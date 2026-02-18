@@ -40,6 +40,7 @@ click-bateva/
   - Link Google Analytics
 - **0.5** Google Maps API setup:
   - Enable Maps JavaScript API in Google Cloud Console
+  - Enable Geocoding API in Google Cloud Console
   - Set up API key with appropriate HTTP referrer restrictions
   - Verify billing is enabled and set budget alerts
 - **0.6** Claude skills discovery:
@@ -68,10 +69,13 @@ click-bateva/
 
 - **2.1** Project scaffold — React app under `apps/admin`, routing, auth guards, basic layout
 - **2.2** Auth — Login/logout UI, Firebase Auth integration, role-based redirect
-- **2.3** Categories & Tags management — List, add, edit, delete (CRUD → Firestore)
-- **2.4** POI management — List, add, edit, delete; Google Maps picker for coordinates; image/video upload to Cloud Storage
-- **2.5** Business account management — Create business records in Firestore + Firebase Auth user creation
-- **2.6** Click analytics page — Display per-POI click counts from `clicks` subcollection
+- **2.3** Icon management — Upload icons to Cloud Storage, list and delete from icon library; icons stored as metadata in `icons` Firestore collection
+- **2.4** Categories & Tags management — List, add, edit, delete (CRUD → Firestore); category form includes icon dropdown populated from icon library
+- **2.5** POI management — List, add, edit, delete; image/video upload to Cloud Storage; location selection via:
+  - Click on embedded map to place pin → auto-populate coordinates
+  - Type address → Geocoding API resolves to coordinates → pin placed on map
+- **2.6** Business account management — Create business records in Firestore + Firebase Auth user creation
+- **2.7** Click analytics page — Display per-POI click counts from `clicks` subcollection
 
 ---
 

@@ -93,15 +93,19 @@ click-bateva/
 - Role: Primary data store for all application data
 - Collections:
   - `points_of_interest`: Stores all POI details
-  - `categories`: Manages dynamically created categories
+  - `categories`: Manages dynamically created categories (each with an optional icon reference)
   - `tags`: Manages dynamically created tags
+  - `icons`: Stores metadata for uploaded icons (name, Cloud Storage URL)
   - `users`: Stores user profiles and roles
   - `businesses`: Stores registered business profiles
   - `points_of_interest/{poiId}/clicks`: Subcollection tracking click events (written client-side)
 
 **Cloud Storage for Firebase:**
-- Role: Scalable object storage for images and videos associated with POIs
+- Role: Scalable object storage for images, videos, and category icons
 - Integration: Stores URLs/paths referenced within Firestore documents
+- Bucket structure:
+  - `poi-media/` — images and videos for POIs
+  - `icons/` — category icons uploaded via the icon management page
 
 **Firebase Authentication:**
 - Role: User identity management for general users, administrators, and business users
@@ -114,6 +118,10 @@ click-bateva/
 
 **Firebase Hosting:**
 - Role: Fast, secure hosting for all web applications via a global CDN
+
+**Google Maps Platform:**
+- Maps JavaScript API — map display in user web app and POI location picker in admin dashboard
+- Geocoding API — converts addresses to coordinates (GeoPoint) when creating/editing POIs
 
 **Google Analytics for Firebase:**
 - Role: Usage statistics, user engagement, and custom event tracking
@@ -155,12 +163,22 @@ click-bateva/
 | timestamp | Timestamp | |
 | userId | string \| null | Firebase Auth UID if authenticated |
 
+### `icons` Collection
+
+| Field | Type | Notes |
+|---|---|---|
+| name | string | Display label for the icon |
+| url | string | Cloud Storage download URL |
+| storagePath | string | Cloud Storage path (for deletion) |
+| createdAt | Timestamp | |
+
 ### `categories` Collection
 
 | Field | Type | Notes |
 |---|---|---|
 | name | string | e.g. "Hotels", "Restaurants" |
-| icon | string | Optional, URL or icon identifier |
+| iconId | string \| null | Reference to `icons` collection |
+| iconUrl | string \| null | Denormalized URL for fast reads |
 | createdAt | Timestamp | |
 | updatedAt | Timestamp | |
 

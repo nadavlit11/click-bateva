@@ -58,12 +58,26 @@ This document outlines the key features and their acceptance criteria for the Mi
 
 #### Feature: Manage Points of Interest (CRUD)
 
-**Scenario: Admin adds a new POI.**
+**Scenario: Admin adds a new POI by clicking on the map.**
 - Given the admin is logged into the Admin Dashboard.
 - When the admin navigates to the "Manage POIs" section and clicks "Add New POI".
-- And fills in all required fields (Name, Description, Coordinates, Category, Tags, optional Images/Videos, Phone, Email, Website).
-- When the admin submits the new POI.
-- Then the new POI is successfully saved to the database.
+- And the POI form displays an interactive map.
+- When the admin clicks a location on the map.
+- Then a pin is placed at the clicked location.
+- And the coordinates (latitude, longitude) are automatically populated.
+- When the admin fills in all other required fields (Name, Description, Category, Tags, optional Images/Videos, Phone, Email, Website) and submits.
+- Then the new POI is successfully saved to the database with the selected coordinates.
+- And the new POI becomes visible on the user-facing map application.
+
+**Scenario: Admin adds a new POI by entering an address.**
+- Given the admin is logged into the Admin Dashboard.
+- When the admin navigates to the "Manage POIs" section and clicks "Add New POI".
+- And the POI form displays an interactive map and an address input field.
+- When the admin types an address into the address field.
+- Then the map automatically pans to the resolved location and places a pin.
+- And the coordinates (latitude, longitude) are automatically populated.
+- When the admin fills in all other required fields and submits.
+- Then the new POI is successfully saved to the database with the geocoded coordinates.
 - And the new POI becomes visible on the user-facing map application.
 
 **Scenario: Admin edits an existing POI.**
@@ -80,11 +94,34 @@ This document outlines the key features and their acceptance criteria for the Mi
 - Then the POI is removed from the database.
 - And the POI is no longer visible on the user-facing map application.
 
+#### Feature: Manage Icons
+
+**Scenario: Admin uploads a new icon.**
+- Given the admin is logged into the Admin Dashboard.
+- When the admin navigates to the "Manage Icons" page.
+- And uploads an image file as a new icon (with an optional name/label).
+- Then the icon is stored in Cloud Storage.
+- And the icon appears in the icon library and is available for selection when creating/editing categories.
+
+**Scenario: Admin deletes an icon.**
+- Given the admin is logged into the Admin Dashboard.
+- When the admin navigates to the "Manage Icons" page.
+- And deletes an existing icon.
+- Then the icon is removed from Cloud Storage.
+- And the icon is no longer available in the icon selection dropdown.
+
 #### Feature: Manage Categories and Tags (CRUD)
 
-**Scenario: Admin adds a new Category.**
+**Scenario: Admin adds a new Category with an icon.**
 - Given the admin is logged into the Admin Dashboard.
+- And at least one icon exists in the icon library.
 - When the admin navigates to the "Manage Categories" section and adds a new category name.
+- And selects an icon from the icon dropdown.
+- Then the new category is saved with the selected icon and is available for selection when creating/editing POIs.
+
+**Scenario: Admin adds a new Category without an icon.**
+- Given the admin is logged into the Admin Dashboard.
+- When the admin navigates to the "Manage Categories" section and adds a new category name without selecting an icon.
 - Then the new category is saved and available for selection when creating/editing POIs.
 
 **Scenario: Admin adds a new Tag.**
