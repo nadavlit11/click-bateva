@@ -1,6 +1,6 @@
 # update-docs
 
-Use this skill whenever a feature, schema, or behavior change has been decided. It ensures all 3 project docs stay in sync.
+Use this skill whenever a feature, schema, or behavior change has been decided. It ensures all project docs stay in sync.
 
 ## Checklist
 
@@ -23,6 +23,12 @@ Work through each file and update as needed:
 - Update or add the relevant phase step
 - If a new sub-task was discovered, add it
 - Mark completed items with ✅ if appropriate
+
+### 4. `docs/progress.md`
+- Mark any newly completed steps as ✅ Done
+- Update status of in-progress steps
+- Add notes for deviations from the original work plan
+- Add to "Known Deviations" section if something changed from the plan
 
 ## Common mistakes to check
 - `clicks` is a top-level collection, not a subcollection
