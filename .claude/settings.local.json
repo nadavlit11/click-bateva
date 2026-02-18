@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(firebase --version:*)",
+      "Bash(command -v:*)",
+      "Bash(node:*)",
+      "Bash(npm --version:*)",
+      "Bash(npm show:*)",
+      "mcp__mcp-registry__search_mcp_registry",
+      "Bash(echo:*)",
+      "Bash(git -C ~/Desktop/Workspace/click-bateva init:*)",
+      "Bash(git -C ~/Desktop/Workspace/click-bateva branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(brew install:*)",
+      "Bash(curl:*)",
+      "Bash(tar:*)",
+      "Bash(sudo mv:*)",
+      "Bash(gh:*)",
+      "Bash(unzip:*)",
+      "Bash(firebase login:list:*)",
+      "Bash(firebase projects:list:*)",
+      "Bash(firebase use:*)",
+      "Bash(firebase init:*)"
+    ]
+  }
+}
