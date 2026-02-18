@@ -1,10 +1,61 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
+
+    // ─── Helper functions ───────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdminOrContentManager() {
+      return isSignedIn() &&
+        (request.auth.token.role == 'admin' || request.auth.token.role == 'content_manager');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+
+    function isBusinessUser() {
+      return isSignedIn() && request.auth.token.role == 'business_user';
+    }
+
+    // ─── icons/ ─────────────────────────────────────────────────────────────
+    // Only admin and content managers can upload/delete icons
+    // Anyone can read (icons displayed publicly on the map)
+
+    match /icons/{fileName} {
+      allow read: if true;
+      allow write: if isAdminOrContentManager();
+    }
+
+    // ─── poi-media/ ─────────────────────────────────────────────────────────
+    // Admin and content managers can upload/delete any POI media
+    // Business users can upload to their own POI folder: poi-media/{businessId}/{poiId}/
+    // Anyone can read (POI images displayed publicly)
+
+    match /poi-media/{allPaths=**} {
+      allow read: if true;
+    }
+
+    match /poi-media/{businessId}/{poiId}/{fileName} {
+      allow write: if isAdminOrContentManager() ||
+        (isBusinessUser() &&
+         request.auth.uid in firestore.get(
+           /databases/(default)/documents/businesses/$(businessId)
+         ).data.associatedUserIds
+        );
+    }
+
+    // Admin can write anywhere under poi-media (covers flat uploads without businessId path)
+    match /poi-media/{fileName} {
+      allow write: if isAdminOrContentManager();
+    }
+
+    // ─── Default deny ───────────────────────────────────────────────────────
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

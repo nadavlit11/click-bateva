@@ -75,7 +75,7 @@ click-bateva/
   - Click on embedded map to place pin → auto-populate coordinates
   - Type address → Geocoding API resolves to coordinates → pin placed on map
 - **2.6** Business account management — Create business records in Firestore + Firebase Auth user creation
-- **2.7** Click analytics page — Display per-POI click counts from `clicks` subcollection
+- **2.7** Click analytics page — Display total clicks, per-category clicks, and per-POI clicks from `clicks` collection
 
 ---
 

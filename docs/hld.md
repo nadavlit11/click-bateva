@@ -98,7 +98,7 @@ click-bateva/
   - `icons`: Stores metadata for uploaded icons (name, Cloud Storage URL)
   - `users`: Stores user profiles and roles
   - `businesses`: Stores registered business profiles
-  - `points_of_interest/{poiId}/clicks`: Subcollection tracking click events (written client-side)
+  - `clicks`: Top-level collection tracking click events (poiId + categoryId + timestamp, written client-side)
 
 **Cloud Storage for Firebase:**
 - Role: Scalable object storage for images, videos, and category icons
@@ -110,7 +110,7 @@ click-bateva/
 **Firebase Authentication:**
 - Role: User identity management for general users, administrators, and business users
 - Provider: Email/Password
-- Role management via Firebase Custom Claims (`admin`, `business_user`)
+- Role management via Firebase Custom Claims (`admin`, `content_manager`, `business_user`)
 
 **Cloud Functions for Firebase:**
 - Role: Serverless backend logic for data validation and any server-side processing
@@ -156,20 +156,22 @@ click-bateva/
 | createdAt | Timestamp | |
 | updatedAt | Timestamp | |
 
-**Subcollection: `points_of_interest/{poiId}/clicks`**
+### `clicks` Collection
+
+Top-level collection (not a subcollection) to enable efficient analytics queries across all POIs and categories.
 
 | Field | Type | Notes |
 |---|---|---|
+| poiId | string | Reference to `points_of_interest` |
+| categoryId | string | Denormalized from POI for fast category analytics |
 | timestamp | Timestamp | |
-| userId | string \| null | Firebase Auth UID if authenticated |
 
 ### `icons` Collection
 
 | Field | Type | Notes |
 |---|---|---|
 | name | string | Display label for the icon |
-| url | string | Cloud Storage download URL |
-| storagePath | string | Cloud Storage path (for deletion) |
+| path | string | Cloud Storage path e.g. `icons/hotel.png` — URL derived at runtime |
 | createdAt | Timestamp | |
 
 ### `categories` Collection
@@ -177,8 +179,9 @@ click-bateva/
 | Field | Type | Notes |
 |---|---|---|
 | name | string | e.g. "Hotels", "Restaurants" |
+| color | string | Hex color e.g. `#FF5733` |
 | iconId | string \| null | Reference to `icons` collection |
-| iconUrl | string \| null | Denormalized URL for fast reads |
+| iconUrl | string \| null | Denormalized icon URL for fast reads |
 | createdAt | Timestamp | |
 | updatedAt | Timestamp | |
 
@@ -206,7 +209,7 @@ click-bateva/
 |---|---|---|
 | email | string | |
 | displayName | string \| null | |
-| role | string | "admin", "business_user", "standard_user" |
+| role | string | "admin", "content_manager", "business_user", "standard_user" |
 | businessRef | DocumentReference \| null | Reference to `businesses` if business user |
 | createdAt | Timestamp | |
 | lastLoginAt | Timestamp | |

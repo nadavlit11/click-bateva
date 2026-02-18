@@ -1,18 +1,115 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 3, 20);
+
+    // ─── Helper functions ───────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userRole() == 'admin';
+    }
+
+    function isContentManager() {
+      return isSignedIn() && userRole() == 'content_manager';
+    }
+
+    function isAdminOrContentManager() {
+      return isAdmin() || isContentManager();
+    }
+
+    function isBusinessUser() {
+      return isSignedIn() && userRole() == 'business_user';
+    }
+
+    // ─── points_of_interest ─────────────────────────────────────────────────
+
+    match /points_of_interest/{poiId} {
+      // Anyone can read active POIs; admin/content_manager can read all
+      allow read: if resource.data.active == true || isAdminOrContentManager();
+
+      // Admin and content managers can create and delete
+      allow create, delete: if isAdminOrContentManager();
+
+      // Admin and content managers can update anything;
+      // Business users can only update their own POIs and only allowed fields
+      allow update: if isAdminOrContentManager() ||
+        (isBusinessUser() &&
+         resource.data.businessId != null &&
+         get(/databases/$(database)/documents/businesses/$(resource.data.businessId))
+           .data.associatedUserIds.hasAny([request.auth.uid]) &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['description', 'images', 'videos', 'phone', 'email', 'website', 'updatedAt'])
+        );
+    }
+
+    // ─── clicks ─────────────────────────────────────────────────────────────
+
+    match /clicks/{clickId} {
+      // Anyone can create a click — validate required fields only
+      allow create: if request.resource.data.keys().hasAll(['poiId', 'categoryId', 'timestamp']) &&
+                       request.resource.data.keys().hasOnly(['poiId', 'categoryId', 'timestamp']);
+
+      // Only admin can read or delete clicks
+      allow read, delete: if isAdmin();
+    }
+
+    // ─── categories ─────────────────────────────────────────────────────────
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdminOrContentManager();
+    }
+
+    // ─── tags ───────────────────────────────────────────────────────────────
+
+    match /tags/{tagId} {
+      allow read: if true;
+      allow write: if isAdminOrContentManager();
+    }
+
+    // ─── icons ──────────────────────────────────────────────────────────────
+
+    match /icons/{iconId} {
+      allow read: if true;
+      allow write: if isAdminOrContentManager();
+    }
+
+    // ─── businesses ─────────────────────────────────────────────────────────
+
+    match /businesses/{businessId} {
+      // Only admin can create, update, delete businesses
+      allow write: if isAdmin();
+
+      // Admin can read all; business users can read their own business only
+      allow read: if isAdmin() ||
+        (isBusinessUser() &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessRef ==
+           /databases/$(database)/documents/businesses/$(businessId)
+        );
+    }
+
+    // ─── users ──────────────────────────────────────────────────────────────
+
+    match /users/{userId} {
+      // Admin can read and write all user documents
+      allow read, write: if isAdmin();
+
+      // Users can read their own document
+      allow read: if isSignedIn() && request.auth.uid == userId;
+
+      // Users can update their own document but cannot change role or businessRef
+      allow update: if isSignedIn() &&
+        request.auth.uid == userId &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['role', 'businessRef']);
     }
   }
 }
