@@ -97,7 +97,9 @@ click-bateva/
   - `tags`: Manages dynamically created tags
   - `users`: Stores user profiles and roles
   - `businesses`: Stores registered business profiles
+  - `conversations`: Stores messaging threads between users and businesses
   - `points_of_interest/{poiId}/clicks`: Subcollection tracking click events (written client-side)
+  - `conversations/{conversationId}/messages`: Subcollection of messages within a thread
 
 **Cloud Storage for Firebase:**
 - Role: Scalable object storage for images and videos associated with POIs
@@ -125,6 +127,7 @@ click-bateva/
   - Authenticated read/write for user-specific data
   - Admin read/write access to all collections
   - Business users limited to read/write their own assigned POIs
+  - Conversations: read/write limited to authenticated users listed in `participants`; messages within a conversation readable only by participants
 
 ## 4. High-Level Data Model (Firestore)
 
@@ -193,11 +196,34 @@ click-bateva/
 | createdAt | Timestamp | |
 | lastLoginAt | Timestamp | |
 
+### `conversations` Collection
+
+Stores messaging threads between authenticated users and businesses about specific POIs.
+
+| Field | Type | Notes |
+|---|---|---|
+| participants | array\<string\> | Firebase Auth UIDs of all participants |
+| poiId | string \| null | Reference to `points_of_interest` if POI-specific |
+| businessId | string \| null | Reference to `businesses` if business conversation |
+| createdAt | Timestamp | |
+| updatedAt | Timestamp | Updated on each new message |
+| lastMessagePreview | string | Truncated preview of last message |
+
+**Subcollection: `conversations/{conversationId}/messages`**
+
+| Field | Type | Notes |
+|---|---|---|
+| senderId | string | Firebase Auth UID |
+| text | string | Message content |
+| timestamp | Timestamp | |
+| readBy | array\<string\> | UIDs that have read this message |
+
 ## 5. Key Data Flows
 
 - Frontend fetches active POIs (optionally filtered by category/tags) from Firestore and displays them on Google Maps. When a user clicks a POI, details are displayed and a click document is written directly to the `clicks` subcollection client-side.
 - Admin dashboard authenticates via Firebase Auth. CRUD operations on POIs, categories, tags, and businesses are performed directly on Firestore, with Security Rules enforcing admin privileges.
 - Business dashboard authenticates via Firebase Auth. Security Rules ensure a business user can only read/write POIs where their UID is referenced in `businessId`.
+- **Conversations**: Authenticated users initiate conversations tied to a POI or business. Messages are written to the `conversations/{id}/messages` subcollection in Firestore. Because all clients (web and future mobile) share the same Firestore backend and use real-time listeners (`onSnapshot`), conversations are **automatically synchronized across all devices** where the user is logged in. A user who starts a conversation on desktop will see the same thread on mobile and vice versa.
 
 ## 6. Scalability & Security
 

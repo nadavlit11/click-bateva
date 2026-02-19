@@ -39,6 +39,40 @@ This document outlines the key features and their acceptance criteria for the Mi
 - And the popup displays the POI's Name, Description, Images/Videos, Phone, Email, and Website Link.
 - And the click is registered for tracking purposes.
 
+#### Feature: Conversations with Businesses (Cross-Device Sync)
+
+**Scenario: Authenticated user starts a conversation about a POI.**
+- Given the user is logged in to their account.
+- And the user is viewing a POI detail popup.
+- When the user clicks "Message Business" and sends a message.
+- Then a new conversation document is created in Firestore under the `conversations` collection.
+- And the message is stored in the `conversations/{id}/messages` subcollection.
+- And the conversation is immediately visible in the user's conversation list.
+
+**Scenario: User sees the same conversations on mobile that they started on desktop.**
+- Given the user is logged in with the same account on both desktop and mobile.
+- And the user previously created a conversation on desktop.
+- When the user opens the conversations list on mobile.
+- Then the same conversation thread is visible, including all messages sent from desktop.
+- And the messages are in the correct chronological order.
+
+**Scenario: User sees the same conversations on desktop that they started on mobile.**
+- Given the user is logged in with the same account on both mobile and desktop.
+- And the user previously created a conversation on mobile.
+- When the user opens the conversations list on desktop.
+- Then the same conversation thread is visible, including all messages sent from mobile.
+
+**Scenario: Messages update in real time across devices.**
+- Given the user has a conversation open on desktop.
+- When a new message is sent from mobile on the same conversation.
+- Then the new message appears on the desktop view without requiring a page refresh.
+
+**Scenario: Unauthenticated user cannot access conversations.**
+- Given the user is not logged in.
+- When the user attempts to view or send a message.
+- Then the user is prompted to log in first.
+- And no conversation data is accessible.
+
 ---
 
 ### 2.2. Admin Dashboard (Web)
