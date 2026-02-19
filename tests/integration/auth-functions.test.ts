@@ -45,7 +45,7 @@ beforeAll(() => {
   functions = getFunctions(app);
 
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-  connectFirestoreEmulator(db, "127.0.0.1", 8081);
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
   connectFunctionsEmulator(functions, "127.0.0.1", 5001);
 });
 
@@ -84,8 +84,8 @@ describe("onUserCreated trigger", () => {
     const cred = await createUserWithEmailAndPassword(auth, email("trigger-1"), "password123");
     const uid = cred.user.uid;
 
-    // Wait for the async trigger to fire
-    await new Promise((r) => setTimeout(r, 3000));
+    // Wait for the async trigger to fire (generous buffer for cold start)
+    await new Promise((r) => setTimeout(r, 5000));
 
     const snap = await getDoc(doc(db, "users", uid));
     expect(snap.exists()).toBe(true);
@@ -97,7 +97,7 @@ describe("onUserCreated trigger", () => {
   it("sets custom claim role=standard_user on the new user", async () => {
     const cred = await createUserWithEmailAndPassword(auth, email("trigger-2"), "password123");
 
-    await new Promise((r) => setTimeout(r, 3000));
+    await new Promise((r) => setTimeout(r, 5000));
 
     await cred.user.getIdToken(true);
     const tokenResult = await cred.user.getIdTokenResult(true);
@@ -135,7 +135,7 @@ describe("setUserRole callable", () => {
     ]);
 
     // Wait for onUserCreated to finish before overriding admin claim
-    await new Promise((r) => setTimeout(r, 3000));
+    await new Promise((r) => setTimeout(r, 5000));
     await setClaimViaEmulator(adminCred.user.uid, { role: "admin" });
 
     // Sign in as admin with fresh token

@@ -16,13 +16,11 @@ Every time a new capability is added, make sure `firebase.json` has the relevant
   "emulators": {
     "auth":      { "port": 9099 },
     "functions": { "port": 5001 },
-    "firestore": { "port": 8081 },
+    "firestore": { "port": 8080 },
     "ui":        { "enabled": true }
   }
 }
 ```
-
-> ⚠️ Port 8080 is taken by Tomcat on this machine — Firestore emulator uses **8081**.
 
 ---
 
