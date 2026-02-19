@@ -26,7 +26,7 @@ Tracks completion status of each work-plan step. Update this file as work is don
 | 1.1 | Finalize Firestore schema | ✅ | All collections defined; `clicks` flat (not subcollection); `icons.path`; `categories` has `color`, `iconId`, `iconUrl` |
 | 1.2 | Write & deploy Firestore Security Rules | ✅ | `firestore.rules` written and committed; all roles and collections covered |
 | 1.3 | Configure Cloud Storage bucket structure and rules | ✅ | `storage.rules` written; `poi-media/`, `icons/` structure defined; uses custom claims |
-| 1.4 | Firebase Auth setup — Email/Password, custom claims Cloud Function | ⬜ | |
+| 1.4 | Firebase Auth setup — Email/Password, custom claims Cloud Function | ✅ | `onUserCreated` trigger + `setUserRole` callable fn; firebase-admin v13 modular imports; emulator on port 8081 (Tomcat holds 8080) |
 | 1.5 | Implement click tracking — client-side write to `clicks` collection | ⬜ | Note: work-plan still says "subcollection" — it's a flat collection |
 | 1.6 | Test security rules using Firebase Emulator Suite | ⬜ | |
 
