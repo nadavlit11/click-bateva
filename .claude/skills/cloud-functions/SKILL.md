@@ -122,6 +122,80 @@ await user.getIdToken(true);
 
 ---
 
+## Jest test setup
+
+### Config files
+
+```
+functions/
+├── jest.config.unit.js         # no emulator, runs *.unit.test.ts
+├── jest.config.integration.js  # emulator required, runs *.integration.test.ts
+└── tsconfig.test.json          # overrides NodeNext → CommonJS for Jest
+```
+
+### ts-jest — use `transform`, NOT `globals`
+
+`globals: { 'ts-jest': { ... } }` is **deprecated** in ts-jest v29+. Always use:
+
+```js
+module.exports = {
+  testEnvironment: "node",
+  transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.test.json" }] },
+  moduleNameMapper: { "^(\\.{1,2}/.*)\\.js$": "$1" }, // strips .js from NodeNext imports
+};
+```
+
+### tsconfig.test.json — required to fix NodeNext/Jest incompatibility
+
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "module": "CommonJS", "moduleResolution": "node" },
+  "include": ["src"]
+}
+```
+
+### Unit test boilerplate — mocking Admin SDK
+
+`auth.ts` calls `getFirestore()` and `getAuth()` at **module load time**. Mocks must be declared with `jest.mock()` (auto-hoisted by Jest) before the `import` of `auth.ts`:
+
+```ts
+// jest.mock() calls are hoisted above imports automatically
+jest.mock("firebase-admin/firestore", () => ({
+  getFirestore: jest.fn(() => ({
+    collection: jest.fn(() => ({ doc: jest.fn(() => ({ set: mockSet, update: mockUpdate })) })),
+  })),
+  FieldValue: { serverTimestamp: jest.fn(() => "mock-timestamp") },
+}));
+jest.mock("firebase-admin/auth", () => ({
+  getAuth: jest.fn(() => ({ setCustomUserClaims: mockSetCustomUserClaims })),
+}));
+jest.mock("firebase-admin/app", () => ({
+  initializeApp: jest.fn(),
+  getApps: jest.fn(() => [{ name: "mock" }]), // non-empty → skip init
+}));
+
+// Import AFTER mocks
+import { setUserRole } from "../auth.js";
+```
+
+### Calling v2 callables in unit tests
+
+```ts
+// ✅ Use .run() directly — do NOT use testEnv.wrapV2()
+const result = await setUserRole.run(makeRequest({}));
+```
+
+### Integration test — unique Firebase app names
+
+Prevents "app already exists" errors when multiple test files run:
+
+```ts
+const app = initializeApp({ projectId: "click-bateva", apiKey: "test-key" }, `test-${Date.now()}`);
+```
+
+---
+
 ## Dual role system
 
 Roles are stored in **two places** that must stay in sync:
