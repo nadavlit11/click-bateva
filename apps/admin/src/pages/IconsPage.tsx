@@ -33,7 +33,7 @@ export function IconsPage() {
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const iconName = name.trim() || file.name.replace(/\.[^.]+$/, '')
+    const iconName = name.trim()
     setUploading(true)
     setError('')
     try {
@@ -92,7 +92,11 @@ export function IconsPage() {
           <button
             type="button"
             disabled={uploading}
-            onClick={() => fileRef.current?.click()}
+            onClick={() => {
+              if (!name.trim()) { setError('יש להזין שם לאייקון'); return }
+              setError('')
+              fileRef.current?.click()
+            }}
             className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
           >
             {uploading ? 'מעלה...' : '+ בחר קובץ'}
