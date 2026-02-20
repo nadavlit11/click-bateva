@@ -3,10 +3,10 @@ import { filterPois } from "./filterPois";
 import type { Poi } from "../types";
 
 const POIS: Poi[] = [
-  { id: "1", name: "שוק הכרמל",   categoryId: "restaurants", tags: ["family", "kosher"],  location: { lat: 32.05, lng: 34.77 }, description: "", mainImage: null, images: [], phone: null, website: null },
-  { id: "2", name: "פארק הירקון", categoryId: "parks",       tags: ["family", "pets"],   location: { lat: 32.10, lng: 34.80 }, description: "", mainImage: null, images: [], phone: null, website: null },
-  { id: "3", name: "חוף בוגרשוב", categoryId: "beaches",     tags: ["water"],             location: { lat: 32.06, lng: 34.76 }, description: "", mainImage: null, images: [], phone: null, website: null },
-  { id: "4", name: "מצדה",        categoryId: "sites",       tags: ["view", "free"],     location: { lat: 31.31, lng: 35.35 }, description: "", mainImage: null, images: [], phone: null, website: null },
+  { id: "1", name: "שוק הכרמל",   categoryId: "restaurants", tags: ["family", "kosher"],  location: { lat: 32.05, lng: 34.77 }, description: "", mainImage: null, images: [], phone: null, email: null, website: null, openingHours: null, price: null },
+  { id: "2", name: "פארק הירקון", categoryId: "parks",       tags: ["family", "pets"],   location: { lat: 32.10, lng: 34.80 }, description: "", mainImage: null, images: [], phone: null, email: null, website: null, openingHours: null, price: null },
+  { id: "3", name: "חוף בוגרשוב", categoryId: "beaches",     tags: ["water"],             location: { lat: 32.06, lng: 34.76 }, description: "", mainImage: null, images: [], phone: null, email: null, website: null, openingHours: null, price: null },
+  { id: "4", name: "מצדה",        categoryId: "sites",       tags: ["view", "free"],     location: { lat: 31.31, lng: 35.35 }, description: "", mainImage: null, images: [], phone: null, email: null, website: null, openingHours: null, price: null },
 ];
 
 const noFilter = {

@@ -14,8 +14,13 @@ interface PoiDetailPanelProps {
 export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const color = category?.color ?? "#4caf50";
-  const hasImages = poi.images.length > 0;
-  const slideCount = hasImages ? poi.images.length : 1;
+  // mainImage is always first; poi.images are the extra images
+  const allImages = [
+    ...(poi.mainImage ? [poi.mainImage] : []),
+    ...poi.images,
+  ];
+  const hasImages = allImages.length > 0;
+  const slideCount = hasImages ? allImages.length : 1;
 
   // Reset slide when POI changes
   useEffect(() => { setCurrentSlide(0); }, [poi.id]);
@@ -56,7 +61,7 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
           }}
         >
           {hasImages ? (
-            poi.images.map((url, i) => (
+            allImages.map((url, i) => (
               <img
                 key={i}
                 src={url}
@@ -142,14 +147,39 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
           <p className="text-sm text-gray-500 mt-1 leading-relaxed">{poi.description}</p>
         )}
 
-        {/* Contact section */}
-        {(poi.phone || poi.website) && <div className="h-px bg-gray-100 my-3" />}
+        {/* Info + contact section */}
+        {(poi.openingHours || poi.price || poi.phone || poi.email || poi.website) && (
+          <div className="h-px bg-gray-100 my-3" />
+        )}
+
+        {poi.openingHours && (
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">🕐</span>
+            <span className="text-sm text-gray-700">{poi.openingHours}</span>
+          </div>
+        )}
+
+        {poi.price && (
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">💰</span>
+            <span className="text-sm text-gray-700">{poi.price}</span>
+          </div>
+        )}
 
         {poi.phone && (
           <div className="flex items-center gap-2 mb-2">
             <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">📞</span>
             <a href={`tel:${poi.phone}`} className="text-sm text-gray-700">
               {poi.phone}
+            </a>
+          </div>
+        )}
+
+        {poi.email && (
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">✉️</span>
+            <a href={`mailto:${poi.email}`} className="text-sm text-gray-700 truncate">
+              {poi.email}
             </a>
           </div>
         )}

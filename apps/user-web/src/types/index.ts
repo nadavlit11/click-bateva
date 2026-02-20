@@ -18,7 +18,10 @@ export interface Poi {
   mainImage: string | null;
   images: string[];       // ordered image URLs; empty = show placeholder
   phone: string | null;
+  email: string | null;
   website: string | null; // domain only e.g. "www.example.co.il"
+  openingHours: string | null;
+  price: string | null;
   categoryId: string;
   tags: string[];   // tag IDs
 }

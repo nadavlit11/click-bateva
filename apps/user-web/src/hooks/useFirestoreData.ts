@@ -15,7 +15,10 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>): Poi[] {
       mainImage: d.mainImage || null,
       images: d.images ?? [],
       phone: d.phone || null,
+      email: d.email || null,
       website: d.website || null,
+      openingHours: d.openingHours ?? null,
+      price: d.price ?? null,
       categoryId: d.categoryId,
       tags: d.tags ?? [],
     };
