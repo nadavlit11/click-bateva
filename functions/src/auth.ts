@@ -20,6 +20,17 @@ type Role = (typeof VALID_ROLES)[number];
  * Creates a Firestore user document and sets the default custom claim.
  */
 export const onUserCreated = auth.user().onCreate(async (user) => {
+  // If another function (e.g. createBusinessUser) already set custom claims,
+  // skip — that function handles its own Firestore doc and claims.
+  const userRecord = await adminAuth.getUser(user.uid);
+  if (userRecord.customClaims?.role) {
+    logger.info("User created with existing role, skipping standard_user setup", {
+      uid: user.uid,
+      role: userRecord.customClaims.role,
+    });
+    return;
+  }
+
   const now = FieldValue.serverTimestamp();
   const role: Role = "standard_user";
 
