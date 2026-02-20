@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="he" dir="rtl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>קליק בטבע — עיצוב 1 (בהיר)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Rubik', sans-serif; }
+
+    .map-container {
+      background:
+        linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-container::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(129, 199, 132, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(165, 214, 167, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(200, 230, 201, 0.2) 0%, transparent 60%);
+    }
+
+    .poi-wrapper {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .poi-marker {
+      width: 36px;
+      height: 36px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .poi-wrapper:hover .poi-marker {
+      transform: rotate(-45deg) scale(1.15);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .poi-marker span {
+      transform: rotate(45deg);
+      font-size: 16px;
+    }
+
+    .poi-label {
+      margin-top: 6px;
+      background: white;
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.18);
+      color: #374151;
+    }
+
+    .category-chip {
+      transition: all 0.2s ease;
+    }
+
+    .category-chip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .tag-pill {
+      transition: all 0.2s ease;
+    }
+
+    .tag-pill:hover {
+      background: #e8f5e9;
+    }
+
+    .tag-pill.active {
+      background: #4caf50;
+      color: white;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .poi-wrapper.animate {
+      animation: float 3s ease-in-out infinite;
+    }
+  </style>
+ </head>
+ <body class="h-full bg-gray-100 overflow-hidden">
+  <div class="flex h-full w-full">
+   <!-- Sidebar -->
+   <aside class="w-80 h-full bg-white flex flex-col z-10 overflow-hidden" style="box-shadow: 4px 0 20px rgba(0,0,0,0.08);">
+    <!-- App Header -->
+    <div class="p-6 border-b border-gray-100">
+     <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg">
+       <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+       </svg>
+      </div>
+      <div>
+       <h1 class="text-2xl font-bold text-gray-800">קליק בטבע</h1>
+       <p class="text-sm text-gray-500">גלה את ישראל</p>
+      </div>
+     </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="p-4">
+     <div class="relative">
+      <input type="text" placeholder="חפש מקום..." class="w-full py-3 px-4 pr-12 bg-gray-50 border-2 border-gray-100 rounded-2xl text-gray-700 placeholder-gray-400 focus:outline-none focus:border-green-400 focus:bg-white transition-all">
+      <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+     </div>
+    </div>
+
+    <!-- Categories Section -->
+    <div class="px-4 pb-4">
+     <h2 class="text-lg font-semibold text-gray-700 mb-3">קטגוריות</h2>
+     <div class="grid grid-cols-2 gap-3">
+      <button class="category-chip flex items-center gap-2 py-3 px-4 bg-orange-50 rounded-2xl border-2 border-orange-100 hover:border-orange-300" data-category="restaurants">
+       <span class="w-8 h-8 rounded-xl bg-orange-400 flex items-center justify-center text-white text-lg">🍽️</span>
+       <span class="text-sm font-medium text-gray-700">מסעדות</span>
+      </button>
+      <button class="category-chip flex items-center gap-2 py-3 px-4 bg-blue-50 rounded-2xl border-2 border-blue-100 hover:border-blue-300" data-category="hotels">
+       <span class="w-8 h-8 rounded-xl bg-blue-400 flex items-center justify-center text-white text-lg">🏨</span>
+       <span class="text-sm font-medium text-gray-700">מלונות</span>
+      </button>
+      <button class="category-chip flex items-center gap-2 py-3 px-4 bg-green-50 rounded-2xl border-2 border-green-100 hover:border-green-300" data-category="parks">
+       <span class="w-8 h-8 rounded-xl bg-green-500 flex items-center justify-center text-white text-lg">🌲</span>
+       <span class="text-sm font-medium text-gray-700">פארקים</span>
+      </button>
+      <button class="category-chip flex items-center gap-2 py-3 px-4 bg-amber-50 rounded-2xl border-2 border-amber-100 hover:border-amber-300" data-category="sites">
+       <span class="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center text-white text-lg">🏛️</span>
+       <span class="text-sm font-medium text-gray-700">אתרים</span>
+      </button>
+      <button class="category-chip flex items-center gap-2 py-3 px-4 bg-purple-50 rounded-2xl border-2 border-purple-100 hover:border-purple-300" data-category="beaches">
+       <span class="w-8 h-8 rounded-xl bg-purple-400 flex items-center justify-center text-white text-lg">🏖️</span>
+       <span class="text-sm font-medium text-gray-700">חופים</span>
+      </button>
+      <button class="category-chip flex items-center gap-2 py-3 px-4 bg-teal-50 rounded-2xl border-2 border-teal-100 hover:border-teal-300" data-category="trails">
+       <span class="w-8 h-8 rounded-xl bg-teal-500 flex items-center justify-center text-white text-lg">🥾</span>
+       <span class="text-sm font-medium text-gray-700">מסלולים</span>
+      </button>
+     </div>
+    </div>
+
+    <!-- Tags Section -->
+    <div class="px-4 pb-4 flex-1 overflow-y-auto">
+     <h2 class="text-lg font-semibold text-gray-700 mb-3">תגיות</h2>
+     <div class="flex flex-wrap gap-2">
+      <button class="tag-pill py-2 px-4 bg-gray-100 rounded-full text-sm text-gray-600 border border-gray-200">מתאים למשפחות</button>
+      <button class="tag-pill py-2 px-4 bg-gray-100 rounded-full text-sm text-gray-600 border border-gray-200">נגיש לנכים</button>
+      <button class="tag-pill py-2 px-4 bg-gray-100 rounded-full text-sm text-gray-600 border border-gray-200">חינם</button>
+      <button class="tag-pill py-2 px-4 bg-gray-100 rounded-full text-sm text-gray-600 border border-gray-200">פתוח עכשיו</button>
+      <button class="tag-pill py-2 px-4 bg-gray-100 rounded-full text-sm text-gray-600 border border-gray-200">חניה</button>
+      <button class="tag-pill py-2 px-4 bg-gray-100 rounded-full text-sm text-gray-600 border border-gray-200">כשר</button>
+      <button class="tag-pill py-2 px-4 bg-gray-100 rounded-full text-sm text-gray-600 border border-gray-200">טבעוני</button>
+      <button class="tag-pill py-2 px-4 bg-gray-100 rounded-full text-sm text-gray-600 border border-gray-200">בעלי חיים</button>
+      <button class="tag-pill py-2 px-4 bg-gray-100 rounded-full text-sm text-gray-600 border border-gray-200">מים</button>
+      <button class="tag-pill py-2 px-4 bg-gray-100 rounded-full text-sm text-gray-600 border border-gray-200">נוף</button>
+     </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-4 border-t border-gray-100 bg-gray-50">
+     <div class="flex items-center justify-between text-sm text-gray-500">
+      <span id="count-1">נמצאו 127 מקומות</span>
+      <button id="clear-1" class="text-green-600 font-medium hover:text-green-700">נקה הכל</button>
+     </div>
+    </div>
+   </aside>
+
+   <!-- Map Area -->
+   <main class="flex-1 h-full map-container relative">
+    <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 100 200" preserveAspectRatio="xMidYMid slice">
+     <path d="M50 10 Q60 30 55 50 Q65 70 60 90 Q70 110 65 130 Q55 150 50 170 Q45 150 35 130 Q30 110 40 90 Q35 70 45 50 Q40 30 50 10" fill="none" stroke="#2e7d32" stroke-width="0.5" />
+    </svg>
+
+    <div class="poi-wrapper animate" style="top:15%;left:30%;animation-delay:0s">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#ff9800,#f57c00)"><span>🍽️</span></div>
+      <div class="poi-label">שוק הכרמל</div>
+    </div>
+    <div class="poi-wrapper" style="top:25%;left:55%">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#2196f3,#1976d2)"><span>🏨</span></div>
+      <div class="poi-label">מלון דן</div>
+    </div>
+    <div class="poi-wrapper animate" style="top:35%;left:25%;animation-delay:.5s">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#4caf50,#388e3c)"><span>🌲</span></div>
+      <div class="poi-label">פארק הירקון</div>
+    </div>
+    <div class="poi-wrapper" style="top:20%;left:70%">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#ffc107,#ffa000)"><span>🏛️</span></div>
+      <div class="poi-label">הכותל המערבי</div>
+    </div>
+    <div class="poi-wrapper animate" style="top:45%;left:15%;animation-delay:1s">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#9c27b0,#7b1fa2)"><span>🏖️</span></div>
+      <div class="poi-label">חוף בוגרשוב</div>
+    </div>
+    <div class="poi-wrapper" style="top:50%;left:45%">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#009688,#00796b)"><span>🥾</span></div>
+      <div class="poi-label">שביל ישראל</div>
+    </div>
+    <div class="poi-wrapper animate" style="top:60%;left:60%;animation-delay:1.5s">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#ff9800,#f57c00)"><span>🍽️</span></div>
+      <div class="poi-label">מסעדת אברהם</div>
+    </div>
+    <div class="poi-wrapper" style="top:40%;left:75%">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#4caf50,#388e3c)"><span>🌲</span></div>
+      <div class="poi-label">יערות הכרמל</div>
+    </div>
+    <div class="poi-wrapper animate" style="top:70%;left:35%;animation-delay:2s">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#2196f3,#1976d2)"><span>🏨</span></div>
+      <div class="poi-label">מלון קיסר</div>
+    </div>
+    <div class="poi-wrapper" style="top:55%;left:20%">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#ffc107,#ffa000)"><span>🏛️</span></div>
+      <div class="poi-label">מצדה</div>
+    </div>
+    <div class="poi-wrapper animate" style="top:75%;left:55%;animation-delay:.7s">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#9c27b0,#7b1fa2)"><span>🏖️</span></div>
+      <div class="poi-label">חוף אכזיב</div>
+    </div>
+    <div class="poi-wrapper" style="top:30%;left:40%">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#009688,#00796b)"><span>🥾</span></div>
+      <div class="poi-label">נחל עמוד</div>
+    </div>
+    <div class="poi-wrapper animate" style="top:85%;left:40%;animation-delay:1.2s">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#ff9800,#f57c00)"><span>🍽️</span></div>
+      <div class="poi-label">מסעדת הנמל</div>
+    </div>
+    <div class="poi-wrapper" style="top:65%;left:70%">
+      <div class="poi-marker" style="background:linear-gradient(135deg,#4caf50,#388e3c)"><span>🌲</span></div>
+      <div class="poi-label">גן לאומי עין גדי</div>
+    </div>
+
+    <!-- Zoom Controls -->
+    <div class="absolute bottom-6 left-6 flex flex-col gap-2">
+     <button class="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12M6 12h12" />
+      </svg>
+     </button>
+     <button class="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+      </svg>
+     </button>
+    </div>
+    <div class="absolute bottom-6 left-20">
+     <button class="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+     </button>
+    </div>
+   </main>
+  </div>
+
+  <script>
+    document.querySelectorAll('.category-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('ring-2');
+        chip.classList.toggle('ring-green-400');
+        chip.classList.toggle('ring-offset-2');
+        document.getElementById('count-1').textContent = 'נמצאו ' + (Math.floor(Math.random()*100)+50) + ' מקומות';
+      });
+    });
+    document.querySelectorAll('.tag-pill').forEach(tag => {
+      tag.addEventListener('click', () => tag.classList.toggle('active'));
+    });
+    document.getElementById('clear-1').addEventListener('click', () => {
+      document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('ring-2','ring-green-400','ring-offset-2'));
+      document.querySelectorAll('.tag-pill').forEach(t => t.classList.remove('active'));
+      document.getElementById('count-1').textContent = 'נמצאו 127 מקומות';
+    });
+  </script>
+ </body>
+</html>

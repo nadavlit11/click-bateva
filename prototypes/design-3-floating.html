@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="he" dir="rtl" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>קליק בטבע — עיצוב 3</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Rubik', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    /* ── Map ── */
+    .map-bg {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(170deg, #dbeafe 0%, #bfdbfe 20%, #bbf7d0 60%, #86efac 100%);
+    }
+    .map-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        /* water-ish blob top-left */
+        radial-gradient(ellipse 40% 30% at 15% 20%, rgba(147,210,255,0.5) 0%, transparent 100%),
+        /* green terrain center */
+        radial-gradient(ellipse 50% 40% at 60% 55%, rgba(134,239,172,0.4) 0%, transparent 100%),
+        /* desert-ish south */
+        radial-gradient(ellipse 60% 35% at 40% 85%, rgba(253,230,138,0.3) 0%, transparent 100%);
+    }
+    /* Simple road-like lines painted with SVG below */
+
+    /* ── POI bubble markers ── */
+    .poi-wrapper {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      z-index: 5;
+    }
+    .poi-wrapper:hover { z-index: 25; }
+
+    .poi-bubble {
+      background: white;
+      border-radius: 18px;
+      padding: 5px 11px 5px 7px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04);
+      font-size: 12px;
+      font-weight: 600;
+      color: #111827;
+      white-space: nowrap;
+      position: relative;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .poi-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid white;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.08));
+    }
+    .poi-wrapper:hover .poi-bubble {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.04);
+    }
+    .poi-wrapper.selected .poi-bubble {
+      background: #1a56db;
+      color: white;
+    }
+    .poi-wrapper.selected .poi-bubble::after { border-top-color: #1a56db; }
+
+    .poi-icon {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    @keyframes bob {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+    .poi-wrapper.bob { animation: bob 3s ease-in-out infinite; }
+
+    /* ── Top bar ── */
+    .top-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 40;
+      padding: 12px 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none; /* let clicks pass through gaps */
+    }
+    .top-bar > * { pointer-events: auto; }
+
+    /* Search row */
+    .search-box {
+      background: white;
+      border-radius: 24px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 580px;
+      /* center-right in RTL: auto margin on left */
+      margin-left: auto;
+      margin-right: 0;
+    }
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      color: #111827;
+      background: transparent;
+    }
+    .search-box input::placeholder { color: #9ca3af; }
+
+    /* Category chips row - Google Maps style */
+    .chips-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+      max-width: 100%;
+    }
+    .chips-row::-webkit-scrollbar { display: none; }
+
+    .cat-chip {
+      flex-shrink: 0;
+      background: white;
+      border-radius: 20px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.06);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: box-shadow 0.15s;
+      border: 2px solid transparent;
+    }
+    .cat-chip:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+
+    /* Filter button */
+    .filter-btn {
+      flex-shrink: 0;
+      background: white;
+      border-radius: 20px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.06);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: box-shadow 0.15s;
+      border: 2px solid transparent;
+      position: relative;
+    }
+    .filter-btn:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    .filter-btn.active { border-color: #1a56db; color: #1a56db; }
+    .filter-badge {
+      background: #1a56db;
+      color: white;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      width: 16px; height: 16px;
+      display: flex; align-items: center; justify-content: center;
+      position: absolute;
+      top: -4px; left: -4px;
+    }
+
+    /* Tag dropdown panel */
+    .tag-panel {
+      background: white;
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.08);
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 420px;
+    }
+    .tag-panel.open { display: flex; }
+
+    .tag-pill {
+      background: #f3f4f6;
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: #4b5563;
+      cursor: pointer;
+      border: 1.5px solid #e5e7eb;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+    .tag-pill:hover { background: #eff6ff; color: #1a56db; border-color: #bfdbfe; }
+    .tag-pill.active { background: #1a56db; color: white; border-color: #1a56db; }
+
+    /* ── Google Maps-style zoom controls ── */
+    .zoom-ctrl {
+      position: fixed;
+      bottom: 80px;
+      left: 16px;
+      z-index: 40;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .zoom-btn {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: 300;
+      color: #374151;
+      line-height: 1;
+      user-select: none;
+    }
+    .zoom-btn:hover { background: #f5f5f5; }
+    .zoom-divider { height: 1px; background: #e0e0e0; margin: 0 4px; }
+
+    /* Location button */
+    .loc-btn {
+      position: fixed;
+      bottom: 24px;
+      left: 16px;
+      z-index: 40;
+      width: 40px; height: 40px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: #1a56db;
+    }
+    .loc-btn:hover { background: #f5f5f5; }
+
+    /* ── Result count pill ── */
+    .result-pill {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 40;
+      background: white;
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.16);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+    .result-pill .divider { width: 1px; height: 14px; background: #d1d5db; }
+    .result-pill button { color: #1a56db; font-size: 13px; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- Full-screen map -->
+  <div class="map-bg">
+    <!-- Road-like SVG lines for realism -->
+    <svg class="absolute inset-0 w-full h-full" style="opacity:0.25" viewBox="0 0 800 900" preserveAspectRatio="xMidYMid slice">
+      <!-- Main highway N-S -->
+      <path d="M380 0 Q370 150 360 300 Q350 450 355 600 Q360 750 350 900" fill="none" stroke="#94a3b8" stroke-width="3"/>
+      <!-- Secondary roads -->
+      <path d="M0 280 Q200 270 380 300 Q550 330 800 310" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <path d="M0 480 Q180 460 360 480 Q520 500 800 470" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <path d="M0 620 Q220 600 355 620 Q500 640 800 610" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <path d="M200 0 Q230 200 240 400 Q245 600 230 900" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <path d="M560 0 Q540 250 550 500 Q560 700 545 900" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <!-- Smaller roads -->
+      <path d="M100 150 Q300 140 380 160" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+      <path d="M355 380 Q460 360 600 390" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+      <path d="M355 520 Q430 510 560 530" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+      <path d="M100 700 Q250 680 355 700" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    </svg>
+
+    <!-- POI bubbles -->
+    <div class="poi-wrapper bob" style="top:14%;left:32%;animation-delay:0s">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#fef3c7">🍽️</span>שוק הכרמל</div>
+    </div>
+    <div class="poi-wrapper" style="top:25%;left:58%">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#dbeafe">🏨</span>מלון דן</div>
+    </div>
+    <div class="poi-wrapper bob" style="top:36%;left:22%;animation-delay:.8s">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#dcfce7">🌲</span>פארק הירקון</div>
+    </div>
+    <div class="poi-wrapper selected" style="top:19%;left:71%">
+      <div class="poi-bubble"><span class="poi-icon">🏛️</span>הכותל המערבי</div>
+    </div>
+    <div class="poi-wrapper bob" style="top:47%;left:13%;animation-delay:1.4s">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#f3e8ff">🏖️</span>חוף בוגרשוב</div>
+    </div>
+    <div class="poi-wrapper" style="top:53%;left:48%">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#ccfbf1">🥾</span>שביל ישראל</div>
+    </div>
+    <div class="poi-wrapper bob" style="top:63%;left:63%;animation-delay:2s">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#fef3c7">🍽️</span>מסעדת אברהם</div>
+    </div>
+    <div class="poi-wrapper" style="top:42%;left:76%">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#dcfce7">🌲</span>יערות הכרמל</div>
+    </div>
+    <div class="poi-wrapper bob" style="top:72%;left:34%;animation-delay:2.4s">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#dbeafe">🏨</span>מלון קיסר</div>
+    </div>
+    <div class="poi-wrapper" style="top:58%;left:18%">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#fef9c3">🏛️</span>מצדה</div>
+    </div>
+    <div class="poi-wrapper bob" style="top:31%;left:43%;animation-delay:.5s">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#ccfbf1">🥾</span>נחל עמוד</div>
+    </div>
+    <div class="poi-wrapper" style="top:78%;left:57%">
+      <div class="poi-bubble"><span class="poi-icon" style="background:#f3e8ff">🏖️</span>חוף אכזיב</div>
+    </div>
+  </div>
+
+  <!-- ── TOP BAR ── -->
+  <div class="top-bar">
+
+    <!-- Search box -->
+    <div class="search-box">
+      <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🌿</div>
+      <input type="text" placeholder="חפש מקום, עיר, אתר...">
+      <svg style="width:20px;height:20px;color:#9ca3af;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+    </div>
+
+    <!-- Category chips + filter button -->
+    <div class="chips-row" id="chips-row">
+      <div class="cat-chip" id="chip-all" style="background:#1a56db;color:white;border-color:#1a56db" data-cat="all">
+        🗺️ הכל
+      </div>
+      <div class="cat-chip" data-cat="restaurants" data-color="#dc2626" data-bg="#fef2f2">🍽️ מסעדות</div>
+      <div class="cat-chip" data-cat="hotels"      data-color="#2563eb" data-bg="#eff6ff">🏨 מלונות</div>
+      <div class="cat-chip" data-cat="parks"       data-color="#16a34a" data-bg="#f0fdf4">🌲 פארקים</div>
+      <div class="cat-chip" data-cat="sites"       data-color="#b45309" data-bg="#fffbeb">🏛️ אתרים</div>
+      <div class="cat-chip" data-cat="beaches"     data-color="#7c3aed" data-bg="#faf5ff">🏖️ חופים</div>
+      <div class="cat-chip" data-cat="trails"      data-color="#c2410c" data-bg="#fff7ed">🥾 מסלולים</div>
+      <div class="cat-chip" data-cat="camping"     data-color="#047857" data-bg="#ecfdf5">⛺ קמפינג</div>
+
+      <!-- Separator -->
+      <div style="width:1px;background:#e5e7eb;flex-shrink:0;margin:4px 0;"></div>
+
+      <!-- Filter button -->
+      <div class="filter-btn" id="filter-btn">
+        <svg style="width:15px;height:15px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+        </svg>
+        סינון
+        <div class="filter-badge" id="filter-badge" style="display:none">1</div>
+      </div>
+    </div>
+
+    <!-- Tag dropdown -->
+    <div class="tag-panel" id="tag-panel">
+      <div class="tag-pill">מתאים למשפחות</div>
+      <div class="tag-pill active">פתוח עכשיו</div>
+      <div class="tag-pill">חינם</div>
+      <div class="tag-pill">נגיש לנכים</div>
+      <div class="tag-pill">כשר</div>
+      <div class="tag-pill">טבעוני</div>
+      <div class="tag-pill">חניה</div>
+      <div class="tag-pill">נוף</div>
+      <div class="tag-pill">שחייה</div>
+      <div class="tag-pill">בעלי חיים</div>
+    </div>
+  </div>
+
+  <!-- ── Zoom controls (Google Maps style) ── -->
+  <div class="zoom-ctrl">
+    <div class="zoom-btn">+</div>
+    <div class="zoom-divider"></div>
+    <div class="zoom-btn" style="font-size:28px;font-weight:200;">−</div>
+  </div>
+
+  <!-- Location button -->
+  <div class="loc-btn">
+    <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+    </svg>
+  </div>
+
+  <!-- Result count -->
+  <div class="result-pill">
+    <span><strong id="count-3">127</strong> מקומות</span>
+    <div class="divider"></div>
+    <button id="clear-3">נקה הכל</button>
+  </div>
+
+  <script>
+    // ── Category chips ──
+    document.querySelectorAll('.cat-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.cat-chip').forEach(c => {
+          c.style.background = 'white';
+          c.style.color = '#374151';
+          c.style.borderColor = 'transparent';
+        });
+        if (chip.dataset.cat === 'all') {
+          chip.style.background = '#1a56db';
+          chip.style.color = 'white';
+          chip.style.borderColor = '#1a56db';
+        } else {
+          chip.style.background = chip.dataset.bg;
+          chip.style.color = chip.dataset.color;
+          chip.style.borderColor = chip.dataset.color;
+        }
+        document.getElementById('count-3').textContent = Math.floor(Math.random() * 80) + 20;
+      });
+    });
+
+    // ── Filter button / tag panel ──
+    const filterBtn = document.getElementById('filter-btn');
+    const tagPanel  = document.getElementById('tag-panel');
+    const filterBadge = document.getElementById('filter-badge');
+
+    filterBtn.addEventListener('click', () => {
+      const open = tagPanel.classList.toggle('open');
+      filterBtn.classList.toggle('active', open);
+    });
+
+    document.querySelectorAll('.tag-pill').forEach(t => {
+      t.addEventListener('click', () => {
+        t.classList.toggle('active');
+        const activeCount = document.querySelectorAll('.tag-pill.active').length;
+        if (activeCount > 0) {
+          filterBadge.style.display = 'flex';
+          filterBadge.textContent = activeCount;
+          filterBtn.classList.add('active');
+        } else {
+          filterBadge.style.display = 'none';
+          if (!tagPanel.classList.contains('open')) filterBtn.classList.remove('active');
+        }
+      });
+    });
+
+    // ── Clear ──
+    document.getElementById('clear-3').addEventListener('click', () => {
+      document.querySelectorAll('.cat-chip').forEach(c => {
+        c.style.background = 'white';
+        c.style.color = '#374151';
+        c.style.borderColor = 'transparent';
+      });
+      document.getElementById('chip-all').style.cssText = 'background:#1a56db;color:white;border-color:#1a56db';
+      document.querySelectorAll('.tag-pill').forEach(t => t.classList.remove('active'));
+      filterBadge.style.display = 'none';
+      filterBtn.classList.remove('active');
+      tagPanel.classList.remove('open');
+      document.getElementById('count-3').textContent = '127';
+    });
+
+    // ── POI click ──
+    document.querySelectorAll('.poi-wrapper').forEach(w => {
+      w.addEventListener('click', () => {
+        const was = w.classList.contains('selected');
+        document.querySelectorAll('.poi-wrapper').forEach(x => x.classList.remove('selected'));
+        if (!was) w.classList.add('selected');
+      });
+    });
+
+    // Close tag panel when clicking outside
+    document.addEventListener('click', e => {
+      if (!filterBtn.contains(e.target) && !tagPanel.contains(e.target)) {
+        tagPanel.classList.remove('open');
+        const activeCount = document.querySelectorAll('.tag-pill.active').length;
+        filterBtn.classList.toggle('active', activeCount > 0);
+      }
+    });
+  </script>
+</body>
+</html>
