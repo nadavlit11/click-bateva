@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "click-bateva"
-  }
+  },
+  "targets": {
+    "click-bateva": {
+      "hosting": {
+        "click-bateva-biz": [
+          "click-bateva-biz"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

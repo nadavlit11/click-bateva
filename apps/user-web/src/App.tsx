@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "./lib/firebase";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
 import { PoiDetailPanel } from "./components/MapView/PoiDetailPanel";
@@ -45,6 +47,15 @@ export default function App() {
     setSearchQuery("");
   }
 
+  function handlePoiClick(poi: Poi) {
+    addDoc(collection(db, "clicks"), {
+      poiId: poi.id,
+      categoryId: poi.categoryId,
+      timestamp: serverTimestamp(),
+    }).catch((err) => console.error("Failed to log POI click:", err));
+    setSelectedPoi(poi);
+  }
+
   return (
     <div className="h-dvh w-screen flex overflow-hidden">
       <Sidebar
@@ -64,7 +75,7 @@ export default function App() {
         <MapView
           pois={filteredPois}
           categories={categories}
-          onPoiClick={setSelectedPoi}
+          onPoiClick={handlePoiClick}
         />
         <BottomSheet
           className="md:hidden absolute bottom-0 left-0 right-0 z-20"
