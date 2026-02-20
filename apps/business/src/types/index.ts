@@ -23,6 +23,7 @@ export interface Poi {
 // The subset of Poi fields that a business user may edit.
 // Used to type the edit form state and the Firestore updateDoc payload.
 export interface PoiEditableFields {
+  mainImage: string         // '' means no main image
   description: string
   images: string[]          // ordered URLs after upload
   videos: string[]          // video URLs

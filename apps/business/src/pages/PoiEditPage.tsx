@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../lib/firebase.ts'
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '../lib/firebase.ts'
 import { ImageUploader } from '../components/ImageUploader.tsx'
 import type { Poi, PoiEditableFields } from '../types/index.ts'
 
@@ -13,7 +14,10 @@ export function PoiEditPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [uploadingMainImage, setUploadingMainImage] = useState(false)
+  const mainImageRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState<PoiEditableFields>({
+    mainImage: '',
     description: '',
     images: [],
     videos: [],
@@ -30,6 +34,7 @@ export function PoiEditPage() {
         const data = snap.data() as Poi
         setPoi({ ...data, id: snap.id })
         setForm({
+          mainImage: data.mainImage ?? '',
           description: data.description,
           images: data.images,
           videos: data.videos,
@@ -50,6 +55,26 @@ export function PoiEditPage() {
         setLoading(false)
       })
   }, [poiId])
+
+  async function handleMainImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !poiId) return
+    setUploadingMainImage(true)
+    setError('')
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg'
+      const storageRef = ref(storage, `poi-media/${poiId}-main-${Date.now()}.${ext}`)
+      await uploadBytesResumable(storageRef, file)
+      const url = await getDownloadURL(storageRef)
+      setForm(prev => ({ ...prev, mainImage: url }))
+    } catch (err) {
+      console.error('Main image upload error', err)
+      setError('שגיאה בהעלאת תמונה ראשית')
+    } finally {
+      setUploadingMainImage(false)
+      e.target.value = ''
+    }
+  }
 
   async function handleSave() {
     if (!poiId) return
@@ -91,6 +116,53 @@ export function PoiEditPage() {
 
       {/* Editable fields */}
       <div className="space-y-4">
+        {/* Main Image */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">תמונה ראשית</label>
+          <input
+            ref={mainImageRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleMainImageSelect}
+          />
+          {form.mainImage ? (
+            <div className="space-y-2">
+              <img
+                src={form.mainImage}
+                alt="תמונה ראשית"
+                className="w-full max-h-48 object-cover rounded-lg border border-gray-200"
+              />
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  disabled={uploadingMainImage}
+                  onClick={() => mainImageRef.current?.click()}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
+                >
+                  {uploadingMainImage ? 'מעלה...' : 'שנה תמונה'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm(prev => ({ ...prev, mainImage: '' }))}
+                  className="text-red-500 hover:text-red-700 text-sm font-medium"
+                >
+                  הסר
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={uploadingMainImage}
+              onClick={() => mainImageRef.current?.click()}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              {uploadingMainImage ? 'מעלה...' : 'בחר תמונה ראשית'}
+            </button>
+          )}
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">תיאור</label>
           <textarea
@@ -132,9 +204,9 @@ export function PoiEditPage() {
           />
         </div>
 
-        {/* Image uploader */}
+        {/* Extra Images */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">תמונות</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">תמונות נוספות</label>
           <ImageUploader
             poiId={poiId!}
             images={form.images}
