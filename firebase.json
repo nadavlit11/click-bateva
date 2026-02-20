@@ -1,9 +1,18 @@
 {
-  "hosting": {
-    "public": "apps/admin/dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "**", "destination": "/index.html" }]
-  },
+  "hosting": [
+    {
+      "site": "click-bateva",
+      "public": "apps/admin/dist",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [{ "source": "**", "destination": "/index.html" }]
+    },
+    {
+      "site": "click-bateva-app",
+      "public": "apps/user-web/dist",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [{ "source": "**", "destination": "/index.html" }]
+    }
+  ],
   "functions": [
     {
       "source": "functions",

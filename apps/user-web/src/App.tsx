@@ -2,16 +2,15 @@ import { useState, useMemo } from "react";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
 import { PoiDetailPanel } from "./components/MapView/PoiDetailPanel";
-import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOCK_POIS } from "./data/defaults";
+import { usePois, useCategories, useTags } from "./hooks/useFirestoreData";
 import { filterPois } from "./lib/filterPois";
-import type { Category, Poi, Tag } from "./types";
-
-// Phase 4.2: mock data. Replace with usePois/useCategories/useTags hooks once Firestore has data.
-const pois = MOCK_POIS;
-const categories: Category[] = DEFAULT_CATEGORIES;
-const tags: Tag[] = DEFAULT_TAGS;
+import type { Poi } from "./types";
 
 export default function App() {
+  const { pois } = usePois();
+  const categories = useCategories();
+  const tags = useTags();
+
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,7 +18,7 @@ export default function App() {
 
   const filteredPois = useMemo(
     () => filterPois(pois, { selectedCategories, selectedTags, searchQuery }),
-    [selectedCategories, selectedTags, searchQuery]
+    [pois, selectedCategories, selectedTags, searchQuery]
   );
 
   function handleCategoryToggle(id: string) {
