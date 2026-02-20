@@ -7,6 +7,7 @@ import { PoisPage } from './pages/PoisPage.tsx'
 import { CategoriesPage } from './pages/CategoriesPage.tsx'
 import { TagsPage } from './pages/TagsPage.tsx'
 import { IconsPage } from './pages/IconsPage.tsx'
+import { BusinessesPage } from './pages/BusinessesPage.tsx'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/tags" element={<TagsPage />} />
             <Route path="/icons" element={<IconsPage />} />
+            <Route path="/businesses" element={<BusinessesPage />} />
           </Route>
         </Route>
       </Routes>

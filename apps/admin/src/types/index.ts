@@ -42,3 +42,13 @@ export interface Icon {
   path: string   // Storage path, e.g. 'icons/{uuid}.png'
   createdAt: unknown
 }
+
+export interface Business {
+  id: string
+  name: string
+  email: string
+  ownerUid: string
+  associatedUserIds: string[]   // UIDs allowed to edit this business's POIs
+  createdAt: unknown
+  updatedAt: unknown
+}

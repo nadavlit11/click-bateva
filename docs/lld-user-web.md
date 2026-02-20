@@ -52,9 +52,11 @@ apps/user-web/
         │   ├── CategoryGrid.tsx 2-col grid of category chips
         │   ├── TagList.tsx     wrapping flex of tag pills
         │   └── SidebarFooter.tsx count text + "נקה הכל" button
-        └── MapView/
-            ├── MapView.tsx     APIProvider + Map (center Israel, zoom 8)
-            └── PoiMarker.tsx   AdvancedMarker with teardrop div + label (Phase 4.2)
+        ├── MapView/
+        │   ├── MapView.tsx     APIProvider + Map (center Israel, zoom 8)
+        │   └── PoiMarker.tsx   AdvancedMarker with teardrop div + label (Phase 4.2)
+        └── BottomSheet/
+            └── BottomSheet.tsx   mobile filter panel; collapses to chip row peek
 ```
 
 ---
@@ -82,8 +84,12 @@ export interface Poi {
   description: string;
   location: { lat: number; lng: number };  // converted from Firestore GeoPoint
   mainImage: string | null;
+  images: string[];       // all images for carousel (Phase 4.4)
+  phone: string | null;
+  email: string | null;
+  website: string | null;
   categoryId: string;
-  tags: string[];     // tag IDs
+  tags: string[];         // tag IDs
   // Note: `active` is NOT in the frontend type — the Firestore query filters
   // where("active", "==", true), so inactive POIs never reach the frontend.
 }
@@ -271,3 +277,108 @@ No explicit `dir="rtl"` on the div — it inherits from `<html dir="rtl">`.
 | 4.2 | Real POI markers from Firestore, colored by category | Yes — usePois, useCategories |
 | 4.3 | Category + tag + search filtering fully wired up | Yes — useTags |
 | 4.4 | POI detail popup (info panel or modal) | No new queries |
+| 4.6 | Mobile bottom sheet layout | No new Firebase |
+
+---
+
+## 11. Mobile Layout (Bottom Sheet)
+
+### Overview
+
+The chosen mobile UX pattern is **Design א — bottom sheet**. On screens narrower than the `md` breakpoint (768px), the right-side Sidebar is hidden and replaced by a bottom sheet that peeks from the bottom of the screen. The map fills the full viewport.
+
+### Breakpoint boundary
+
+`md` (768px) is the desktop/mobile boundary:
+
+- `md+` (desktop): RTL flex row — Sidebar on right, MapView fills left remainder.
+- `< md` (mobile): MapView fills full screen; BottomSheet and PoiDetailPanel overlay the map as absolutely-positioned layers.
+
+### Root layout structure
+
+```tsx
+// App.tsx — root wrapper uses h-dvh instead of h-screen to account for
+// mobile browser chrome (address bar) collapsing on scroll.
+<div className="h-dvh w-screen flex flex-col overflow-hidden">
+  {/* Desktop (md+): RTL flex row — Sidebar on right, Map fills left */}
+  {/* Mobile (< md): Map fills full screen, BottomSheet overlaid     */}
+</div>
+```
+
+### New state in App.tsx
+
+```typescript
+const [sheetExpanded, setSheetExpanded] = useState(false)
+```
+
+### BottomSheet component
+
+**Location:** `src/components/BottomSheet/BottomSheet.tsx`
+
+**Behaviour:**
+
+| State | Description |
+|---|---|
+| Collapsed (default) | Peeks 120px from the bottom of the screen; shows a category chip row + result count |
+| Expanded | Slides up to ~70% of viewport height; shows full filter UI (SearchBar, CategoryGrid, TagList, SidebarFooter) |
+
+**Interaction:**
+- A drag-handle bar sits at the top of the sheet.
+- Tapping anywhere on the peeking area expands the sheet.
+- A semi-transparent backdrop appears when expanded; tapping it collapses the sheet.
+
+**Animation:** `transition: transform 300ms ease` (CSS transform-based slide).
+
+**Props:** Mirror `SidebarProps` exactly — same filter state, same callbacks — so the two components are interchangeable from App.tsx's perspective.
+
+```typescript
+interface BottomSheetProps {
+  categories: Category[];
+  tags: Tag[];
+  selectedCategories: Set<string>;
+  selectedTags: Set<string>;
+  searchQuery: string;
+  filteredCount: number;
+  expanded: boolean;
+  onExpandedChange: (expanded: boolean) => void;
+  onCategoryToggle: (id: string) => void;
+  onTagToggle: (id: string) => void;
+  onSearchChange: (q: string) => void;
+  onClearAll: () => void;
+}
+```
+
+### POI detail on mobile
+
+`PoiDetailPanel` slides up from the bottom (full-width, ~85% viewport height) instead of the desktop side panel. The same component is used; desktop vs. mobile positioning is controlled via responsive Tailwind classes inside the component.
+
+### Mobile component tree
+
+```
+App.tsx
+  ├── <Sidebar>  (hidden on mobile via md:flex — desktop only)
+  ├── <main className="flex-1 relative">
+  │     └── <MapView> (full screen on mobile)
+  ├── <BottomSheet expanded={sheetExpanded} onExpandedChange={setSheetExpanded} ...>
+  │     │   (absolute, bottom-0, z-20 — mobile only, hidden on md+)
+  │     ├── SheetHandle        — drag handle bar
+  │     ├── ChipRow            — category chips (always visible when peeking)
+  │     ├── ResultCount        — e.g. "12 מקומות"
+  │     └── [expanded only]
+  │           ├── SearchBar
+  │           ├── CategoryGrid
+  │           ├── TagList
+  │           └── SidebarFooter
+  └── {selectedPoi && <PoiDetailPanel>}
+        (absolute, bottom-0, z-30 — slides up when selectedPoi != null)
+```
+
+### Visibility control
+
+```tsx
+{/* Sidebar — desktop only */}
+<Sidebar className="hidden md:flex" ... />
+
+{/* BottomSheet — mobile only */}
+<BottomSheet className="md:hidden absolute bottom-0 left-0 right-0 z-20" ... />
+```

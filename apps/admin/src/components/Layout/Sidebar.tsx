@@ -8,6 +8,7 @@ const NAV = [
   { path: '/categories',  label: 'קטגוריות',      end: false },
   { path: '/tags',        label: 'תגיות',         end: false },
   { path: '/icons',       label: 'אייקונים',      end: false },
+  { path: '/businesses',  label: 'עסקים',         end: false },
 ]
 
 export function Sidebar() {
