@@ -15,14 +15,14 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const db = getFirestore(app);
 
-if (import.meta.env.DEV) {
+if (import.meta.env.VITE_USE_EMULATOR === 'true') {
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
 }
 
-export const analytics = typeof window !== "undefined" && !import.meta.env.DEV
+export const analytics = typeof window !== "undefined" && import.meta.env.PROD
   ? getAnalytics(app)
   : null;
 
-export const perf = typeof window !== "undefined" && !import.meta.env.DEV
+export const perf = typeof window !== "undefined" && import.meta.env.PROD
   ? getPerformance(app)
   : null;
