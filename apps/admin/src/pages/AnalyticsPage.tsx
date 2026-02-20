@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
 
 interface ClickDoc {
@@ -9,11 +9,13 @@ interface ClickDoc {
 
 interface PoiStat {
   poiId: string
+  name: string
   count: number
 }
 
 interface CategoryStat {
   categoryId: string
+  name: string
   count: number
 }
 
@@ -26,26 +28,40 @@ export function AnalyticsPage() {
 
   useEffect(() => {
     getDocs(collection(db, 'clicks'))
-      .then(snap => {
+      .then(async snap => {
         const clicks = snap.docs.map(d => d.data() as ClickDoc)
         setTotal(clicks.length)
 
         // Aggregate by POI
         const poiMap: Record<string, number> = {}
         for (const c of clicks) { poiMap[c.poiId] = (poiMap[c.poiId] ?? 0) + 1 }
-        const sortedPois = Object.entries(poiMap)
+        const sortedPoiEntries = Object.entries(poiMap)
           .sort(([, a], [, b]) => b - a)
           .slice(0, 5)
-          .map(([poiId, count]) => ({ poiId, count }))
-        setTopPois(sortedPois)
 
         // Aggregate by category
         const catMap: Record<string, number> = {}
         for (const c of clicks) { catMap[c.categoryId] = (catMap[c.categoryId] ?? 0) + 1 }
-        const sortedCats = Object.entries(catMap)
+        const sortedCatEntries = Object.entries(catMap)
           .sort(([, a], [, b]) => b - a)
-          .map(([categoryId, count]) => ({ categoryId, count }))
-        setByCategory(sortedCats)
+
+        // Fetch names in parallel
+        const [poiDocs, catDocs] = await Promise.all([
+          Promise.all(sortedPoiEntries.map(([id]) => getDoc(doc(db, 'points_of_interest', id)))),
+          Promise.all(sortedCatEntries.map(([id]) => getDoc(doc(db, 'categories', id)))),
+        ])
+
+        setTopPois(sortedPoiEntries.map(([poiId, count], i) => ({
+          poiId,
+          count,
+          name: poiDocs[i].data()?.name ?? poiId,
+        })))
+
+        setByCategory(sortedCatEntries.map(([categoryId, count], i) => ({
+          categoryId,
+          count,
+          name: catDocs[i].data()?.name ?? categoryId,
+        })))
 
         setLoading(false)
       })
@@ -82,14 +98,14 @@ export function AnalyticsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-right px-4 py-3 font-medium text-gray-600">מזהה נקודת עניין</th>
+                    <th className="text-right px-4 py-3 font-medium text-gray-600">נקודת עניין</th>
                     <th className="text-right px-4 py-3 font-medium text-gray-600">קליקים</th>
                   </tr>
                 </thead>
                 <tbody>
                   {topPois.map(s => (
                     <tr key={s.poiId} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-800 font-mono text-xs">{s.poiId}</td>
+                      <td className="px-4 py-3 text-gray-800">{s.name}</td>
                       <td className="px-4 py-3 text-gray-700 font-medium">{s.count}</td>
                     </tr>
                   ))}
@@ -112,7 +128,7 @@ export function AnalyticsPage() {
                 <tbody>
                   {byCategory.map(s => (
                     <tr key={s.categoryId} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-800 font-mono text-xs">{s.categoryId}</td>
+                      <td className="px-4 py-3 text-gray-800">{s.name}</td>
                       <td className="px-4 py-3 text-gray-700 font-medium">{s.count}</td>
                     </tr>
                   ))}
