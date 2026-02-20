@@ -56,6 +56,7 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
           style={{
             display: "flex",
             height: "100%",
+            direction: "ltr",
             transition: "transform 0.3s ease",
             transform: `translateX(${-currentSlide * 100}%)`,
           }}
