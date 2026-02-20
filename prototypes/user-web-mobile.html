@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>קליק בטבע — מובייל: השוואת עיצובים</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Rubik', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #cbd5e1; min-height: 100vh; padding: 40px 24px 80px; }
+
+    h1 { text-align: center; font-size: 22px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+    .subtitle { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 44px; }
+
+    /* Layout */
+    .designs-row { display: flex; gap: 44px; justify-content: center; align-items: flex-start; overflow-x: auto; padding-bottom: 20px; }
+    .design-col { display: flex; flex-direction: column; align-items: center; gap: 14px; flex-shrink: 0; }
+    .design-label { font-size: 16px; font-weight: 700; color: #1e293b; }
+    .design-desc { font-size: 12px; color: #64748b; text-align: center; max-width: 210px; line-height: 1.6; }
+
+    /* Phone frame */
+    .phone {
+      width: 375px; height: 700px;
+      border-radius: 44px; overflow: hidden; position: relative;
+      box-shadow: 0 0 0 2px #1e293b, 0 0 0 7px #475569, 0 30px 80px rgba(0,0,0,0.4);
+      background: white; flex-shrink: 0;
+    }
+
+    /* Status bar */
+    .status-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 44px; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 22px; font-size: 13px; font-weight: 600; color: #1e293b;
+    }
+
+    /* Map background */
+    .map-bg { position: absolute; inset: 0; background: #cfe8b5; overflow: hidden; }
+    .map-bg svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    /* POI markers */
+    .marker {
+      position: absolute; display: flex; flex-direction: column; align-items: center;
+      cursor: pointer; z-index: 6; transform: translate(-50%, -100%);
+      transition: transform 0.15s;
+    }
+    .marker:active { transform: translate(-50%, -100%) scale(0.92); }
+    .marker-pin {
+      width: 34px; height: 42px;
+      border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+      border: 2.5px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    }
+    .marker-label {
+      background: white; border-radius: 999px; padding: 2px 8px;
+      font-size: 10px; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      margin-top: 3px; white-space: nowrap; color: #1e293b;
+    }
+
+    /* Map zoom controls */
+    .map-zoom {
+      position: absolute; right: 14px; display: flex; flex-direction: column;
+      gap: 2px; z-index: 8;
+    }
+    .zoom-btn {
+      width: 36px; height: 36px; background: white; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 20px; cursor: pointer;
+      color: #475569; font-weight: 300; line-height: 1; user-select: none;
+    }
+
+    /* Category chips */
+    .cat-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s;
+      white-space: nowrap; user-select: none;
+    }
+    .cat-chip.active { border-color: currentColor; font-weight: 600; }
+    .cat-chip:not(.active) { opacity: 0.75; }
+
+    /* Tag pills */
+    .tag-pill {
+      display: inline-flex; align-items: center; padding: 5px 12px;
+      border-radius: 999px; font-size: 12px; font-weight: 500;
+      cursor: pointer; background: #f1f5f9; color: #64748b;
+      transition: all 0.15s; user-select: none; white-space: nowrap;
+    }
+    .tag-pill.active { background: #16a34a; color: white; }
+
+    /* Horizontal scroll row */
+    .chip-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 0 14px; }
+    .chip-row::-webkit-scrollbar { display: none; }
+
+    /* Section label */
+    .sec-label {
+      font-size: 11px; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 8px; margin-top: 16px;
+    }
+
+    /* Search input */
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px;
+      padding: 10px 14px; color: #94a3b8; font-size: 14px; cursor: text;
+    }
+    .search-box svg { flex-shrink: 0; }
+
+    /* ---- DESIGN A: BOTTOM SHEET ---- */
+    .bs {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 15;
+      background: white; border-radius: 22px 22px 0 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.13);
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .bs.peek  { transform: translateY(calc(100% - 148px)); }
+    .bs.open  { transform: translateY(0); }
+    .bs-handle-bar { padding: 12px 16px 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .bs-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 0 auto 12px; }
+
+    /* ---- DESIGN B: TAB BAR ---- */
+    .tab-panel { position: absolute; inset: 0; }
+    .tab-panel.hidden { display: none; }
+    .tab-bar {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 66px; z-index: 30;
+      background: white; border-top: 1px solid #f1f5f9;
+      display: flex; box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    }
+    .tab-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 3px; cursor: pointer;
+      font-size: 11px; font-weight: 500; color: #94a3b8; transition: color 0.15s;
+      -webkit-tap-highlight-color: transparent; position: relative;
+    }
+    .tab-btn.active { color: #16a34a; }
+    .tab-badge {
+      position: absolute; top: 7px; left: 50%; transform: translateX(2px);
+      background: #ef4444; color: white; border-radius: 999px;
+      font-size: 10px; font-weight: 700; padding: 1px 5px; min-width: 17px; text-align: center;
+    }
+
+    /* ---- DESIGN C: TOP BAR ---- */
+    .top-filter-bar {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 15;
+      background: white; box-shadow: 0 2px 14px rgba(0,0,0,0.1);
+    }
+
+    /* ---- POI DETAIL PANEL (shared A & C) ---- */
+    .poi-panel {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 25;
+      background: white; border-radius: 22px 22px 0 0; padding: 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.16);
+      transform: translateY(100%);
+      transition: transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .poi-panel.visible { transform: translateY(0); }
+    .poi-inner { padding: 16px 16px 24px; }
+
+    /* POI detail content */
+    .poi-image {
+      height: 120px; border-radius: 12px; margin-bottom: 12px;
+      background: linear-gradient(135deg, #cfe8b5 0%, #a8d8ea 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: #94a3b8; font-size: 14px;
+    }
+    .poi-action-btn {
+      flex: 1; border: none; border-radius: 12px; padding: 12px;
+      font-size: 14px; font-weight: 600; font-family: Rubik; cursor: pointer;
+    }
+    .close-btn {
+      background: #f1f5f9; border: none; border-radius: 999px;
+      width: 32px; height: 32px; cursor: pointer; font-size: 18px;
+      display: flex; align-items: center; justify-content: center; color: #64748b;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>קליק בטבע — עיצוב מובייל</h1>
+<p class="subtitle">לחץ על מרקר לצפייה בפרטי מקום · לחץ על קטגוריה לסינון · לחץ על הידית לפתיחה</p>
+
+<!-- Three phone frames, LTR so they appear left→right -->
+<div class="designs-row" dir="ltr">
+
+  <!-- ====================================================
+       DESIGN A: BOTTOM SHEET
+       ==================================================== -->
+  <div class="design-col" dir="rtl">
+    <div class="design-label">א — גיליון תחתון</div>
+
+    <div class="phone">
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="display:flex;gap:6px;align-items:center;font-size:12px">📶 🔋</span>
+      </div>
+
+      <!-- Map -->
+      <div class="map-bg">
+        <svg viewBox="0 0 375 700" preserveAspectRatio="none">
+          <rect width="375" height="700" fill="#cfe8b5"/>
+          <rect x="0" y="440" width="375" height="260" fill="#c0e09e"/>
+          <path d="M0,330 Q120,290 250,310 T375,350" stroke="white" stroke-width="8" fill="none" opacity="0.65"/>
+          <line x1="190" y1="0" x2="205" y2="700" stroke="white" stroke-width="5" opacity="0.5"/>
+          <line x1="60" y1="0" x2="75" y2="700" stroke="white" stroke-width="3" opacity="0.38"/>
+          <line x1="295" y1="80" x2="310" y2="700" stroke="white" stroke-width="3" opacity="0.38"/>
+          <path d="M0,170 L110,185 L230,155 L375,210" stroke="white" stroke-width="3" fill="none" opacity="0.38"/>
+          <ellipse cx="55" cy="520" rx="38" ry="22" fill="#a8d8ea" opacity="0.65"/>
+          <ellipse cx="310" cy="600" rx="28" ry="16" fill="#a8d8ea" opacity="0.55"/>
+        </svg>
+      </div>
+
+      <!-- Markers -->
+      <div class="marker" style="left:135px;top:240px" onclick="showPoi('a')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#22c55e,#16a34a)"></div>
+        <div class="marker-label">גן לאומי עין גדי</div>
+      </div>
+      <div class="marker" style="left:248px;top:305px" onclick="showPoi('a')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#fb923c,#ea580c)"></div>
+        <div class="marker-label">מסעדת השף</div>
+      </div>
+      <div class="marker" style="left:170px;top:380px" onclick="showPoi('a')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#60a5fa,#2563eb)"></div>
+        <div class="marker-label">חניון מרכזי</div>
+      </div>
+      <div class="marker" style="left:82px;top:355px" onclick="showPoi('a')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#c084fc,#9333ea)"></div>
+        <div class="marker-label">מלון הצוק</div>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="map-zoom" style="bottom:178px">
+        <div class="zoom-btn">+</div>
+        <div class="zoom-btn">−</div>
+      </div>
+
+      <!-- My location button -->
+      <div style="position:absolute;left:14px;bottom:178px;z-index:8">
+        <div class="zoom-btn" style="font-size:16px">◎</div>
+      </div>
+
+      <!-- Bottom Sheet -->
+      <div class="bs peek" id="bs-a">
+        <div class="bs-handle-bar" onclick="toggleBs('a')">
+          <div class="bs-handle"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:14px;color:#64748b">מציג <strong style="color:#1e293b">27 מקומות</strong></span>
+            <button onclick="event.stopPropagation();clearAll('a')" style="background:#f1f5f9;color:#64748b;border:none;border-radius:999px;padding:5px 14px;font-size:12px;font-family:Rubik;cursor:pointer;font-weight:500">נקה הכל</button>
+          </div>
+        </div>
+
+        <!-- Category chips -->
+        <div style="padding:6px 0 8px">
+          <div class="chip-row" dir="rtl" id="cats-a">
+            <div class="cat-chip active" style="background:#dcfce7;color:#16a34a" onclick="toggleCat(this)">🌿 טיולים</div>
+            <div class="cat-chip" style="background:#fff7ed;color:#ea580c" onclick="toggleCat(this)">🍽 מסעדות</div>
+            <div class="cat-chip" style="background:#eff6ff;color:#2563eb" onclick="toggleCat(this)">🅿 חניונים</div>
+            <div class="cat-chip" style="background:#faf5ff;color:#9333ea" onclick="toggleCat(this)">🏨 מלונות</div>
+          </div>
+        </div>
+
+        <!-- Search (shown when expanded) -->
+        <div style="padding:6px 14px 8px">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            חפש מקום...
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div style="padding:4px 14px 22px">
+          <div class="sec-label" style="margin-top:10px">תגיות</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;direction:rtl" id="tags-a">
+            <div class="tag-pill" onclick="toggleTag(this)">משפחות</div>
+            <div class="tag-pill" onclick="toggleTag(this)">כלבים מותרים</div>
+            <div class="tag-pill" onclick="toggleTag(this)">חניה חינם</div>
+            <div class="tag-pill" onclick="toggleTag(this)">גישה לנכים</div>
+            <div class="tag-pill" onclick="toggleTag(this)">פיקניק</div>
+          </div>
+        </div>
+      </div><!-- /bs -->
+
+      <!-- POI Detail Panel A -->
+      <div class="poi-panel" id="poi-a">
+        <div class="poi-inner">
+          <div class="bs-handle"></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+            <div>
+              <div style="font-size:17px;font-weight:700;color:#1e293b">גן לאומי עין גדי</div>
+              <div style="font-size:13px;color:#16a34a;font-weight:500;margin-top:3px">🌿 טיולים</div>
+            </div>
+            <button class="close-btn" onclick="hidePoi('a')">×</button>
+          </div>
+          <div class="poi-image">📸 תמונה</div>
+          <p style="font-size:13px;color:#475569;line-height:1.65;margin-bottom:12px">שמורת טבע עם מפלי מים, צמחייה עשירה ונוף מדהים לים המלח. פתוח כל ימות השבוע.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;direction:rtl">
+            <span style="background:#dcfce7;color:#16a34a;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:500">משפחות</span>
+            <span style="background:#dcfce7;color:#16a34a;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:500">חניה חינם</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="poi-action-btn" style="background:#16a34a;color:white">📞 חייג</button>
+            <button class="poi-action-btn" style="background:#eff6ff;color:#2563eb">🌐 אתר</button>
+          </div>
+        </div>
+      </div><!-- /poi-a -->
+
+    </div><!-- /phone A -->
+    <p class="design-desc">מפה מלאה + גיליון תחתון שמתרחב לסינון.<br>הכי נפוץ ואינטואיטיבי (Google Maps, Wolt).</p>
+  </div><!-- /design-col A -->
+
+
+  <!-- ====================================================
+       DESIGN B: TAB BAR
+       ==================================================== -->
+  <div class="design-col" dir="rtl">
+    <div class="design-label">ב — סרגל לשוניות</div>
+
+    <div class="phone">
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="display:flex;gap:6px;align-items:center;font-size:12px">📶 🔋</span>
+      </div>
+
+      <!-- MAP PANEL -->
+      <div class="tab-panel" id="tab-map-b">
+        <!-- Map -->
+        <div class="map-bg">
+          <svg viewBox="0 0 375 700" preserveAspectRatio="none">
+            <rect width="375" height="700" fill="#cfe8b5"/>
+            <rect x="0" y="440" width="375" height="260" fill="#c0e09e"/>
+            <path d="M0,330 Q120,290 250,310 T375,350" stroke="white" stroke-width="8" fill="none" opacity="0.65"/>
+            <line x1="190" y1="0" x2="205" y2="700" stroke="white" stroke-width="5" opacity="0.5"/>
+            <line x1="60" y1="0" x2="75" y2="700" stroke="white" stroke-width="3" opacity="0.38"/>
+            <line x1="295" y1="80" x2="310" y2="700" stroke="white" stroke-width="3" opacity="0.38"/>
+            <path d="M0,170 L110,185 L230,155 L375,210" stroke="white" stroke-width="3" fill="none" opacity="0.38"/>
+            <ellipse cx="55" cy="520" rx="38" ry="22" fill="#a8d8ea" opacity="0.65"/>
+            <ellipse cx="310" cy="600" rx="28" ry="16" fill="#a8d8ea" opacity="0.55"/>
+          </svg>
+        </div>
+
+        <!-- Active filter chip floating on map -->
+        <div style="position:absolute;top:54px;right:14px;background:white;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:600;color:#16a34a;box-shadow:0 2px 10px rgba(0,0,0,0.13);z-index:8;display:flex;align-items:center;gap:6px">
+          🌿 טיולים
+          <span style="color:#cbd5e1;font-weight:400">|</span>
+          <span style="color:#94a3b8;font-weight:400;cursor:pointer">27 מקומות</span>
+        </div>
+
+        <!-- Markers -->
+        <div class="marker" style="left:135px;top:245px" onclick="showPoi('b')">
+          <div class="marker-pin" style="background:linear-gradient(135deg,#22c55e,#16a34a)"></div>
+          <div class="marker-label">גן לאומי עין גדי</div>
+        </div>
+        <div class="marker" style="left:248px;top:310px" onclick="showPoi('b')">
+          <div class="marker-pin" style="background:linear-gradient(135deg,#fb923c,#ea580c)"></div>
+          <div class="marker-label">מסעדת השף</div>
+        </div>
+        <div class="marker" style="left:170px;top:385px" onclick="showPoi('b')">
+          <div class="marker-pin" style="background:linear-gradient(135deg,#60a5fa,#2563eb)"></div>
+          <div class="marker-label">חניון מרכזי</div>
+        </div>
+        <div class="marker" style="left:82px;top:360px" onclick="showPoi('b')">
+          <div class="marker-pin" style="background:linear-gradient(135deg,#c084fc,#9333ea)"></div>
+          <div class="marker-label">מלון הצוק</div>
+        </div>
+
+        <!-- Zoom controls -->
+        <div class="map-zoom" style="bottom:100px">
+          <div class="zoom-btn">+</div>
+          <div class="zoom-btn">−</div>
+        </div>
+        <div style="position:absolute;left:14px;bottom:100px;z-index:8">
+          <div class="zoom-btn" style="font-size:16px">◎</div>
+        </div>
+
+        <!-- POI Detail Panel B (sits above tab bar) -->
+        <div class="poi-panel" id="poi-b" style="bottom:66px">
+          <div class="poi-inner">
+            <div class="bs-handle"></div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+              <div>
+                <div style="font-size:17px;font-weight:700;color:#1e293b">גן לאומי עין גדי</div>
+                <div style="font-size:13px;color:#16a34a;font-weight:500;margin-top:3px">🌿 טיולים</div>
+              </div>
+              <button class="close-btn" onclick="hidePoi('b')">×</button>
+            </div>
+            <div class="poi-image">📸 תמונה</div>
+            <p style="font-size:13px;color:#475569;line-height:1.65;margin-bottom:12px">שמורת טבע עם מפלי מים, צמחייה עשירה ונוף מדהים לים המלח.</p>
+            <div style="display:flex;gap:8px">
+              <button class="poi-action-btn" style="background:#16a34a;color:white">📞 חייג</button>
+              <button class="poi-action-btn" style="background:#eff6ff;color:#2563eb">🌐 אתר</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /tab-map-b -->
+
+      <!-- FILTER PANEL -->
+      <div class="tab-panel hidden" id="tab-filter-b" style="background:white;overflow-y:auto;padding-top:44px;padding-bottom:70px">
+        <div style="padding:16px 16px 0">
+          <!-- Header -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+            <div style="width:36px;height:36px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🌿</div>
+            <div>
+              <div style="font-size:16px;font-weight:700;color:#1e293b">קליק בטבע</div>
+              <div style="font-size:11px;color:#94a3b8">גלה את ישראל</div>
+            </div>
+          </div>
+
+          <!-- Search -->
+          <div class="search-box" style="margin-bottom:4px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            חפש מקום...
+          </div>
+
+          <!-- Categories -->
+          <div class="sec-label">קטגוריות</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;direction:rtl;margin-bottom:4px" id="cats-b">
+            <div class="cat-chip active" style="background:#dcfce7;color:#16a34a;justify-content:center" onclick="toggleCat(this);updateBadge()">🌿 טיולים</div>
+            <div class="cat-chip" style="background:#fff7ed;color:#ea580c;justify-content:center" onclick="toggleCat(this);updateBadge()">🍽 מסעדות</div>
+            <div class="cat-chip" style="background:#eff6ff;color:#2563eb;justify-content:center" onclick="toggleCat(this);updateBadge()">🅿 חניונים</div>
+            <div class="cat-chip" style="background:#faf5ff;color:#9333ea;justify-content:center" onclick="toggleCat(this);updateBadge()">🏨 מלונות</div>
+          </div>
+
+          <!-- Tags -->
+          <div class="sec-label">תגיות</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;direction:rtl;margin-bottom:4px" id="tags-b">
+            <div class="tag-pill" onclick="toggleTag(this);updateBadge()">משפחות</div>
+            <div class="tag-pill" onclick="toggleTag(this);updateBadge()">כלבים מותרים</div>
+            <div class="tag-pill" onclick="toggleTag(this);updateBadge()">חניה חינם</div>
+            <div class="tag-pill" onclick="toggleTag(this);updateBadge()">גישה לנכים</div>
+            <div class="tag-pill" onclick="toggleTag(this);updateBadge()">פיקניק</div>
+            <div class="tag-pill" onclick="toggleTag(this);updateBadge()">ביוגרפי</div>
+          </div>
+
+          <!-- Result count + back -->
+          <div style="margin-top:22px;background:#f8fafc;border-radius:14px;padding:16px;text-align:center">
+            <div style="font-size:14px;color:#64748b;margin-bottom:10px">מציג <strong style="color:#1e293b">27 מקומות</strong></div>
+            <button onclick="switchTab('b','map')" style="width:100%;background:#16a34a;color:white;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:600;font-family:Rubik;cursor:pointer">הצג במפה ←</button>
+          </div>
+        </div>
+      </div><!-- /tab-filter-b -->
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <div class="tab-btn active" id="tbtn-map-b" onclick="switchTab('b','map')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="3,6 9,3 15,6 21,3 21,18 15,21 9,18 3,21"/>
+            <line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>
+          </svg>
+          <span>מפה</span>
+        </div>
+        <div class="tab-btn" id="tbtn-filter-b" onclick="switchTab('b','filter')">
+          <div style="position:relative;display:inline-block">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+            </svg>
+            <div class="tab-badge" id="filter-badge-b">1</div>
+          </div>
+          <span>סינון</span>
+        </div>
+      </div>
+
+    </div><!-- /phone B -->
+    <p class="design-desc">שתי לשוניות: מפה וסינון. מסנן מוסתר מהמפה — מחייב מעבר בין מצבים.</p>
+  </div><!-- /design-col B -->
+
+
+  <!-- ====================================================
+       DESIGN C: TOP BAR (always visible)
+       ==================================================== -->
+  <div class="design-col" dir="rtl">
+    <div class="design-label">ג — סרגל עליון</div>
+
+    <div class="phone">
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="display:flex;gap:6px;align-items:center;font-size:12px">📶 🔋</span>
+      </div>
+
+      <!-- Map (full screen) -->
+      <div class="map-bg">
+        <svg viewBox="0 0 375 700" preserveAspectRatio="none">
+          <rect width="375" height="700" fill="#cfe8b5"/>
+          <rect x="0" y="440" width="375" height="260" fill="#c0e09e"/>
+          <path d="M0,330 Q120,290 250,310 T375,350" stroke="white" stroke-width="8" fill="none" opacity="0.65"/>
+          <line x1="190" y1="0" x2="205" y2="700" stroke="white" stroke-width="5" opacity="0.5"/>
+          <line x1="60" y1="0" x2="75" y2="700" stroke="white" stroke-width="3" opacity="0.38"/>
+          <line x1="295" y1="80" x2="310" y2="700" stroke="white" stroke-width="3" opacity="0.38"/>
+          <path d="M0,170 L110,185 L230,155 L375,210" stroke="white" stroke-width="3" fill="none" opacity="0.38"/>
+          <ellipse cx="55" cy="520" rx="38" ry="22" fill="#a8d8ea" opacity="0.65"/>
+          <ellipse cx="310" cy="600" rx="28" ry="16" fill="#a8d8ea" opacity="0.55"/>
+        </svg>
+      </div>
+
+      <!-- Markers (shifted down to clear the top bar) -->
+      <div class="marker" style="left:135px;top:320px" onclick="showPoi('c')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#22c55e,#16a34a)"></div>
+        <div class="marker-label">גן לאומי עין גדי</div>
+      </div>
+      <div class="marker" style="left:248px;top:390px" onclick="showPoi('c')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#fb923c,#ea580c)"></div>
+        <div class="marker-label">מסעדת השף</div>
+      </div>
+      <div class="marker" style="left:170px;top:460px" onclick="showPoi('c')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#60a5fa,#2563eb)"></div>
+        <div class="marker-label">חניון מרכזי</div>
+      </div>
+      <div class="marker" style="left:82px;top:435px" onclick="showPoi('c')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#c084fc,#9333ea)"></div>
+        <div class="marker-label">מלון הצוק</div>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="map-zoom" style="bottom:80px">
+        <div class="zoom-btn">+</div>
+        <div class="zoom-btn">−</div>
+      </div>
+      <div style="position:absolute;left:14px;bottom:80px;z-index:8">
+        <div class="zoom-btn" style="font-size:16px">◎</div>
+      </div>
+
+      <!-- Top filter bar -->
+      <div class="top-filter-bar">
+        <!-- Status bar spacer -->
+        <div style="height:44px"></div>
+        <!-- Search -->
+        <div style="padding:8px 14px 6px">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            חפש מקום...
+          </div>
+        </div>
+        <!-- Category chips -->
+        <div style="padding:2px 0 6px">
+          <div class="chip-row" dir="rtl" id="cats-c">
+            <div class="cat-chip active" style="background:#dcfce7;color:#16a34a" onclick="toggleCat(this)">🌿 טיולים</div>
+            <div class="cat-chip" style="background:#fff7ed;color:#ea580c" onclick="toggleCat(this)">🍽 מסעדות</div>
+            <div class="cat-chip" style="background:#eff6ff;color:#2563eb" onclick="toggleCat(this)">🅿 חניונים</div>
+            <div class="cat-chip" style="background:#faf5ff;color:#9333ea" onclick="toggleCat(this)">🏨 מלונות</div>
+          </div>
+        </div>
+        <!-- Tag row -->
+        <div style="padding:0 0 8px">
+          <div class="chip-row" dir="rtl" id="tags-c">
+            <div class="tag-pill" onclick="toggleTag(this)">משפחות</div>
+            <div class="tag-pill" onclick="toggleTag(this)">כלבים מותרים</div>
+            <div class="tag-pill" onclick="toggleTag(this)">חניה חינם</div>
+            <div class="tag-pill" onclick="toggleTag(this)">גישה לנכים</div>
+            <div class="tag-pill" onclick="toggleTag(this)">פיקניק</div>
+          </div>
+        </div>
+        <!-- Count bar -->
+        <div style="background:#f8fafc;border-top:1px solid #f1f5f9;padding:6px 14px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:12px;color:#64748b">27 מקומות</span>
+          <button onclick="clearAll('c')" style="font-size:11px;color:#16a34a;background:none;border:none;font-family:Rubik;cursor:pointer;font-weight:600">נקה הכל</button>
+        </div>
+      </div>
+
+      <!-- POI Detail Panel C -->
+      <div class="poi-panel" id="poi-c">
+        <div class="poi-inner">
+          <div class="bs-handle"></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+            <div>
+              <div style="font-size:17px;font-weight:700;color:#1e293b">גן לאומי עין גדי</div>
+              <div style="font-size:13px;color:#16a34a;font-weight:500;margin-top:3px">🌿 טיולים</div>
+            </div>
+            <button class="close-btn" onclick="hidePoi('c')">×</button>
+          </div>
+          <div class="poi-image">📸 תמונה</div>
+          <p style="font-size:13px;color:#475569;line-height:1.65;margin-bottom:12px">שמורת טבע עם מפלי מים, צמחייה עשירה ונוף מדהים לים המלח. פתוח כל ימות השבוע.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;direction:rtl">
+            <span style="background:#dcfce7;color:#16a34a;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:500">משפחות</span>
+            <span style="background:#dcfce7;color:#16a34a;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:500">חניה חינם</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="poi-action-btn" style="background:#16a34a;color:white">📞 חייג</button>
+            <button class="poi-action-btn" style="background:#eff6ff;color:#2563eb">🌐 אתר</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /phone C -->
+    <p class="design-desc">מסנן תמיד גלוי למעלה. מהיר לגישה, אבל מאכל שטח מפה.</p>
+  </div><!-- /design-col C -->
+
+
+  <!-- ====================================================
+       DESIGN ד: COLLAPSED SIDEBAR DRAWER
+       ==================================================== -->
+  <div class="design-col" dir="rtl">
+    <div class="design-label">ד — סרגל צד מתקפל</div>
+
+    <div class="phone">
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="display:flex;gap:6px;align-items:center;font-size:12px">📶 🔋</span>
+      </div>
+
+      <!-- Map (full screen) -->
+      <div class="map-bg">
+        <svg viewBox="0 0 375 700" preserveAspectRatio="none">
+          <rect width="375" height="700" fill="#cfe8b5"/>
+          <rect x="0" y="440" width="375" height="260" fill="#c0e09e"/>
+          <path d="M0,330 Q120,290 250,310 T375,350" stroke="white" stroke-width="8" fill="none" opacity="0.65"/>
+          <line x1="190" y1="0" x2="205" y2="700" stroke="white" stroke-width="5" opacity="0.5"/>
+          <line x1="60" y1="0" x2="75" y2="700" stroke="white" stroke-width="3" opacity="0.38"/>
+          <line x1="295" y1="80" x2="310" y2="700" stroke="white" stroke-width="3" opacity="0.38"/>
+          <path d="M0,170 L110,185 L230,155 L375,210" stroke="white" stroke-width="3" fill="none" opacity="0.38"/>
+          <ellipse cx="55" cy="520" rx="38" ry="22" fill="#a8d8ea" opacity="0.65"/>
+          <ellipse cx="310" cy="600" rx="28" ry="16" fill="#a8d8ea" opacity="0.55"/>
+        </svg>
+      </div>
+
+      <!-- Markers -->
+      <div class="marker" style="left:110px;top:260px" onclick="showPoi('d')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#22c55e,#16a34a)"></div>
+        <div class="marker-label">גן לאומי עין גדי</div>
+      </div>
+      <div class="marker" style="left:195px;top:330px" onclick="showPoi('d')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#fb923c,#ea580c)"></div>
+        <div class="marker-label">מסעדת השף</div>
+      </div>
+      <div class="marker" style="left:130px;top:410px" onclick="showPoi('d')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#60a5fa,#2563eb)"></div>
+        <div class="marker-label">חניון מרכזי</div>
+      </div>
+      <div class="marker" style="left:60px;top:390px" onclick="showPoi('d')">
+        <div class="marker-pin" style="background:linear-gradient(135deg,#c084fc,#9333ea)"></div>
+        <div class="marker-label">מלון הצוק</div>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="map-zoom" style="bottom:80px;right:auto;left:14px">
+        <div class="zoom-btn">+</div>
+        <div class="zoom-btn">−</div>
+      </div>
+
+      <!-- Backdrop (dim map when sidebar open) -->
+      <div id="overlay-d" onclick="closeSidebar()"
+        style="position:absolute;inset:0;background:rgba(0,0,0,0.28);z-index:18;
+               opacity:0;pointer-events:none;transition:opacity 0.32s;">
+      </div>
+
+      <!-- Tab strip — always fixed at right edge, never moves -->
+      <div id="tab-strip-d" onclick="toggleSidebar()" style="
+        position:absolute;top:0;right:0;bottom:0;width:44px;z-index:22;
+        background:white;box-shadow:-4px 0 18px rgba(0,0,0,0.13);
+        display:flex;flex-direction:column;align-items:center;padding-top:58px;
+        cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;">
+        <div id="hamburger-d" style="display:flex;flex-direction:column;gap:5px;align-items:center">
+          <div style="width:18px;height:2px;background:#64748b;border-radius:2px"></div>
+          <div style="width:18px;height:2px;background:#64748b;border-radius:2px"></div>
+          <div style="width:18px;height:2px;background:#64748b;border-radius:2px"></div>
+        </div>
+      </div>
+
+      <!-- Sidebar content — slides in from the right, behind the tab strip -->
+      <div id="sidebar-content-d" style="
+        position:absolute;top:0;right:44px;bottom:0;width:280px;z-index:21;
+        background:white;overflow-y:auto;display:flex;flex-direction:column;
+        transform:translateX(280px);
+        transition:transform 0.32s cubic-bezier(0.25,0.46,0.45,0.94);">
+        <div style="flex:1;display:flex;flex-direction:column;">
+          <!-- App header -->
+          <div style="padding:52px 16px 12px;border-bottom:1px solid #f1f5f9;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+              <div style="width:34px;height:34px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🌿</div>
+              <div>
+                <div style="font-size:15px;font-weight:700;color:#1e293b">קליק בטבע</div>
+                <div style="font-size:11px;color:#94a3b8">גלה את ישראל</div>
+              </div>
+            </div>
+            <!-- Search -->
+            <div class="search-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              חפש מקום...
+            </div>
+          </div>
+
+          <!-- Categories -->
+          <div style="padding:12px 14px 0">
+            <div class="sec-label" style="margin-top:4px">קטגוריות</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;direction:rtl;margin-bottom:0" id="cats-d">
+              <div class="cat-chip active" style="background:#dcfce7;color:#16a34a;justify-content:center;font-size:12px" onclick="toggleCat(this)">🌿 טיולים</div>
+              <div class="cat-chip" style="background:#fff7ed;color:#ea580c;justify-content:center;font-size:12px" onclick="toggleCat(this)">🍽 מסעדות</div>
+              <div class="cat-chip" style="background:#eff6ff;color:#2563eb;justify-content:center;font-size:12px" onclick="toggleCat(this)">🅿 חניונים</div>
+              <div class="cat-chip" style="background:#faf5ff;color:#9333ea;justify-content:center;font-size:12px" onclick="toggleCat(this)">🏨 מלונות</div>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div style="padding:4px 14px 12px">
+            <div class="sec-label">תגיות</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;direction:rtl" id="tags-d">
+              <div class="tag-pill" onclick="toggleTag(this)">משפחות</div>
+              <div class="tag-pill" onclick="toggleTag(this)">כלבים מותרים</div>
+              <div class="tag-pill" onclick="toggleTag(this)">חניה חינם</div>
+              <div class="tag-pill" onclick="toggleTag(this)">גישה לנכים</div>
+              <div class="tag-pill" onclick="toggleTag(this)">פיקניק</div>
+            </div>
+          </div>
+
+          <!-- Footer count -->
+          <div style="margin-top:auto;padding:12px 14px 20px;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:13px;color:#64748b">מציג <strong style="color:#1e293b">27 מקומות</strong></span>
+            <button onclick="clearAllD()" style="font-size:12px;color:#16a34a;background:none;border:none;font-family:Rubik;cursor:pointer;font-weight:600;padding:6px 10px">נקה הכל</button>
+          </div>
+        </div>
+      </div><!-- /sidebar-content-d -->
+
+      <!-- POI Detail Panel D -->
+      <div class="poi-panel" id="poi-d">
+        <div class="poi-inner">
+          <div class="bs-handle"></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+            <div>
+              <div style="font-size:17px;font-weight:700;color:#1e293b">גן לאומי עין גדי</div>
+              <div style="font-size:13px;color:#16a34a;font-weight:500;margin-top:3px">🌿 טיולים</div>
+            </div>
+            <button class="close-btn" onclick="hidePoi('d')">×</button>
+          </div>
+          <div class="poi-image">📸 תמונה</div>
+          <p style="font-size:13px;color:#475569;line-height:1.65;margin-bottom:12px">שמורת טבע עם מפלי מים, צמחייה עשירה ונוף מדהים לים המלח. פתוח כל ימות השבוע.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;direction:rtl">
+            <span style="background:#dcfce7;color:#16a34a;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:500">משפחות</span>
+            <span style="background:#dcfce7;color:#16a34a;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:500">חניה חינם</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="poi-action-btn" style="background:#16a34a;color:white">📞 חייג</button>
+            <button class="poi-action-btn" style="background:#eff6ff;color:#2563eb">🌐 אתר</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /phone D -->
+    <p class="design-desc">מפה מלאה עם סרגל צד מתקפל. הכי קרוב לחוויית הדסקטופ — רק לחיצה על הטאב מרחיבה את הסרגל.</p>
+  </div><!-- /design-col D -->
+
+</div><!-- /designs-row -->
+
+<script>
+  // ---- Design A: Bottom sheet ----
+  const bsStates = { a: 'peek' };
+  function toggleBs(id) {
+    const el = document.getElementById('bs-' + id);
+    if (bsStates[id] === 'peek') {
+      el.className = 'bs open'; bsStates[id] = 'open';
+    } else {
+      el.className = 'bs peek'; bsStates[id] = 'peek';
+    }
+  }
+
+  // ---- Chips & pills ----
+  function toggleCat(el) { el.classList.toggle('active'); }
+  function toggleTag(el) { el.classList.toggle('active'); }
+  function clearAll(phone) {
+    const cats = document.querySelectorAll('#cats-' + phone + ' .cat-chip');
+    const tags = document.querySelectorAll('#tags-' + phone + ' .tag-pill');
+    cats.forEach(c => c.classList.remove('active'));
+    tags.forEach(t => t.classList.remove('active'));
+    updateBadge();
+  }
+
+  // ---- Design B: filter badge ----
+  function updateBadge() {
+    const activeCats = document.querySelectorAll('#cats-b .cat-chip.active').length;
+    const activeTags = document.querySelectorAll('#tags-b .tag-pill.active').length;
+    const total = activeCats + activeTags;
+    const badge = document.getElementById('filter-badge-b');
+    badge.textContent = total;
+    badge.style.display = total > 0 ? 'block' : 'none';
+  }
+  updateBadge();
+
+  // ---- Design B: tab switching ----
+  function switchTab(phone, tab) {
+    const mapPanel    = document.getElementById('tab-map-b');
+    const filterPanel = document.getElementById('tab-filter-b');
+    const mapBtn      = document.getElementById('tbtn-map-b');
+    const filterBtn   = document.getElementById('tbtn-filter-b');
+    const poiPanel    = document.getElementById('poi-b');
+
+    if (tab === 'map') {
+      mapPanel.classList.remove('hidden');
+      filterPanel.classList.add('hidden');
+      mapBtn.classList.add('active');
+      filterBtn.classList.remove('active');
+    } else {
+      filterPanel.classList.remove('hidden');
+      mapPanel.classList.add('hidden');
+      mapBtn.classList.remove('active');
+      filterBtn.classList.add('active');
+      poiPanel.classList.remove('visible');
+    }
+  }
+
+  // ---- POI detail ----
+  function showPoi(phone) {
+    document.getElementById('poi-' + phone).classList.add('visible');
+    // Collapse sheet A when POI opens
+    if (phone === 'a' && bsStates['a'] === 'open') {
+      document.getElementById('bs-a').className = 'bs peek';
+      bsStates['a'] = 'peek';
+    }
+  }
+  function hidePoi(phone) {
+    document.getElementById('poi-' + phone).classList.remove('visible');
+  }
+
+  // ---- Design D: Collapsible sidebar ----
+  let sidebarOpen = false;
+  function toggleSidebar() {
+    sidebarOpen = !sidebarOpen;
+    _applySidebarD();
+  }
+  function closeSidebar() {
+    sidebarOpen = false;
+    _applySidebarD();
+  }
+  function _applySidebarD() {
+    const content   = document.getElementById('sidebar-content-d');
+    const overlay   = document.getElementById('overlay-d');
+    const hamburger = document.getElementById('hamburger-d');
+    // Content slides in/out independently; tab strip stays fixed
+    content.style.transform     = sidebarOpen ? 'translateX(0)' : 'translateX(280px)';
+    overlay.style.opacity       = sidebarOpen ? '1' : '0';
+    overlay.style.pointerEvents = sidebarOpen ? 'auto' : 'none';
+    hamburger.innerHTML = sidebarOpen
+      ? '<div style="width:18px;height:2px;background:#475569;border-radius:2px;transform:rotate(45deg) translate(3px,3px)"></div><div style="width:18px;height:2px;background:#475569;border-radius:2px;transform:rotate(-45deg) translate(3px,-3px)"></div>'
+      : '<div style="width:18px;height:2px;background:#64748b;border-radius:2px"></div><div style="width:18px;height:2px;background:#64748b;border-radius:2px"></div><div style="width:18px;height:2px;background:#64748b;border-radius:2px"></div>';
+  }
+
+  function clearAllD() {
+    document.querySelectorAll('#cats-d .cat-chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#tags-d .tag-pill').forEach(t => t.classList.remove('active'));
+  }
+</script>
+</body>
+</html>
