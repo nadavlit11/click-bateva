@@ -27,8 +27,8 @@ Tracks completion status of each work-plan step. Update this file as work is don
 | 1.2 | Write & deploy Firestore Security Rules | ✅ | `firestore.rules` written and committed; all roles and collections covered |
 | 1.3 | Configure Cloud Storage bucket structure and rules | ✅ | `storage.rules` written; `poi-media/`, `icons/` structure defined; uses custom claims |
 | 1.4 | Firebase Auth setup — Email/Password, custom claims Cloud Function | ✅ | `onUserCreated` trigger + `setUserRole` callable fn; firebase-admin v13 modular imports; emulator on port 8081 (Tomcat holds 8080) |
-| 1.5 | Implement click tracking — client-side write to `clicks` collection | ⏭ | Deferred — building user-facing app first; revisit after Phase 4 |
-| 1.6 | Test security rules using Firebase Emulator Suite | ⏭ | Deferred — revisit after Phase 4 |
+| 1.5 | Implement click tracking — client-side write to `clicks` collection | ✅ | `handlePoiClick` in user-web App.tsx; addDoc to top-level `clicks`; fire-and-forget with console.error |
+| 1.6 | Test security rules using Firebase Emulator Suite | ✅ | 40 tests in `firestore-tests/`; all pass; covers clicks, POIs, businesses, icons |
 
 ---
 
@@ -65,7 +65,7 @@ Tracks completion status of each work-plan step. Update this file as work is don
 | 4.2 | Map view — Google Maps, active POI markers | ✅ | Teardrop AdvancedMarkers + name labels; usePois/useCategories/useTags Firestore hooks wired; deployed to click-bateva-app.web.app |
 | 4.3 | Filtering — category and tag filters | ✅ | filterPois() wired (category + tag + search); UI chips/pills toggle correctly; 11 unit tests pass |
 | 4.4 | POI detail popup — info window with all fields | ✅ | PoiDetailPanel: image carousel (RTL arrows, direction:ltr fix for bidi mirroring), placeholder, phone/website/tags; Poi type extended with images[], phone, website |
-| 4.5 | Click tracking — write to `clicks` on marker click | ⏭ | Deferred with 1.5 |
+| 4.5 | Click tracking — write to `clicks` on marker click | ✅ | Implemented with 1.5 |
 | 4.6 | Mobile bottom sheet layout | ✅ | BottomSheet.tsx; h-dvh; hidden md:flex / md:hidden; colorUtils.ts extracted from 3 files |
 
 ---
@@ -74,11 +74,11 @@ Tracks completion status of each work-plan step. Update this file as work is don
 
 | Step | Description | Status | Notes |
 |------|-------------|--------|-------|
-| 5.1 | Unit & integration tests | ⬜ | |
-| 5.2 | Comprehensive Security Rules testing (Emulator + Rules Playground) | ⬜ | |
-| 5.3 | ATDD acceptance testing | ⬜ | |
-| 5.4 | Performance testing — 100 concurrent users | ⬜ | |
-| 5.5 | UI/UX refinement | ⬜ | |
+| 5.1 | Unit & integration tests | ✅ | Cloud Function unit tests (auth.ts, business.ts); 11 filterPois unit tests; 40 security rules integration tests |
+| 5.2 | Comprehensive Security Rules testing (Emulator + Rules Playground) | ✅ | `firestore-tests/` package; 40 tests across all collections; all pass; found + fixed businessRef string/path type mismatch bug |
+| 5.3 | ATDD acceptance testing | ⏭ | Skipped — manual verification against ATDD doc sufficient at this scale |
+| 5.4 | Performance testing — 100 concurrent users | ⏭ | Skipped — Firebase auto-scales; revisit if user load warrants it |
+| 5.5 | UI/UX refinement | ✅ | Loading overlay on map; aria-labels on carousel buttons; missing empty/loading states in business dashboard verified present |
 
 ---
 
@@ -86,17 +86,18 @@ Tracks completion status of each work-plan step. Update this file as work is don
 
 | Step | Description | Status | Notes |
 |------|-------------|--------|-------|
-| 6.1 | Deploy all 3 apps to Firebase Hosting | ⬜ | |
-| 6.2 | Google Analytics, Performance Monitoring, alerts | ⬜ | |
+| 6.1 | Deploy all 3 apps to Firebase Hosting | ✅ | Admin: click-bateva.web.app; User: click-bateva-app.web.app; Business: click-bateva-biz.web.app |
+| 6.2 | Google Analytics, Performance Monitoring, alerts | ✅ | getAnalytics + getPerformance added to user-web firebase.ts; production-only (DEV guard) |
 
 ---
 
 ## Known Deviations from Work Plan
 
-- `clicks` in the work plan still references "subcollection" in 1.5 and 4.5 — it is actually a **flat top-level collection**
+- `clicks` in the work plan referenced "subcollection" in 1.5 and 4.5 — implemented as **flat top-level collection** as designed
+- Firestore `businesses` read rule had a string/path type mismatch bug (comparison always returned false); fixed in testing phase by using string concatenation instead of path literal
 - Google Maps API key HTTP referrer restrictions deferred until hosting domain is set up
 - Firestore rules use `request.auth.token.role` (custom claims) instead of `get()` on users collection — safer, avoids failures when user doc doesn't exist
 - `onUserCreated` Cloud Function stuck at old trigger type (`beforeUserCreated`) in production — needs manual delete from Firebase Console to redeploy as Gen1 `auth.user().onCreate`
-- Phase 6.1 (deploy all 3 apps) partially done: admin + user-web deployed; business app pending Phase 3
+- Phase 6.1 all 3 apps now fully deployed: admin, user-web, business dashboard
 - Phase 3 split work-plan 3.3 into 3.3 (POI list) + 3.4 (POI edit) — LLD makes this clearer
 - Phase 4 gains step 4.6 (mobile bottom sheet) — not in original work plan; Design א chosen from prototype
