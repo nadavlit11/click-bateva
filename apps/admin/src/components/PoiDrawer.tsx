@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { MapPicker } from './MapPicker.tsx'
 import {
   collection,
   addDoc,
@@ -287,28 +288,11 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, onSaved }: P
             {/* Location */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">מיקום</label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <input
-                    type="number"
-                    step="any"
-                    value={form.lat}
-                    onChange={e => set('lat', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                    placeholder="קו רוחב"
-                  />
-                </div>
-                <div className="flex-1">
-                  <input
-                    type="number"
-                    step="any"
-                    value={form.lng}
-                    onChange={e => set('lng', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                    placeholder="קו אורך"
-                  />
-                </div>
-              </div>
+              <MapPicker
+                lat={form.lat}
+                lng={form.lng}
+                onChange={(lat, lng) => setForm(prev => ({ ...prev, lat, lng }))}
+              />
             </div>
 
             {/* Main Image */}

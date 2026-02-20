@@ -46,3 +46,8 @@ coverage/
 
 # Misc
 .cache/
+
+# Firebase service account keys (never commit)
+serviceAccount.json
+*serviceAccount*.json
+*service-account*.json

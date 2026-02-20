@@ -33,7 +33,19 @@ initializeApp({ credential: cert(credPath) })
 const adminAuth = getAuth()
 const db = getFirestore()
 
-await adminAuth.setCustomUserClaims(uid, { role: 'admin' })
-await db.collection('users').doc(uid).set({ role: 'admin' }, { merge: true })
+try {
+  await adminAuth.setCustomUserClaims(uid, { role: 'admin' })
+  console.log(`✓ Custom claim set for ${uid}`)
+} catch (err) {
+  console.error(`✗ Failed to set custom claim: ${err.message}`)
+  process.exit(1)
+}
 
-console.log(`✓ Set ${uid} as admin. The user must sign out and back in for the new token to take effect.`)
+try {
+  await db.collection('users').doc(uid).set({ role: 'admin' }, { merge: true })
+  console.log(`✓ Firestore users/${uid} updated`)
+} catch (err) {
+  console.warn(`⚠ Firestore write skipped (Firestore may not be initialized yet): ${err.message}`)
+}
+
+console.log(`✓ Done. The user must sign out and back in for the new token to take effect.`)

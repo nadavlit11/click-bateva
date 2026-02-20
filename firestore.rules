@@ -10,7 +10,7 @@ service cloud.firestore {
     }
 
     function userRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return request.auth.token.role;
     }
 
     function isAdmin() {
@@ -91,7 +91,7 @@ service cloud.firestore {
       // Admin can read all; business users can read their own business only
       allow read: if isAdmin() ||
         (isBusinessUser() &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessRef ==
+         request.auth.token.businessRef ==
            /databases/$(database)/documents/businesses/$(businessId)
         );
     }

@@ -16,7 +16,7 @@ const VALID_ROLES = ["admin", "content_manager", "business_user", "standard_user
 type Role = (typeof VALID_ROLES)[number];
 
 /**
- * Auth trigger: fires when a new Firebase Auth user is created.
+ * Auth trigger (Gen1): fires when a new Firebase Auth user is created.
  * Creates a Firestore user document and sets the default custom claim.
  */
 export const onUserCreated = auth.user().onCreate(async (user) => {
