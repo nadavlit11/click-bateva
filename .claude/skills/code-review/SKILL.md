@@ -51,6 +51,8 @@ Prompt:
 > - Firestore rules use `get(/databases/$(database)/documents/users/$(request.auth.uid))` for role checks
 > - Denormalize fields (e.g. `iconUrl` on categories) rather than doing extra reads at query time
 > - `clicks` documents must have exactly: `poiId`, `categoryId`, `timestamp`
+> - `businesses` documents must have `associatedUserIds: string[]` (checked by POI update rule)
+> - `createBusinessUser` Cloud Function must set BOTH `role` AND `businessRef` custom claims; `businessRef` format: `/databases/(default)/documents/businesses/${uid}`
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >

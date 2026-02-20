@@ -41,7 +41,7 @@ Tracks completion status of each work-plan step. Update this file as work is don
 | 2.3 | Icon management — upload, list, delete; `icons` Firestore collection | ✅ | IconsPage: upload to Storage + Firestore doc; list with delete; Storage rules use custom claims |
 | 2.4 | Categories & Tags management — CRUD + icon dropdown | ✅ | CategoryModal + TagModal; icon picker from Firestore; color picker; tags are simple name-only |
 | 2.5 | POI management — CRUD, media upload, map-click + geocoding location | ✅ | PoiDrawer: full CRUD; Cloud Storage image upload; MapPicker (Leaflet + Nominatim) replaces bare lat/lng inputs |
-| 2.6 | Business account management — Firestore records + Auth user creation | ⬜ | |
+| 2.6 | Business account management — Firestore records + Auth user creation | ✅ | `createBusinessUser` callable fn; sets `role` + `businessRef` custom claims; `businesses/{uid}` with `associatedUserIds: [uid]`; BusinessesPage + BusinessModal in admin |
 | 2.7 | Click analytics — total, per-category, per-POI clicks | ⬜ | |
 
 ---
@@ -52,7 +52,8 @@ Tracks completion status of each work-plan step. Update this file as work is don
 |------|-------------|--------|-------|
 | 3.1 | Project scaffold — `apps/business`, routing, auth guards | ⬜ | |
 | 3.2 | Auth — Login/logout, business role redirect | ⬜ | |
-| 3.3 | POI editing — assigned POIs only, restricted fields | ⬜ | |
+| 3.3 | POI list — assigned POIs by businessId | ⬜ | |
+| 3.4 | POI edit — restricted fields + image upload | ⬜ | |
 
 ---
 
@@ -65,6 +66,7 @@ Tracks completion status of each work-plan step. Update this file as work is don
 | 4.3 | Filtering — category and tag filters | ✅ | filterPois() wired (category + tag + search); UI chips/pills toggle correctly; 11 unit tests pass |
 | 4.4 | POI detail popup — info window with all fields | ✅ | PoiDetailPanel: image carousel (RTL arrows, direction:ltr fix for bidi mirroring), placeholder, phone/website/tags; Poi type extended with images[], phone, website |
 | 4.5 | Click tracking — write to `clicks` on marker click | ⏭ | Deferred with 1.5 |
+| 4.6 | Mobile bottom sheet layout | ⬜ | Design א (bottom sheet) chosen from prototype; LLD in docs/lld-user-web.md §11 |
 
 ---
 
@@ -96,3 +98,5 @@ Tracks completion status of each work-plan step. Update this file as work is don
 - Firestore rules use `request.auth.token.role` (custom claims) instead of `get()` on users collection — safer, avoids failures when user doc doesn't exist
 - `onUserCreated` Cloud Function stuck at old trigger type (`beforeUserCreated`) in production — needs manual delete from Firebase Console to redeploy as Gen1 `auth.user().onCreate`
 - Phase 6.1 (deploy all 3 apps) partially done: admin + user-web deployed; business app pending Phase 3
+- Phase 3 split work-plan 3.3 into 3.3 (POI list) + 3.4 (POI edit) — LLD makes this clearer
+- Phase 4 gains step 4.6 (mobile bottom sheet) — not in original work plan; Design א chosen from prototype

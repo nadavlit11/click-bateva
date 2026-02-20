@@ -208,6 +208,31 @@ const app = initializeApp({ projectId: "click-bateva", apiKey: "test-key" }, `te
 
 ---
 
+## Business user custom claims
+
+Business users require TWO custom claims, not just `role`:
+
+```ts
+const businessRef = `/databases/(default)/documents/businesses/${uid}`;
+await adminAuth.setCustomUserClaims(uid, { role: "business_user", businessRef });
+```
+
+The `businessRef` path is checked by the Firestore `businesses` read rule:
+```
+request.auth.token.businessRef == /databases/$(database)/documents/businesses/$(businessId)
+```
+
+**Gotcha:** Setting only `{ role: "business_user" }` will cause the business dashboard `AuthGuard` to fail when reading the business document — the Firestore rule will deny the read.
+
+The `businesses/{uid}` document must also include `associatedUserIds: [uid]` — checked by the POI update rule:
+```
+get(...businesses/...).data.associatedUserIds.hasAny([request.auth.uid])
+```
+
+Mirror `businessRef` in the `users/{uid}` Firestore doc for auditability.
+
+---
+
 ## Dual role system
 
 Roles are stored in **two places** that must stay in sync:
