@@ -9,7 +9,7 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
-import type { Poi, Category, Tag } from '../types/index.ts'
+import type { Poi, Category, Tag, Business } from '../types/index.ts'
 
 interface Props {
   isOpen: boolean
@@ -17,6 +17,7 @@ interface Props {
   poi: Poi | null
   categories: Category[]
   tags: Tag[]
+  businesses: Business[]
   onSaved: () => void
 }
 
@@ -58,13 +59,14 @@ const INITIAL_FORM: FormState = {
   price: '',
 }
 
-export function PoiDrawer({ isOpen, onClose, poi, categories, tags, onSaved }: Props) {
+export function PoiDrawer({ isOpen, onClose, poi, categories, tags, businesses, onSaved }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [uploadingMainImage, setUploadingMainImage] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
   const [uploadingVideos, setUploadingVideos] = useState(false)
+  const [businessSearch, setBusinessSearch] = useState('')
 
   const mainImageRef = useRef<HTMLInputElement>(null)
   const imagesRef = useRef<HTMLInputElement>(null)
@@ -94,6 +96,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, onSaved }: P
       setForm(INITIAL_FORM)
     }
     setError('')
+    setBusinessSearch('')
   }, [poi, isOpen])
 
   function set(field: keyof FormState, value: FormState[typeof field]) {
@@ -272,6 +275,43 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, onSaved }: P
                 ))}
               </select>
             </div>
+
+            {/* Business */}
+            {businesses.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">עסק משויך</label>
+                <input
+                  type="text"
+                  value={businessSearch}
+                  onChange={e => setBusinessSearch(e.target.value)}
+                  placeholder="חיפוש עסק..."
+                  className="w-full border border-gray-300 rounded-t-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 border-b-0"
+                />
+                <select
+                  value={form.businessId}
+                  onChange={e => set('businessId', e.target.value)}
+                  size={4}
+                  className="w-full border border-gray-300 rounded-b-lg px-3 py-1 text-sm focus:outline-none focus:border-green-500 bg-white"
+                >
+                  <option value="">— ללא עסק —</option>
+                  {businesses
+                    .filter(b => { const q = businessSearch.toLowerCase(); return b.name.toLowerCase().includes(q) || b.email.toLowerCase().includes(q) })
+                    .map(b => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))
+                  }
+                </select>
+                {form.businessId && (
+                  <button
+                    type="button"
+                    onClick={() => set('businessId', '')}
+                    className="mt-1 text-xs text-red-500 hover:text-red-700"
+                  >
+                    נקה שיוך
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Description */}
             <div>
