@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore'
-import { db } from '../lib/firebase.ts'
+import { httpsCallable } from 'firebase/functions'
+import { db, functions } from '../lib/firebase.ts'
 import type { Business } from '../types/index.ts'
 import { BusinessModal } from '../components/BusinessModal.tsx'
+
+const deleteBusinessUserFn = httpsCallable<{ uid: string }, { uid: string }>(functions, 'deleteBusinessUser')
 
 export function BusinessesPage() {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     const q = query(collection(db, 'businesses'), orderBy('createdAt', 'desc'))
@@ -24,6 +28,19 @@ export function BusinessesPage() {
       }
     )
   }, [])
+
+  async function handleDelete(business: Business) {
+    if (!window.confirm(`למחוק את העסק "${business.name}"? פעולה זו אינה הפיכה.`)) return
+    setDeletingId(business.id)
+    try {
+      await deleteBusinessUserFn({ uid: business.id })
+    } catch (err: unknown) {
+      alert('שגיאה במחיקת העסק')
+      console.error(err)
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   function openAdd() {
     setModalOpen(true)
@@ -56,12 +73,13 @@ export function BusinessesPage() {
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="text-right px-4 py-3 font-medium text-gray-600">שם העסק</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">אימייל</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
               {businesses.length === 0 && (
                 <tr>
-                  <td colSpan={2} className="text-center py-10 text-gray-400">
+                  <td colSpan={3} className="text-center py-10 text-gray-400">
                     אין עסקים עדיין
                   </td>
                 </tr>
@@ -70,6 +88,15 @@ export function BusinessesPage() {
                 <tr key={business.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-900">{business.name}</td>
                   <td className="px-4 py-3 text-gray-600">{business.email}</td>
+                  <td className="px-4 py-3 text-left">
+                    <button
+                      onClick={() => handleDelete(business)}
+                      disabled={deletingId === business.id}
+                      className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-40"
+                    >
+                      {deletingId === business.id ? '...' : 'מחק'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

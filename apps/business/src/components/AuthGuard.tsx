@@ -20,7 +20,7 @@ export function AuthGuard() {
         return
       }
       try {
-        const { claims } = await user.getIdTokenResult()
+        const { claims } = await user.getIdTokenResult(true)
         const role = claims.role as string | undefined
 
         if (role !== 'business_user') {

@@ -86,3 +86,42 @@ export const createBusinessUser = onCall({ cors: true }, async (request) => {
 
   return { uid };
 });
+
+/**
+ * Callable function: admin-only — deletes a business user account.
+ * Deletes the Firebase Auth user and atomically removes the user + business documents.
+ */
+export const deleteBusinessUser = onCall({ cors: true }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Must be authenticated.");
+  }
+  if (request.auth.token.role !== "admin") {
+    throw new HttpsError("permission-denied", "Only admins can delete business users.");
+  }
+
+  const { uid } = request.data as { uid: unknown };
+  if (typeof uid !== "string" || !uid.trim()) {
+    throw new HttpsError("invalid-argument", "uid must be a non-empty string.");
+  }
+
+  try {
+    await adminAuth.deleteUser(uid);
+  } catch (err: unknown) {
+    const code = (err as { code?: string }).code ?? "";
+    if (code === "auth/user-not-found") {
+      // Auth user already gone — still clean up Firestore
+    } else {
+      logger.error("Unexpected error deleting Firebase Auth user", err);
+      throw new HttpsError("internal", "Failed to delete user.");
+    }
+  }
+
+  const batch = db.batch();
+  batch.delete(db.collection("users").doc(uid));
+  batch.delete(db.collection("businesses").doc(uid));
+  await batch.commit();
+
+  logger.info("Business user deleted", { uid, by: request.auth.uid });
+
+  return { uid };
+});
