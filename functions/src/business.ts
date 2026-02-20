@@ -11,7 +11,7 @@ const db = getFirestore();
  * Creates a Firebase Auth user, sets the business_user custom claim, and
  * atomically writes user and business documents to Firestore.
  */
-export const createBusinessUser = onCall(async (request) => {
+export const createBusinessUser = onCall({ cors: true }, async (request) => {
   // Verify caller is authenticated
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
