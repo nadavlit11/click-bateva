@@ -1,6 +1,8 @@
 # bug-retro
 
-Run this after fixing any non-trivial bug. The goal is to make sure the same bug can never slip through again.
+Run this after fixing **any** bug — including small ones. The goal is to make sure the same bug can never slip through again, and that the fix didn't break anything.
+
+> **Rule:** No bug fix gets committed without (1) running the code-review skill and (2) running relevant tests. No exceptions.
 
 ---
 
@@ -47,11 +49,37 @@ If no existing subagent fits, add the rule to Subagent C.
 
 ---
 
-## Step 4 — Commit
+## Step 4 — Code review the fix
+
+Run the `/code-review` skill on the bug fix diff before committing. Do not skip this even for one-line changes.
+
+---
+
+## Step 5 — Run relevant tests
 
 ```bash
-git add .claude/skills/code-review/SKILL.md
-git commit -m "chore: encode bug lesson — <one-line summary of the rule added>"
+# Cloud Function changes:
+cd functions && npm test
+
+# Firestore Security Rules changes:
+cd firestore-tests && npm test   # requires: firebase emulators:start --only firestore
+
+# User-web logic changes:
+cd apps/user-web && npm test
+```
+
+Run whichever test suite covers the changed code. All tests must pass before committing.
+
+---
+
+## Step 6 — Commit (fix + lesson together)
+
+```bash
+# Stage the fix files + the updated code-review skill
+git add <fix files> .claude/skills/code-review/SKILL.md
+git commit -m "fix: <description>
+
+chore: encode bug lesson — <one-line summary of the rule added>"
 ```
 
 ---
@@ -60,5 +88,7 @@ git commit -m "chore: encode bug lesson — <one-line summary of the rule added>
 
 - [ ] Bug described: symptom + root cause + fix
 - [ ] Root cause classified
+- [ ] Code-review skill run on the fix — all subagents PASS
+- [ ] Relevant tests run and passing
 - [ ] Concrete rule added to the right code-review subagent
 - [ ] Committed

@@ -135,9 +135,28 @@ Prompt:
 
 ---
 
-## Step 4 — Commit and push
+## Step 4 — Run relevant tests
 
-Once all subagents pass:
+Before committing, run whichever test suite covers the changed code:
+
+```bash
+# Cloud Function changes:
+cd functions && npm test
+
+# Firestore Security Rules changes:
+cd firestore-tests && npm test   # requires: firebase emulators:start --only firestore
+
+# User-web logic changes (filterPois etc.):
+cd apps/user-web && npm test
+```
+
+All tests must pass. If any fail, fix them before proceeding.
+
+---
+
+## Step 5 — Commit and push
+
+Once all subagents pass AND tests pass:
 
 ```bash
 git commit -m "<type>: <description>"
