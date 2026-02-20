@@ -305,7 +305,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, businesses, 
                   <button
                     type="button"
                     onClick={() => set('businessId', '')}
-                    className="mt-1 text-xs text-red-500 hover:text-red-700"
+                    className="mt-1 text-xs text-gray-400 hover:text-gray-600 underline"
                   >
                     נקה שיוך
                   </button>
