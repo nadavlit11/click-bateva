@@ -9,6 +9,7 @@ const NAV = [
   { path: '/tags',        label: 'תגיות',         end: false },
   { path: '/icons',       label: 'אייקונים',      end: false },
   { path: '/businesses',  label: 'עסקים',         end: false },
+  { path: '/analytics',  label: 'אנליטיקס',      end: true },
 ]
 
 export function Sidebar() {

@@ -4,6 +4,7 @@ import { AppLayout } from './components/Layout/AppLayout.tsx'
 import { LoginPage } from './pages/LoginPage.tsx'
 import { ErrorPage } from './pages/ErrorPage.tsx'
 import { PoisListPage } from './pages/PoisListPage.tsx'
+import { PoiEditPage } from './pages/PoiEditPage.tsx'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route element={<AuthGuard />}>
           <Route element={<AppLayout />}>
             <Route index element={<PoisListPage />} />
+            <Route path="/pois/:poiId" element={<PoiEditPage />} />
           </Route>
         </Route>
       </Routes>

@@ -19,7 +19,7 @@ Stage any missing files before reviewing. **Always check `git status` first** �
 
 ## Step 2 — Spawn subagents in parallel
 
-Launch all three at the same time with the Task tool:
+Launch all four at the same time with the Task tool:
 
 ### Subagent A — Security Review
 
@@ -87,6 +87,30 @@ Prompt:
 > Diff:
 > [paste diff]
 
+### Subagent D — Test Coverage
+
+Prompt:
+> Review the following git diff and determine whether the new logic has adequate test coverage.
+>
+> **What must be tested:**
+> - Cloud Functions (callable + triggers): every exported function needs a unit test covering the happy path and key error cases
+> - `filterPois` and other pure utility functions: unit tests for each logical branch
+> - Firestore Security Rules changes: integration test using the emulator for each new rule or rule change (allow + deny case)
+>
+> **What does NOT need tests (acceptable to skip):**
+> - React UI components (no component tests in this project)
+> - Firebase config / boilerplate files (`firebase.ts`, `main.tsx`, etc.)
+> - Type-only files (`types/index.ts`)
+> - Simple CRUD pages that only wire existing SDK calls (Firestore `getDocs`/`onSnapshot`/`updateDoc` with no business logic)
+> - Routing and layout scaffolding
+>
+> For each piece of logic that requires a test, check if a corresponding test file exists in the diff (or already exists in the repo if you can verify). Output PASS if all required tests are present or if nothing testable was added. Output FAIL with a specific list of missing tests otherwise.
+>
+> Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
+>
+> Diff:
+> [paste diff]
+
 ---
 
 ## Step 3 — Aggregate results
@@ -96,10 +120,11 @@ Prompt:
 | A — Security | PASS / FAIL |
 | B — Patterns | PASS / FAIL |
 | C — Code Quality | PASS / FAIL |
+| D — Test Coverage | PASS / FAIL |
 
 **If all PASS** → proceed to commit.
 
-**If any FAIL** → fix all findings, re-stage, and re-run this skill before committing.
+**If any FAIL** → fix all findings (or write the missing tests), re-stage, and re-run this skill before committing.
 
 ---
 

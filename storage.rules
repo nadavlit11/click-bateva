@@ -33,12 +33,15 @@ service firebase.storage {
 
     // ─── poi-media/ ─────────────────────────────────────────────────────────
     // Admin and content managers can upload/delete any POI media
+    // Business users can upload images for their assigned POIs
     // Anyone can read (POI images displayed publicly)
-    // TODO Phase 3: add business_user write scope for their own poi-media paths
+    // Note: Storage rules can't read Firestore, so write access for business_user is
+    // scoped to role only. The Firestore POI update rule (associatedUserIds check)
+    // prevents them from persisting URLs to POIs they don't own.
 
     match /poi-media/{allPaths=**} {
       allow read: if true;
-      allow write: if isAdminOrContentManager();
+      allow write: if isAdminOrContentManager() || isBusinessUser();
     }
 
     // ─── Default deny ───────────────────────────────────────────────────────
