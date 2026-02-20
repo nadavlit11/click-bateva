@@ -9,10 +9,11 @@ Run before every code commit. Acts as a gate — do not commit if any subagent r
 ## Step 1 — Get the diff
 
 ```bash
-git diff --staged
+git status          # check for untracked files that should be staged
+git diff --staged   # review what's already staged
 ```
 
-If nothing is staged, stage the relevant files first. Pass the diff output to all subagents.
+Stage any missing files before reviewing. **Always check `git status` first** — untracked files won't appear in the diff and are easy to miss before committing. Pass the staged diff output to all subagents.
 
 ---
 
