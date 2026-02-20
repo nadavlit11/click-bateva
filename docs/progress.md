@@ -42,7 +42,7 @@ Tracks completion status of each work-plan step. Update this file as work is don
 | 2.4 | Categories & Tags management — CRUD + icon dropdown | ✅ | CategoryModal + TagModal; icon picker from Firestore; color picker; tags are simple name-only |
 | 2.5 | POI management — CRUD, media upload, map-click + geocoding location | ✅ | PoiDrawer: full CRUD; Cloud Storage image upload; MapPicker (Leaflet + Nominatim) replaces bare lat/lng inputs |
 | 2.6 | Business account management — Firestore records + Auth user creation | ✅ | `createBusinessUser` callable fn; sets `role` + `businessRef` custom claims; `businesses/{uid}` with `associatedUserIds: [uid]`; BusinessesPage + BusinessModal in admin |
-| 2.7 | Click analytics — total, per-category, per-POI clicks | ⬜ | |
+| 2.7 | Click analytics — total, per-category, per-POI clicks | ✅ | AnalyticsPage: getDocs from clicks, aggregate by poiId + categoryId; top-5 POIs table + by-category table |
 
 ---
 
@@ -52,8 +52,8 @@ Tracks completion status of each work-plan step. Update this file as work is don
 |------|-------------|--------|-------|
 | 3.1 | Project scaffold — `apps/business`, routing, auth guards | ✅ | Vite+React+TS+Tailwind v4; BrowserRouter + AuthGuard + AppLayout; click-bateva-biz hosting target added |
 | 3.2 | Auth — Login/logout, business role redirect | ✅ | AuthGuard: role check → businessRef claim → getDoc businesses/{id} → BusinessContext; LoginPage; TopBar with signOut |
-| 3.3 | POI list — assigned POIs by businessId | ⬜ | |
-| 3.4 | POI edit — restricted fields + image upload | ⬜ | |
+| 3.3 | POI list — assigned POIs by businessId | ✅ | PoisListPage: onSnapshot with where('businessId','==',businessId); PoiCard with active badge |
+| 3.4 | POI edit — restricted fields + image upload | ✅ | PoiEditPage: edits PoiEditableFields; ImageUploader to poi-media/; storage.rules updated for business_user |
 
 ---
 
