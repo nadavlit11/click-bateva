@@ -32,8 +32,11 @@ service cloud.firestore {
     // ─── points_of_interest ─────────────────────────────────────────────────
 
     match /points_of_interest/{poiId} {
-      // Anyone can read active POIs; admin/content_manager can read all
-      allow read: if resource.data.active == true || isAdminOrContentManager();
+      // Anyone can read active POIs; admin/content_manager can read all;
+      // business users can read POIs associated with their own business (including inactive)
+      allow read: if resource.data.active == true ||
+                     isAdminOrContentManager() ||
+                     (isBusinessUser() && resource.data.businessId == request.auth.uid);
 
       // Admin and content managers can create and delete
       allow create, delete: if isAdminOrContentManager();
@@ -88,14 +91,10 @@ service cloud.firestore {
       // Only admin can create, update, delete businesses
       allow write: if isAdmin();
 
-      // Admin can read all; business users can read their own business only.
-      // businessRef is a string claim set by createBusinessUser Cloud Function —
-      // use string concatenation (not path literal) to avoid type-mismatch with JWT strings.
+      // Admin can read all; business users can read their own business document.
+      // Business documents are keyed by the owner's UID, so uid == businessId is sufficient.
       allow read: if isAdmin() ||
-        (isBusinessUser() &&
-         request.auth.token.businessRef ==
-           '/databases/' + database + '/documents/businesses/' + businessId
-        );
+        (isBusinessUser() && request.auth.uid == businessId);
     }
 
     // ─── users ──────────────────────────────────────────────────────────────
