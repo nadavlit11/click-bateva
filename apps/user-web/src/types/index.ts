@@ -16,6 +16,9 @@ export interface Poi {
   description: string;
   location: { lat: number; lng: number };
   mainImage: string | null;
+  images: string[];       // ordered image URLs; empty = show placeholder
+  phone: string | null;
+  website: string | null; // domain only e.g. "www.example.co.il"
   categoryId: string;
   tags: string[];   // tag IDs
 }

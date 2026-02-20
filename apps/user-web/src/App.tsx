@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
+import { PoiDetailPanel } from "./components/MapView/PoiDetailPanel";
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOCK_POIS } from "./data/defaults";
 import { filterPois } from "./lib/filterPois";
-import type { Category, Tag } from "./types";
+import type { Category, Poi, Tag } from "./types";
 
 // Phase 4.2: mock data. Replace with usePois/useCategories/useTags hooks once Firestore has data.
 const pois = MOCK_POIS;
@@ -14,6 +15,7 @@ export default function App() {
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
   const filteredPois = useMemo(
     () => filterPois(pois, { selectedCategories, selectedTags, searchQuery }),
@@ -56,12 +58,20 @@ export default function App() {
         onSearchChange={setSearchQuery}
         onClearAll={handleClearAll}
       />
-      <main className="flex-1 h-full">
+      <main className="flex-1 h-full relative">
         <MapView
           pois={filteredPois}
           categories={categories}
-          onPoiClick={() => {}}
+          onPoiClick={setSelectedPoi}
         />
+        {selectedPoi && (
+          <PoiDetailPanel
+            poi={selectedPoi}
+            category={categories.find(c => c.id === selectedPoi.categoryId)}
+            tags={tags.filter(t => selectedPoi.tags.includes(t.id))}
+            onClose={() => setSelectedPoi(null)}
+          />
+        )}
       </main>
     </div>
   );

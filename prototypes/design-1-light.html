@@ -100,6 +100,181 @@
     .poi-wrapper.animate {
       animation: float 3s ease-in-out infinite;
     }
+
+    /* POI Detail Panel */
+    @keyframes slideInPanel {
+      from { opacity: 0; transform: translateX(-20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    #poi-panel {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 300px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      overflow: hidden;
+      z-index: 20;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+      animation: slideInPanel 0.22s ease;
+    }
+
+    #poi-panel.hidden { display: none; }
+
+    /* Carousel */
+    #poi-carousel {
+      position: relative;
+      height: 180px;
+      overflow: hidden;
+    }
+
+    #poi-carousel-track {
+      display: flex;
+      height: 100%;
+      transition: transform 0.3s ease;
+    }
+
+    .carousel-slide {
+      flex: 0 0 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+    }
+
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      background: rgba(255,255,255,0.85);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 2;
+      color: #374151;
+    }
+
+    .carousel-arrow:hover { background: white; }
+    #carousel-prev { left: 8px; }
+    #carousel-next { right: 8px; }
+
+    #carousel-dots {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 5px;
+      z-index: 2;
+    }
+
+    .carousel-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: background 0.2s;
+    }
+
+    .carousel-dot.active { background: white; }
+
+    #poi-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      background: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      color: #374151;
+      z-index: 3;
+    }
+
+    #poi-close-btn:hover { background: #f3f4f6; }
+
+    /* Body */
+    .poi-detail-category-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .poi-detail-divider {
+      height: 1px;
+      background: #f3f4f6;
+      margin: 12px 0;
+    }
+
+    .poi-contact-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .poi-contact-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .poi-website-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #059669;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .poi-website-btn:hover { color: #047857; }
+
+    .poi-detail-tag {
+      background: #f3f4f6;
+      color: #6b7280;
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 12px;
+    }
+
+    /* Dim selected marker */
+    .poi-wrapper.selected .poi-marker {
+      box-shadow: 0 0 0 3px white, 0 0 0 5px currentColor;
+    }
   </style>
  </head>
  <body class="h-full bg-gray-100 overflow-hidden">
@@ -191,63 +366,102 @@
 
    <!-- Map Area -->
    <main class="flex-1 h-full map-container relative">
+
+    <!-- POI Detail Panel -->
+    <div id="poi-panel" class="hidden">
+
+      <!-- Carousel -->
+      <div id="poi-carousel">
+        <div id="poi-carousel-track"></div>
+        <button class="carousel-arrow" id="carousel-prev" onclick="carouselPrev()">›</button>
+        <button class="carousel-arrow" id="carousel-next" onclick="carouselNext()">‹</button>
+        <div id="carousel-dots"></div>
+        <button id="poi-close-btn" onclick="closePoiPanel()" title="סגור">×</button>
+      </div>
+
+      <!-- Body -->
+      <div style="padding:14px 16px 18px;">
+        <span id="poi-panel-category" class="poi-detail-category-chip"></span>
+        <h2 id="poi-panel-name" style="font-size:19px;font-weight:700;color:#1f2937;margin:8px 0 0;"></h2>
+        <p id="poi-panel-desc" style="font-size:13px;color:#6b7280;margin:8px 0 0;line-height:1.6;"></p>
+
+        <div class="poi-detail-divider"></div>
+
+        <!-- Contact -->
+        <div class="poi-contact-row">
+          <span class="poi-contact-icon">📞</span>
+          <span id="poi-panel-phone"></span>
+        </div>
+        <a id="poi-panel-website" class="poi-website-btn" href="#" target="_blank">
+          <span class="poi-contact-icon">🌐</span>
+          <span id="poi-panel-website-text"></span>
+          <span style="margin-right:auto;font-size:11px;opacity:0.7">←</span>
+        </a>
+
+        <div class="poi-detail-divider"></div>
+
+        <!-- Tags -->
+        <div id="poi-panel-tags" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+    </div>
+
     <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 100 200" preserveAspectRatio="xMidYMid slice">
      <path d="M50 10 Q60 30 55 50 Q65 70 60 90 Q70 110 65 130 Q55 150 50 170 Q45 150 35 130 Q30 110 40 90 Q35 70 45 50 Q40 30 50 10" fill="none" stroke="#2e7d32" stroke-width="0.5" />
     </svg>
 
-    <div class="poi-wrapper animate" style="top:15%;left:30%;animation-delay:0s">
+    <div class="poi-wrapper animate" style="top:15%;left:30%;animation-delay:0s" data-poi="שוק הכרמל">
       <div class="poi-marker" style="background:linear-gradient(135deg,#ff9800,#f57c00)"><span>🍽️</span></div>
       <div class="poi-label">שוק הכרמל</div>
     </div>
-    <div class="poi-wrapper" style="top:25%;left:55%">
+    <div class="poi-wrapper" style="top:25%;left:55%" data-poi="מלון דן">
       <div class="poi-marker" style="background:linear-gradient(135deg,#2196f3,#1976d2)"><span>🏨</span></div>
       <div class="poi-label">מלון דן</div>
     </div>
-    <div class="poi-wrapper animate" style="top:35%;left:25%;animation-delay:.5s">
+    <div class="poi-wrapper animate" style="top:35%;left:25%;animation-delay:.5s" data-poi="פארק הירקון">
       <div class="poi-marker" style="background:linear-gradient(135deg,#4caf50,#388e3c)"><span>🌲</span></div>
       <div class="poi-label">פארק הירקון</div>
     </div>
-    <div class="poi-wrapper" style="top:20%;left:70%">
+    <div class="poi-wrapper" style="top:20%;left:70%" data-poi="הכותל המערבי">
       <div class="poi-marker" style="background:linear-gradient(135deg,#ffc107,#ffa000)"><span>🏛️</span></div>
       <div class="poi-label">הכותל המערבי</div>
     </div>
-    <div class="poi-wrapper animate" style="top:45%;left:15%;animation-delay:1s">
+    <div class="poi-wrapper animate" style="top:45%;left:15%;animation-delay:1s" data-poi="חוף בוגרשוב">
       <div class="poi-marker" style="background:linear-gradient(135deg,#9c27b0,#7b1fa2)"><span>🏖️</span></div>
       <div class="poi-label">חוף בוגרשוב</div>
     </div>
-    <div class="poi-wrapper" style="top:50%;left:45%">
+    <div class="poi-wrapper" style="top:50%;left:45%" data-poi="שביל ישראל">
       <div class="poi-marker" style="background:linear-gradient(135deg,#009688,#00796b)"><span>🥾</span></div>
       <div class="poi-label">שביל ישראל</div>
     </div>
-    <div class="poi-wrapper animate" style="top:60%;left:60%;animation-delay:1.5s">
+    <div class="poi-wrapper animate" style="top:60%;left:60%;animation-delay:1.5s" data-poi="מסעדת אברהם">
       <div class="poi-marker" style="background:linear-gradient(135deg,#ff9800,#f57c00)"><span>🍽️</span></div>
       <div class="poi-label">מסעדת אברהם</div>
     </div>
-    <div class="poi-wrapper" style="top:40%;left:75%">
+    <div class="poi-wrapper" style="top:40%;left:75%" data-poi="יערות הכרמל">
       <div class="poi-marker" style="background:linear-gradient(135deg,#4caf50,#388e3c)"><span>🌲</span></div>
       <div class="poi-label">יערות הכרמל</div>
     </div>
-    <div class="poi-wrapper animate" style="top:70%;left:35%;animation-delay:2s">
+    <div class="poi-wrapper animate" style="top:70%;left:35%;animation-delay:2s" data-poi="מלון קיסר">
       <div class="poi-marker" style="background:linear-gradient(135deg,#2196f3,#1976d2)"><span>🏨</span></div>
       <div class="poi-label">מלון קיסר</div>
     </div>
-    <div class="poi-wrapper" style="top:55%;left:20%">
+    <div class="poi-wrapper" style="top:55%;left:20%" data-poi="מצדה">
       <div class="poi-marker" style="background:linear-gradient(135deg,#ffc107,#ffa000)"><span>🏛️</span></div>
       <div class="poi-label">מצדה</div>
     </div>
-    <div class="poi-wrapper animate" style="top:75%;left:55%;animation-delay:.7s">
+    <div class="poi-wrapper animate" style="top:75%;left:55%;animation-delay:.7s" data-poi="חוף אכזיב">
       <div class="poi-marker" style="background:linear-gradient(135deg,#9c27b0,#7b1fa2)"><span>🏖️</span></div>
       <div class="poi-label">חוף אכזיב</div>
     </div>
-    <div class="poi-wrapper" style="top:30%;left:40%">
+    <div class="poi-wrapper" style="top:30%;left:40%" data-poi="נחל עמוד">
       <div class="poi-marker" style="background:linear-gradient(135deg,#009688,#00796b)"><span>🥾</span></div>
       <div class="poi-label">נחל עמוד</div>
     </div>
-    <div class="poi-wrapper animate" style="top:85%;left:40%;animation-delay:1.2s">
+    <div class="poi-wrapper animate" style="top:85%;left:40%;animation-delay:1.2s" data-poi="מסעדת הנמל">
       <div class="poi-marker" style="background:linear-gradient(135deg,#ff9800,#f57c00)"><span>🍽️</span></div>
       <div class="poi-label">מסעדת הנמל</div>
     </div>
-    <div class="poi-wrapper" style="top:65%;left:70%">
+    <div class="poi-wrapper" style="top:65%;left:70%" data-poi="גן לאומי עין גדי">
       <div class="poi-marker" style="background:linear-gradient(135deg,#4caf50,#388e3c)"><span>🌲</span></div>
       <div class="poi-label">גן לאומי עין גדי</div>
     </div>
@@ -277,6 +491,7 @@
   </div>
 
   <script>
+    // ── Sidebar filters ──────────────────────────────────────────────
     document.querySelectorAll('.category-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         chip.classList.toggle('ring-2');
@@ -292,6 +507,124 @@
       document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('ring-2','ring-green-400','ring-offset-2'));
       document.querySelectorAll('.tag-pill').forEach(t => t.classList.remove('active'));
       document.getElementById('count-1').textContent = 'נמצאו 127 מקומות';
+    });
+
+    // ── POI data ─────────────────────────────────────────────────────
+    // slides: array of gradient strings (simulating multiple photos)
+    function makeSlides(color) {
+      return [
+        `linear-gradient(135deg, ${color}dd, ${color})`,
+        `linear-gradient(200deg, ${color}99, ${color}ee)`,
+        `linear-gradient(45deg,  ${color}bb, ${color}ff)`,
+      ];
+    }
+
+    const POI_DATA = {
+      'שוק הכרמל':       { emoji:'🍽️', category:'מסעדות',  color:'#ff9800', bg:'#fff3e0', phone:'03-123-4567', website:'www.shuk-hacarmel.co.il', desc:'שוק ירקות ופירות עממי בתל אביב, עשיר בריחות, צבעים וטעמים של המטבח הישראלי.',              tags:['מתאים למשפחות','חינם','נוף'] },
+      'מלון דן':          { emoji:'🏨', category:'מלונות',  color:'#2196f3', bg:'#e3f2fd', phone:'03-520-2525', website:'www.danhotels.co.il',      desc:'מלון יוקרה מוביל בלב תל אביב עם נוף לים התיכון ושירות אישי מעולה.',                   tags:['נגיש לנכים','חניה'] },
+      'פארק הירקון':      { emoji:'🌲', category:'פארקים',  color:'#4caf50', bg:'#e8f5e9', phone:'03-642-2828', website:'www.park-hayarkon.org.il',  desc:'פארק עירוני גדול לאורך נהר הירקון — מקום מנוחה ופנאי לכל תושבי העיר.',                tags:['מתאים למשפחות','חינם','בעלי חיים'] },
+      'הכותל המערבי':    { emoji:'🏛️', category:'אתרים',   color:'#ffc107', bg:'#fffde7', phone:'02-627-1333', website:'www.thekotel.org',          desc:'שרידי חומת הר הבית, המקום הקדוש ביותר ליהדות. מוקד עלייה לרגל מכל רחבי העולם.',       tags:['חינם','נוף'] },
+      'חוף בוגרשוב':     { emoji:'🏖️', category:'חופים',   color:'#9c27b0', bg:'#f3e5f5', phone:'03-724-0340', website:'www.tel-aviv.gov.il/beaches', desc:'חוף ים פופולרי בתל אביב עם חול לבן רחב, מתקני בידור ואטרקציות לכל הגילאים.',        tags:['מתאים למשפחות','חינם','מים'] },
+      'שביל ישראל':       { emoji:'🥾', category:'מסלולים', color:'#009688', bg:'#e0f2f1', phone:'04-658-8200', website:'www.israeltrail.net',        desc:'שביל הליכה ארוך המשתרע לאורך כל ארץ ישראל — אתגר מיוחד לאוהבי טבע ונוף.',             tags:['נוף','בעלי חיים'] },
+      'מסעדת אברהם':     { emoji:'🍽️', category:'מסעדות',  color:'#ff9800', bg:'#fff3e0', phone:'04-855-2222', website:'www.restaurant-avraham.co.il', desc:'מסעדה מפורסמת המגישה מאכלים ים תיכוניים עשירים — אווירה חמה ומוזיקה חיה.',           tags:['כשר','נגיש לנכים'] },
+      'יערות הכרמל':     { emoji:'🌲', category:'פארקים',  color:'#4caf50', bg:'#e8f5e9', phone:'04-822-8983', website:'www.parks.org.il',            desc:'יערות הכרמל שוכנים בצפון ישראל ומציעים שבילי הליכה, מצפור ומוקדי טבע עשירים.',      tags:['מתאים למשפחות','בעלי חיים','נוף'] },
+      'מלון קיסר':        { emoji:'🏨', category:'מלונות',  color:'#2196f3', bg:'#e3f2fd', phone:'04-900-0000', website:'www.caesarhotels.co.il',      desc:'מלון בוטיק אלגנטי על חוף הים בנהריה, עם ספא מפנק ונוף מרהיב לים התיכון.',            tags:['חניה','נגיש לנכים'] },
+      'מצדה':             { emoji:'🏛️', category:'אתרים',   color:'#ffc107', bg:'#fffde7', phone:'08-658-4207', website:'www.parks.org.il/masada',     desc:'מבצר יהודי עתיק על ראש סלע תלול מעל ים המלח. אתר מורשת עולמי עם נוף דרמטי.',        tags:['נוף','חינם'] },
+      'חוף אכזיב':        { emoji:'🏖️', category:'חופים',   color:'#9c27b0', bg:'#f3e5f5', phone:'04-982-3263', website:'www.parks.org.il/achziv',     desc:'חוף שקט וציורי בגליל המערבי, המוכר בשמורת הטבע הסמוכה ובמים הצלולים שלו.',          tags:['מים','נוף','חינם'] },
+      'נחל עמוד':         { emoji:'🥾', category:'מסלולים', color:'#009688', bg:'#e0f2f1', phone:'04-698-9290', website:'www.parks.org.il/nahal-amud',  desc:'מסלול הליכה ציורי לאורך נחל עמוד בגליל, עם מפלים זורמים ומעיינות קרים.',             tags:['נוף','מים','בעלי חיים'] },
+      'מסעדת הנמל':       { emoji:'🍽️', category:'מסעדות',  color:'#ff9800', bg:'#fff3e0', phone:'04-991-0088', website:'www.namal-akko.co.il',         desc:'מסעדת דגים ופירות ים מפורסמת על נמל עכו ההיסטורי — חוויה קולינרית ייחודית.',        tags:['כשר','נוף'] },
+      'גן לאומי עין גדי': { emoji:'🌲', category:'פארקים',  color:'#4caf50', bg:'#e8f5e9', phone:'08-658-4285', website:'www.parks.org.il/ein-gedi',    desc:'שמורת טבע ירוקה ופורחת בלב המדבר ליד ים המלח, עם מפלים, בריכות ועדרי יעלים.',      tags:['מתאים למשפחות','מים','נוף','בעלי חיים'] },
+    };
+
+    // ── Carousel state ────────────────────────────────────────────────
+    let currentSlide = 0;
+    let totalSlides = 3;
+
+    function goToSlide(n) {
+      currentSlide = n;
+      document.getElementById('poi-carousel-track').style.transform =
+        `translateX(${-n * 100}%)`;
+      document.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === n);
+      });
+    }
+
+    function carouselPrev() { goToSlide((currentSlide - 1 + totalSlides) % totalSlides); }
+    function carouselNext() { goToSlide((currentSlide + 1) % totalSlides); }
+
+    // ── POI panel logic ───────────────────────────────────────────────
+    let selectedWrapper = null;
+
+    function openPoiPanel(name) {
+      const data = POI_DATA[name];
+      if (!data) return;
+
+      // Build carousel slides
+      const slides = makeSlides(data.color);
+      totalSlides = slides.length;
+      const track = document.getElementById('poi-carousel-track');
+      track.innerHTML = slides.map(bg =>
+        `<div class="carousel-slide" style="background:${bg}">
+          <span>${data.emoji}</span>
+        </div>`
+      ).join('');
+
+      // Build dots
+      const dotsEl = document.getElementById('carousel-dots');
+      dotsEl.innerHTML = slides.map((_, i) =>
+        `<button class="carousel-dot${i === 0 ? ' active' : ''}" onclick="goToSlide(${i})"></button>`
+      ).join('');
+
+      goToSlide(0);
+
+      // Category chip
+      const chip = document.getElementById('poi-panel-category');
+      chip.textContent = data.emoji + ' ' + data.category;
+      chip.style.background = data.bg;
+      chip.style.color = data.color;
+      chip.style.border = `1px solid ${data.color}44`;
+
+      document.getElementById('poi-panel-name').textContent = name;
+      document.getElementById('poi-panel-desc').textContent = data.desc;
+      document.getElementById('poi-panel-phone').textContent = data.phone;
+
+      const websiteEl = document.getElementById('poi-panel-website');
+      document.getElementById('poi-panel-website-text').textContent = data.website;
+      websiteEl.href = 'https://' + data.website;
+
+      const tagsEl = document.getElementById('poi-panel-tags');
+      tagsEl.innerHTML = data.tags
+        .map(t => `<span class="poi-detail-tag">${t}</span>`)
+        .join('');
+
+      // Show panel
+      const panel = document.getElementById('poi-panel');
+      panel.classList.remove('hidden');
+      panel.style.animation = 'none';
+      requestAnimationFrame(() => { panel.style.animation = ''; });
+    }
+
+    function closePoiPanel() {
+      document.getElementById('poi-panel').classList.add('hidden');
+      if (selectedWrapper) {
+        selectedWrapper.classList.remove('selected');
+        selectedWrapper = null;
+      }
+    }
+
+    // Wire up marker clicks
+    document.querySelectorAll('.poi-wrapper[data-poi]').forEach(wrapper => {
+      wrapper.addEventListener('click', () => {
+        if (selectedWrapper) selectedWrapper.classList.remove('selected');
+        selectedWrapper = wrapper;
+        wrapper.classList.add('selected');
+        openPoiPanel(wrapper.dataset.poi);
+      });
+    });
+
+    // ESC to close
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closePoiPanel();
     });
   </script>
  </body>
