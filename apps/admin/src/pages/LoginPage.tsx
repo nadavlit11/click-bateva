@@ -1,36 +1,66 @@
-// Phase 2.2 will add real Firebase Auth sign-in logic
+import { useState } from 'react'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { useNavigate } from 'react-router-dom'
+import { auth } from '../lib/firebase.ts'
+
 export function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+      navigate('/')
+    } catch {
+      setError('אימייל או סיסמה שגויים')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
         <h1 className="text-xl font-bold text-gray-900 mb-1">קליק בטבע</h1>
         <p className="text-sm text-gray-500 mb-6">כניסה ללוח הניהול</p>
 
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">אימייל</label>
             <input
               type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="admin@example.com"
-              disabled
+              required
+              autoFocus
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">סיסמה</label>
             <input
               type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="••••••••"
-              disabled
+              required
             />
           </div>
+          {error && <p className="text-red-600 text-sm">{error}</p>}
           <button
-            type="button"
-            disabled
-            className="w-full py-2 bg-green-600 text-white text-sm font-medium rounded-lg opacity-50 cursor-not-allowed"
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
           >
-            כניסה (Phase 2.2)
+            {loading ? 'מתחבר...' : 'כניסה'}
           </button>
         </form>
       </div>

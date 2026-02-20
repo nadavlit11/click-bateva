@@ -33,24 +33,11 @@ service firebase.storage {
 
     // ─── poi-media/ ─────────────────────────────────────────────────────────
     // Admin and content managers can upload/delete any POI media
-    // Business users can upload to their own POI folder: poi-media/{businessId}/{poiId}/
     // Anyone can read (POI images displayed publicly)
+    // TODO Phase 3: add business_user write scope for their own poi-media paths
 
     match /poi-media/{allPaths=**} {
       allow read: if true;
-    }
-
-    match /poi-media/{businessId}/{poiId}/{fileName} {
-      allow write: if isAdminOrContentManager() ||
-        (isBusinessUser() &&
-         request.auth.uid in firestore.get(
-           /databases/(default)/documents/businesses/$(businessId)
-         ).data.associatedUserIds
-        );
-    }
-
-    // Admin can write anywhere under poi-media (covers flat uploads without businessId path)
-    match /poi-media/{fileName} {
       allow write: if isAdminOrContentManager();
     }
 

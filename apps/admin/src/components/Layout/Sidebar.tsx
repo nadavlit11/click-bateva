@@ -1,4 +1,6 @@
 import { NavLink } from 'react-router-dom'
+import { signOut } from 'firebase/auth'
+import { auth } from '../../lib/firebase.ts'
 
 const NAV = [
   { path: '/',            label: 'לוח בקרה',      end: true },
@@ -36,7 +38,10 @@ export function Sidebar() {
       </nav>
 
       <div className="p-3 border-t border-gray-200">
-        <button className="w-full text-start px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+        <button
+          onClick={() => { signOut(auth).catch(console.error) }}
+          className="w-full text-start px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        >
           התנתקות
         </button>
       </div>
