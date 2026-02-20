@@ -36,4 +36,4 @@ Work through each file and update as needed:
 - `categories` has `color`, `iconId`, `iconUrl`
 - Roles: `admin`, `content_manager`, `business_user`, `standard_user`
 - Storage rules use `request.auth.token.role` (custom claims), NOT `firestore.get()`
-- Firestore rules use `get()` to look up the `users` collection for role checks
+- Firestore rules use `request.auth.token.role` (custom claims) for role checks — NOT `get()` on the users collection

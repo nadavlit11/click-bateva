@@ -57,6 +57,20 @@ import { auth } from "firebase-functions/v1";           // Auth trigger (v1)
 import { onCall, HttpsError } from "firebase-functions/v2/https"; // Callable (v2)
 ```
 
+**CRITICAL: Cannot change trigger type on a deployed function.**
+If you try to change from `auth.user().onCreate` (v1 background trigger) to `beforeUserCreated` (v2 identity trigger) or vice versa, Firebase will block the deploy with:
+> "Changing from a background triggered function to providers/cloud.auth/eventTypes/user.beforeCreate is not allowed. Please delete your function and create a new one instead."
+
+Fix: delete the function from Firebase Console first, then redeploy.
+
+## Node.js version for Gen1 functions
+
+Gen1 (`auth.user().onCreate`) **does not support Node 24**. Maximum is Node 22.
+Set in `functions/package.json`:
+```json
+"engines": { "node": "22" }
+```
+
 ---
 
 ## Emulator prerequisites
@@ -200,7 +214,9 @@ Roles are stored in **two places** that must stay in sync:
 
 | Store | Used by | Set by |
 |-------|---------|--------|
-| Firestore `users/{uid}.role` | Security rules (`isAdmin()`, etc.) | `onUserCreated` + `setUserRole` |
-| Custom claim `{ role }` on Auth token | Front-end + callable function auth checks | `onUserCreated` + `setUserRole` |
+| Firestore `users/{uid}.role` | Admin UI display only | `onUserCreated` + `setUserRole` |
+| Custom claim `{ role }` on Auth token | Firestore rules + storage rules + callable function auth checks + front-end | `onUserCreated` + `setUserRole` |
 
 `setUserRole` updates both atomically. When testing manually, make sure both are set.
+
+**Important:** Firestore Security Rules use `request.auth.token.role` (custom claims), NOT `get()` on the users collection. This avoids failures when the user document doesn't exist yet (e.g., new users before the trigger fires).

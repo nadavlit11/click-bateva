@@ -44,12 +44,21 @@ Worth creating if:
 - A common mistake needs a checklist to prevent it
 - A deploy/test workflow has specific steps worth encoding
 
-### 4. Update `docs/progress.md`
+### 4. Check for missing LLD docs
+
+Was an LLD doc created for any new app or major feature area built this phase?
+- `docs/lld-user-web.md` — user-facing map app ✅
+- `docs/lld-admin-dashboard.md` — admin dashboard ✅
+- Future: `docs/lld-business-dashboard.md` when Phase 3 starts
+
+**If an LLD was skipped:** create it now (post-hoc is better than never), then add a reminder that next time, LLDs should be written **at the end of planning, before implementation starts**.
+
+### 5. Update `docs/progress.md`
 
 - Mark completed steps as ✅ Done
 - Add notes on deviations from the work plan
 
-### 5. Commit everything
+### 6. Commit everything
 
 ```bash
 git add .claude/skills/ docs/progress.md

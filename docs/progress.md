@@ -36,11 +36,11 @@ Tracks completion status of each work-plan step. Update this file as work is don
 
 | Step | Description | Status | Notes |
 |------|-------------|--------|-------|
-| 2.1 | Project scaffold — `apps/admin`, routing, auth guards, layout | ⬜ | |
-| 2.2 | Auth — Login/logout UI, Firebase Auth integration, role-based redirect | ⬜ | |
-| 2.3 | Icon management — upload, list, delete; `icons` Firestore collection | ⬜ | |
-| 2.4 | Categories & Tags management — CRUD + icon dropdown | ⬜ | |
-| 2.5 | POI management — CRUD, media upload, map-click + geocoding location | ⬜ | |
+| 2.1 | Project scaffold — `apps/admin`, routing, auth guards, layout | ✅ | Vite+React+TS+Tailwind; LoginPage, AuthGuard (role-gated), Layout + Sidebar; deployed to click-bateva.web.app |
+| 2.2 | Auth — Login/logout UI, Firebase Auth integration, role-based redirect | ✅ | signInWithEmailAndPassword; onAuthStateChanged + getIdTokenResult() for role check; signOut; set-admin bootstrap script |
+| 2.3 | Icon management — upload, list, delete; `icons` Firestore collection | ✅ | IconsPage: upload to Storage + Firestore doc; list with delete; Storage rules use custom claims |
+| 2.4 | Categories & Tags management — CRUD + icon dropdown | ✅ | CategoryModal + TagModal; icon picker from Firestore; color picker; tags are simple name-only |
+| 2.5 | POI management — CRUD, media upload, map-click + geocoding location | ✅ | PoiDrawer: full CRUD; Cloud Storage image upload; MapPicker (Leaflet + Nominatim) replaces bare lat/lng inputs |
 | 2.6 | Business account management — Firestore records + Auth user creation | ⬜ | |
 | 2.7 | Click analytics — total, per-category, per-POI clicks | ⬜ | |
 
@@ -61,8 +61,8 @@ Tracks completion status of each work-plan step. Update this file as work is don
 | Step | Description | Status | Notes |
 |------|-------------|--------|-------|
 | 4.1 | Project scaffold — `apps/user-web` | ✅ | Vite + React 18 + TS + Tailwind v4 + @vis.gl/react-google-maps; design-1-light; RTL; Rubik font; LLD saved to docs/lld-user-web.md |
-| 4.2 | Map view — Google Maps, active POI markers | 🔄 | Teardrop AdvancedMarkers + name labels working with mock data; swap to Firestore hooks once admin creates real POIs |
-| 4.3 | Filtering — category and tag filters | 🔄 | filterPois() wired (category + tag + search); UI chips/pills toggle correctly; 11 unit tests pass |
+| 4.2 | Map view — Google Maps, active POI markers | ✅ | Teardrop AdvancedMarkers + name labels; usePois/useCategories/useTags Firestore hooks wired; deployed to click-bateva-app.web.app |
+| 4.3 | Filtering — category and tag filters | ✅ | filterPois() wired (category + tag + search); UI chips/pills toggle correctly; 11 unit tests pass |
 | 4.4 | POI detail popup — info window with all fields | ✅ | PoiDetailPanel: image carousel (RTL arrows, direction:ltr fix for bidi mirroring), placeholder, phone/website/tags; Poi type extended with images[], phone, website |
 | 4.5 | Click tracking — write to `clicks` on marker click | ⏭ | Deferred with 1.5 |
 
@@ -93,3 +93,6 @@ Tracks completion status of each work-plan step. Update this file as work is don
 
 - `clicks` in the work plan still references "subcollection" in 1.5 and 4.5 — it is actually a **flat top-level collection**
 - Google Maps API key HTTP referrer restrictions deferred until hosting domain is set up
+- Firestore rules use `request.auth.token.role` (custom claims) instead of `get()` on users collection — safer, avoids failures when user doc doesn't exist
+- `onUserCreated` Cloud Function stuck at old trigger type (`beforeUserCreated`) in production — needs manual delete from Firebase Console to redeploy as Gen1 `auth.user().onCreate`
+- Phase 6.1 (deploy all 3 apps) partially done: admin + user-web deployed; business app pending Phase 3

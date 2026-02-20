@@ -19,7 +19,7 @@ Use this skill before deploying `firestore.rules` or `storage.rules`. Validates 
 ### firestore.rules
 - [ ] Every collection in the matrix has a `match` block
 - [ ] `isAdmin()`, `isContentManager()`, `isAdminOrContentManager()`, `isBusinessUser()` helper functions exist
-- [ ] `userRole()` reads from `users/{uid}` document
+- [ ] `userRole()` uses `request.auth.token.role` (custom claims) — NOT `get()` on the users collection
 - [ ] Public read for `points_of_interest` only returns `active == true` docs
 - [ ] Business user POI update is limited to: `description`, `images`, `videos`, `phone`, `email`, `website`, `updatedAt`
 - [ ] Business user POI update checks `businesses/{businessId}.associatedUserIds` contains their UID
