@@ -101,10 +101,13 @@ Prompt:
 
 ---
 
-## Step 4 — Commit
+## Step 4 — Commit and push
 
 Once all subagents pass:
 
 ```bash
 git commit -m "<type>: <description>"
+git push
 ```
+
+Always push immediately after committing.
