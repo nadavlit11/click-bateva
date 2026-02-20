@@ -5,6 +5,7 @@ const NAV = [
   { path: '/pois',        label: 'נקודות עניין',  end: false },
   { path: '/categories',  label: 'קטגוריות',      end: false },
   { path: '/tags',        label: 'תגיות',         end: false },
+  { path: '/icons',       label: 'אייקונים',      end: false },
 ]
 
 export function Sidebar() {

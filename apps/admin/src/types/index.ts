@@ -35,3 +35,10 @@ export interface Tag {
   createdAt: unknown
   updatedAt: unknown
 }
+
+export interface Icon {
+  id: string
+  name: string
+  path: string   // Storage path, e.g. 'icons/{uuid}.png'
+  createdAt: unknown
+}

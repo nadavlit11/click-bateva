@@ -1,24 +1,26 @@
 import { useState, useEffect } from 'react'
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../lib/firebase.ts'
-import type { Category } from '../types/index.ts'
+import { ref, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '../lib/firebase.ts'
+import type { Category, Icon } from '../types/index.ts'
 
 interface Props {
   isOpen: boolean
   onClose: () => void
   category: Category | null
   onSaved: () => void
+  icons: Icon[]
 }
 
 interface FormState {
   name: string
   color: string
-  iconUrl: string
+  iconId: string
 }
 
-const INITIAL_FORM: FormState = { name: '', color: '#16a34a', iconUrl: '' }
+const INITIAL_FORM: FormState = { name: '', color: '#16a34a', iconId: '' }
 
-export function CategoryModal({ isOpen, onClose, category, onSaved }: Props) {
+export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -28,7 +30,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved }: Props) {
       setForm({
         name: category.name,
         color: category.color,
-        iconUrl: category.iconUrl ?? '',
+        iconId: category.iconId ?? '',
       })
     } else {
       setForm(INITIAL_FORM)
@@ -47,11 +49,22 @@ export function CategoryModal({ isOpen, onClose, category, onSaved }: Props) {
     setSaving(true)
     setError('')
     try {
+      let iconId: string | null = null
+      let iconUrl: string | null = null
+
+      if (form.iconId) {
+        const selectedIcon = icons.find(i => i.id === form.iconId)
+        if (selectedIcon) {
+          iconId = selectedIcon.id
+          iconUrl = await getDownloadURL(ref(storage, selectedIcon.path))
+        }
+      }
+
       const data = {
         name: form.name.trim(),
         color: form.color,
-        iconId: null,
-        iconUrl: form.iconUrl.trim() || null,
+        iconId,
+        iconUrl,
         updatedAt: serverTimestamp(),
       }
 
@@ -120,14 +133,17 @@ export function CategoryModal({ isOpen, onClose, category, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">כתובת אייקון (URL)</label>
-            <input
-              type="url"
-              value={form.iconUrl}
-              onChange={e => set('iconUrl', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-              placeholder="https://..."
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">אייקון</label>
+            <select
+              value={form.iconId}
+              onChange={e => set('iconId', e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
+            >
+              <option value="">ללא אייקון</option>
+              {icons.map(icon => (
+                <option key={icon.id} value={icon.id}>{icon.name}</option>
+              ))}
+            </select>
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}

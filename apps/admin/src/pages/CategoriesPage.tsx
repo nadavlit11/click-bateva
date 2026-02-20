@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
-import type { Category } from '../types/index.ts'
+import type { Category, Icon } from '../types/index.ts'
 import { CategoryModal } from '../components/CategoryModal.tsx'
 
 export function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
+  const [icons, setIcons] = useState<Icon[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
 
   useEffect(() => {
-    return onSnapshot(collection(db, 'categories'), snap => {
+    const unsub1 = onSnapshot(collection(db, 'categories'), snap => {
       setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
     })
+    const unsub2 = onSnapshot(collection(db, 'icons'), snap => {
+      setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
+    })
+    return () => { unsub1(); unsub2() }
   }, [])
 
   async function handleDelete(id: string) {
@@ -100,6 +105,7 @@ export function CategoriesPage() {
         onClose={handleClose}
         category={editingCategory}
         onSaved={handleClose}
+        icons={icons}
       />
     </div>
   )

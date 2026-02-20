@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   collection,
   addDoc,
@@ -6,7 +6,8 @@ import {
   doc,
   serverTimestamp,
 } from 'firebase/firestore'
-import { db } from '../lib/firebase.ts'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '../lib/firebase.ts'
 import type { Poi, Category, Tag } from '../types/index.ts'
 
 interface Props {
@@ -60,6 +61,13 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, onSaved }: P
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [uploadingMainImage, setUploadingMainImage] = useState(false)
+  const [uploadingImages, setUploadingImages] = useState(false)
+  const [uploadingVideos, setUploadingVideos] = useState(false)
+
+  const mainImageRef = useRef<HTMLInputElement>(null)
+  const imagesRef = useRef<HTMLInputElement>(null)
+  const videosRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (poi) {
@@ -91,23 +99,68 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, onSaved }: P
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
-  function addListItem(field: 'images' | 'videos') {
-    setForm(prev => ({ ...prev, [field]: [...prev[field], ''] }))
+  async function uploadFile(file: File): Promise<string> {
+    const ext = file.name.split('.').pop() ?? ''
+    const path = `poi-media/${crypto.randomUUID()}.${ext}`
+    const storageRef = ref(storage, path)
+    await uploadBytes(storageRef, file)
+    return getDownloadURL(storageRef)
   }
 
-  function updateListItem(field: 'images' | 'videos', index: number, value: string) {
-    setForm(prev => {
-      const updated = [...prev[field]]
-      updated[index] = value
-      return { ...prev, [field]: updated }
-    })
+  async function handleMainImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingMainImage(true)
+    try {
+      const url = await uploadFile(file)
+      set('mainImage', url)
+    } catch (err) {
+      setError('שגיאה בהעלאת תמונה ראשית')
+      console.error(err)
+    } finally {
+      setUploadingMainImage(false)
+      e.target.value = ''
+    }
   }
 
-  function removeListItem(field: 'images' | 'videos', index: number) {
-    setForm(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index),
-    }))
+  async function handleImagesSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    setUploadingImages(true)
+    try {
+      const urls = await Promise.all(files.map(f => uploadFile(f)))
+      setForm(prev => ({ ...prev, images: [...prev.images, ...urls] }))
+    } catch (err) {
+      setError('שגיאה בהעלאת תמונות')
+      console.error(err)
+    } finally {
+      setUploadingImages(false)
+      e.target.value = ''
+    }
+  }
+
+  async function handleVideosSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    setUploadingVideos(true)
+    try {
+      const urls = await Promise.all(files.map(f => uploadFile(f)))
+      setForm(prev => ({ ...prev, videos: [...prev.videos, ...urls] }))
+    } catch (err) {
+      setError('שגיאה בהעלאת סרטונים')
+      console.error(err)
+    } finally {
+      setUploadingVideos(false)
+      e.target.value = ''
+    }
+  }
+
+  function removeImage(index: number) {
+    setForm(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }))
+  }
+
+  function removeVideo(index: number) {
+    setForm(prev => ({ ...prev, videos: prev.videos.filter((_, i) => i !== index) }))
   }
 
   function toggleTag(tagId: string) {
@@ -260,78 +313,130 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, onSaved }: P
 
             {/* Main Image */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">תמונה ראשית (URL)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">תמונה ראשית</label>
               <input
-                type="url"
-                value={form.mainImage}
-                onChange={e => set('mainImage', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                placeholder="https://..."
+                ref={mainImageRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleMainImageSelect}
               />
+              {form.mainImage ? (
+                <div className="space-y-2">
+                  <img
+                    src={form.mainImage}
+                    alt="תמונה ראשית"
+                    className="w-full max-h-40 object-cover rounded-lg border border-gray-200"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={uploadingMainImage}
+                      onClick={() => mainImageRef.current?.click()}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
+                    >
+                      {uploadingMainImage ? 'מעלה...' : 'שנה תמונה'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => set('mainImage', '')}
+                      className="text-red-500 hover:text-red-700 text-sm font-medium"
+                    >
+                      הסר
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled={uploadingMainImage}
+                  onClick={() => mainImageRef.current?.click()}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                >
+                  {uploadingMainImage ? 'מעלה...' : 'בחר תמונה'}
+                </button>
+              )}
             </div>
 
             {/* Additional Images */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">תמונות נוספות</label>
-              <div className="space-y-2">
-                {form.images.map((url, i) => (
-                  <div key={i} className="flex gap-2">
-                    <input
-                      type="url"
-                      value={url}
-                      onChange={e => updateListItem('images', i, e.target.value)}
-                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                      placeholder="https://..."
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeListItem('images', i)}
-                      className="text-red-500 hover:text-red-700 px-2 text-sm"
-                    >
-                      הסר
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => addListItem('images')}
-                  className="text-green-600 hover:text-green-800 text-sm font-medium"
-                >
-                  + הוסף תמונה
-                </button>
-              </div>
+              <input
+                ref={imagesRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleImagesSelect}
+              />
+              {form.images.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  {form.images.map((url, i) => (
+                    <div key={i} className="relative">
+                      <img
+                        src={url}
+                        alt={`תמונה ${i + 1}`}
+                        className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        className="absolute top-1 right-1 bg-white rounded-full w-5 h-5 flex items-center justify-center text-red-500 hover:text-red-700 text-xs shadow"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button
+                type="button"
+                disabled={uploadingImages}
+                onClick={() => imagesRef.current?.click()}
+                className="text-green-600 hover:text-green-800 text-sm font-medium disabled:opacity-50"
+              >
+                {uploadingImages ? 'מעלה...' : '+ הוסף תמונות'}
+              </button>
             </div>
 
             {/* Videos */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">סרטונים</label>
-              <div className="space-y-2">
-                {form.videos.map((url, i) => (
-                  <div key={i} className="flex gap-2">
-                    <input
-                      type="url"
-                      value={url}
-                      onChange={e => updateListItem('videos', i, e.target.value)}
-                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                      placeholder="https://..."
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeListItem('videos', i)}
-                      className="text-red-500 hover:text-red-700 px-2 text-sm"
-                    >
-                      הסר
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => addListItem('videos')}
-                  className="text-green-600 hover:text-green-800 text-sm font-medium"
-                >
-                  + הוסף סרטון
-                </button>
-              </div>
+              <input
+                ref={videosRef}
+                type="file"
+                accept="video/*"
+                multiple
+                className="hidden"
+                onChange={handleVideosSelect}
+              />
+              {form.videos.length > 0 && (
+                <div className="space-y-1 mb-2">
+                  {form.videos.map((url, i) => {
+                    const filename = url.split('/').pop()?.split('?')[0] ?? url
+                    return (
+                      <div key={i} className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                        <span className="text-sm text-gray-700 truncate">{filename}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeVideo(i)}
+                          className="text-red-500 hover:text-red-700 text-sm font-medium shrink-0"
+                        >
+                          הסר
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+              <button
+                type="button"
+                disabled={uploadingVideos}
+                onClick={() => videosRef.current?.click()}
+                className="text-green-600 hover:text-green-800 text-sm font-medium disabled:opacity-50"
+              >
+                {uploadingVideos ? 'מעלה...' : '+ הוסף סרטונים'}
+              </button>
             </div>
 
             {/* Opening Hours */}
