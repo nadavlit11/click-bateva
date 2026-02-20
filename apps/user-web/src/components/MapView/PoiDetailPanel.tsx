@@ -2,19 +2,13 @@ import { useState, useEffect } from "react";
 import type { CSSProperties } from "react";
 import type { Poi, Category, Tag } from "../../types";
 import { CATEGORY_EMOJI } from "../../data/defaults";
+import { lighten } from "../../lib/colorUtils";
 
 interface PoiDetailPanelProps {
   poi: Poi;
   category: Category | undefined;
   tags: Tag[];
   onClose: () => void;
-}
-
-function lighten(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},0.08)`;
 }
 
 export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelProps) {

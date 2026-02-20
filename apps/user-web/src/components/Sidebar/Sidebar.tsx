@@ -16,6 +16,7 @@ interface SidebarProps {
   onTagToggle: (id: string) => void;
   onSearchChange: (q: string) => void;
   onClearAll: () => void;
+  className?: string;
 }
 
 export function Sidebar({
@@ -29,10 +30,11 @@ export function Sidebar({
   onTagToggle,
   onSearchChange,
   onClearAll,
+  className,
 }: SidebarProps) {
   return (
     <aside
-      className="w-80 h-full bg-white flex flex-col z-10 overflow-hidden shrink-0"
+      className={`w-80 h-full bg-white flex flex-col z-10 overflow-hidden shrink-0 ${className ?? ""}`}
       style={{ boxShadow: "4px 0 20px rgba(0,0,0,0.08)" }}
     >
       <AppHeader />

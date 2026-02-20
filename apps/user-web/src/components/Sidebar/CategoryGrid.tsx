@@ -1,27 +1,11 @@
 import { CATEGORY_EMOJI } from "../../data/defaults";
 import type { Category } from "../../types";
+import { lighten, lightenBorder } from "../../lib/colorUtils";
 
 interface CategoryGridProps {
   categories: Category[];
   selectedCategories: Set<string>;
   onToggle: (id: string) => void;
-}
-
-// Maps a hex color to a light Tailwind-compatible bg/border for each chip.
-// We inline a style for the icon bg so we can use the real category color.
-function lighten(hex: string): string {
-  // Convert hex to rgba with low opacity for the chip background
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},0.08)`;
-}
-
-function lightenBorder(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},0.25)`;
 }
 
 export function CategoryGrid({ categories, selectedCategories, onToggle }: CategoryGridProps) {
