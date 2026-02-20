@@ -86,7 +86,9 @@ After scaffolding, remove:
 - **Tailwind v4**: `@import "tailwindcss"` replaces the old `@tailwind base/components/utilities` directives. Plugin is `@tailwindcss/vite`, not `tailwindcss` directly.
 - **`AdvancedMarker` requires `mapId`** — use `mapId="DEMO_MAP_ID"` for local dev. Replace with a real Map ID from Google Cloud Console before production.
 - **RTL layout**: `dir="rtl"` on `<html>` means the first flex child renders on the RIGHT. No need to set `dir` on individual divs — they inherit.
+- **RTL bidi-mirrored characters**: `‹` (U+2039) and `›` (U+203A) are Unicode bidi-mirrored — the browser flips them in RTL context. Fix: add `direction: "ltr"` to the element's inline style. Affects carousel arrow buttons, any directional icon characters.
 - **Shared constants** (emoji maps, color maps, default data) belong in `src/data/defaults.ts` — do not duplicate across components.
+- **Website href safety**: When constructing `href` from a user/admin-supplied domain string, validate with `new URL()` and assert `url.hostname === domain` to prevent `@`-based URL confusion attacks (e.g. `trusted.com@evil.com` → browser goes to `evil.com`).
 
 ---
 

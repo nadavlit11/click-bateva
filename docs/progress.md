@@ -63,7 +63,7 @@ Tracks completion status of each work-plan step. Update this file as work is don
 | 4.1 | Project scaffold — `apps/user-web` | ✅ | Vite + React 18 + TS + Tailwind v4 + @vis.gl/react-google-maps; design-1-light; RTL; Rubik font; LLD saved to docs/lld-user-web.md |
 | 4.2 | Map view — Google Maps, active POI markers | 🔄 | Teardrop AdvancedMarkers + name labels working with mock data; swap to Firestore hooks once admin creates real POIs |
 | 4.3 | Filtering — category and tag filters | 🔄 | filterPois() wired (category + tag + search); UI chips/pills toggle correctly; 11 unit tests pass |
-| 4.4 | POI detail popup — info window with all fields | ⬜ | |
+| 4.4 | POI detail popup — info window with all fields | ✅ | PoiDetailPanel: image carousel (RTL arrows, direction:ltr fix for bidi mirroring), placeholder, phone/website/tags; Poi type extended with images[], phone, website |
 | 4.5 | Click tracking — write to `clicks` on marker click | ⏭ | Deferred with 1.5 |
 
 ---
