@@ -50,8 +50,8 @@ Tracks completion status of each work-plan step. Update this file as work is don
 
 | Step | Description | Status | Notes |
 |------|-------------|--------|-------|
-| 3.1 | Project scaffold — `apps/business`, routing, auth guards | ⬜ | |
-| 3.2 | Auth — Login/logout, business role redirect | ⬜ | |
+| 3.1 | Project scaffold — `apps/business`, routing, auth guards | ✅ | Vite+React+TS+Tailwind v4; BrowserRouter + AuthGuard + AppLayout; click-bateva-biz hosting target added |
+| 3.2 | Auth — Login/logout, business role redirect | ✅ | AuthGuard: role check → businessRef claim → getDoc businesses/{id} → BusinessContext; LoginPage; TopBar with signOut |
 | 3.3 | POI list — assigned POIs by businessId | ⬜ | |
 | 3.4 | POI edit — restricted fields + image upload | ⬜ | |
 
@@ -66,7 +66,7 @@ Tracks completion status of each work-plan step. Update this file as work is don
 | 4.3 | Filtering — category and tag filters | ✅ | filterPois() wired (category + tag + search); UI chips/pills toggle correctly; 11 unit tests pass |
 | 4.4 | POI detail popup — info window with all fields | ✅ | PoiDetailPanel: image carousel (RTL arrows, direction:ltr fix for bidi mirroring), placeholder, phone/website/tags; Poi type extended with images[], phone, website |
 | 4.5 | Click tracking — write to `clicks` on marker click | ⏭ | Deferred with 1.5 |
-| 4.6 | Mobile bottom sheet layout | ⬜ | Design א (bottom sheet) chosen from prototype; LLD in docs/lld-user-web.md §11 |
+| 4.6 | Mobile bottom sheet layout | ✅ | BottomSheet.tsx; h-dvh; hidden md:flex / md:hidden; colorUtils.ts extracted from 3 files |
 
 ---
 
