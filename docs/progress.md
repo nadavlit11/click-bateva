@@ -27,8 +27,8 @@ Tracks completion status of each work-plan step. Update this file as work is don
 | 1.2 | Write & deploy Firestore Security Rules | ✅ | `firestore.rules` written and committed; all roles and collections covered |
 | 1.3 | Configure Cloud Storage bucket structure and rules | ✅ | `storage.rules` written; `poi-media/`, `icons/` structure defined; uses custom claims |
 | 1.4 | Firebase Auth setup — Email/Password, custom claims Cloud Function | ✅ | `onUserCreated` trigger + `setUserRole` callable fn; firebase-admin v13 modular imports; emulator on port 8081 (Tomcat holds 8080) |
-| 1.5 | Implement click tracking — client-side write to `clicks` collection | ⬜ | Note: work-plan still says "subcollection" — it's a flat collection |
-| 1.6 | Test security rules using Firebase Emulator Suite | ⬜ | |
+| 1.5 | Implement click tracking — client-side write to `clicks` collection | ⏭ | Deferred — building user-facing app first; revisit after Phase 4 |
+| 1.6 | Test security rules using Firebase Emulator Suite | ⏭ | Deferred — revisit after Phase 4 |
 
 ---
 
@@ -60,11 +60,11 @@ Tracks completion status of each work-plan step. Update this file as work is don
 
 | Step | Description | Status | Notes |
 |------|-------------|--------|-------|
-| 4.1 | Project scaffold — `apps/user-web` | ⬜ | |
-| 4.2 | Map view — Google Maps, active POI markers | ⬜ | |
-| 4.3 | Filtering — category and tag filters | ⬜ | |
+| 4.1 | Project scaffold — `apps/user-web` | ✅ | Vite + React 18 + TS + Tailwind v4 + @vis.gl/react-google-maps; design-1-light; RTL; Rubik font; LLD saved to docs/lld-user-web.md |
+| 4.2 | Map view — Google Maps, active POI markers | 🔄 | Teardrop AdvancedMarkers + name labels working with mock data; swap to Firestore hooks once admin creates real POIs |
+| 4.3 | Filtering — category and tag filters | 🔄 | filterPois() wired (category + tag + search); UI chips/pills toggle correctly; 11 unit tests pass |
 | 4.4 | POI detail popup — info window with all fields | ⬜ | |
-| 4.5 | Click tracking — write to `clicks` on marker click | ⬜ | |
+| 4.5 | Click tracking — write to `clicks` on marker click | ⏭ | Deferred with 1.5 |
 
 ---
 

@@ -11,7 +11,8 @@ Every feature must ship with tests. Tests are written **alongside the feature**,
 | Cloud Function (callable / trigger) | ✅ validation logic, error cases | ✅ end-to-end against emulator | — |
 | Firestore Security Rules change | — | — | ✅ all affected collections × roles |
 | New Firestore collection | — | — | ✅ add to `tests/rules/*.rules.test.ts` |
-| React component (future) | ✅ rendering, user interaction | ✅ if involves Firebase calls | — |
+| React component | ✅ pure logic extracted to functions, rendering | — | — |
+| Pure utility / filter function | ✅ all filter combinations | — | — |
 
 **Minimum bar**: every Cloud Function gets a unit test file. Every rules change gets a rules test.
 
@@ -31,9 +32,15 @@ tests/
 └── rules/
     ├── setup.ts                   ← shared initializeTestEnvironment
     └── *.rules.test.ts            ← Firestore security rules tests
+
+apps/user-web/src/
+└── lib/
+    └── filterPois.test.ts         ← Vitest unit tests (co-located with source)
 ```
 
 Integration tests that use the **Firebase client SDK** (`firebase/app`, `firebase/auth`, etc.) live at the **project root** `tests/integration/` — not inside `functions/` — because the client SDK is installed at root.
+
+**React app tests** use **Vitest** (co-located with source as `*.test.ts`). Run with `npm test` from `apps/user-web/`.
 
 ---
 
@@ -43,6 +50,7 @@ Integration tests that use the **Firebase client SDK** (`firebase/app`, `firebas
 |---|---|---|
 | `cd functions && npm test` | Cloud Function unit tests | No |
 | `npm run test:integration` | Integration tests (functions + rules) | Yes |
+| `cd apps/user-web && npm test` | Vitest unit tests | No |
 
 Start emulators: `firebase emulators:start --only auth,functions,firestore`
 

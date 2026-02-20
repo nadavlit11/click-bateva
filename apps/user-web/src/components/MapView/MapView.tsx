@@ -1,0 +1,41 @@
+import { useMemo } from "react";
+import { APIProvider, Map } from "@vis.gl/react-google-maps";
+import { PoiMarker } from "./PoiMarker";
+import type { Poi, Category } from "../../types";
+
+interface MapViewProps {
+  pois: Poi[];
+  categories: Category[];
+  onPoiClick: (poi: Poi) => void;
+}
+
+const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
+const MAP_ID = "DEMO_MAP_ID";
+
+export function MapView({ pois, categories, onPoiClick }: MapViewProps) {
+  const colorMap = useMemo(
+    () => Object.fromEntries(categories.map((c) => [c.id, c.color])),
+    [categories]
+  );
+
+  return (
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+      <Map
+        defaultCenter={ISRAEL_CENTER}
+        defaultZoom={8}
+        mapId={MAP_ID}
+        gestureHandling="greedy"
+        className="w-full h-full"
+      >
+        {pois.map((poi) => (
+          <PoiMarker
+            key={poi.id}
+            poi={poi}
+            color={colorMap[poi.categoryId] ?? "#4caf50"}
+            onClick={() => onPoiClick(poi)}
+          />
+        ))}
+      </Map>
+    </APIProvider>
+  );
+}
