@@ -30,6 +30,7 @@ Prompt:
 > - Firebase Security Rule gaps: missing auth checks, overly permissive rules, missing field validation on writes
 > - Any logic that lets unauthenticated users read or write data they shouldn't
 > - Exposed internal data structures in API responses
+> - Firestore Security Rules comparing a custom claim to a path literal (e.g. `request.auth.token.someRef == /databases/$(database)/documents/...`): custom claims are always **strings**, so this comparison is always false. Use string concatenation instead: `request.auth.token.someRef == '/databases/' + database + '/documents/...'`
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >
@@ -53,6 +54,7 @@ Prompt:
 > - `clicks` documents must have exactly: `poiId`, `categoryId`, `timestamp`
 > - `businesses` documents must have `associatedUserIds: string[]` (checked by POI update rule)
 > - `createBusinessUser` Cloud Function must set BOTH `role` AND `businessRef` custom claims; `businessRef` format: `/databases/(default)/documents/businesses/${uid}`
+> - Firebase emulator connection must be gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`). Using `DEV` connects every local dev server to the emulator even when QA-ing against production data.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >
@@ -81,6 +83,10 @@ Prompt:
 > **Missing error handling:**
 > - Unhandled promise rejections
 > - Uncaught Firebase errors at system boundaries
+>
+> **RTL / layout correctness:**
+> - Carousels, sliders, or any component using `translateX` to scroll through flex children must have `direction: ltr` on the track element. In a `dir="rtl"` document, RTL flex reverses physical item order, making `translateX(-N%)` navigate the wrong direction.
+> - When a new field is added to a TypeScript type that maps to Firestore, check that: (1) the Firestore data hook (`snapshotTo*`) maps it, (2) every test fixture that constructs that type includes the field, (3) every UI component that could display it actually wires it up.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >
