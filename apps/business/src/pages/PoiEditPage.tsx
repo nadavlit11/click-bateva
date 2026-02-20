@@ -9,6 +9,7 @@ export function PoiEditPage() {
   const { poiId } = useParams<{ poiId: string }>()
   const navigate = useNavigate()
   const [poi, setPoi] = useState<Poi | null>(null)
+  const [categoryName, setCategoryName] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -36,6 +37,11 @@ export function PoiEditPage() {
           email: data.email,
           website: data.website,
         })
+        if (data.categoryId) {
+          getDoc(doc(db, 'categories', data.categoryId))
+            .then(catSnap => { if (catSnap.exists()) setCategoryName(catSnap.data().name ?? data.categoryId) })
+            .catch(() => setCategoryName(data.categoryId))
+        }
         setLoading(false)
       })
       .catch(err => {
@@ -76,7 +82,7 @@ export function PoiEditPage() {
       {/* Read-only info */}
       {poi && (
         <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 text-sm text-gray-600 space-y-1">
-          <p><span className="font-medium text-gray-900">קטגוריה:</span> {poi.categoryId}</p>
+          <p><span className="font-medium text-gray-900">קטגוריה:</span> {categoryName || poi.categoryId}</p>
           <p><span className="font-medium text-gray-900">סטטוס:</span> {poi.active ? 'פעיל' : 'לא פעיל'}</p>
           {poi.openingHours && <p><span className="font-medium text-gray-900">שעות פתיחה:</span> {poi.openingHours}</p>}
           {poi.price && <p><span className="font-medium text-gray-900">מחיר:</span> {poi.price}</p>}
