@@ -39,8 +39,18 @@ export const createBusinessUser = onCall({ cors: true }, async (request) => {
     throw new HttpsError("invalid-argument", "password must be at least 6 characters.");
   }
 
-  // Create Firebase Auth user
-  const userRecord = await adminAuth.createUser({ email: email.trim(), password });
+  // Create Firebase Auth user — catch known errors and convert to HttpsError
+  let userRecord;
+  try {
+    userRecord = await adminAuth.createUser({ email: email.trim(), password });
+  } catch (err: unknown) {
+    const code = (err as { code?: string }).code ?? "";
+    if (code === "auth/email-already-exists") {
+      throw new HttpsError("already-exists", "(auth/email-already-in-use)");
+    }
+    logger.error("Unexpected error creating Firebase Auth user", err);
+    throw new HttpsError("internal", "Failed to create user.");
+  }
   const uid = userRecord.uid;
 
   // Set custom claims: role + businessRef (Firestore path used by security rules)
