@@ -10,7 +10,7 @@ import { filterPois } from "./lib/filterPois";
 import type { Poi } from "./types";
 
 export default function App() {
-  const { pois } = usePois();
+  const { pois, loading: poisLoading } = usePois();
   const categories = useCategories();
   const tags = useTags();
 
@@ -92,6 +92,13 @@ export default function App() {
           onSearchChange={setSearchQuery}
           onClearAll={handleClearAll}
         />
+        {poisLoading && (
+          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+            <div className="bg-white/80 rounded-xl px-5 py-3 shadow text-gray-500 text-sm font-medium">
+              טוען...
+            </div>
+          </div>
+        )}
         {selectedPoi && (
           <PoiDetailPanel
             poi={selectedPoi}

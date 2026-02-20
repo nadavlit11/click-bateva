@@ -1,5 +1,7 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
+import { getPerformance } from "firebase/performance";
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
@@ -16,3 +18,11 @@ export const db = getFirestore(app);
 if (import.meta.env.DEV) {
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
 }
+
+export const analytics = typeof window !== "undefined" && !import.meta.env.DEV
+  ? getAnalytics(app)
+  : null;
+
+export const perf = typeof window !== "undefined" && !import.meta.env.DEV
+  ? getPerformance(app)
+  : null;

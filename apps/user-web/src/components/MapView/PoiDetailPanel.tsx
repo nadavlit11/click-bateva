@@ -84,8 +84,8 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
         {/* Arrows — only when multiple slides */}
         {slideCount > 1 && (
           <>
-            <button onClick={next} style={arrowStyle("left")}>‹</button>
-            <button onClick={prev} style={arrowStyle("right")}>›</button>
+            <button onClick={next} style={arrowStyle("left")} aria-label="תמונה הבאה">‹</button>
+            <button onClick={prev} style={arrowStyle("right")} aria-label="תמונה קודמת">›</button>
           </>
         )}
 
@@ -96,6 +96,7 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
               <button
                 key={i}
                 onClick={() => setCurrentSlide(i)}
+                aria-label={`תמונה ${i + 1}`}
                 style={{
                   width: 6, height: 6, borderRadius: "50%", border: "none", padding: 0, cursor: "pointer",
                   background: i === currentSlide ? "white" : "rgba(255,255,255,0.5)",

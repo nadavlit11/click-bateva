@@ -88,11 +88,13 @@ service cloud.firestore {
       // Only admin can create, update, delete businesses
       allow write: if isAdmin();
 
-      // Admin can read all; business users can read their own business only
+      // Admin can read all; business users can read their own business only.
+      // businessRef is a string claim set by createBusinessUser Cloud Function —
+      // use string concatenation (not path literal) to avoid type-mismatch with JWT strings.
       allow read: if isAdmin() ||
         (isBusinessUser() &&
          request.auth.token.businessRef ==
-           /databases/$(database)/documents/businesses/$(businessId)
+           '/databases/' + database + '/documents/businesses/' + businessId
         );
     }
 
