@@ -52,7 +52,6 @@ export function Sidebar({
           selectedCategories={selectedCategories}
           onToggle={onCategoryToggle}
         />
-        <TagList tags={tags} selectedTags={selectedTags} onToggle={onTagToggle} />
         <SubcategoryFilter
           categories={categories}
           subcategories={subcategories}
@@ -60,6 +59,7 @@ export function Sidebar({
           selectedSubcategories={selectedSubcategories}
           onToggle={onSubcategoryToggle}
         />
+        <TagList tags={tags} selectedTags={selectedTags} onToggle={onTagToggle} />
       </div>
       <SidebarFooter count={filteredCount} onClearAll={onClearAll} />
     </aside>

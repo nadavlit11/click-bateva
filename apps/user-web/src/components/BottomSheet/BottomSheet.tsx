@@ -85,17 +85,17 @@ export function BottomSheet({
                 selectedCategories={selectedCategories}
                 onToggle={onCategoryToggle}
               />
-              <TagList
-                tags={tags}
-                selectedTags={selectedTags}
-                onToggle={onTagToggle}
-              />
               <SubcategoryFilter
                 categories={categories}
                 subcategories={subcategories}
                 selectedCategories={selectedCategories}
                 selectedSubcategories={selectedSubcategories}
                 onToggle={onSubcategoryToggle}
+              />
+              <TagList
+                tags={tags}
+                selectedTags={selectedTags}
+                onToggle={onTagToggle}
               />
             </div>
             <SidebarFooter count={filteredCount} onClearAll={onClearAll} />
