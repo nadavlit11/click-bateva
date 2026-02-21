@@ -16,19 +16,63 @@ This document outlines the key features and their acceptance criteria for the Mi
 - Then a Google Map of Israel is displayed, centered appropriately.
 - And all active Points of Interest (POIs) are visible as markers on the map.
 
-#### Feature: Filter POIs by Category and Tags
+#### Feature: Filter POIs by Category and Location
 
 **Scenario: User filters POIs to find hotels.**
 - Given the map is displayed with multiple POIs.
-- And filter options for Categories (e.g., "Hotels") and Tags (e.g., "Kosher") are available.
-- When the user selects "Hotels" from the category filter.
-- Then only POIs categorized as "Hotels" remain visible on the map.
-- And POIs not categorized as "Hotels" are hidden.
+- And filter options for Categories (e.g., "מלונות") and Area (e.g., "צפון") are available in the sidebar/bottom sheet.
+- When the user selects "מלונות" from the category grid.
+- Then only POIs categorized as "מלונות" remain visible on the map.
+- And POIs not categorized as "מלונות" are hidden.
 
-**Scenario: User refines search with tags.**
-- Given the map is displayed with filtered POIs (e.g., "Hotels").
-- When the user additionally selects "Kosher" from the tags filter.
-- Then only "Hotels" that also have the "Kosher" tag remain visible.
+**Scenario: User filters POIs by region.**
+- Given the map is displayed with multiple POIs.
+- And the sidebar shows an "אזור" section with a dropdown.
+- When the user selects a region (e.g., "צפון") from the region dropdown.
+- Then only POIs tagged with "צפון" (or its sub-regions) remain visible.
+- And sub-region pills appear below the dropdown for the selected region.
+
+**Scenario: User narrows to a sub-region.**
+- Given the user has selected "צפון" from the region dropdown.
+- And sub-region pills (e.g., "גולן", "גליל") are shown below the dropdown.
+- When the user clicks the "גולן" pill.
+- Then only POIs tagged with "גולן" are shown (sub-region overrides the parent selection).
+
+#### Feature: Filter POIs by Subcategory (Per-Category Refinements)
+
+**Scenario: Subcategory filter appears after selecting a category.**
+- Given the user has not selected any category.
+- When the "סינון מפורט" section is visible in the sidebar.
+- Then it shows a hint: "בחר קטגוריה לסינון מפורט" and no filter options.
+
+**Scenario: User selects one category — subcategory section auto-expands.**
+- Given the map is displayed and no category is selected.
+- When the user selects exactly one category (e.g., "מסעדות").
+- Then the "סינון מפורט" section auto-expands and shows subcategory pills for that category (e.g., "כשר", "זול", "בינוני").
+
+**Scenario: User selects multiple categories — subcategory sections are collapsed by default.**
+- Given the user has selected two categories (e.g., "מסעדות" and "מלונות").
+- Then the "סינון מפורט" section shows both category names collapsed (with ◂ arrow).
+- When the user clicks a category name header.
+- Then that category's subcategory pills expand.
+
+**Scenario: Subcategory filter is scoped to each POI's category.**
+- Given the user has selected "מסעדות" and "טיולים" from the category grid.
+- And the user has selected "כשר" subcategory (under מסעדות).
+- Then all POIs categorized as "טיולים" remain visible regardless of kashrut subcategory.
+- And only "מסעדות" POIs with the "כשר" subcategory remain visible.
+
+**Scenario: AND-across-groups, OR-within-group subcategory logic.**
+- Given the user has selected "מסעדות".
+- And the "כשרות" group has options "כשר" and "כשר למהדרין".
+- And the "מחיר" group has options "זול" and "בינוני".
+- When the user selects "כשר" from כשרות and "זול" from מחיר.
+- Then only מסעדות POIs that match BOTH: (kosher OR mehadrin) AND (cheap) remain visible.
+
+**Scenario: Deselecting a category clears its subcategory selections.**
+- Given the user has selected "מסעדות" and chosen "כשר" as a subcategory.
+- When the user deselects "מסעדות" from the category grid.
+- Then the "כשר" subcategory is automatically cleared from the active filter.
 
 #### Feature: View Detailed POI Information
 
@@ -65,7 +109,7 @@ This document outlines the key features and their acceptance criteria for the Mi
 - When the admin clicks a location on the map.
 - Then a pin is placed at the clicked location.
 - And the coordinates (latitude, longitude) are automatically populated.
-- When the admin fills in all other required fields (Name, Description, Category, Tags, optional Images/Videos, Phone, Email, Website) and submits.
+- When the admin fills in all other required fields (Name, Description, Category, Tags (location), Subcategories, optional Images/Videos, Phone, Email, Website) and submits.
 - Then the new POI is successfully saved to the database with the selected coordinates.
 - And the new POI becomes visible on the user-facing map application.
 
@@ -83,7 +127,7 @@ This document outlines the key features and their acceptance criteria for the Mi
 **Scenario: Admin edits an existing POI.**
 - Given the admin is logged into the Admin Dashboard.
 - When the admin selects an existing POI for editing.
-- And modifies its Name, Description, Category, Tags, or other details.
+- And modifies its Name, Description, Category, Tags (location), Subcategories, or other details.
 - When the admin saves the changes.
 - Then the POI's details are updated in the database.
 - And the updated details are immediately reflected on the user-facing map application.
@@ -124,10 +168,47 @@ This document outlines the key features and their acceptance criteria for the Mi
 - When the admin navigates to the "Manage Categories" section and adds a new category name without selecting an icon.
 - Then the new category is saved and available for selection when creating/editing POIs.
 
-**Scenario: Admin adds a new Tag.**
+**Scenario: Admin adds a new location Tag (area/sub-area).**
 - Given the admin is logged into the Admin Dashboard.
-- When the admin navigates to the "Manage Tags" section and adds a new tag name.
-- Then the new tag is saved and available for selection when creating/editing POIs.
+- When the admin navigates to the "Manage Tags" section and adds a new tag name with group "location".
+- And optionally sets a parentId to make it a sub-region.
+- Then the new location tag is saved and available for assignment to POIs.
+- And it appears in the user-facing area filter (as a parent region in the dropdown, or as a sub-region pill).
+
+#### Feature: Manage Subcategories (CRUD)
+
+**Scenario: Admin adds a new subcategory for a category.**
+- Given the admin is logged into the Admin Dashboard.
+- When the admin navigates to the "Subcategories" section.
+- And clicks "Add New Subcategory".
+- And selects a category (e.g., "מסעדות") and enters a name (e.g., "כשר") and optionally a group (e.g., "כשרות").
+- Then the subcategory is saved and linked to that category.
+- And it appears as a filter pill in the user-facing app when "מסעדות" is selected.
+
+**Scenario: Admin edits a subcategory.**
+- Given the admin is on the Subcategories page.
+- When the admin clicks edit on an existing subcategory and changes its name or group.
+- Then the updated subcategory is saved and reflected in the user-facing filter.
+
+**Scenario: Admin deletes a subcategory.**
+- Given the admin is on the Subcategories page.
+- When the admin clicks delete on a subcategory and confirms.
+- Then the subcategory is removed from Firestore.
+- And it no longer appears in the user-facing filter or POI edit form.
+
+**Scenario: Admin assigns subcategories to a POI.**
+- Given the admin is editing a POI with category "מסעדות".
+- When the POI edit drawer opens.
+- Then subcategory checkboxes for "מסעדות" are shown (e.g., "כשר", "זול").
+- When the admin checks "כשר" and saves.
+- Then the POI's `subcategoryIds` field is updated in Firestore.
+- And the POI appears when a user filters by "כשר" under מסעדות.
+
+**Scenario: Subcategory checkboxes change when category changes.**
+- Given the admin is editing a POI.
+- When the admin changes the category from "מסעדות" to "מלונות".
+- Then the subcategory checkboxes update to show מלונות subcategories.
+- And previously selected מסעדות subcategory IDs are cleared.
 
 #### Feature: Track POI Click Analytics
 
