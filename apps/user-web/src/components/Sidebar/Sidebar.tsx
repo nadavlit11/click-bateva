@@ -38,13 +38,15 @@ export function Sidebar({
       style={{ boxShadow: "4px 0 20px rgba(0,0,0,0.08)" }}
     >
       <AppHeader />
-      <SearchBar value={searchQuery} onChange={onSearchChange} />
-      <CategoryGrid
-        categories={categories}
-        selectedCategories={selectedCategories}
-        onToggle={onCategoryToggle}
-      />
-      <TagList tags={tags} selectedTags={selectedTags} onToggle={onTagToggle} />
+      <div className="flex-1 overflow-y-auto">
+        <SearchBar value={searchQuery} onChange={onSearchChange} />
+        <CategoryGrid
+          categories={categories}
+          selectedCategories={selectedCategories}
+          onToggle={onCategoryToggle}
+        />
+        <TagList tags={tags} selectedTags={selectedTags} onToggle={onTagToggle} />
+      </div>
       <SidebarFooter count={filteredCount} onClearAll={onClearAll} />
     </aside>
   );

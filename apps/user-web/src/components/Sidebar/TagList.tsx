@@ -8,7 +8,7 @@ interface TagListProps {
 
 export function TagList({ tags, selectedTags, onToggle }: TagListProps) {
   return (
-    <div className="px-4 pb-4 flex-1 overflow-y-auto">
+    <div className="px-4 pb-4">
       <h2 className="text-lg font-semibold text-gray-700 mb-3">תגיות</h2>
       <div className="flex flex-wrap gap-2">
         {tags.map((tag) => {
