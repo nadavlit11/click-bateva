@@ -25,7 +25,7 @@ export function SubcategoryFilter({
   selectedSubcategories,
   onToggle,
 }: SubcategoryFilterProps) {
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const activeCats = categories.filter(
     c => selectedCategories.has(c.id) && subcategories.some(s => s.categoryId === c.id)
@@ -39,8 +39,8 @@ export function SubcategoryFilter({
     );
   }
 
-  function toggleCollapse(catId: string) {
-    setCollapsed(prev => {
+  function toggleExpanded(catId: string) {
+    setExpanded(prev => {
       const next = new Set(prev);
       next.has(catId) ? next.delete(catId) : next.add(catId);
       return next;
@@ -54,7 +54,7 @@ export function SubcategoryFilter({
       </h3>
       {activeCats.map(cat => {
         const catSubs = subcategories.filter(s => s.categoryId === cat.id);
-        const isCollapsed = collapsed.has(cat.id);
+        const isExpanded = expanded.has(cat.id);
 
         // Collect unique groups in stable order (grouped null last)
         const groupOrder: Array<string | null> = [];
@@ -71,13 +71,13 @@ export function SubcategoryFilter({
         return (
           <div key={cat.id}>
             <button
-              onClick={() => toggleCollapse(cat.id)}
+              onClick={() => toggleExpanded(cat.id)}
               className="flex items-center gap-1 text-sm font-semibold text-gray-700 mb-2 w-full text-right"
             >
-              <span className="text-gray-400 text-xs">{isCollapsed ? "▸" : "▾"}</span>
+              <span className="text-gray-400 text-xs">{isExpanded ? "▾" : "▸"}</span>
               {cat.name}
             </button>
-            {!isCollapsed && (
+            {isExpanded && (
               <div className="space-y-2 mr-3">
                 {groupOrder.map(group => {
                   const groupSubs = catSubs.filter(s => (s.group ?? null) === group);
