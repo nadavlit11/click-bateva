@@ -33,7 +33,7 @@ export function MapView({ pois, categories, selectedPoiId, onPoiClick }: MapView
         gestureHandling="greedy"
         mapTypeControl={false}
         minZoom={8}
-        restriction={{ latLngBounds: ISRAEL_BOUNDS, strictBounds: true }}
+        restriction={{ latLngBounds: ISRAEL_BOUNDS, strictBounds: false }}
         className="w-full h-full"
       >
         {pois.map((poi) => (
