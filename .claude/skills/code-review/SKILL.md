@@ -57,6 +57,8 @@ Prompt:
 > - Firebase emulator connection must be gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`). Using `DEV` connects every local dev server to the emulator even when QA-ing against production data.
 > - Firebase Functions v2 `onCall` does NOT add CORS headers for arbitrary origins by default (unlike v1). Every `onCall` from `firebase-functions/v2/https` must include `{ cors: true }`: `onCall({ cors: true }, async (request) => { ... })`. Without this, calls from localhost and non-Firebase-Hosting origins fail with a CORS error.
 > - The `onUserCreated` Auth trigger fires for ALL new users, including those created by admin callable functions (e.g. `createBusinessUser`). Any `setCustomUserClaims` call in `onUserCreated` must first check `adminAuth.getUser(uid).customClaims?.role` and skip if a role is already set — otherwise it races with and overwrites claims set by the callable.
+> - Demo mode mock data: once production Firestore has been seeded with real catalog data (categories, tags, subcategories), all mock POIs must reference those real seeded document IDs. Never merge parallel MOCK_CATEGORIES/MOCK_TAGS/MOCK_SUBCATEGORIES arrays alongside real Firestore data — this causes duplicate entries in the UI.
+> - After adding a new Firestore collection, always deploy the updated security rules: `firebase deploy --only firestore:rules`. A rule written in the file but not deployed silently blocks all reads/writes.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >
@@ -89,6 +91,11 @@ Prompt:
 > **RTL / layout correctness:**
 > - Carousels, sliders, or any component using `translateX` to scroll through flex children must have `direction: ltr` on the track element. In a `dir="rtl"` document, RTL flex reverses physical item order, making `translateX(-N%)` navigate the wrong direction.
 > - When a new field is added to a TypeScript type that maps to Firestore, check that: (1) the Firestore data hook (`snapshotTo*`) maps it, (2) every test fixture that constructs that type includes the field, (3) every UI component that could display it actually wires it up.
+> - In RTL UIs, "collapsed" state indicators should point LEFT (◂), not right (▸). The ▸ character signals "expand right" which is the wrong direction in Hebrew/Arabic layouts.
+> - Mobile viewport height: always use `100dvh` (not `100vh`) in full-screen layouts — `dvh` accounts for mobile browser chrome (URL bar, nav). When a fixed overlay (bottom sheet, tab bar) sits at the bottom, subtract its height from `max-h` calculations: `max-h-[calc(100dvh-120px-2rem)] md:max-h-[calc(100dvh-2rem)]`.
+> - Scroll indicators (arrows/fade that show "more content below"): initialize by checking actual scroll state on mount, not by assuming an initial value. Use `useEffect(() => { requestAnimationFrame(checkScroll); }, [expanded])` so the indicator reflects real overflow after layout settles.
+> - Footer shadows over a scroll container: a `box-shadow` on a footer sibling needs `position: relative; z-index: N` to paint on top of the adjacent scroll area. Without z-index, the scroll content may render on top and hide the shadow.
+> - After a refactor that removes intermediate variable aliases (e.g., `effectiveFoo = foo`), do a replace_all to update all consumers. Dead aliases left behind cause TS errors when the alias is later deleted.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >

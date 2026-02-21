@@ -19,6 +19,14 @@ Use this skill when adding a new Firestore collection to the project. Ensures al
 - Implement permissions per the matrix
 - Add any necessary helper functions if new role logic is needed
 
+### 3b. Deploy the updated rules immediately
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+**Do this right after writing the rule** — a rule in the file but not deployed silently blocks all client reads/writes to the new collection. Don't wait until the end of the feature.
+
 ### 4. Update `firestore.indexes.json`
 - Add composite indexes for any queries that filter/order on multiple fields
 - Common patterns:

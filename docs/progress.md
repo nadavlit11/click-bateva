@@ -91,6 +91,25 @@ Tracks completion status of each work-plan step. Update this file as work is don
 
 ---
 
+## Post-Launch Refinements (2026-02-21)
+
+Fixes and polish applied after initial Phase 4 deploy, outside the original work plan:
+
+| Fix | Description |
+|-----|-------------|
+| Subcategory model | Replaced tag-group faceted filtering with per-category subcategories (`subcategories` collection); filter is AND-across-groups, OR-within-group, scoped to each POI's category |
+| Demo mode production | Removed `import.meta.env.DEV` guard from demo toggle; created `scripts/seed-demo.mjs` to seed production Firestore with 6 categories, 15 location tags, 36 subcategories, 1 showcase POI |
+| Mobile POI panel | Fixed cut-off by using `dvh` and subtracting 120px bottom-sheet height on mobile |
+| Duplicate demo data | Fixed: mock POIs now reference real seeded Firestore IDs; MOCK_CATEGORIES/MOCK_TAGS/MOCK_SUBCATEGORIES removed from merge |
+| Location filter UX | Replaced collapsible pills with native `<select>` dropdown + sub-region pills; switching regions auto-clears previous selection |
+| Subcategory filter UX | Auto-expands when exactly 1 category selected; collapsed by default for multiple; RTL arrow (◂/▾); hint text when no category selected |
+| Scroll indicator | Fade gradient + down-arrow in bottom sheet; only shows when content actually overflows (checked via `requestAnimationFrame` on open) |
+| Footer shadow | `z-index` fix so shadow renders above scroll sibling |
+| Map south bound | Extended from 29.3° → 28.5° to allow seeing Eilat on mobile with bottom sheet covering 70vh |
+| Firestore rules deploy | Deployed `subcategories` allow-read rule that was written but not deployed |
+
+---
+
 ## Known Deviations from Work Plan
 
 - `clicks` in the work plan referenced "subcollection" in 1.5 and 4.5 — implemented as **flat top-level collection** as designed
