@@ -63,6 +63,7 @@ export function BottomSheet({
     } else {
       setCanScrollDown(false);
     }
+  // Sets have new identity on every toggle (new Set(prev)), so this fires on each selection change — intended.
   }, [expanded, selectedCategories, selectedSubcategories]);
 
   const sheetStyle: React.CSSProperties = {

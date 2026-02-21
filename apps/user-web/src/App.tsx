@@ -25,10 +25,7 @@ export default function App() {
   const [showMocks, setShowMocks] = useState(false);
 
   // Demo mode adds mock POIs using real seeded category/tag/subcategory IDs — no duplicate catalogs
-  const effectivePois          = showMocks ? [...pois, ...MOCK_POIS] : pois;
-  const effectiveCategories    = categories;
-  const effectiveTags          = tags;
-  const effectiveSubcategories = subcategories;
+  const effectivePois = showMocks ? [...pois, ...MOCK_POIS] : pois;
 
   const filteredPois = useMemo(
     () => filterPois(effectivePois, {
@@ -36,9 +33,9 @@ export default function App() {
       selectedTags,
       selectedSubcategories,
       searchQuery,
-      subcategories: effectiveSubcategories,
+      subcategories,
     }),
-    [effectivePois, selectedCategories, selectedTags, selectedSubcategories, searchQuery, effectiveSubcategories]
+    [effectivePois, selectedCategories, selectedTags, selectedSubcategories, searchQuery, subcategories]
   );
 
   function handleCategoryToggle(id: string) {
@@ -50,7 +47,7 @@ export default function App() {
     });
     if (isCurrentlySelected) {
       // Clear subcategories of this category when deselecting
-      const catSubIds = effectiveSubcategories.filter(s => s.categoryId === id).map(s => s.id);
+      const catSubIds = subcategories.filter(s => s.categoryId === id).map(s => s.id);
       setSelectedSubcategories(prev => {
         const next = new Set(prev);
         catSubIds.forEach(sid => next.delete(sid));
@@ -95,9 +92,9 @@ export default function App() {
     <div className="h-dvh w-screen flex overflow-hidden">
       <Sidebar
         className="hidden md:flex"
-        categories={effectiveCategories}
-        tags={effectiveTags}
-        subcategories={effectiveSubcategories}
+        categories={categories}
+        tags={tags}
+        subcategories={subcategories}
         selectedCategories={selectedCategories}
         selectedTags={selectedTags}
         selectedSubcategories={selectedSubcategories}
@@ -112,7 +109,7 @@ export default function App() {
       <main className="flex-1 h-full relative">
         <MapView
           pois={filteredPois}
-          categories={effectiveCategories}
+          categories={categories}
           selectedPoiId={selectedPoi?.id ?? null}
           onPoiClick={handlePoiClick}
         />
@@ -127,9 +124,9 @@ export default function App() {
           className="md:hidden absolute bottom-0 left-0 right-0 z-20"
           expanded={sheetExpanded}
           onExpandedChange={setSheetExpanded}
-          categories={effectiveCategories}
-          tags={effectiveTags}
-          subcategories={effectiveSubcategories}
+          categories={categories}
+          tags={tags}
+          subcategories={subcategories}
           selectedCategories={selectedCategories}
           selectedTags={selectedTags}
           selectedSubcategories={selectedSubcategories}
@@ -151,8 +148,8 @@ export default function App() {
         {selectedPoi && (
           <PoiDetailPanel
             poi={selectedPoi}
-            category={effectiveCategories.find(c => c.id === selectedPoi.categoryId)}
-            tags={effectiveTags.filter(t => selectedPoi.tags.includes(t.id))}
+            category={categories.find(c => c.id === selectedPoi.categoryId)}
+            tags={tags.filter(t => selectedPoi.tags.includes(t.id))}
             onClose={() => setSelectedPoi(null)}
           />
         )}
