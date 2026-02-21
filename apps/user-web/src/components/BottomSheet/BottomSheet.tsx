@@ -80,6 +80,11 @@ export function BottomSheet({
           <div className="flex flex-col flex-1 overflow-hidden">
             <SearchBar value={searchQuery} onChange={onSearchChange} />
             <div className="flex-1 overflow-y-auto">
+              <TagList
+                tags={tags}
+                selectedTags={selectedTags}
+                onToggle={onTagToggle}
+              />
               <CategoryGrid
                 categories={categories}
                 selectedCategories={selectedCategories}
@@ -91,11 +96,6 @@ export function BottomSheet({
                 selectedCategories={selectedCategories}
                 selectedSubcategories={selectedSubcategories}
                 onToggle={onSubcategoryToggle}
-              />
-              <TagList
-                tags={tags}
-                selectedTags={selectedTags}
-                onToggle={onTagToggle}
               />
             </div>
             <SidebarFooter count={filteredCount} onClearAll={onClearAll} />
