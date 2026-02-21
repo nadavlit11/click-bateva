@@ -74,7 +74,7 @@ export function SubcategoryFilter({
               onClick={() => toggleExpanded(cat.id)}
               className="flex items-center gap-1 text-sm font-semibold text-gray-700 mb-2 w-full text-right"
             >
-              <span className="text-gray-400 text-xs">{isExpanded ? "▾" : "▸"}</span>
+              <span className="text-gray-400 text-xs">{isExpanded ? "▾" : "◂"}</span>
               {cat.name}
             </button>
             {isExpanded && (
