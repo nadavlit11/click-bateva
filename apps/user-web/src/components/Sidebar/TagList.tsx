@@ -8,77 +8,64 @@ interface TagListProps {
 }
 
 export function TagList({ tags, selectedTags, onToggle }: TagListProps) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [focusedParentId, setFocusedParentId] = useState("");
 
-  // Only show location tags
   const locationTags = tags.filter(t => t.group === "location");
   if (locationTags.length === 0) return null;
 
   const parents = locationTags.filter(t => !t.parentId);
-  const childrenOf = (parentId: string) => locationTags.filter(t => t.parentId === parentId);
+  const childrenOf = (id: string) => locationTags.filter(t => t.parentId === id);
+  const focusedChildren = focusedParentId ? childrenOf(focusedParentId) : [];
 
-  function toggleExpand(id: string) {
-    setExpanded(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  function handleRegionChange(newParentId: string) {
+    // Deselect previous parent + its children
+    if (focusedParentId) {
+      if (selectedTags.has(focusedParentId)) onToggle(focusedParentId);
+      childrenOf(focusedParentId).forEach(c => {
+        if (selectedTags.has(c.id)) onToggle(c.id);
+      });
+    }
+    // Select new parent
+    if (newParentId && !selectedTags.has(newParentId)) onToggle(newParentId);
+    setFocusedParentId(newParentId);
   }
 
   return (
     <div className="px-4 pb-4 space-y-2">
       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">אזור</h3>
-      {parents.map(parent => {
-        const children = childrenOf(parent.id);
-        const isExpanded = expanded.has(parent.id);
-        const isSelected = selectedTags.has(parent.id);
 
-        return (
-          <div key={parent.id}>
-            <div className="flex items-center gap-1">
-              {children.length > 0 && (
-                <button
-                  onClick={() => toggleExpand(parent.id)}
-                  className="text-gray-400 hover:text-gray-600 text-sm w-5 shrink-0 text-center"
-                  aria-label={isExpanded ? "כווץ" : "הרחב"}
-                >
-                  {isExpanded ? "▾" : "▸"}
-                </button>
-              )}
+      <select
+        value={focusedParentId}
+        onChange={e => handleRegionChange(e.target.value)}
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:border-green-500 cursor-pointer"
+        dir="rtl"
+      >
+        <option value="">כל האזורים</option>
+        {parents.map(p => (
+          <option key={p.id} value={p.id}>{p.name}</option>
+        ))}
+      </select>
+
+      {focusedChildren.length > 0 && (
+        <div className="flex flex-wrap gap-2 pt-1">
+          {focusedChildren.map(child => {
+            const isSelected = selectedTags.has(child.id);
+            return (
               <button
-                onClick={() => onToggle(parent.id)}
-                className={`py-1.5 px-3 rounded-full text-sm border transition-all ${
+                key={child.id}
+                onClick={() => onToggle(child.id)}
+                className={`py-1 px-2.5 rounded-full text-xs border transition-all ${
                   isSelected
                     ? "bg-green-500 text-white border-green-500"
                     : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-green-50"
-                } ${children.length === 0 ? "mr-5" : ""}`}
+                }`}
               >
-                {parent.name}
+                {child.name}
               </button>
-            </div>
-            {isExpanded && children.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-1.5 mr-6">
-                {children.map(child => {
-                  const isChildSelected = selectedTags.has(child.id);
-                  return (
-                    <button
-                      key={child.id}
-                      onClick={() => onToggle(child.id)}
-                      className={`py-1 px-2.5 rounded-full text-xs border transition-all ${
-                        isChildSelected
-                          ? "bg-green-500 text-white border-green-500"
-                          : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-green-50"
-                      }`}
-                    >
-                      {child.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

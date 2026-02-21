@@ -7,7 +7,7 @@ import { PoiDetailPanel } from "./components/MapView/PoiDetailPanel";
 import { BottomSheet } from "./components/BottomSheet/BottomSheet";
 import { usePois, useCategories, useTags, useSubcategories } from "./hooks/useFirestoreData";
 import { filterPois } from "./lib/filterPois";
-import { MOCK_POIS, MOCK_CATEGORIES, MOCK_TAGS, MOCK_SUBCATEGORIES } from "./data/mockData";
+import { MOCK_POIS } from "./data/mockData";
 import type { Poi } from "./types";
 
 export default function App() {
@@ -24,10 +24,11 @@ export default function App() {
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [showMocks, setShowMocks] = useState(false);
 
-  const effectivePois          = showMocks ? [...pois, ...MOCK_POIS]                   : pois;
-  const effectiveCategories    = showMocks ? [...categories, ...MOCK_CATEGORIES]       : categories;
-  const effectiveTags          = showMocks ? [...tags, ...MOCK_TAGS]                   : tags;
-  const effectiveSubcategories = showMocks ? [...subcategories, ...MOCK_SUBCATEGORIES] : subcategories;
+  // Demo mode adds mock POIs using real seeded category/tag/subcategory IDs — no duplicate catalogs
+  const effectivePois          = showMocks ? [...pois, ...MOCK_POIS] : pois;
+  const effectiveCategories    = categories;
+  const effectiveTags          = tags;
+  const effectiveSubcategories = subcategories;
 
   const filteredPois = useMemo(
     () => filterPois(effectivePois, {
