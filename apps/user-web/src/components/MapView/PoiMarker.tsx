@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
-import { CATEGORY_EMOJI } from "../../data/defaults";
 import type { Poi } from "../../types";
 
 interface PoiMarkerProps {
   poi: Poi;
-  color: string;    // hex from matching category
+  color: string;
+  iconUrl: string | null;
   selected: boolean;
   onClick: () => void;
 }
 
-export function PoiMarker({ poi, color, selected, onClick }: PoiMarkerProps) {
+export function PoiMarker({ poi, color, iconUrl, selected, onClick }: PoiMarkerProps) {
   const [hovered, setHovered] = useState(false);
 
   const boxShadow = selected
@@ -47,9 +47,21 @@ export function PoiMarker({ poi, color, selected, onClick }: PoiMarkerProps) {
             transition: "transform 0.2s ease, box-shadow 0.2s ease",
           }}
         >
-          <span style={{ transform: "rotate(45deg)", fontSize: 16, lineHeight: 1 }}>
-            {CATEGORY_EMOJI[poi.categoryId] ?? "📍"}
-          </span>
+          {iconUrl ? (
+            <img
+              src={iconUrl}
+              alt=""
+              style={{
+                transform: "rotate(45deg)",
+                width: 18,
+                height: 18,
+                objectFit: "contain",
+                filter: "brightness(0) invert(1)",
+              }}
+            />
+          ) : (
+            <span style={{ transform: "rotate(45deg)", fontSize: 16, lineHeight: 1 }}>📍</span>
+          )}
         </div>
 
         {/* Name label */}

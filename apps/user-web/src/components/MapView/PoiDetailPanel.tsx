@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import type { CSSProperties } from "react";
 import type { Poi, Category, Tag } from "../../types";
-import { CATEGORY_EMOJI } from "../../data/defaults";
 import { lighten } from "../../lib/colorUtils";
 
 interface PoiDetailPanelProps {
@@ -46,7 +45,10 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
   })();
 
   return (
-    <div className="absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100vh-2rem)] overflow-y-auto">
+    <div
+      className="absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100vh-2rem)] overflow-y-auto"
+      style={{ outline: `3px solid ${color}` }}
+    >
 
       {/* ── Carousel ── */}
       <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
@@ -79,10 +81,17 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 56,
               }}
             >
-              {CATEGORY_EMOJI[poi.categoryId] ?? "📍"}
+              {category?.iconUrl ? (
+                <img
+                  src={category.iconUrl}
+                  alt=""
+                  style={{ width: 64, height: 64, objectFit: "contain", filter: "brightness(0) invert(1)", opacity: 0.9 }}
+                />
+              ) : (
+                <span style={{ fontSize: 56 }}>📍</span>
+              )}
             </div>
           )}
         </div>
@@ -135,10 +144,17 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
         {/* Category chip */}
         {category && (
           <span
-            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium"
+            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium"
             style={{ background: lighten(color), color, border: `1px solid ${color}44` }}
           >
-            {CATEGORY_EMOJI[category.id] ?? "📍"} {category.name}
+            {category.iconUrl ? (
+              <img
+                src={category.iconUrl}
+                alt=""
+                style={{ width: 13, height: 13, objectFit: "contain", filter: `opacity(0.85)` }}
+              />
+            ) : null}
+            {category.name}
           </span>
         )}
 

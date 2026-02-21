@@ -18,6 +18,10 @@ export function MapView({ pois, categories, selectedPoiId, onPoiClick }: MapView
     () => Object.fromEntries(categories.map((c) => [c.id, c.color])),
     [categories]
   );
+  const iconUrlMap = useMemo(
+    () => Object.fromEntries(categories.map((c) => [c.id, c.iconUrl])),
+    [categories]
+  );
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
@@ -34,6 +38,7 @@ export function MapView({ pois, categories, selectedPoiId, onPoiClick }: MapView
             key={poi.id}
             poi={poi}
             color={colorMap[poi.categoryId] ?? "#4caf50"}
+            iconUrl={iconUrlMap[poi.categoryId] ?? null}
             selected={poi.id === selectedPoiId}
             onClick={() => onPoiClick(poi)}
           />
