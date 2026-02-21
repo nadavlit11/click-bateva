@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import type { QuerySnapshot, DocumentData } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import type { Category, Poi, Tag } from "../types";
+import type { Category, Poi, Tag, Subcategory } from "../types";
 
 function snapshotToPois(snap: QuerySnapshot<DocumentData>): Poi[] {
   return snap.docs.map(doc => {
@@ -21,6 +21,7 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>): Poi[] {
       price: d.price ?? null,
       categoryId: d.categoryId,
       tags: d.tags ?? [],
+      subcategoryIds: d.subcategoryIds ?? [],
     };
   });
 }
@@ -68,4 +69,17 @@ export function useTags() {
   }, []);
 
   return tags;
+}
+
+export function useSubcategories() {
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "subcategories"), snap => {
+      setSubcategories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subcategory)));
+    }, err => console.error("useSubcategories:", err));
+    return unsub;
+  }, []);
+
+  return subcategories;
 }

@@ -9,6 +9,7 @@ import { TagsPage } from './pages/TagsPage.tsx'
 import { IconsPage } from './pages/IconsPage.tsx'
 import { BusinessesPage } from './pages/BusinessesPage.tsx'
 import { AnalyticsPage } from './pages/AnalyticsPage.tsx'
+import { SubcategoriesPage } from './pages/SubcategoriesPage.tsx'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/tags" element={<TagsPage />} />
             <Route path="/icons" element={<IconsPage />} />
             <Route path="/businesses" element={<BusinessesPage />} />
+            <Route path="/subcategories" element={<SubcategoriesPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
           </Route>
         </Route>

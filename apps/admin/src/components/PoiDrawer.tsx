@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { GROUP_ORDER, GROUP_LABELS } from '../constants/tagGroups.ts'
 import { MapPicker } from './MapPicker.tsx'
 import {
   collection,
@@ -10,7 +9,16 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
-import type { Poi, Category, Tag, Business } from '../types/index.ts'
+import type { Poi, Category, Tag, Subcategory, Business } from '../types/index.ts'
+
+const SUBCAT_GROUP_LABELS: Record<string, string> = {
+  kashrut:    'כשרות',
+  price:      'מחיר',
+  audience:   'קהל יעד',
+  type:       'סוג',
+  difficulty: 'רמת קושי',
+  amenities:  'מתקנים',
+}
 
 interface Props {
   isOpen: boolean
@@ -18,6 +26,7 @@ interface Props {
   poi: Poi | null
   categories: Category[]
   tags: Tag[]
+  subcategories: Subcategory[]
   businesses: Business[]
   onSaved: () => void
 }
@@ -35,6 +44,7 @@ interface FormState {
   website: string
   categoryId: string
   selectedTags: string[]
+  selectedSubcategoryIds: string[]
   businessId: string
   active: boolean
   openingHours: string
@@ -54,13 +64,14 @@ const INITIAL_FORM: FormState = {
   website: '',
   categoryId: '',
   selectedTags: [],
+  selectedSubcategoryIds: [],
   businessId: '',
   active: true,
   openingHours: '',
   price: '',
 }
 
-export function PoiDrawer({ isOpen, onClose, poi, categories, tags, businesses, onSaved }: Props) {
+export function PoiDrawer({ isOpen, onClose, poi, categories, tags, subcategories, businesses, onSaved }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -88,6 +99,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, businesses, 
         website: poi.website,
         categoryId: poi.categoryId,
         selectedTags: [...poi.tags],
+        selectedSubcategoryIds: [...(poi.subcategoryIds ?? [])],
         businessId: poi.businessId ?? '',
         active: poi.active,
         openingHours: poi.openingHours ?? '',
@@ -177,6 +189,15 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, businesses, 
     }))
   }
 
+  function toggleSubcategory(subId: string) {
+    setForm(prev => ({
+      ...prev,
+      selectedSubcategoryIds: prev.selectedSubcategoryIds.includes(subId)
+        ? prev.selectedSubcategoryIds.filter(s => s !== subId)
+        : [...prev.selectedSubcategoryIds, subId],
+    }))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.name.trim()) { setError('שם הנקודה הוא שדה חובה'); return }
@@ -197,6 +218,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, businesses, 
         website: form.website.trim(),
         categoryId: form.categoryId,
         tags: form.selectedTags,
+        subcategoryIds: form.selectedSubcategoryIds,
         businessId: form.businessId.trim() || null,
         active: form.active,
         openingHours: form.openingHours.trim() || null,
@@ -267,7 +289,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, businesses, 
               <label className="block text-sm font-medium text-gray-700 mb-1">קטגוריה *</label>
               <select
                 value={form.categoryId}
-                onChange={e => set('categoryId', e.target.value)}
+                onChange={e => setForm(prev => ({ ...prev, categoryId: e.target.value, selectedSubcategoryIds: [] }))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
               >
                 <option value="">בחר קטגוריה</option>
@@ -524,32 +546,73 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, businesses, 
               />
             </div>
 
-            {/* Tags — grouped by group field */}
-            {tags.length > 0 && (() => {
-              const grouped = GROUP_ORDER
-                .map(g => ({ key: g ?? 'general', label: g ? GROUP_LABELS[g] : 'תגיות', tags: tags.filter(t => t.group === g) }))
-                .filter(g => g.tags.length > 0)
+            {/* Location tags */}
+            {(() => {
+              const locationTags = tags.filter(t => t.group === 'location')
+              if (locationTags.length === 0) return null
+              const parents = locationTags.filter(t => !t.parentId)
+              const childrenOf = (pid: string) => locationTags.filter(t => t.parentId === pid)
+              return (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">תגית אזור</label>
+                  {parents.map(parent => {
+                    const children = childrenOf(parent.id)
+                    return (
+                      <div key={parent.id}>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={form.selectedTags.includes(parent.id)} onChange={() => toggleTag(parent.id)} className="accent-green-600" />
+                          <span className="text-sm font-medium text-gray-700">{parent.name}</span>
+                        </label>
+                        {children.length > 0 && (
+                          <div className="mr-6 mt-1 grid grid-cols-2 gap-1">
+                            {children.map(child => (
+                              <label key={child.id} className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" checked={form.selectedTags.includes(child.id)} onChange={() => toggleTag(child.id)} className="accent-green-600" />
+                                <span className="text-sm text-gray-600">{child.name}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+
+            {/* Subcategories (scoped to selected category) */}
+            {form.categoryId && (() => {
+              const catSubs = subcategories.filter(s => s.categoryId === form.categoryId)
+              if (catSubs.length === 0) return null
+              const groupOrder: Array<string | null> = []
+              const seen = new Set<string | null>()
+              for (const s of catSubs) {
+                const g = s.group ?? null
+                if (!seen.has(g)) { seen.add(g); groupOrder.push(g) }
+              }
               return (
                 <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">תגיות</label>
-                  {grouped.map(({ key, label, tags: groupTags }) => (
-                    <div key={key}>
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{label}</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {groupTags.map(tag => (
-                          <label key={tag.id} className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={form.selectedTags.includes(tag.id)}
-                              onChange={() => toggleTag(tag.id)}
-                              className="accent-green-600"
-                            />
-                            <span className="text-sm text-gray-700">{tag.name}</span>
-                          </label>
-                        ))}
+                  <label className="block text-sm font-medium text-gray-700">תת-קטגוריות</label>
+                  {groupOrder.map(group => {
+                    const groupSubs = catSubs.filter(s => (s.group ?? null) === group)
+                    return (
+                      <div key={group ?? '__null__'}>
+                        {group && (
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+                            {SUBCAT_GROUP_LABELS[group] ?? group}
+                          </p>
+                        )}
+                        <div className="grid grid-cols-2 gap-2">
+                          {groupSubs.map(sub => (
+                            <label key={sub.id} className="flex items-center gap-2 cursor-pointer">
+                              <input type="checkbox" checked={form.selectedSubcategoryIds.includes(sub.id)} onChange={() => toggleSubcategory(sub.id)} className="accent-green-600" />
+                              <span className="text-sm text-gray-700">{sub.name}</span>
+                            </label>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )
             })()}

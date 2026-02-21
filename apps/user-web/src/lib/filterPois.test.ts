@@ -1,19 +1,36 @@
 import { describe, it, expect } from "vitest";
 import { filterPois } from "./filterPois";
-import type { Poi, Tag } from "../types";
+import type { Poi, Subcategory } from "../types";
+
+const mkPoi = (overrides: Partial<Poi> & Pick<Poi, "id" | "categoryId">): Poi => ({
+  name: "test",
+  description: "",
+  location: { lat: 32.0, lng: 34.8 },
+  mainImage: null,
+  images: [],
+  phone: null,
+  email: null,
+  website: null,
+  openingHours: null,
+  price: null,
+  tags: [],
+  subcategoryIds: [],
+  ...overrides,
+});
 
 const POIS: Poi[] = [
-  { id: "1", name: "שוק הכרמל",   categoryId: "restaurants", tags: ["family", "kosher"],  location: { lat: 32.05, lng: 34.77 }, description: "", mainImage: null, images: [], phone: null, email: null, website: null, openingHours: null, price: null },
-  { id: "2", name: "פארק הירקון", categoryId: "parks",       tags: ["family", "pets"],   location: { lat: 32.10, lng: 34.80 }, description: "", mainImage: null, images: [], phone: null, email: null, website: null, openingHours: null, price: null },
-  { id: "3", name: "חוף בוגרשוב", categoryId: "beaches",     tags: ["water"],             location: { lat: 32.06, lng: 34.76 }, description: "", mainImage: null, images: [], phone: null, email: null, website: null, openingHours: null, price: null },
-  { id: "4", name: "מצדה",        categoryId: "sites",       tags: ["view", "free"],     location: { lat: 31.31, lng: 35.35 }, description: "", mainImage: null, images: [], phone: null, email: null, website: null, openingHours: null, price: null },
+  mkPoi({ id: "1", name: "שוק הכרמל",   categoryId: "restaurants", tags: ["north"] }),
+  mkPoi({ id: "2", name: "פארק הירקון", categoryId: "parks",       tags: ["center"] }),
+  mkPoi({ id: "3", name: "חוף בוגרשוב", categoryId: "beaches",     tags: ["center"] }),
+  mkPoi({ id: "4", name: "מצדה",        categoryId: "sites",       tags: ["south"] }),
 ];
 
 const noFilter = {
   selectedCategories: new Set<string>(),
   selectedTags: new Set<string>(),
+  selectedSubcategories: new Set<string>(),
   searchQuery: "",
-  tags: [],
+  subcategories: [] as Subcategory[],
 };
 
 describe("filterPois", () => {
@@ -22,10 +39,7 @@ describe("filterPois", () => {
   });
 
   it("filters by a single category", () => {
-    const result = filterPois(POIS, {
-      ...noFilter,
-      selectedCategories: new Set(["parks"]),
-    });
+    const result = filterPois(POIS, { ...noFilter, selectedCategories: new Set(["parks"]) });
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("2");
   });
@@ -38,21 +52,14 @@ describe("filterPois", () => {
     expect(result).toHaveLength(2);
   });
 
-  it("filters by a single tag", () => {
-    const result = filterPois(POIS, {
-      ...noFilter,
-      selectedTags: new Set(["family"]),
-    });
-    expect(result).toHaveLength(2); // שוק הכרמל + פארק הירקון
+  it("filters by location tag (OR logic)", () => {
+    const result = filterPois(POIS, { ...noFilter, selectedTags: new Set(["center"]) });
+    expect(result).toHaveLength(2); // פארק הירקון + חוף בוגרשוב
   });
 
-  it("filters by tag with OR logic across POI tags", () => {
-    const result = filterPois(POIS, {
-      ...noFilter,
-      selectedTags: new Set(["view"]),
-    });
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("4");
+  it("multiple location tags use OR logic", () => {
+    const result = filterPois(POIS, { ...noFilter, selectedTags: new Set(["north", "south"]) });
+    expect(result).toHaveLength(2); // שוק הכרמל + מצדה
   });
 
   it("filters by search query (substring match)", () => {
@@ -66,12 +73,11 @@ describe("filterPois", () => {
     expect(result).toHaveLength(0);
   });
 
-  it("combines category + tag filters (AND between filter types)", () => {
-    // restaurants that also have the 'family' tag
+  it("combines category + location tag filters (AND between filter types)", () => {
     const result = filterPois(POIS, {
       ...noFilter,
       selectedCategories: new Set(["restaurants"]),
-      selectedTags: new Set(["family"]),
+      selectedTags: new Set(["north"]),
     });
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("1");
@@ -87,11 +93,10 @@ describe("filterPois", () => {
     expect(result[0].id).toBe("4");
   });
 
-  it("returns empty array when no POIs match combined filters", () => {
+  it("returns empty array when no POIs match", () => {
     const result = filterPois(POIS, {
       ...noFilter,
       selectedCategories: new Set(["hotels"]),
-      selectedTags: new Set(["water"]),
     });
     expect(result).toHaveLength(0);
   });
@@ -100,71 +105,84 @@ describe("filterPois", () => {
     expect(filterPois([], noFilter)).toHaveLength(0);
   });
 
-  describe("AND-across-groups OR-within-group tag logic", () => {
-    const TAGS: Tag[] = [
-      { id: "north",  name: "צפון",           group: "location" },
-      { id: "south",  name: "דרום",           group: "location" },
-      { id: "kosher", name: "כשר",            group: "kashrut" },
-      { id: "view",   name: "נוף מהמם",       group: null },
-      { id: "free",   name: "כניסה חופשית",   group: null },
-    ];
+  describe("subcategory filter — per-category scoping", () => {
+    const kosherSub: Subcategory = { id: "kosher", categoryId: "restaurants", group: "kashrut", name: "כשר" };
+    const couplesSub: Subcategory = { id: "couples", categoryId: "hotels", group: "audience", name: "זוגות" };
+    const cheapSub: Subcategory = { id: "cheap", categoryId: "restaurants", group: "price", name: "זול" };
 
-    it("OR within same group: north OR south shows POIs with either location tag", () => {
-      const pois: Poi[] = [
-        { ...POIS[0], tags: ["north"] },
-        { ...POIS[1], tags: ["south"] },
-        { ...POIS[2], tags: [] },
-      ];
-      const result = filterPois(pois, {
+    const hike    = mkPoi({ id: "hike",    categoryId: "hikes" });
+    const kosherRest = mkPoi({ id: "krest", categoryId: "restaurants", subcategoryIds: ["kosher"] });
+    const normalRest = mkPoi({ id: "nrest", categoryId: "restaurants", subcategoryIds: [] });
+    const couplesHotel = mkPoi({ id: "chotel", categoryId: "hotels", subcategoryIds: ["couples"] });
+    const familyHotel  = mkPoi({ id: "fhotel", categoryId: "hotels", subcategoryIds: [] });
+
+    it("hike passes through kosher restaurant filter untouched", () => {
+      const result = filterPois([hike, kosherRest, normalRest], {
         ...noFilter,
-        selectedTags: new Set(["north", "south"]),
-        tags: TAGS,
+        selectedSubcategories: new Set(["kosher"]),
+        subcategories: [kosherSub],
       });
-      expect(result).toHaveLength(2);
+      expect(result).toHaveLength(2); // hike + kosher restaurant
+      expect(result.map(p => p.id)).toContain("hike");
+      expect(result.map(p => p.id)).toContain("krest");
     });
 
-    it("AND across groups: north AND kosher shows only POIs with both", () => {
-      const pois: Poi[] = [
-        { ...POIS[0], tags: ["north", "kosher"] },
-        { ...POIS[1], tags: ["north"] },           // missing kashrut tag
-        { ...POIS[2], tags: ["kosher"] },          // missing location tag
-      ];
+    it("non-matching restaurant is filtered out", () => {
+      const result = filterPois([hike, kosherRest, normalRest], {
+        ...noFilter,
+        selectedSubcategories: new Set(["kosher"]),
+        subcategories: [kosherSub],
+      });
+      expect(result.map(p => p.id)).not.toContain("nrest");
+    });
+
+    it("multi-category trip: hikes + kosher restaurants + couples hotels", () => {
+      const pois = [hike, kosherRest, normalRest, couplesHotel, familyHotel];
       const result = filterPois(pois, {
         ...noFilter,
-        selectedTags: new Set(["north", "kosher"]),
-        tags: TAGS,
+        selectedSubcategories: new Set(["kosher", "couples"]),
+        subcategories: [kosherSub, couplesSub],
       });
+      // hike passes, kosher restaurant passes, couples hotel passes
+      // normal restaurant filtered out, family hotel filtered out
+      expect(result).toHaveLength(3);
+      expect(result.map(p => p.id)).toEqual(expect.arrayContaining(["hike", "krest", "chotel"]));
+    });
+
+    it("AND-across-subcategory-groups within a category", () => {
+      const cheapKosher = mkPoi({ id: "ck", categoryId: "restaurants", subcategoryIds: ["kosher", "cheap"] });
+      const kosherOnly  = mkPoi({ id: "ko", categoryId: "restaurants", subcategoryIds: ["kosher"] });
+      const cheapOnly   = mkPoi({ id: "co", categoryId: "restaurants", subcategoryIds: ["cheap"] });
+
+      const result = filterPois([cheapKosher, kosherOnly, cheapOnly], {
+        ...noFilter,
+        selectedSubcategories: new Set(["kosher", "cheap"]),
+        subcategories: [kosherSub, cheapSub],
+      });
+      // Must have BOTH kosher AND cheap (AND across groups)
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe("1");
+      expect(result[0].id).toBe("ck");
     });
 
-    it("null-group tags use OR logic: selecting two ungrouped tags shows POIs with either", () => {
-      const pois: Poi[] = [
-        { ...POIS[0], tags: ["view"] },
-        { ...POIS[1], tags: ["free"] },
-        { ...POIS[2], tags: [] },
-      ];
-      const result = filterPois(pois, {
+    it("OR-within-subcategory-group: two options in same group", () => {
+      const mediumSub: Subcategory = { id: "medium", categoryId: "restaurants", group: "price", name: "בינוני" };
+      const cheapRest  = mkPoi({ id: "cr", categoryId: "restaurants", subcategoryIds: ["cheap"] });
+      const mediumRest = mkPoi({ id: "mr", categoryId: "restaurants", subcategoryIds: ["medium"] });
+      const expRest    = mkPoi({ id: "er", categoryId: "restaurants", subcategoryIds: [] });
+
+      const result = filterPois([cheapRest, mediumRest, expRest], {
         ...noFilter,
-        selectedTags: new Set(["view", "free"]),
-        tags: TAGS,
+        selectedSubcategories: new Set(["cheap", "medium"]),
+        subcategories: [cheapSub, mediumSub],
       });
+      // cheap OR medium within same "price" group
       expect(result).toHaveLength(2);
+      expect(result.map(p => p.id)).toEqual(expect.arrayContaining(["cr", "mr"]));
     });
 
-    it("mixed groups: location + ungrouped applies AND across them", () => {
-      const pois: Poi[] = [
-        { ...POIS[0], tags: ["north", "view"] },  // matches both
-        { ...POIS[1], tags: ["north"] },           // missing ungrouped tag
-        { ...POIS[2], tags: ["view"] },            // missing location tag
-      ];
-      const result = filterPois(pois, {
-        ...noFilter,
-        selectedTags: new Set(["north", "view"]),
-        tags: TAGS,
-      });
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe("1");
+    it("no subcategories selected — all POIs pass", () => {
+      const result = filterPois([hike, kosherRest, normalRest], noFilter);
+      expect(result).toHaveLength(3);
     });
   });
 });

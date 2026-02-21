@@ -78,6 +78,13 @@ service cloud.firestore {
       allow write: if isAdminOrContentManager();
     }
 
+    // ─── subcategories ──────────────────────────────────────────────────────
+
+    match /subcategories/{subcategoryId} {
+      allow read: if true;
+      allow write: if isAdminOrContentManager();
+    }
+
     // ─── icons ──────────────────────────────────────────────────────────────
 
     match /icons/{iconId} {

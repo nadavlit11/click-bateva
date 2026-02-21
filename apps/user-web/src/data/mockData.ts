@@ -2,7 +2,7 @@
  * Mock data for local development only.
  * Toggle with the "הצג מוקים" button visible in dev mode.
  */
-import type { Category, Tag, Poi } from "../types";
+import type { Category, Tag, Subcategory, Poi } from "../types";
 
 export const MOCK_CATEGORIES: Category[] = [
   { id: "mock-beach",      name: "חופים",             color: "#2196F3", iconUrl: null },
@@ -14,23 +14,53 @@ export const MOCK_CATEGORIES: Category[] = [
 ];
 
 export const MOCK_TAGS: Tag[] = [
-  // audience
-  { id: "mock-family",       name: "מתאים למשפחות", group: "audience" },
-  { id: "mock-accessible",   name: "נגיש לנכים",    group: "audience" },
-  // kashrut
-  { id: "mock-kosher",       name: "כשר",            group: "kashrut" },
-  // price
-  { id: "mock-free",         name: "כניסה חופשית",   group: "price" },
-  // location
-  { id: "mock-loc-north",    name: "צפון",           group: "location" },
-  { id: "mock-loc-center",   name: "מרכז",           group: "location" },
-  { id: "mock-loc-south",    name: "דרום",           group: "location" },
-  { id: "mock-loc-jerusalem",name: "ירושלים",        group: "location" },
-  { id: "mock-loc-deadsea",  name: "ים המלח",        group: "location" },
-  { id: "mock-loc-eilat",    name: "אילת",           group: "location" },
-  // general (ungrouped)
-  { id: "mock-view",         name: "נוף מהמם",       group: null },
-  { id: "mock-recommended",  name: "מומלץ מאוד",     group: null },
+  // location parent tags (global filter)
+  { id: "mock-loc-north",     name: "צפון",    group: "location", parentId: null },
+  { id: "mock-loc-center",    name: "מרכז",    group: "location", parentId: null },
+  { id: "mock-loc-south",     name: "דרום",    group: "location", parentId: null },
+  { id: "mock-loc-jerusalem", name: "ירושלים", group: "location", parentId: null },
+  { id: "mock-loc-deadsea",   name: "ים המלח", group: "location", parentId: null },
+  { id: "mock-loc-eilat",     name: "אילת",    group: "location", parentId: null },
+  // location sub-tags (children)
+  { id: "mock-loc-golan",     name: "גולן",    group: "location", parentId: "mock-loc-north" },
+  { id: "mock-loc-galil",     name: "גליל",    group: "location", parentId: "mock-loc-north" },
+  { id: "mock-loc-carmel",    name: "כרמל",    group: "location", parentId: "mock-loc-north" },
+  { id: "mock-loc-gushdan",   name: "גוש דן",  group: "location", parentId: "mock-loc-center" },
+  { id: "mock-loc-sharon",    name: "שרון",    group: "location", parentId: "mock-loc-center" },
+  { id: "mock-loc-shfela",    name: "שפלה",    group: "location", parentId: "mock-loc-center" },
+  { id: "mock-loc-negev",     name: "נגב",     group: "location", parentId: "mock-loc-south" },
+];
+
+export const MOCK_SUBCATEGORIES: Subcategory[] = [
+  // Restaurants — kashrut
+  { id: "mock-sub-kosher",    categoryId: "mock-restaurant", group: "kashrut", name: "כשר" },
+  { id: "mock-sub-dairy",     categoryId: "mock-restaurant", group: "kashrut", name: "חלבי" },
+  { id: "mock-sub-meat",      categoryId: "mock-restaurant", group: "kashrut", name: "בשרי" },
+  // Restaurants — price
+  { id: "mock-sub-cheap",     categoryId: "mock-restaurant", group: "price",   name: "זול" },
+  { id: "mock-sub-mid",       categoryId: "mock-restaurant", group: "price",   name: "בינוני" },
+  { id: "mock-sub-pricey",    categoryId: "mock-restaurant", group: "price",   name: "יקר" },
+  // Restaurants — audience
+  { id: "mock-sub-rest-fam",  categoryId: "mock-restaurant", group: "audience", name: "משפחות" },
+  { id: "mock-sub-rest-cpl",  categoryId: "mock-restaurant", group: "audience", name: "זוגות" },
+  // Hotels — type
+  { id: "mock-sub-boutique",  categoryId: "mock-hotel",      group: "type",    name: "בוטיק" },
+  { id: "mock-sub-kibbutz",   categoryId: "mock-hotel",      group: "type",    name: "קיבוץ" },
+  // Hotels — audience
+  { id: "mock-sub-hotel-fam", categoryId: "mock-hotel",      group: "audience", name: "משפחות" },
+  { id: "mock-sub-hotel-cpl", categoryId: "mock-hotel",      group: "audience", name: "זוגות" },
+  // Hiking — difficulty
+  { id: "mock-sub-easy",      categoryId: "mock-hiking",     group: "difficulty", name: "קל" },
+  { id: "mock-sub-medium",    categoryId: "mock-hiking",     group: "difficulty", name: "בינוני" },
+  { id: "mock-sub-hard",      categoryId: "mock-hiking",     group: "difficulty", name: "קשה" },
+  // Beaches — type
+  { id: "mock-sub-bch-swim",  categoryId: "mock-beach",      group: "type",    name: "שחייה" },
+  { id: "mock-sub-bch-surf",  categoryId: "mock-beach",      group: "type",    name: "גלישה" },
+  { id: "mock-sub-bch-acc",   categoryId: "mock-beach",      group: "type",    name: "נגיש" },
+  // Parks — type
+  { id: "mock-sub-park-nat",  categoryId: "mock-park",       group: "type",    name: "טבע" },
+  { id: "mock-sub-park-urb",  categoryId: "mock-park",       group: "type",    name: "עירוני" },
+  { id: "mock-sub-park-free", categoryId: "mock-park",       group: "price",   name: "כניסה חופשית" },
 ];
 
 // [name, lat, lng, categoryId, tagIds[]]
@@ -268,18 +298,56 @@ function locationTag(lat: number, lng: number): string {
   return "mock-loc-center";
 }
 
-export const MOCK_POIS: Poi[] = SEEDS.map(([name, lat, lng, categoryId, tags], i) => ({
-  id: `mock-${i}`,
-  name,
-  description: DESCRIPTIONS[categoryId] ?? "",
-  location: { lat, lng },
-  mainImage: null,
-  images: [],
-  phone: null,
-  email: null,
-  website: null,
-  openingHours: null,
-  price: null,
-  categoryId,
-  tags: [...(tags as string[]), locationTag(lat as number, lng as number)],
-}));
+// Rotate through subcategory combinations per category for realistic mock variety
+const SUBCAT_POOLS: Record<string, string[][]> = {
+  "mock-restaurant": [
+    ["mock-sub-kosher", "mock-sub-cheap",  "mock-sub-rest-fam"],
+    ["mock-sub-dairy",  "mock-sub-mid",    "mock-sub-rest-cpl"],
+    ["mock-sub-meat",   "mock-sub-pricey", "mock-sub-rest-fam"],
+    ["mock-sub-kosher", "mock-sub-mid",    "mock-sub-rest-cpl"],
+    ["mock-sub-dairy",  "mock-sub-cheap"],
+  ],
+  "mock-hotel": [
+    ["mock-sub-boutique", "mock-sub-hotel-cpl"],
+    ["mock-sub-kibbutz",  "mock-sub-hotel-fam"],
+    ["mock-sub-boutique", "mock-sub-hotel-fam"],
+  ],
+  "mock-hiking": [
+    ["mock-sub-easy"],
+    ["mock-sub-medium"],
+    ["mock-sub-hard"],
+    ["mock-sub-easy"],
+    ["mock-sub-medium"],
+  ],
+  "mock-beach": [
+    ["mock-sub-bch-swim"],
+    ["mock-sub-bch-surf"],
+    ["mock-sub-bch-acc"],
+    ["mock-sub-bch-swim"],
+  ],
+  "mock-park": [
+    ["mock-sub-park-nat",  "mock-sub-park-free"],
+    ["mock-sub-park-urb",  "mock-sub-park-free"],
+    ["mock-sub-park-nat"],
+  ],
+};
+
+export const MOCK_POIS: Poi[] = SEEDS.map(([name, lat, lng, categoryId], i) => {
+  const pool = SUBCAT_POOLS[categoryId] ?? [];
+  return {
+    id: `mock-${i}`,
+    name,
+    description: DESCRIPTIONS[categoryId] ?? "",
+    location: { lat, lng },
+    mainImage: null,
+    images: [],
+    phone: null,
+    email: null,
+    website: null,
+    openingHours: null,
+    price: null,
+    categoryId,
+    tags: [locationTag(lat, lng)],
+    subcategoryIds: pool.length > 0 ? pool[i % pool.length] : [],
+  };
+});

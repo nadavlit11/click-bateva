@@ -10,7 +10,8 @@ export interface Poi {
   email: string
   website: string
   categoryId: string
-  tags: string[]
+  tags: string[]           // location tag IDs only
+  subcategoryIds: string[] // category-scoped refinement IDs
   businessId: string | null
   active: boolean
   openingHours: string | null
@@ -32,7 +33,17 @@ export interface Category {
 export interface Tag {
   id: string
   name: string
-  group: string | null  // e.g. "location" | "kashrut" | "price" | "audience" | null
+  group: string | null   // "location" | null
+  parentId: string | null
+  createdAt: unknown
+  updatedAt: unknown
+}
+
+export interface Subcategory {
+  id: string
+  categoryId: string
+  group: string | null   // e.g. "kashrut" | "price" | "audience" | null
+  name: string
   createdAt: unknown
   updatedAt: unknown
 }

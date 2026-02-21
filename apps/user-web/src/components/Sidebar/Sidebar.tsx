@@ -1,19 +1,23 @@
-import type { Category, Tag } from "../../types";
+import type { Category, Tag, Subcategory } from "../../types";
 import { AppHeader } from "./AppHeader";
 import { SearchBar } from "./SearchBar";
 import { CategoryGrid } from "./CategoryGrid";
 import { TagList } from "./TagList";
+import { SubcategoryFilter } from "./SubcategoryFilter";
 import { SidebarFooter } from "./SidebarFooter";
 
 interface SidebarProps {
   categories: Category[];
   tags: Tag[];
+  subcategories: Subcategory[];
   selectedCategories: Set<string>;
   selectedTags: Set<string>;
+  selectedSubcategories: Set<string>;
   searchQuery: string;
   filteredCount: number;
   onCategoryToggle: (id: string) => void;
   onTagToggle: (id: string) => void;
+  onSubcategoryToggle: (id: string) => void;
   onSearchChange: (q: string) => void;
   onClearAll: () => void;
   className?: string;
@@ -22,12 +26,15 @@ interface SidebarProps {
 export function Sidebar({
   categories,
   tags,
+  subcategories,
   selectedCategories,
   selectedTags,
+  selectedSubcategories,
   searchQuery,
   filteredCount,
   onCategoryToggle,
   onTagToggle,
+  onSubcategoryToggle,
   onSearchChange,
   onClearAll,
   className,
@@ -46,6 +53,13 @@ export function Sidebar({
           onToggle={onCategoryToggle}
         />
         <TagList tags={tags} selectedTags={selectedTags} onToggle={onTagToggle} />
+        <SubcategoryFilter
+          categories={categories}
+          subcategories={subcategories}
+          selectedCategories={selectedCategories}
+          selectedSubcategories={selectedSubcategories}
+          onToggle={onSubcategoryToggle}
+        />
       </div>
       <SidebarFooter count={filteredCount} onClearAll={onClearAll} />
     </aside>

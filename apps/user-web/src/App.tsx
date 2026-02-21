@@ -5,38 +5,57 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
 import { PoiDetailPanel } from "./components/MapView/PoiDetailPanel";
 import { BottomSheet } from "./components/BottomSheet/BottomSheet";
-import { usePois, useCategories, useTags } from "./hooks/useFirestoreData";
+import { usePois, useCategories, useTags, useSubcategories } from "./hooks/useFirestoreData";
 import { filterPois } from "./lib/filterPois";
-import { MOCK_POIS, MOCK_CATEGORIES, MOCK_TAGS } from "./data/mockData";
+import { MOCK_POIS, MOCK_CATEGORIES, MOCK_TAGS, MOCK_SUBCATEGORIES } from "./data/mockData";
 import type { Poi } from "./types";
 
 export default function App() {
   const { pois, loading: poisLoading } = usePois();
   const categories = useCategories();
   const tags = useTags();
+  const subcategories = useSubcategories();
 
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [showMocks, setShowMocks] = useState(false);
 
-  const effectivePois       = showMocks ? [...pois, ...MOCK_POIS]             : pois;
-  const effectiveCategories = showMocks ? [...categories, ...MOCK_CATEGORIES] : categories;
-  const effectiveTags       = showMocks ? [...tags, ...MOCK_TAGS]             : tags;
+  const effectivePois          = showMocks ? [...pois, ...MOCK_POIS]                   : pois;
+  const effectiveCategories    = showMocks ? [...categories, ...MOCK_CATEGORIES]       : categories;
+  const effectiveTags          = showMocks ? [...tags, ...MOCK_TAGS]                   : tags;
+  const effectiveSubcategories = showMocks ? [...subcategories, ...MOCK_SUBCATEGORIES] : subcategories;
 
   const filteredPois = useMemo(
-    () => filterPois(effectivePois, { selectedCategories, selectedTags, searchQuery, tags: effectiveTags }),
-    [effectivePois, selectedCategories, selectedTags, searchQuery, effectiveTags]
+    () => filterPois(effectivePois, {
+      selectedCategories,
+      selectedTags,
+      selectedSubcategories,
+      searchQuery,
+      subcategories: effectiveSubcategories,
+    }),
+    [effectivePois, selectedCategories, selectedTags, selectedSubcategories, searchQuery, effectiveSubcategories]
   );
 
   function handleCategoryToggle(id: string) {
-    setSelectedCategories((prev) => {
+    const isCurrentlySelected = selectedCategories.has(id);
+    setSelectedCategories(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+    if (isCurrentlySelected) {
+      // Clear subcategories of this category when deselecting
+      const catSubIds = effectiveSubcategories.filter(s => s.categoryId === id).map(s => s.id);
+      setSelectedSubcategories(prev => {
+        const next = new Set(prev);
+        catSubIds.forEach(sid => next.delete(sid));
+        return next;
+      });
+    }
   }
 
   function handleTagToggle(id: string) {
@@ -47,9 +66,18 @@ export default function App() {
     });
   }
 
+  function handleSubcategoryToggle(id: string) {
+    setSelectedSubcategories((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
   function handleClearAll() {
     setSelectedCategories(new Set());
     setSelectedTags(new Set());
+    setSelectedSubcategories(new Set());
     setSearchQuery("");
   }
 
@@ -68,12 +96,15 @@ export default function App() {
         className="hidden md:flex"
         categories={effectiveCategories}
         tags={effectiveTags}
+        subcategories={effectiveSubcategories}
         selectedCategories={selectedCategories}
         selectedTags={selectedTags}
+        selectedSubcategories={selectedSubcategories}
         searchQuery={searchQuery}
         filteredCount={filteredPois.length}
         onCategoryToggle={handleCategoryToggle}
         onTagToggle={handleTagToggle}
+        onSubcategoryToggle={handleSubcategoryToggle}
         onSearchChange={setSearchQuery}
         onClearAll={handleClearAll}
       />
@@ -99,12 +130,15 @@ export default function App() {
           onExpandedChange={setSheetExpanded}
           categories={effectiveCategories}
           tags={effectiveTags}
+          subcategories={effectiveSubcategories}
           selectedCategories={selectedCategories}
           selectedTags={selectedTags}
+          selectedSubcategories={selectedSubcategories}
           searchQuery={searchQuery}
           filteredCount={filteredPois.length}
           onCategoryToggle={handleCategoryToggle}
           onTagToggle={handleTagToggle}
+          onSubcategoryToggle={handleSubcategoryToggle}
           onSearchChange={setSearchQuery}
           onClearAll={handleClearAll}
         />
