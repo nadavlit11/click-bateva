@@ -7,6 +7,7 @@ import { PoiDetailPanel } from "./components/MapView/PoiDetailPanel";
 import { BottomSheet } from "./components/BottomSheet/BottomSheet";
 import { usePois, useCategories, useTags } from "./hooks/useFirestoreData";
 import { filterPois } from "./lib/filterPois";
+import { MOCK_POIS, MOCK_CATEGORIES, MOCK_TAGS } from "./data/mockData";
 import type { Poi } from "./types";
 
 export default function App() {
@@ -19,10 +20,15 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [showMocks, setShowMocks] = useState(false);
+
+  const effectivePois       = showMocks ? [...pois, ...MOCK_POIS]             : pois;
+  const effectiveCategories = showMocks ? [...categories, ...MOCK_CATEGORIES] : categories;
+  const effectiveTags       = showMocks ? [...tags, ...MOCK_TAGS]             : tags;
 
   const filteredPois = useMemo(
-    () => filterPois(pois, { selectedCategories, selectedTags, searchQuery }),
-    [pois, selectedCategories, selectedTags, searchQuery]
+    () => filterPois(effectivePois, { selectedCategories, selectedTags, searchQuery }),
+    [effectivePois, selectedCategories, selectedTags, searchQuery]
   );
 
   function handleCategoryToggle(id: string) {
@@ -60,8 +66,8 @@ export default function App() {
     <div className="h-dvh w-screen flex overflow-hidden">
       <Sidebar
         className="hidden md:flex"
-        categories={categories}
-        tags={tags}
+        categories={effectiveCategories}
+        tags={effectiveTags}
         selectedCategories={selectedCategories}
         selectedTags={selectedTags}
         searchQuery={searchQuery}
@@ -74,16 +80,25 @@ export default function App() {
       <main className="flex-1 h-full relative">
         <MapView
           pois={filteredPois}
-          categories={categories}
+          categories={effectiveCategories}
           selectedPoiId={selectedPoi?.id ?? null}
           onPoiClick={handlePoiClick}
         />
+        {import.meta.env.DEV && (
+          <button
+            onClick={() => setShowMocks(m => !m)}
+            className="absolute top-4 right-4 z-30 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg transition-colors"
+            style={{ background: showMocks ? "#4CAF50" : "#374151", color: "white" }}
+          >
+            {showMocks ? "✓ מוקים פעיל (200)" : "הצג מוקים"}
+          </button>
+        )}
         <BottomSheet
           className="md:hidden absolute bottom-0 left-0 right-0 z-20"
           expanded={sheetExpanded}
           onExpandedChange={setSheetExpanded}
-          categories={categories}
-          tags={tags}
+          categories={effectiveCategories}
+          tags={effectiveTags}
           selectedCategories={selectedCategories}
           selectedTags={selectedTags}
           searchQuery={searchQuery}
@@ -103,8 +118,8 @@ export default function App() {
         {selectedPoi && (
           <PoiDetailPanel
             poi={selectedPoi}
-            category={categories.find(c => c.id === selectedPoi.categoryId)}
-            tags={tags.filter(t => selectedPoi.tags.includes(t.id))}
+            category={effectiveCategories.find(c => c.id === selectedPoi.categoryId)}
+            tags={effectiveTags.filter(t => selectedPoi.tags.includes(t.id))}
             onClose={() => setSelectedPoi(null)}
           />
         )}
