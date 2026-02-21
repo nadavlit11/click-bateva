@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import type { Category, Tag, Subcategory } from "../../types";
 import { CATEGORY_EMOJI } from "../../data/defaults";
 import { lighten, lightenBorder } from "../../lib/colorUtils";
@@ -46,13 +46,24 @@ export function BottomSheet({
   className,
 }: BottomSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [atBottom, setAtBottom] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
 
-  function handleScroll() {
+  function checkScroll() {
     const el = scrollRef.current;
     if (!el) return;
-    setAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 16);
+    setCanScrollDown(el.scrollHeight > el.clientHeight + el.scrollTop + 16);
   }
+
+  // Re-check whenever the sheet opens or content changes
+  useEffect(() => {
+    if (expanded) {
+      // Wait one frame for layout to settle
+      const id = requestAnimationFrame(checkScroll);
+      return () => cancelAnimationFrame(id);
+    } else {
+      setCanScrollDown(false);
+    }
+  }, [expanded, selectedCategories, selectedSubcategories]);
 
   const sheetStyle: React.CSSProperties = {
     transform: expanded ? "translateY(0)" : "translateY(calc(100% - 120px))",
@@ -92,8 +103,8 @@ export function BottomSheet({
             <div className="relative flex-1 overflow-hidden">
               <div
                 ref={scrollRef}
-                onScroll={handleScroll}
                 className="h-full overflow-y-auto"
+                onScroll={checkScroll}
               >
               <TagList
                 tags={tags}
@@ -113,7 +124,7 @@ export function BottomSheet({
                 onToggle={onSubcategoryToggle}
               />
               </div>
-              {!atBottom && (
+              {canScrollDown && (
                 <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none flex items-end justify-center pb-1">
                   <span className="text-gray-400 text-3xl leading-none">⌄</span>
                 </div>
