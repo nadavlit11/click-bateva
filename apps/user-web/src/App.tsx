@@ -115,15 +115,13 @@ export default function App() {
           selectedPoiId={selectedPoi?.id ?? null}
           onPoiClick={handlePoiClick}
         />
-        {import.meta.env.DEV && (
-          <button
-            onClick={() => setShowMocks(m => !m)}
-            className="absolute top-4 right-4 z-30 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg transition-colors"
-            style={{ background: showMocks ? "#4CAF50" : "#374151", color: "white" }}
-          >
-            {showMocks ? "✓ מוקים פעיל (200)" : "הצג מוקים"}
-          </button>
-        )}
+        <button
+          onClick={() => setShowMocks(m => !m)}
+          className="absolute top-4 right-4 z-30 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg transition-colors"
+          style={{ background: showMocks ? "#4CAF50" : "#374151", color: "white" }}
+        >
+          {showMocks ? "✓ דמו פעיל (200)" : "הצג דמו"}
+        </button>
         <BottomSheet
           className="md:hidden absolute bottom-0 left-0 right-0 z-20"
           expanded={sheetExpanded}
