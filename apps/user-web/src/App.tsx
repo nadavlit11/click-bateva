@@ -75,6 +75,7 @@ export default function App() {
         <MapView
           pois={filteredPois}
           categories={categories}
+          selectedPoiId={selectedPoi?.id ?? null}
           onPoiClick={handlePoiClick}
         />
         <BottomSheet
