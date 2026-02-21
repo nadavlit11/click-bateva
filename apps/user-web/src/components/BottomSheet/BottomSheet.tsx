@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import type { Category, Tag, Subcategory } from "../../types";
 import { CATEGORY_EMOJI } from "../../data/defaults";
 import { lighten, lightenBorder } from "../../lib/colorUtils";
@@ -44,6 +45,15 @@ export function BottomSheet({
   onClearAll,
   className,
 }: BottomSheetProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [atBottom, setAtBottom] = useState(false);
+
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    setAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 16);
+  }
+
   const sheetStyle: React.CSSProperties = {
     transform: expanded ? "translateY(0)" : "translateY(calc(100% - 120px))",
     transition: "transform 300ms ease",
@@ -79,7 +89,12 @@ export function BottomSheet({
           /* ── Expanded state ── */
           <div className="flex flex-col flex-1 overflow-hidden">
             <SearchBar value={searchQuery} onChange={onSearchChange} />
-            <div className="flex-1 overflow-y-auto">
+            <div className="relative flex-1 overflow-hidden">
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="h-full overflow-y-auto"
+              >
               <TagList
                 tags={tags}
                 selectedTags={selectedTags}
@@ -97,6 +112,12 @@ export function BottomSheet({
                 selectedSubcategories={selectedSubcategories}
                 onToggle={onSubcategoryToggle}
               />
+              </div>
+              {!atBottom && (
+                <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none flex items-end justify-center pb-1">
+                  <span className="text-gray-400 text-base">⌄</span>
+                </div>
+              )}
             </div>
             <SidebarFooter count={filteredCount} onClearAll={onClearAll} />
           </div>
