@@ -46,10 +46,7 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
   })();
 
   return (
-    <div
-      className="absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100vh-2rem)] overflow-y-auto"
-      style={{ borderLeft: `4px solid ${color}` }}
-    >
+    <div className="absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100vh-2rem)] overflow-y-auto">
 
       {/* ── Carousel ── */}
       <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
