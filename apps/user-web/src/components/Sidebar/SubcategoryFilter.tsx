@@ -31,7 +31,13 @@ export function SubcategoryFilter({
     c => selectedCategories.has(c.id) && subcategories.some(s => s.categoryId === c.id)
   );
 
-  if (activeCats.length === 0) return null;
+  if (activeCats.length === 0) {
+    return (
+      <div className="px-4 pb-3">
+        <p className="text-xs text-gray-400 text-right">בחר קטגוריה לסינון מפורט</p>
+      </div>
+    );
+  }
 
   function toggleCollapse(catId: string) {
     setCollapsed(prev => {
