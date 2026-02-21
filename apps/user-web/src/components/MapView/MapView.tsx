@@ -12,7 +12,7 @@ interface MapViewProps {
 
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
 const MAP_ID = "DEMO_MAP_ID";
-const ISRAEL_BOUNDS = { north: 33.4, south: 29.3, west: 34.1, east: 35.9 };
+const ISRAEL_BOUNDS = { north: 33.5, south: 29.3, west: 33.8, east: 36.0 };
 
 export function MapView({ pois, categories, selectedPoiId, onPoiClick }: MapViewProps) {
   const colorMap = useMemo(
@@ -33,7 +33,7 @@ export function MapView({ pois, categories, selectedPoiId, onPoiClick }: MapView
         gestureHandling="greedy"
         mapTypeControl={false}
         minZoom={8}
-        restriction={{ latLngBounds: ISRAEL_BOUNDS, strictBounds: false }}
+        restriction={{ latLngBounds: ISRAEL_BOUNDS, strictBounds: true }}
         className="w-full h-full"
       >
         {pois.map((poi) => (
