@@ -27,8 +27,8 @@ export default function App() {
   const effectiveTags       = showMocks ? [...tags, ...MOCK_TAGS]             : tags;
 
   const filteredPois = useMemo(
-    () => filterPois(effectivePois, { selectedCategories, selectedTags, searchQuery }),
-    [effectivePois, selectedCategories, selectedTags, searchQuery]
+    () => filterPois(effectivePois, { selectedCategories, selectedTags, searchQuery, tags: effectiveTags }),
+    [effectivePois, selectedCategories, selectedTags, searchQuery, effectiveTags]
   );
 
   function handleCategoryToggle(id: string) {

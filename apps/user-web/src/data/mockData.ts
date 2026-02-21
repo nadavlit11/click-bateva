@@ -14,12 +14,23 @@ export const MOCK_CATEGORIES: Category[] = [
 ];
 
 export const MOCK_TAGS: Tag[] = [
-  { id: "mock-family",      name: "מתאים למשפחות" },
-  { id: "mock-kosher",      name: "כשר" },
-  { id: "mock-accessible",  name: "נגיש לנכים" },
-  { id: "mock-free",        name: "כניסה חופשית" },
-  { id: "mock-view",        name: "נוף מהמם" },
-  { id: "mock-recommended", name: "מומלץ מאוד" },
+  // audience
+  { id: "mock-family",       name: "מתאים למשפחות", group: "audience" },
+  { id: "mock-accessible",   name: "נגיש לנכים",    group: "audience" },
+  // kashrut
+  { id: "mock-kosher",       name: "כשר",            group: "kashrut" },
+  // price
+  { id: "mock-free",         name: "כניסה חופשית",   group: "price" },
+  // location
+  { id: "mock-loc-north",    name: "צפון",           group: "location" },
+  { id: "mock-loc-center",   name: "מרכז",           group: "location" },
+  { id: "mock-loc-south",    name: "דרום",           group: "location" },
+  { id: "mock-loc-jerusalem",name: "ירושלים",        group: "location" },
+  { id: "mock-loc-deadsea",  name: "ים המלח",        group: "location" },
+  { id: "mock-loc-eilat",    name: "אילת",           group: "location" },
+  // general (ungrouped)
+  { id: "mock-view",         name: "נוף מהמם",       group: null },
+  { id: "mock-recommended",  name: "מומלץ מאוד",     group: null },
 ];
 
 // [name, lat, lng, categoryId, tagIds[]]
@@ -248,6 +259,15 @@ const DESCRIPTIONS: Record<string, string> = {
   "mock-park":       "פארק ירוק ומטופח עם שטחי דשא ומתקני שעשועים.",
 };
 
+function locationTag(lat: number, lng: number): string {
+  if (lat < 29.65) return "mock-loc-eilat";
+  if (lng > 35.2 && lat < 31.9) return "mock-loc-deadsea";
+  if (lat < 31.5) return "mock-loc-south";
+  if (lat < 32.0 && lng > 35.0) return "mock-loc-jerusalem";
+  if (lat >= 32.5) return "mock-loc-north";
+  return "mock-loc-center";
+}
+
 export const MOCK_POIS: Poi[] = SEEDS.map(([name, lat, lng, categoryId, tags], i) => ({
   id: `mock-${i}`,
   name,
@@ -261,5 +281,5 @@ export const MOCK_POIS: Poi[] = SEEDS.map(([name, lat, lng, categoryId, tags], i
   openingHours: null,
   price: null,
   categoryId,
-  tags: tags as string[],
+  tags: [...(tags as string[]), locationTag(lat as number, lng as number)],
 }));

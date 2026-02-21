@@ -7,7 +7,8 @@ export interface Category {
 
 export interface Tag {
   id: string;
-  name: string;     // Hebrew e.g. "מתאים למשפחות"
+  name: string;         // Hebrew e.g. "מתאים למשפחות"
+  group: string | null; // "location" | "kashrut" | "price" | "audience" | null
 }
 
 export interface Poi {

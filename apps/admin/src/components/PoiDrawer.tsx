@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { GROUP_ORDER, GROUP_LABELS } from '../constants/tagGroups.ts'
 import { MapPicker } from './MapPicker.tsx'
 import {
   collection,
@@ -523,25 +524,35 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, businesses, 
               />
             </div>
 
-            {/* Tags */}
-            {tags.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">תגיות</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {tags.map(tag => (
-                    <label key={tag.id} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={form.selectedTags.includes(tag.id)}
-                        onChange={() => toggleTag(tag.id)}
-                        className="accent-green-600"
-                      />
-                      <span className="text-sm text-gray-700">{tag.name}</span>
-                    </label>
+            {/* Tags — grouped by group field */}
+            {tags.length > 0 && (() => {
+              const grouped = GROUP_ORDER
+                .map(g => ({ key: g ?? 'general', label: g ? GROUP_LABELS[g] : 'תגיות', tags: tags.filter(t => t.group === g) }))
+                .filter(g => g.tags.length > 0)
+              return (
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700">תגיות</label>
+                  {grouped.map(({ key, label, tags: groupTags }) => (
+                    <div key={key}>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{label}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {groupTags.map(tag => (
+                          <label key={tag.id} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={form.selectedTags.includes(tag.id)}
+                              onChange={() => toggleTag(tag.id)}
+                              className="accent-green-600"
+                            />
+                            <span className="text-sm text-gray-700">{tag.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             {/* Active */}
             <div>

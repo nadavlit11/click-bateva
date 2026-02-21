@@ -3,6 +3,7 @@ import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
 import type { Tag } from '../types/index.ts'
 import { TagModal } from '../components/TagModal.tsx'
+import { GROUP_LABELS } from '../constants/tagGroups.ts'
 
 export function TagsPage() {
   const [tags, setTags] = useState<Tag[]>([])
@@ -52,13 +53,14 @@ export function TagsPage() {
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
               <th className="text-right px-4 py-3 font-medium text-gray-600">שם</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">קבוצה</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {tags.length === 0 && (
               <tr>
-                <td colSpan={2} className="text-center py-10 text-gray-400">
+                <td colSpan={3} className="text-center py-10 text-gray-400">
                   אין תגיות עדיין
                 </td>
               </tr>
@@ -66,6 +68,15 @@ export function TagsPage() {
             {tags.map(tag => (
               <tr key={tag.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium text-gray-900">{tag.name}</td>
+                <td className="px-4 py-3">
+                  {tag.group ? (
+                    <span className="inline-block px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-200">
+                      {GROUP_LABELS[tag.group] ?? tag.group}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 text-xs">כללי</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2 justify-end">
                     <button

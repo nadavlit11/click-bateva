@@ -32,6 +32,7 @@ export interface Category {
 export interface Tag {
   id: string
   name: string
+  group: string | null  // e.g. "location" | "kashrut" | "price" | "audience" | null
   createdAt: unknown
   updatedAt: unknown
 }

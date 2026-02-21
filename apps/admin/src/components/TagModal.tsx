@@ -10,13 +10,23 @@ interface Props {
   onSaved: () => void
 }
 
+const GROUPS = [
+  { value: '',         label: 'ללא קבוצה' },
+  { value: 'location', label: 'אזור' },
+  { value: 'kashrut',  label: 'כשרות' },
+  { value: 'price',    label: 'מחיר' },
+  { value: 'audience', label: 'קהל יעד' },
+]
+
 export function TagModal({ isOpen, onClose, tag, onSaved }: Props) {
   const [name, setName] = useState('')
+  const [group, setGroup] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     setName(tag?.name ?? '')
+    setGroup(tag?.group ?? '')
     setError('')
   }, [tag, isOpen])
 
@@ -27,17 +37,15 @@ export function TagModal({ isOpen, onClose, tag, onSaved }: Props) {
     setSaving(true)
     setError('')
     try {
+      const data = {
+        name: name.trim(),
+        group: group || null,
+        updatedAt: serverTimestamp(),
+      }
       if (tag?.id) {
-        await updateDoc(doc(db, 'tags', tag.id), {
-          name: name.trim(),
-          updatedAt: serverTimestamp(),
-        })
+        await updateDoc(doc(db, 'tags', tag.id), data)
       } else {
-        await addDoc(collection(db, 'tags'), {
-          name: name.trim(),
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        })
+        await addDoc(collection(db, 'tags'), { ...data, createdAt: serverTimestamp() })
       }
       onSaved()
     } catch (err) {
@@ -75,6 +83,19 @@ export function TagModal({ isOpen, onClose, tag, onSaved }: Props) {
               placeholder="שם התגית"
               autoFocus
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">קבוצה</label>
+            <select
+              value={group}
+              onChange={e => setGroup(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
+            >
+              {GROUPS.map(g => (
+                <option key={g.value} value={g.value}>{g.label}</option>
+              ))}
+            </select>
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
