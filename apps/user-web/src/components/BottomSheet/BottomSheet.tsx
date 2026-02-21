@@ -114,8 +114,8 @@ export function BottomSheet({
               />
               </div>
               {!atBottom && (
-                <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none flex items-end justify-center pb-1">
-                  <span className="text-gray-400 text-base">⌄</span>
+                <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none flex items-end justify-center pb-1">
+                  <span className="text-gray-400 text-3xl leading-none">⌄</span>
                 </div>
               )}
             </div>

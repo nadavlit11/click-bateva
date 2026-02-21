@@ -5,7 +5,7 @@ interface SidebarFooterProps {
 
 export function SidebarFooter({ count, onClearAll }: SidebarFooterProps) {
   return (
-    <div className="p-4 border-t border-gray-100 bg-gray-50 shrink-0">
+    <div className="p-4 bg-gray-50 shrink-0" style={{ boxShadow: "0 -4px 12px rgba(0,0,0,0.08)" }}>
       <div className="flex items-center justify-between text-sm text-gray-500">
         <span>נמצאו {count} מקומות</span>
         <button
