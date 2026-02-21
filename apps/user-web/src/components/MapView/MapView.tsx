@@ -25,14 +25,14 @@ export function MapView({ pois, categories, selectedPoiId, onPoiClick }: MapView
   );
 
   return (
-    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} language="he" region="IL">
       <Map
         defaultCenter={ISRAEL_CENTER}
         defaultZoom={8}
         mapId={MAP_ID}
         gestureHandling="greedy"
         mapTypeControl={false}
-        minZoom={7}
+        minZoom={8}
         restriction={{ latLngBounds: ISRAEL_BOUNDS, strictBounds: false }}
         className="w-full h-full"
       >
