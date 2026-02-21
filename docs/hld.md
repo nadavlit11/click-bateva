@@ -28,7 +28,7 @@ The application adopts a modern client-server architecture, with the frontend im
 |  +---------------------------------------------+ |
 |  |             Cloud Firestore                 | |
 |  | (NoSQL Database: POIs, Categories, Tags,    | |
-|  |  Users, Businesses, Clicks)                 | |
+|  |  Subcategories, Users, Businesses, Clicks)  | |
 |  +---------------------------------------------+ |
 |             ^                     ^             |
 |             |                     |             |
@@ -99,6 +99,7 @@ click-bateva/
   - `users`: Stores user profiles and roles
   - `businesses`: Stores registered business profiles
   - `clicks`: Top-level collection tracking click events (poiId + categoryId + timestamp, written client-side)
+  - `subcategories`: Per-category refinement filters (categoryId + name + group); shown in user-web filter UI, scoped to selected category
 
 **Cloud Storage for Firebase:**
 - Role: Scalable object storage for images, videos, and category icons
@@ -150,7 +151,8 @@ click-bateva/
 | email | string | |
 | website | string | |
 | categoryId | string | Reference to `categories` |
-| tags | array\<string\> | Tag IDs or names |
+| tags | array\<string\> | Location tag IDs (group === "location") |
+| subcategoryIds | array\<string\> | Reference to `subcategories` for per-category filters |
 | businessId | string \| null | Reference to `businesses` |
 | active | boolean | |
 | createdAt | Timestamp | |
@@ -187,9 +189,25 @@ Top-level collection (not a subcollection) to enable efficient analytics queries
 
 ### `tags` Collection
 
+Location tags only — used for the area/sub-region filter in the user-facing app.
+
 | Field | Type | Notes |
 |---|---|---|
-| name | string | e.g. "Kosher", "Open at Night" |
+| name | string | e.g. "צפון", "גולן" |
+| group | string \| null | Always `"location"` for tags used in the UI |
+| parentId | string \| null | null = top-level region; non-null = sub-region of that parent tag |
+| createdAt | Timestamp | |
+| updatedAt | Timestamp | |
+
+### `subcategories` Collection
+
+Per-category refinement filters. AND-across-groups, OR-within-group, scoped to the POI's category.
+
+| Field | Type | Notes |
+|---|---|---|
+| categoryId | string | Reference to `categories` |
+| name | string | e.g. "כשר", "זול", "בוטיק" |
+| group | string \| null | Groups enable AND-across-groups logic (e.g. "כשרות", "מחיר"); null = ungrouped |
 | createdAt | Timestamp | |
 | updatedAt | Timestamp | |
 
@@ -216,7 +234,7 @@ Top-level collection (not a subcollection) to enable efficient analytics queries
 
 ## 5. Key Data Flows
 
-- Frontend fetches active POIs (optionally filtered by category/tags) from Firestore and displays them on Google Maps. When a user clicks a POI, details are displayed and a click document is written directly to the `clicks` subcollection client-side.
+- Frontend fetches active POIs from Firestore and displays them on Google Maps. Client-side filtering applies: category, location tags (OR within parent/sub-region), and per-category subcategory filters (AND-across-groups, OR-within-group). When a user clicks a POI, details are displayed and a click document is written to the top-level `clicks` collection client-side.
 - Admin dashboard authenticates via Firebase Auth. CRUD operations on POIs, categories, tags, and businesses are performed directly on Firestore, with Security Rules enforcing admin privileges.
 - Business dashboard authenticates via Firebase Auth. Security Rules ensure a business user can only read/write POIs where their UID is referenced in `businessId`.
 

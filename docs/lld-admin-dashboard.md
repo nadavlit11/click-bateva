@@ -44,21 +44,26 @@ apps/admin/
     ├── lib/
     │   └── firebase.ts         initializeApp, db, auth, storage; emulator in DEV
     ├── pages/
-    │   ├── LoginPage.tsx       signInWithEmailAndPassword; Hebrew error messages
-    │   ├── DashboardPage.tsx   stats overview (placeholder)
-    │   ├── PoisPage.tsx        list POIs + open PoiDrawer
-    │   ├── CategoriesPage.tsx  list + CategoryModal
-    │   ├── TagsPage.tsx        list + TagModal
-    │   └── IconsPage.tsx       upload + list + delete icons
+    │   ├── LoginPage.tsx           signInWithEmailAndPassword; Hebrew error messages
+    │   ├── DashboardPage.tsx       stats overview (placeholder)
+    │   ├── PoisPage.tsx            list POIs + open PoiDrawer
+    │   ├── CategoriesPage.tsx      list + CategoryModal
+    │   ├── TagsPage.tsx            list + TagModal (group + parentId fields)
+    │   ├── SubcategoriesPage.tsx   list grouped by category + SubcategoryModal
+    │   ├── IconsPage.tsx           upload + list + delete icons
+    │   ├── BusinessesPage.tsx      list + BusinessModal; createBusinessUser callable
+    │   └── AnalyticsPage.tsx       click totals per POI + per category
     └── components/
-        ├── AuthGuard.tsx       onAuthStateChanged + getIdTokenResult(); gate on admin/content_manager
-        ├── CategoryModal.tsx   create/edit category; icon picker; color picker
-        ├── TagModal.tsx        create/edit tag (name only)
-        ├── MapPicker.tsx       Leaflet map + Nominatim search; click/drag/search to set lat/lng
-        ├── PoiDrawer.tsx       slide-in panel; full POI CRUD + image upload + MapPicker
+        ├── AuthGuard.tsx           onAuthStateChanged + getIdTokenResult(); gate on admin/content_manager
+        ├── CategoryModal.tsx       create/edit category; icon picker; color picker
+        ├── TagModal.tsx            create/edit tag; group select + parentId picker
+        ├── SubcategoryModal.tsx    create/edit subcategory; category select + group input
+        ├── MapPicker.tsx           Leaflet map + Nominatim search; click/drag/search to set lat/lng
+        ├── PoiDrawer.tsx           slide-in panel; full POI CRUD + image upload + MapPicker + subcategory checkboxes
+        ├── BusinessModal.tsx       create business + Firebase Auth user via createBusinessUser callable
         └── Layout/
-            ├── AppLayout.tsx   flex layout: Sidebar + <Outlet />
-            └── Sidebar.tsx     nav links + signOut
+            ├── AppLayout.tsx       flex layout: Sidebar + <Outlet />
+            └── Sidebar.tsx         nav links + signOut
 ```
 
 ---
@@ -66,12 +71,15 @@ apps/admin/
 ## 3. Routing
 
 ```
-/login           → LoginPage (public)
-/ (index)        → DashboardPage (auth-gated)
-/pois            → PoisPage (auth-gated)
-/categories      → CategoriesPage (auth-gated)
-/tags            → TagsPage (auth-gated)
-/icons           → IconsPage (auth-gated)
+/login            → LoginPage (public)
+/ (index)         → DashboardPage (auth-gated)
+/pois             → PoisPage (auth-gated)
+/categories       → CategoriesPage (auth-gated)
+/tags             → TagsPage (auth-gated)
+/subcategories    → SubcategoriesPage (auth-gated)
+/icons            → IconsPage (auth-gated)
+/businesses       → BusinessesPage (auth-gated)
+/analytics        → AnalyticsPage (auth-gated)
 ```
 
 `AuthGuard` wraps all authenticated routes via `<Route element={<AuthGuard />}>`.
@@ -113,7 +121,8 @@ export interface Poi {
   email: string
   website: string           // '' means no website (domain only)
   categoryId: string
-  tags: string[]            // tag IDs
+  tags: string[]            // location tag IDs only
+  subcategoryIds: string[]  // subcategory IDs for per-category filter
   businessId: string | null
   active: boolean
   openingHours: string | null
@@ -135,6 +144,17 @@ export interface Category {
 export interface Tag {
   id: string
   name: string
+  group: string | null    // always "location" for area filter tags
+  parentId: string | null // null = top-level region; non-null = sub-region of that parent tag
+  createdAt: unknown
+  updatedAt: unknown
+}
+
+export interface Subcategory {
+  id: string
+  categoryId: string      // which category this refines
+  name: string            // e.g. "כשר", "זול"
+  group: string | null    // groups within a category (AND-across, OR-within); null = ungrouped
   createdAt: unknown
   updatedAt: unknown
 }
@@ -157,8 +177,11 @@ export interface Icon {
 |---|---|
 | `points_of_interest` | read all (admin), create, update, delete |
 | `categories` | read all, create, update, delete |
-| `tags` | read all, create, update, delete |
+| `tags` | read all, create, update, delete (includes group + parentId) |
+| `subcategories` | read all, create, update, delete |
 | `icons` | read all, create, delete |
+| `businesses` | read all, create |
+| `clicks` | read all (analytics aggregation) |
 
 ---
 

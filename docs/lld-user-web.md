@@ -35,28 +35,33 @@ apps/user-web/
     ├── App.tsx                 Root: h-screen flex, lifted filter state
     ├── index.css               @import "tailwindcss"; Rubik font
     ├── types/
-    │   └── index.ts            Poi, Category, Tag interfaces
+    │   └── index.ts            Poi, Category, Tag, Subcategory interfaces
     ├── data/
-    │   └── defaults.ts         Hardcoded categories + tags for Phase 4.1
+    │   └── mockData.ts         MOCK_POIS only (references real seeded Firestore IDs)
     ├── lib/
-    │   └── firebase.ts         initializeApp, getFirestore, emulator in DEV
-    ├── hooks/                  (Phase 4.2+)
+    │   ├── firebase.ts         initializeApp, getFirestore, emulator gated on VITE_USE_EMULATOR
+    │   ├── filterPois.ts       filterPois() + PoiFilter interface
+    │   └── colorUtils.ts       lighten(), lightenBorder()
+    ├── hooks/
     │   ├── usePois.ts          onSnapshot active POIs
     │   ├── useCategories.ts    onSnapshot categories
-    │   └── useTags.ts          onSnapshot tags
+    │   ├── useTags.ts          onSnapshot location tags (group === "location")
+    │   └── useSubcategories.ts onSnapshot subcategories
     └── components/
         ├── Sidebar/
-        │   ├── Sidebar.tsx     flex-col container (w-80, shadow)
-        │   ├── AppHeader.tsx   logo icon + "קליק בטבע" + "גלה את ישראל"
-        │   ├── SearchBar.tsx   text input, emits searchQuery
-        │   ├── CategoryGrid.tsx 2-col grid of category chips
-        │   ├── TagList.tsx     wrapping flex of tag pills
-        │   └── SidebarFooter.tsx count text + "נקה הכל" button
+        │   ├── Sidebar.tsx         flex-col container (w-80, shadow)
+        │   ├── AppHeader.tsx       logo icon + "קליק בטבע" + "גלה את ישראל"
+        │   ├── SearchBar.tsx       text input, emits searchQuery
+        │   ├── TagList.tsx         region <select> dropdown + sub-region pill buttons
+        │   ├── CategoryGrid.tsx    2-col grid of category chips
+        │   ├── SubcategoryFilter.tsx  per-category subcategory pills, grouped by group
+        │   └── SidebarFooter.tsx   count text + "נקה הכל" button; upward shadow via z-index
         ├── MapView/
-        │   ├── MapView.tsx     APIProvider + Map (center Israel, zoom 8)
-        │   └── PoiMarker.tsx   AdvancedMarker with teardrop div + label (Phase 4.2)
+        │   ├── MapView.tsx     APIProvider + Map (center Israel, zoom 8); bounds south=28.5
+        │   ├── PoiMarker.tsx   AdvancedMarker with teardrop div + label
+        │   └── PoiDetailPanel.tsx  slide-up detail panel; image carousel; max-h uses 100dvh
         └── BottomSheet/
-            └── BottomSheet.tsx   mobile filter panel; collapses to chip row peek
+            └── BottomSheet.tsx   mobile filter panel; collapses to chip row peek; scroll fade indicator
 ```
 
 ---
@@ -75,7 +80,16 @@ export interface Category {
 
 export interface Tag {
   id: string;
-  name: string;       // Hebrew e.g. "מתאים למשפחות"
+  name: string;           // Hebrew e.g. "צפון", "גולן"
+  group: string | null;   // always "location" for tags shown in the area filter
+  parentId: string | null; // null = top-level region; non-null = sub-region of that parent tag
+}
+
+export interface Subcategory {
+  id: string;
+  categoryId: string;     // which category this refines
+  name: string;           // Hebrew e.g. "כשר", "זול"
+  group: string | null;   // enables AND-across-groups logic e.g. "כשרות", "מחיר"; null = ungrouped
 }
 
 export interface Poi {
@@ -84,12 +98,13 @@ export interface Poi {
   description: string;
   location: { lat: number; lng: number };  // converted from Firestore GeoPoint
   mainImage: string | null;
-  images: string[];       // all images for carousel (Phase 4.4)
+  images: string[];       // all images for carousel
   phone: string | null;
   email: string | null;
   website: string | null;
   categoryId: string;
-  tags: string[];         // tag IDs
+  tags: string[];         // location tag IDs only
+  subcategoryIds: string[]; // subcategory IDs for per-category filtering
   // Note: `active` is NOT in the frontend type — the Firestore query filters
   // where("active", "==", true), so inactive POIs never reach the frontend.
 }
@@ -103,27 +118,47 @@ All filter state lives in `App.tsx` (lifted state — no Redux/Zustand needed fo
 
 ```
 App.tsx
-  ├── pois: Poi[]                       ← Phase 4.1: []; Phase 4.2+: from usePois()
-  ├── categories: Category[]            ← Phase 4.1: DEFAULT_CATEGORIES; Phase 4.2+: useCategories()
-  ├── tags: Tag[]                       ← Phase 4.1: DEFAULT_TAGS; Phase 4.3+: useTags()
-  ├── selectedCategories: Set<string>   ← filter: category IDs
-  ├── selectedTags: Set<string>         ← filter: tag IDs
-  ├── searchQuery: string               ← filter: text search
-  ├── selectedPoi: Poi | null           ← for POI detail popup (Phase 4.4)
-  └── filteredPois: Poi[]               ← derived: useMemo over pois + all filters
+  ├── pois: Poi[]                           ← from usePois() + MOCK_POIS in demo mode
+  ├── categories: Category[]                ← useCategories()
+  ├── tags: Tag[]                           ← useTags() (location tags only, group === "location")
+  ├── subcategories: Subcategory[]          ← useSubcategories()
+  ├── selectedCategories: Set<string>       ← filter: category IDs
+  ├── selectedTags: Set<string>             ← filter: location tag IDs
+  ├── selectedSubcategories: Set<string>    ← filter: subcategory IDs (per-category)
+  ├── searchQuery: string                   ← filter: text search
+  ├── selectedPoi: Poi | null               ← for POI detail popup
+  └── filteredPois: Poi[]                   ← derived: filterPois(pois, { ... }) via useMemo
 ```
 
-**Filtering logic** (client-side, Phase 4.3+):
+**Filtering logic** (in `lib/filterPois.ts`):
 ```typescript
-const filteredPois = useMemo(() => pois.filter(poi => {
-  const matchesCategory = selectedCategories.size === 0
-    || selectedCategories.has(poi.categoryId);
-  const matchesTags = selectedTags.size === 0
-    || poi.tags.some(t => selectedTags.has(t));
-  const matchesSearch = !searchQuery
-    || poi.name.includes(searchQuery);
-  return matchesCategory && matchesTags && matchesSearch;
-}), [pois, selectedCategories, selectedTags, searchQuery]);
+export interface PoiFilter {
+  selectedCategories: Set<string>;
+  selectedTags: Set<string>;           // location tags (OR-within-parent-group)
+  selectedSubcategories: Set<string>;
+  searchQuery: string;
+  tags: Tag[];                         // for parentId resolution
+  subcategories: Subcategory[];        // for categoryId + group lookup
+}
+
+// Per-category subcategory logic:
+// Build: category → group → selected subcategory IDs
+const subsByCategory = new Map<string, Map<string | null, Set<string>>>();
+for (const subId of selectedSubcategories) {
+  const sub = subcategories.find(s => s.id === subId);
+  // ... populate subsByCategory
+}
+// In pois.filter():
+// AND-across-subcategory-groups, OR-within-group, scoped to POI's category
+const catGroups = subsByCategory.get(poi.categoryId);
+const matchesSubcategory = !catGroups ||
+  Array.from(catGroups.values()).every(
+    groupSet => (poi.subcategoryIds ?? []).some(s => groupSet.has(s))
+  );
+// POIs in unselected categories always pass the subcategory check
+```
+
+**toggleCategory** also clears `selectedSubcategories` for the deselected category.
 ```
 
 **When to consider Zustand:** If the app grows to multiple routes that need to share filter state across navigation, or the `selectedPoi` popup triggers complex cross-component behavior.
@@ -140,16 +175,20 @@ No props. Owns all state. Renders `<Sidebar>` + `<MapView>` in RTL flex layout.
 interface SidebarProps {
   categories: Category[];
   tags: Tag[];
+  subcategories: Subcategory[];
   selectedCategories: Set<string>;
   selectedTags: Set<string>;
+  selectedSubcategories: Set<string>;
   searchQuery: string;
   filteredCount: number;
   onCategoryToggle: (id: string) => void;
   onTagToggle: (id: string) => void;
+  onSubcategoryToggle: (id: string) => void;
   onSearchChange: (q: string) => void;
   onClearAll: () => void;
 }
 ```
+Order of children: SearchBar → TagList → CategoryGrid → SubcategoryFilter → SidebarFooter.
 
 ### CategoryGrid.tsx
 ```typescript
@@ -161,15 +200,30 @@ interface CategoryGridProps {
 ```
 Each chip background derived from `category.color` (rgba with low opacity). Active state: colored border + `outline` ring.
 
-### TagList.tsx
+### TagList.tsx (location filter)
 ```typescript
 interface TagListProps {
-  tags: Tag[];
+  tags: Tag[];          // location tags only (group === "location")
   selectedTags: Set<string>;
   onToggle: (id: string) => void;
 }
 ```
-Active state: `bg-green-500 text-white`.
+Renders a `<select>` dropdown for top-level regions (parentId === null). When a region is selected, sub-region pills (parentId === selectedParentId) appear below. Switching regions auto-deselects the previous parent + its children.
+
+### SubcategoryFilter.tsx
+```typescript
+interface SubcategoryFilterProps {
+  categories: Category[];
+  subcategories: Subcategory[];
+  selectedCategories: Set<string>;
+  selectedSubcategories: Set<string>;
+  onToggle: (id: string) => void;
+}
+```
+- Shows hint text ("בחר קטגוריה לסינון מפורט") when no category with subcategories is selected.
+- Auto-expands when exactly 1 category with subcategories is selected; collapsed by default for multiple.
+- Each category section is toggled with a header button (◂ collapsed, ▾ expanded — RTL-correct).
+- Subcategory pills grouped by `group` field, with null-group last.
 
 ### MapView.tsx
 ```typescript
@@ -199,30 +253,42 @@ Renders inside `<AdvancedMarker position={poi.location}>`. Custom div: CSS-only 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const db = getFirestore(app);
 
-if (import.meta.env.DEV) {
+// Emulator only when VITE_USE_EMULATOR=true — NOT import.meta.env.DEV,
+// which would connect every local dev server to the emulator even against prod data.
+if (import.meta.env.VITE_USE_EMULATOR === 'true') {
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
 }
 ```
 
-### hooks/usePois.ts (Phase 4.2)
+### hooks/usePois.ts
 ```typescript
 export function usePois(): Poi[] {
   // onSnapshot("points_of_interest", where("active", "==", true))
   // doc.data().location is a Firestore GeoPoint → convert to { lat, lng }
+  // maps subcategoryIds: doc.data().subcategoryIds ?? []
 }
 ```
 
-### hooks/useCategories.ts (Phase 4.2)
+### hooks/useCategories.ts
 ```typescript
 export function useCategories(): Category[] {
   // onSnapshot("categories")
 }
 ```
 
-### hooks/useTags.ts (Phase 4.3)
+### hooks/useTags.ts
 ```typescript
 export function useTags(): Tag[] {
-  // onSnapshot("tags")
+  // onSnapshot("tags") — returns all tags; filter to group === "location" for area filter UI
+  // maps parentId: doc.data().parentId ?? null
+}
+```
+
+### hooks/useSubcategories.ts
+```typescript
+export function useSubcategories(): Subcategory[] {
+  // onSnapshot("subcategories")
+  // maps group: doc.data().group ?? null
 }
 ```
 
@@ -329,23 +395,29 @@ const [sheetExpanded, setSheetExpanded] = useState(false)
 
 **Animation:** `transition: transform 300ms ease` (CSS transform-based slide).
 
-**Props:** Mirror `SidebarProps` exactly — same filter state, same callbacks — so the two components are interchangeable from App.tsx's perspective.
+**Props:** Mirror `SidebarProps` — same filter state, same callbacks — plus `expanded`/`onExpandedChange`.
 
 ```typescript
 interface BottomSheetProps {
   categories: Category[];
   tags: Tag[];
+  subcategories: Subcategory[];
   selectedCategories: Set<string>;
   selectedTags: Set<string>;
+  selectedSubcategories: Set<string>;
   searchQuery: string;
   filteredCount: number;
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   onCategoryToggle: (id: string) => void;
   onTagToggle: (id: string) => void;
+  onSubcategoryToggle: (id: string) => void;
   onSearchChange: (q: string) => void;
   onClearAll: () => void;
 }
+```
+
+**Scroll fade indicator:** An absolutely-positioned fade gradient + ⌄ arrow appears at the bottom of the scroll area when content overflows. State initialized on mount via `requestAnimationFrame(checkScroll)` in a `useEffect` that depends on `[expanded, selectedCategories, selectedSubcategories]` (Sets have new identity on each toggle, so this fires on every selection change — intended).
 ```
 
 ### POI detail on mobile
@@ -366,8 +438,9 @@ App.tsx
   │     ├── ResultCount        — e.g. "12 מקומות"
   │     └── [expanded only]
   │           ├── SearchBar
+  │           ├── TagList         (area dropdown + sub-region pills)
   │           ├── CategoryGrid
-  │           ├── TagList
+  │           ├── SubcategoryFilter
   │           └── SidebarFooter
   └── {selectedPoi && <PoiDetailPanel>}
         (absolute, bottom-0, z-30 — slides up when selectedPoi != null)
