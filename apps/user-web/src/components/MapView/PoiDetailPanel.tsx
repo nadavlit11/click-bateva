@@ -87,7 +87,7 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
                 <img
                   src={category.iconUrl}
                   alt=""
-                  style={{ width: 64, height: 64, objectFit: "contain", filter: "brightness(0) invert(1)", opacity: 0.9 }}
+                  style={{ width: 64, height: 64, objectFit: "contain", opacity: 0.9 }}
                 />
               ) : (
                 <span style={{ fontSize: 56 }}>📍</span>

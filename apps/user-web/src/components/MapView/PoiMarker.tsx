@@ -53,10 +53,10 @@ export function PoiMarker({ poi, color, iconUrl, selected, onClick }: PoiMarkerP
               alt=""
               style={{
                 transform: "rotate(45deg)",
-                width: 18,
-                height: 18,
+                width: 20,
+                height: 20,
                 objectFit: "contain",
-                filter: "brightness(0) invert(1)",
+                display: "block",
               }}
             />
           ) : (
