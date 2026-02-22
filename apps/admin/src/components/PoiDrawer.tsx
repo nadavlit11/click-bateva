@@ -43,7 +43,7 @@ interface FormState {
   selectedSubcategoryIds: string[]
   businessId: string
   active: boolean
-  openingHours: Record<string, DayHours | null>
+  openingHours: Record<string, DayHours | null> | 'by_appointment'
   price: string
 }
 
@@ -91,9 +91,11 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         selectedSubcategoryIds: [...(poi.subcategoryIds ?? [])],
         businessId: poi.businessId ?? '',
         active: poi.active,
-        openingHours: (typeof poi.openingHours === 'object' && poi.openingHours !== null)
-          ? { ...EMPTY_HOURS, ...poi.openingHours }
-          : { ...EMPTY_HOURS },
+        openingHours: poi.openingHours === 'by_appointment'
+          ? 'by_appointment'
+          : (typeof poi.openingHours === 'object' && poi.openingHours !== null)
+            ? { ...EMPTY_HOURS, ...poi.openingHours }
+            : { ...EMPTY_HOURS },
         price: poi.price ?? '',
       })
     } else {
@@ -179,7 +181,9 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         subcategoryIds: form.selectedSubcategoryIds,
         businessId: form.businessId.trim() || null,
         active: form.active,
-        openingHours: Object.values(form.openingHours).every(v => v === null) ? null : form.openingHours,
+        openingHours: form.openingHours === 'by_appointment'
+          ? 'by_appointment'
+          : Object.values(form.openingHours).every(v => v === null) ? null : form.openingHours,
         price: form.price.trim() || null,
         updatedAt: serverTimestamp(),
       }
@@ -416,61 +420,85 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
               </div>
             </div>
 
-            {/* Opening Hours — structured per-day */}
+            {/* Opening Hours */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">שעות פתיחה</label>
-              <div className="space-y-2">
-                {DAY_KEYS.map(day => {
-                  const hours = form.openingHours[day]
-                  const isOpen = hours !== null
-                  return (
-                    <div key={day} className="flex items-center gap-2">
-                      <span className="text-sm text-gray-700 w-14 shrink-0">{DAY_NAMES_HE[day]}</span>
-                      <label className="flex items-center gap-1 cursor-pointer shrink-0">
-                        <input
-                          type="checkbox"
-                          checked={isOpen}
-                          onChange={() =>
-                            setForm(prev => ({
-                              ...prev,
-                              openingHours: { ...prev.openingHours, [day]: isOpen ? null : { ...DEFAULT_HOURS } },
-                            }))
-                          }
-                          className="accent-green-600"
-                        />
-                        <span className="text-xs text-gray-500">{isOpen ? 'פתוח' : 'סגור'}</span>
-                      </label>
-                      {isOpen && (
-                        <div className="flex items-center gap-1 flex-1" dir="ltr">
-                          <input
-                            type="time"
-                            value={hours.open}
-                            onChange={e =>
-                              setForm(prev => ({
-                                ...prev,
-                                openingHours: { ...prev.openingHours, [day]: { ...prev.openingHours[day]!, open: e.target.value } },
-                              }))
-                            }
-                            className="border border-gray-300 rounded px-2 py-1 text-sm"
-                          />
-                          <span className="text-gray-400">–</span>
-                          <input
-                            type="time"
-                            value={hours.close}
-                            onChange={e =>
-                              setForm(prev => ({
-                                ...prev,
-                                openingHours: { ...prev.openingHours, [day]: { ...prev.openingHours[day]!, close: e.target.value } },
-                              }))
-                            }
-                            className="border border-gray-300 rounded px-2 py-1 text-sm"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+              <div className="flex gap-4 mb-2">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="hoursMode"
+                    checked={form.openingHours !== 'by_appointment'}
+                    onChange={() => setForm(prev => ({ ...prev, openingHours: { ...EMPTY_HOURS } }))}
+                    className="accent-green-600"
+                  />
+                  <span className="text-sm text-gray-700">שעות קבועות</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="hoursMode"
+                    checked={form.openingHours === 'by_appointment'}
+                    onChange={() => setForm(prev => ({ ...prev, openingHours: 'by_appointment' }))}
+                    className="accent-green-600"
+                  />
+                  <span className="text-sm text-gray-700">בתיאום מראש</span>
+                </label>
               </div>
+              {form.openingHours !== 'by_appointment' && (
+                <div className="space-y-2">
+                  {DAY_KEYS.map(day => {
+                    const hours = (form.openingHours as Record<string, DayHours | null>)[day]
+                    const isOpen = hours !== null
+                    return (
+                      <div key={day} className="flex items-center gap-2">
+                        <span className="text-sm text-gray-700 w-14 shrink-0">{DAY_NAMES_HE[day]}</span>
+                        <label className="flex items-center gap-1 cursor-pointer shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={isOpen}
+                            onChange={() =>
+                              setForm(prev => ({
+                                ...prev,
+                                openingHours: { ...(prev.openingHours as Record<string, DayHours | null>), [day]: isOpen ? null : { ...DEFAULT_HOURS } },
+                              }))
+                            }
+                            className="accent-green-600"
+                          />
+                          <span className="text-xs text-gray-500">{isOpen ? 'פתוח' : 'סגור'}</span>
+                        </label>
+                        {isOpen && (
+                          <div className="flex items-center gap-1 flex-1" dir="ltr">
+                            <input
+                              type="time"
+                              value={hours.open}
+                              onChange={e =>
+                                setForm(prev => ({
+                                  ...prev,
+                                  openingHours: { ...(prev.openingHours as Record<string, DayHours | null>), [day]: { ...(prev.openingHours as Record<string, DayHours | null>)[day]!, open: e.target.value } },
+                                }))
+                              }
+                              className="border border-gray-300 rounded px-2 py-1 text-sm"
+                            />
+                            <span className="text-gray-400">–</span>
+                            <input
+                              type="time"
+                              value={hours.close}
+                              onChange={e =>
+                                setForm(prev => ({
+                                  ...prev,
+                                  openingHours: { ...(prev.openingHours as Record<string, DayHours | null>), [day]: { ...(prev.openingHours as Record<string, DayHours | null>)[day]!, close: e.target.value } },
+                                }))
+                              }
+                              className="border border-gray-300 rounded px-2 py-1 text-sm"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Price */}

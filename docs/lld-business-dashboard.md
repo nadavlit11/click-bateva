@@ -129,7 +129,7 @@ export interface Poi {
   categoryId: string
   businessId: string | null
   active: boolean
-  openingHours: string | null
+  openingHours: Record<string, DayHours | null> | string | null
   price: string | null
   createdAt: unknown        // Firestore serverTimestamp
   updatedAt: unknown

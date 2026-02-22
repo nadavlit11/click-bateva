@@ -18,7 +18,7 @@ export interface Poi {
   subcategoryIds: string[] // category-scoped refinement IDs
   businessId: string | null
   active: boolean
-  openingHours: Record<string, DayHours | null> | null
+  openingHours: Record<string, DayHours | null> | 'by_appointment' | null
   price: string | null
   createdAt: unknown
   updatedAt: unknown

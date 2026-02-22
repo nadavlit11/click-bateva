@@ -2,12 +2,7 @@ import { useState, useEffect } from "react";
 import type { CSSProperties } from "react";
 import type { Poi, Category, DayHours } from "../../types";
 import { lighten } from "../../lib/colorUtils";
-
-const DAY_KEYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
-const DAY_NAMES_HE: Record<string, string> = {
-  sunday: "ראשון", monday: "שני", tuesday: "שלישי", wednesday: "רביעי",
-  thursday: "חמישי", friday: "שישי", saturday: "שבת",
-};
+import { DAY_KEYS, DAY_NAMES_HE, getOpeningStatusText } from "../../lib/openingStatus";
 
 interface PoiDetailPanelProps {
   poi: Poi;
@@ -193,43 +188,45 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
 
         {poi.openingHours && (
           <div className="mb-2">
-            <button
-              onClick={() => setHoursExpanded(v => !v)}
-              className="flex items-center gap-2 w-full text-start"
-            >
-              <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">🕐</span>
-              <span className="text-sm text-gray-700 flex-1">
-                {typeof poi.openingHours === "string"
-                  ? poi.openingHours.split("\n")[0]
-                  : (() => {
-                      const todayKey = DAY_KEYS[new Date().getDay()];
-                      const todayHours = poi.openingHours[todayKey];
-                      return todayHours ? `פתוח ${todayHours.open}–${todayHours.close}` : "סגור היום";
-                    })()
-                }
-              </span>
-              <span className="text-xs text-gray-400">{hoursExpanded ? "▲" : "▼"}</span>
-            </button>
-            {hoursExpanded && (
-              <div className="mr-9 mt-1 text-sm text-gray-600 leading-relaxed">
-                {typeof poi.openingHours === "string"
-                  ? <span className="whitespace-pre-line">{poi.openingHours.split("\n").slice(1).join("\n")}</span>
-                  : (
-                    <div className="space-y-0.5">
-                      {DAY_KEYS.map(day => {
-                        const hours = (poi.openingHours as Record<string, DayHours | null>)[day];
-                        const isToday = day === DAY_KEYS[new Date().getDay()];
-                        return (
-                          <div key={day} className={`flex justify-between ${isToday ? "font-bold text-gray-900" : ""}`}>
-                            <span>{DAY_NAMES_HE[day]}</span>
-                            <span dir="ltr">{hours ? `${hours.open}–${hours.close}` : "סגור"}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )
-                }
+            {poi.openingHours === "by_appointment" ? (
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">🕐</span>
+                <span className="text-sm text-gray-700">בתיאום מראש</span>
               </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => setHoursExpanded(v => !v)}
+                  className="flex items-center gap-2 w-full text-start"
+                >
+                  <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">🕐</span>
+                  <span className="text-sm text-gray-700 flex-1">
+                    {getOpeningStatusText(poi.openingHours)}
+                  </span>
+                  <span className="text-xs text-gray-400">{hoursExpanded ? "▲" : "▼"}</span>
+                </button>
+                {hoursExpanded && (
+                  <div className="mr-9 mt-1 text-sm text-gray-600 leading-relaxed">
+                    {typeof poi.openingHours === "string"
+                      ? <span className="whitespace-pre-line">{poi.openingHours.split("\n").slice(1).join("\n")}</span>
+                      : (
+                        <div className="space-y-0.5">
+                          {DAY_KEYS.map(day => {
+                            const hours = (poi.openingHours as Record<string, DayHours | null>)[day];
+                            const isToday = day === DAY_KEYS[new Date().getDay()];
+                            return (
+                              <div key={day} className={`flex justify-between ${isToday ? "font-bold text-gray-900" : ""}`}>
+                                <span>{DAY_NAMES_HE[day]}</span>
+                                <span dir="ltr">{hours ? `${hours.open}–${hours.close}` : "סגור"}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )
+                    }
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

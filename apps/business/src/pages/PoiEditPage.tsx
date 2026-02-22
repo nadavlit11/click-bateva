@@ -119,7 +119,7 @@ export function PoiEditPage() {
             <div>
               <span className="font-medium text-gray-900">שעות פתיחה:</span>
               {typeof poi.openingHours === 'string'
-                ? <span className="mr-1">{poi.openingHours}</span>
+                ? <span className="mr-1">{poi.openingHours === 'by_appointment' ? 'בתיאום מראש' : poi.openingHours}</span>
                 : (
                   <div className="mt-1 space-y-0.5">
                     {DAY_KEYS.map(day => {

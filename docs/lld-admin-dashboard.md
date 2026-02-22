@@ -121,7 +121,7 @@ export interface Poi {
   subcategoryIds: string[]  // subcategory IDs for per-category filter
   businessId: string | null
   active: boolean
-  openingHours: string | null
+  openingHours: Record<string, DayHours | null> | 'by_appointment' | null
   price: string | null
   createdAt: unknown        // Firestore serverTimestamp
   updatedAt: unknown
