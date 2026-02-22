@@ -8,20 +8,11 @@ interface Props {
   onClose: () => void
   subcategory: Subcategory | null
   categories: Category[]
+  existingGroups: string[]
   onSaved: () => void
 }
 
-const GROUPS = [
-  { value: '',           label: 'ללא קבוצה' },
-  { value: 'kashrut',   label: 'כשרות' },
-  { value: 'price',     label: 'מחיר' },
-  { value: 'audience',  label: 'קהל יעד' },
-  { value: 'type',      label: 'סוג' },
-  { value: 'difficulty',label: 'רמת קושי' },
-  { value: 'amenities', label: 'מתקנים' },
-]
-
-export function SubcategoryModal({ isOpen, onClose, subcategory, categories, onSaved }: Props) {
+export function SubcategoryModal({ isOpen, onClose, subcategory, categories, existingGroups, onSaved }: Props) {
   const [name, setName] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [group, setGroup] = useState('')
@@ -96,15 +87,20 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, onS
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">קבוצה</label>
-            <select
+            <input
+              type="text"
+              list="group-suggestions"
               value={group}
               onChange={e => setGroup(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
-            >
-              {GROUPS.map(g => (
-                <option key={g.value} value={g.value}>{g.label}</option>
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              placeholder="למשל: סוג, מחיר, קהל יעד"
+            />
+            <datalist id="group-suggestions">
+              {existingGroups.map(g => (
+                <option key={g} value={g} />
               ))}
-            </select>
+            </datalist>
+            <p className="text-xs text-gray-400 mt-1">בחר מהרשימה או הקלד שם קבוצה חדשה. השאר ריק לללא קבוצה.</p>
           </div>
 
           <div>

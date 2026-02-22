@@ -11,14 +11,6 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
 import type { Poi, Category, Subcategory, Business } from '../types/index.ts'
 
-const SUBCAT_GROUP_LABELS: Record<string, string> = {
-  kashrut:    'כשרות',
-  price:      'מחיר',
-  audience:   'קהל יעד',
-  type:       'סוג',
-  difficulty: 'רמת קושי',
-  amenities:  'מתקנים',
-}
 
 interface Props {
   isOpen: boolean
@@ -552,7 +544,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                       <div key={group ?? '__null__'}>
                         {group && (
                           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
-                            {SUBCAT_GROUP_LABELS[group] ?? group}
+                            {group}
                           </p>
                         )}
                         <div className="grid grid-cols-2 gap-2">

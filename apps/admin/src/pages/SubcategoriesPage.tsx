@@ -4,15 +4,6 @@ import { db } from '../lib/firebase.ts'
 import type { Subcategory, Category } from '../types/index.ts'
 import { SubcategoryModal } from '../components/SubcategoryModal.tsx'
 
-const GROUP_LABELS: Record<string, string> = {
-  kashrut:    'כשרות',
-  price:      'מחיר',
-  audience:   'קהל יעד',
-  type:       'סוג',
-  difficulty: 'רמת קושי',
-  amenities:  'מתקנים',
-}
-
 export function SubcategoriesPage() {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -96,7 +87,7 @@ export function SubcategoriesPage() {
                     <td className="px-4 py-2.5">
                       {sub.group ? (
                         <span className="inline-block px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200">
-                          {GROUP_LABELS[sub.group] ?? sub.group}
+                          {sub.group}
                         </span>
                       ) : (
                         <span className="text-gray-400 text-xs">כללי</span>
@@ -171,6 +162,7 @@ export function SubcategoriesPage() {
         onClose={handleClose}
         subcategory={editingSub}
         categories={categories}
+        existingGroups={[...new Set(subcategories.map(s => s.group).filter((g): g is string => !!g))]}
         onSaved={handleClose}
       />
     </div>

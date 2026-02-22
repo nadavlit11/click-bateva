@@ -9,15 +9,6 @@ interface SubcategoryFilterProps {
   onToggle: (id: string) => void;
 }
 
-const GROUP_LABELS: Record<string, string> = {
-  kashrut:    "כשרות",
-  price:      "מחיר",
-  audience:   "קהל יעד",
-  type:       "סוג",
-  difficulty: "רמת קושי",
-  amenities:  "מתקנים",
-};
-
 export function SubcategoryFilter({
   categories,
   subcategories,
@@ -88,7 +79,7 @@ export function SubcategoryFilter({
                     <div key={group ?? "__null__"}>
                       {group && (
                         <p className="text-xs text-gray-400 mb-1">
-                          {GROUP_LABELS[group] ?? group}
+                          {group}
                         </p>
                       )}
                       <div className="flex flex-wrap gap-2">
