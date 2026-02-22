@@ -1,14 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { reportError } from "./lib/errorReporting";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
-import { PoiDetailPanel } from "./components/MapView/PoiDetailPanel";
 import { BottomSheet } from "./components/BottomSheet/BottomSheet";
 import { usePois, useCategories, useSubcategories } from "./hooks/useFirestoreData";
 import { filterPois } from "./lib/filterPois";
 import type { Poi } from "./types";
+
+const PoiDetailPanel = lazy(() => import("./components/MapView/PoiDetailPanel").then(m => ({ default: m.PoiDetailPanel })));
 
 export default function App() {
   const { pois, loading: poisLoading } = usePois();
@@ -118,11 +119,13 @@ export default function App() {
           </div>
         )}
         {selectedPoi && (
-          <PoiDetailPanel
-            poi={selectedPoi}
-            category={categories.find(c => c.id === selectedPoi.categoryId)}
-            onClose={() => setSelectedPoi(null)}
-          />
+          <Suspense fallback={null}>
+            <PoiDetailPanel
+              poi={selectedPoi}
+              category={categories.find(c => c.id === selectedPoi.categoryId)}
+              onClose={() => setSelectedPoi(null)}
+            />
+          </Suspense>
         )}
       </main>
     </div>

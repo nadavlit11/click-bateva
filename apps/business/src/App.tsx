@@ -1,24 +1,30 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthGuard } from './components/AuthGuard.tsx'
 import { AppLayout } from './components/Layout/AppLayout.tsx'
-import { LoginPage } from './pages/LoginPage.tsx'
-import { ErrorPage } from './pages/ErrorPage.tsx'
-import { PoisListPage } from './pages/PoisListPage.tsx'
-import { PoiEditPage } from './pages/PoiEditPage.tsx'
+
+const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then(m => ({ default: m.LoginPage })))
+const ErrorPage = lazy(() => import('./pages/ErrorPage.tsx').then(m => ({ default: m.ErrorPage })))
+const PoisListPage = lazy(() => import('./pages/PoisListPage.tsx').then(m => ({ default: m.PoisListPage })))
+const PoiEditPage = lazy(() => import('./pages/PoiEditPage.tsx').then(m => ({ default: m.PoiEditPage })))
+
+const Loading = () => <div className="text-center py-10 text-gray-400">טוען...</div>
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/error" element={<ErrorPage />} />
-        <Route element={<AuthGuard />}>
-          <Route element={<AppLayout />}>
-            <Route index element={<PoisListPage />} />
-            <Route path="/pois/:poiId" element={<PoiEditPage />} />
+      <Suspense fallback={<Loading />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/error" element={<ErrorPage />} />
+          <Route element={<AuthGuard />}>
+            <Route element={<AppLayout />}>
+              <Route index element={<PoisListPage />} />
+              <Route path="/pois/:poiId" element={<PoiEditPage />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }
