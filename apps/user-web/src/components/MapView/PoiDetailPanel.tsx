@@ -11,6 +11,8 @@ interface PoiDetailPanelProps {
 
 export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [hoursExpanded, setHoursExpanded] = useState(false);
   const color = category?.color ?? "#4caf50";
   // mainImage is always first; poi.images are the extra images
   const allImages = [
@@ -20,8 +22,8 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
   const hasImages = allImages.length > 0;
   const slideCount = hasImages ? allImages.length : 1;
 
-  // Reset slide when POI changes
-  useEffect(() => { setCurrentSlide(0); }, [poi.id]);
+  // Reset state when POI changes
+  useEffect(() => { setCurrentSlide(0); setDescExpanded(false); setHoursExpanded(false); }, [poi.id]);
 
   // ESC to close
   useEffect(() => {
@@ -160,7 +162,22 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
         <h2 className="text-xl font-bold text-gray-800 mt-2">{poi.name}</h2>
 
         {poi.description && (
-          <p className="text-sm text-gray-500 mt-1 leading-relaxed">{poi.description}</p>
+          <div className="mt-1">
+            <p
+              className={`text-sm text-gray-500 leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}
+            >
+              {poi.description}
+            </p>
+            {poi.description.length > 120 && (
+              <button
+                onClick={() => setDescExpanded(v => !v)}
+                className="text-xs font-medium mt-1"
+                style={{ color }}
+              >
+                {descExpanded ? "הצג פחות" : "קרא עוד"}
+              </button>
+            )}
+          </div>
         )}
 
         {/* Info + contact section */}
@@ -169,9 +186,20 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
         )}
 
         {poi.openingHours && (
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">🕐</span>
-            <span className="text-sm text-gray-700">{poi.openingHours}</span>
+          <div className="mb-2">
+            <button
+              onClick={() => setHoursExpanded(v => !v)}
+              className="flex items-center gap-2 w-full text-start"
+            >
+              <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">🕐</span>
+              <span className="text-sm text-gray-700 flex-1">{poi.openingHours.split("\n")[0]}</span>
+              <span className="text-xs text-gray-400">{hoursExpanded ? "▲" : "▼"}</span>
+            </button>
+            {hoursExpanded && (
+              <div className="mr-9 mt-1 text-sm text-gray-600 whitespace-pre-line leading-relaxed">
+                {poi.openingHours.split("\n").slice(1).join("\n")}
+              </div>
+            )}
           </div>
         )}
 
