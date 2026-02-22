@@ -16,27 +16,20 @@ This document outlines the key features and their acceptance criteria for the Mi
 - Then a Google Map of Israel is displayed, centered appropriately.
 - And all active Points of Interest (POIs) are visible as markers on the map.
 
-#### Feature: Filter POIs by Category and Location
+#### Feature: Filter POIs by Category
+
+**Scenario: No POIs shown until a category is selected.**
+- Given the user navigates to the application.
+- When the map loads successfully.
+- Then no POI markers are visible on the map.
+- And the sidebar/bottom sheet shows the category grid for selection.
 
 **Scenario: User filters POIs to find hotels.**
-- Given the map is displayed with multiple POIs.
-- And filter options for Categories (e.g., "מלונות") and Area (e.g., "צפון") are available in the sidebar/bottom sheet.
+- Given the map is displayed with no POIs (no category selected yet).
+- And filter options for Categories (e.g., "מלונות") are available in the sidebar/bottom sheet.
 - When the user selects "מלונות" from the category grid.
-- Then only POIs categorized as "מלונות" remain visible on the map.
-- And POIs not categorized as "מלונות" are hidden.
-
-**Scenario: User filters POIs by region.**
-- Given the map is displayed with multiple POIs.
-- And the sidebar shows an "אזור" section with a dropdown.
-- When the user selects a region (e.g., "צפון") from the region dropdown.
-- Then only POIs tagged with "צפון" (or its sub-regions) remain visible.
-- And sub-region pills appear below the dropdown for the selected region.
-
-**Scenario: User narrows to a sub-region.**
-- Given the user has selected "צפון" from the region dropdown.
-- And sub-region pills (e.g., "גולן", "גליל") are shown below the dropdown.
-- When the user clicks the "גולן" pill.
-- Then only POIs tagged with "גולן" are shown (sub-region overrides the parent selection).
+- Then only POIs categorized as "מלונות" become visible on the map.
+- And POIs not categorized as "מלונות" remain hidden.
 
 #### Feature: Filter POIs by Subcategory (Per-Category Refinements)
 
@@ -109,7 +102,7 @@ This document outlines the key features and their acceptance criteria for the Mi
 - When the admin clicks a location on the map.
 - Then a pin is placed at the clicked location.
 - And the coordinates (latitude, longitude) are automatically populated.
-- When the admin fills in all other required fields (Name, Description, Category, Tags (location), Subcategories, optional Images/Videos, Phone, Email, Website) and submits.
+- When the admin fills in all other required fields (Name, Description, Category, Subcategories, optional Images/Videos, Phone, Email, Website) and submits.
 - Then the new POI is successfully saved to the database with the selected coordinates.
 - And the new POI becomes visible on the user-facing map application.
 
@@ -127,7 +120,7 @@ This document outlines the key features and their acceptance criteria for the Mi
 **Scenario: Admin edits an existing POI.**
 - Given the admin is logged into the Admin Dashboard.
 - When the admin selects an existing POI for editing.
-- And modifies its Name, Description, Category, Tags (location), Subcategories, or other details.
+- And modifies its Name, Description, Category, Subcategories, or other details.
 - When the admin saves the changes.
 - Then the POI's details are updated in the database.
 - And the updated details are immediately reflected on the user-facing map application.
@@ -154,7 +147,7 @@ This document outlines the key features and their acceptance criteria for the Mi
 - Then the icon is removed from Cloud Storage.
 - And the icon is no longer available in the icon selection dropdown.
 
-#### Feature: Manage Categories and Tags (CRUD)
+#### Feature: Manage Categories (CRUD)
 
 **Scenario: Admin adds a new Category with an icon.**
 - Given the admin is logged into the Admin Dashboard.
@@ -168,20 +161,13 @@ This document outlines the key features and their acceptance criteria for the Mi
 - When the admin navigates to the "Manage Categories" section and adds a new category name without selecting an icon.
 - Then the new category is saved and available for selection when creating/editing POIs.
 
-**Scenario: Admin adds a new location Tag (area/sub-area).**
-- Given the admin is logged into the Admin Dashboard.
-- When the admin navigates to the "Manage Tags" section and adds a new tag name with group "location".
-- And optionally sets a parentId to make it a sub-region.
-- Then the new location tag is saved and available for assignment to POIs.
-- And it appears in the user-facing area filter (as a parent region in the dropdown, or as a sub-region pill).
-
 #### Feature: Manage Subcategories (CRUD)
 
 **Scenario: Admin adds a new subcategory for a category.**
 - Given the admin is logged into the Admin Dashboard.
 - When the admin navigates to the "Subcategories" section.
 - And clicks "Add New Subcategory".
-- And selects a category (e.g., "מסעדות") and enters a name (e.g., "כשר") and optionally a group (e.g., "כשרות").
+- And selects a category (e.g., "מסעדות") and enters a name (e.g., "כשר") and optionally types a group name (e.g., "כשרות") in the free-text input (with autocomplete from existing groups).
 - Then the subcategory is saved and linked to that category.
 - And it appears as a filter pill in the user-facing app when "מסעדות" is selected.
 

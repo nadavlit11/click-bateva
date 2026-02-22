@@ -27,7 +27,7 @@ The application adopts a modern client-server architecture, with the frontend im
 |             V                     V             |
 |  +---------------------------------------------+ |
 |  |             Cloud Firestore                 | |
-|  | (NoSQL Database: POIs, Categories, Tags,    | |
+|  | (NoSQL Database: POIs, Categories,            | |
 |  |  Subcategories, Users, Businesses, Clicks)  | |
 |  +---------------------------------------------+ |
 |             ^                     ^             |
@@ -64,7 +64,7 @@ The application adopts a modern client-server architecture, with the frontend im
 
 **Admin Dashboard (React Web App):**
 - Technology: React, JavaScript/TypeScript (with a UI component library e.g. Material-UI)
-- Purpose: Secure interface for administrators to manage all POI data, categories, tags, businesses, and review analytics
+- Purpose: Secure interface for administrators to manage all POI data, categories, subcategories, businesses, and review analytics
 - Deployment: Firebase Hosting
 
 **Business Dashboard (React Web App):**
@@ -94,7 +94,6 @@ click-bateva/
 - Collections:
   - `points_of_interest`: Stores all POI details
   - `categories`: Manages dynamically created categories (each with an optional icon reference)
-  - `tags`: Manages dynamically created tags
   - `icons`: Stores metadata for uploaded icons (name, Cloud Storage URL)
   - `users`: Stores user profiles and roles
   - `businesses`: Stores registered business profiles
@@ -151,7 +150,7 @@ click-bateva/
 | email | string | |
 | website | string | |
 | categoryId | string | Reference to `categories` |
-| tags | array\<string\> | Location tag IDs (group === "location") |
+| tags | array\<string\> | Legacy field (always `[]` — location filtering removed) |
 | subcategoryIds | array\<string\> | Reference to `subcategories` for per-category filters |
 | businessId | string \| null | Reference to `businesses` |
 | active | boolean | |
@@ -187,18 +186,6 @@ Top-level collection (not a subcollection) to enable efficient analytics queries
 | createdAt | Timestamp | |
 | updatedAt | Timestamp | |
 
-### `tags` Collection
-
-Location tags only — used for the area/sub-region filter in the user-facing app.
-
-| Field | Type | Notes |
-|---|---|---|
-| name | string | e.g. "צפון", "גולן" |
-| group | string \| null | Always `"location"` for tags used in the UI |
-| parentId | string \| null | null = top-level region; non-null = sub-region of that parent tag |
-| createdAt | Timestamp | |
-| updatedAt | Timestamp | |
-
 ### `subcategories` Collection
 
 Per-category refinement filters. AND-across-groups, OR-within-group, scoped to the POI's category.
@@ -207,7 +194,7 @@ Per-category refinement filters. AND-across-groups, OR-within-group, scoped to t
 |---|---|---|
 | categoryId | string | Reference to `categories` |
 | name | string | e.g. "כשר", "זול", "בוטיק" |
-| group | string \| null | Groups enable AND-across-groups logic (e.g. "כשרות", "מחיר"); null = ungrouped |
+| group | string \| null | Free-text group name (e.g. "כשרות", "מחיר"); enables AND-across-groups logic; null = ungrouped |
 | createdAt | Timestamp | |
 | updatedAt | Timestamp | |
 
@@ -234,8 +221,8 @@ Per-category refinement filters. AND-across-groups, OR-within-group, scoped to t
 
 ## 5. Key Data Flows
 
-- Frontend fetches active POIs from Firestore and displays them on Google Maps. Client-side filtering applies: category, location tags (OR within parent/sub-region), and per-category subcategory filters (AND-across-groups, OR-within-group). When a user clicks a POI, details are displayed and a click document is written to the top-level `clicks` collection client-side.
-- Admin dashboard authenticates via Firebase Auth. CRUD operations on POIs, categories, tags, and businesses are performed directly on Firestore, with Security Rules enforcing admin privileges.
+- Frontend fetches active POIs from Firestore and displays them on Google Maps. No POIs are shown until at least one category is selected. Client-side filtering applies: category (required), per-category subcategory filters (AND-across-groups, OR-within-group), and text search. When a user clicks a POI, details are displayed and a click document is written to the top-level `clicks` collection client-side.
+- Admin dashboard authenticates via Firebase Auth. CRUD operations on POIs, categories, subcategories, and businesses are performed directly on Firestore, with Security Rules enforcing admin privileges.
 - Business dashboard authenticates via Firebase Auth. Security Rules ensure a business user can only read/write POIs where their UID is referenced in `businessId`.
 
 ## 6. Scalability & Security

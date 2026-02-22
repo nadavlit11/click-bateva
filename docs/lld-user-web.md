@@ -35,22 +35,18 @@ apps/user-web/
     ├── App.tsx                 Root: h-screen flex, lifted filter state
     ├── index.css               @import "tailwindcss"; Rubik font
     ├── types/
-    │   └── index.ts            Poi, Category, Tag, Subcategory interfaces
+    │   └── index.ts            Poi, Category, Subcategory interfaces
     ├── lib/
     │   ├── firebase.ts         initializeApp, getFirestore, emulator gated on VITE_USE_EMULATOR
     │   ├── filterPois.ts       filterPois() + PoiFilter interface
     │   └── colorUtils.ts       lighten(), lightenBorder()
     ├── hooks/
-    │   ├── usePois.ts          onSnapshot active POIs
-    │   ├── useCategories.ts    onSnapshot categories
-    │   ├── useTags.ts          onSnapshot location tags (group === "location")
-    │   └── useSubcategories.ts onSnapshot subcategories
+    │   └── useFirestoreData.ts  usePois, useCategories, useSubcategories (onSnapshot hooks)
     └── components/
         ├── Sidebar/
         │   ├── Sidebar.tsx         flex-col container (w-80, shadow)
         │   ├── AppHeader.tsx       logo icon + "קליק בטבע" + "גלה את ישראל"
         │   ├── SearchBar.tsx       text input, emits searchQuery
-        │   ├── TagList.tsx         region <select> dropdown + sub-region pill buttons
         │   ├── CategoryGrid.tsx    2-col grid of category chips
         │   ├── SubcategoryFilter.tsx  per-category subcategory pills, grouped by group
         │   └── SidebarFooter.tsx   count text + "נקה הכל" button; upward shadow via z-index
@@ -76,18 +72,11 @@ export interface Category {
   iconUrl: string | null;
 }
 
-export interface Tag {
-  id: string;
-  name: string;           // Hebrew e.g. "צפון", "גולן"
-  group: string | null;   // always "location" for tags shown in the area filter
-  parentId: string | null; // null = top-level region; non-null = sub-region of that parent tag
-}
-
 export interface Subcategory {
   id: string;
   categoryId: string;     // which category this refines
   name: string;           // Hebrew e.g. "כשר", "זול"
-  group: string | null;   // enables AND-across-groups logic e.g. "כשרות", "מחיר"; null = ungrouped
+  group: string | null;   // free-text group name for AND-across-groups logic e.g. "כשרות", "מחיר"; null = ungrouped
 }
 
 export interface Poi {
@@ -101,7 +90,6 @@ export interface Poi {
   email: string | null;
   website: string | null;
   categoryId: string;
-  tags: string[];         // location tag IDs only
   subcategoryIds: string[]; // subcategory IDs for per-category filtering
   // Note: `active` is NOT in the frontend type — the Firestore query filters
   // where("active", "==", true), so inactive POIs never reach the frontend.
@@ -118,10 +106,8 @@ All filter state lives in `App.tsx` (lifted state — no Redux/Zustand needed fo
 App.tsx
   ├── pois: Poi[]                           ← from usePois()
   ├── categories: Category[]                ← useCategories()
-  ├── tags: Tag[]                           ← useTags() (location tags only, group === "location")
   ├── subcategories: Subcategory[]          ← useSubcategories()
-  ├── selectedCategories: Set<string>       ← filter: category IDs
-  ├── selectedTags: Set<string>             ← filter: location tag IDs
+  ├── selectedCategories: Set<string>       ← filter: category IDs (required — no POIs shown when empty)
   ├── selectedSubcategories: Set<string>    ← filter: subcategory IDs (per-category)
   ├── searchQuery: string                   ← filter: text search
   ├── selectedPoi: Poi | null               ← for POI detail popup
@@ -131,11 +117,9 @@ App.tsx
 **Filtering logic** (in `lib/filterPois.ts`):
 ```typescript
 export interface PoiFilter {
-  selectedCategories: Set<string>;
-  selectedTags: Set<string>;           // location tags (OR-within-parent-group)
+  selectedCategories: Set<string>;     // required — empty Set means no POIs shown
   selectedSubcategories: Set<string>;
   searchQuery: string;
-  tags: Tag[];                         // for parentId resolution
   subcategories: Subcategory[];        // for categoryId + group lookup
 }
 
@@ -172,21 +156,18 @@ No props. Owns all state. Renders `<Sidebar>` + `<MapView>` in RTL flex layout.
 ```typescript
 interface SidebarProps {
   categories: Category[];
-  tags: Tag[];
   subcategories: Subcategory[];
   selectedCategories: Set<string>;
-  selectedTags: Set<string>;
   selectedSubcategories: Set<string>;
   searchQuery: string;
   filteredCount: number;
   onCategoryToggle: (id: string) => void;
-  onTagToggle: (id: string) => void;
   onSubcategoryToggle: (id: string) => void;
   onSearchChange: (q: string) => void;
   onClearAll: () => void;
 }
 ```
-Order of children: SearchBar → TagList → CategoryGrid → SubcategoryFilter → SidebarFooter.
+Order of children: SearchBar → CategoryGrid → SubcategoryFilter → SidebarFooter.
 
 ### CategoryGrid.tsx
 ```typescript
@@ -197,16 +178,6 @@ interface CategoryGridProps {
 }
 ```
 Each chip background derived from `category.color` (rgba with low opacity). Active state: colored border + `outline` ring.
-
-### TagList.tsx (location filter)
-```typescript
-interface TagListProps {
-  tags: Tag[];          // location tags only (group === "location")
-  selectedTags: Set<string>;
-  onToggle: (id: string) => void;
-}
-```
-Renders a `<select>` dropdown for top-level regions (parentId === null). When a region is selected, sub-region pills (parentId === selectedParentId) appear below. Switching regions auto-deselects the previous parent + its children.
 
 ### SubcategoryFilter.tsx
 ```typescript
@@ -258,32 +229,21 @@ if (import.meta.env.VITE_USE_EMULATOR === 'true') {
 }
 ```
 
-### hooks/usePois.ts
+### hooks/useFirestoreData.ts
+
+All Firestore data hooks are co-located in a single file:
+
 ```typescript
 export function usePois(): Poi[] {
   // onSnapshot("points_of_interest", where("active", "==", true))
   // doc.data().location is a Firestore GeoPoint → convert to { lat, lng }
   // maps subcategoryIds: doc.data().subcategoryIds ?? []
 }
-```
 
-### hooks/useCategories.ts
-```typescript
 export function useCategories(): Category[] {
   // onSnapshot("categories")
 }
-```
 
-### hooks/useTags.ts
-```typescript
-export function useTags(): Tag[] {
-  // onSnapshot("tags") — returns all tags; filter to group === "location" for area filter UI
-  // maps parentId: doc.data().parentId ?? null
-}
-```
-
-### hooks/useSubcategories.ts
-```typescript
 export function useSubcategories(): Subcategory[] {
   // onSnapshot("subcategories")
   // maps group: doc.data().group ?? null
@@ -339,7 +299,7 @@ No explicit `dir="rtl"` on the div — it inherits from `<html dir="rtl">`.
 |---|---|---|
 | 4.1 ✅ | Map of Israel (no markers) + full Sidebar shell (hardcoded data) | No |
 | 4.2 | Real POI markers from Firestore, colored by category | Yes — usePois, useCategories |
-| 4.3 | Category + tag + search filtering fully wired up | Yes — useTags |
+| 4.3 | Category + subcategory + search filtering fully wired up | Yes |
 | 4.4 | POI detail popup (info panel or modal) | No new queries |
 | 4.6 | Mobile bottom sheet layout | No new Firebase |
 
@@ -384,7 +344,7 @@ const [sheetExpanded, setSheetExpanded] = useState(false)
 | State | Description |
 |---|---|
 | Collapsed (default) | Peeks 120px from the bottom of the screen; shows a category chip row + result count |
-| Expanded | Slides up to ~70% of viewport height; shows full filter UI (SearchBar, CategoryGrid, TagList, SidebarFooter) |
+| Expanded | Slides up to ~70% of viewport height; shows full filter UI (SearchBar, CategoryGrid, SubcategoryFilter, SidebarFooter) |
 
 **Interaction:**
 - A drag-handle bar sits at the top of the sheet.
@@ -398,17 +358,14 @@ const [sheetExpanded, setSheetExpanded] = useState(false)
 ```typescript
 interface BottomSheetProps {
   categories: Category[];
-  tags: Tag[];
   subcategories: Subcategory[];
   selectedCategories: Set<string>;
-  selectedTags: Set<string>;
   selectedSubcategories: Set<string>;
   searchQuery: string;
   filteredCount: number;
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   onCategoryToggle: (id: string) => void;
-  onTagToggle: (id: string) => void;
   onSubcategoryToggle: (id: string) => void;
   onSearchChange: (q: string) => void;
   onClearAll: () => void;
@@ -436,7 +393,6 @@ App.tsx
   │     ├── ResultCount        — e.g. "12 מקומות"
   │     └── [expanded only]
   │           ├── SearchBar
-  │           ├── TagList         (area dropdown + sub-region pills)
   │           ├── CategoryGrid
   │           ├── SubcategoryFilter
   │           └── SidebarFooter

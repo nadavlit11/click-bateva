@@ -2,7 +2,7 @@
 
 ## Context
 
-The admin dashboard is a role-gated single-page app for managing all project content (POIs, categories, tags, icons). Access is restricted to `admin` and `content_manager` roles via Firebase Auth custom claims.
+The admin dashboard is a role-gated single-page app for managing all project content (POIs, categories, subcategories, icons). Access is restricted to `admin` and `content_manager` roles via Firebase Auth custom claims.
 
 Deployed at: https://click-bateva.web.app
 
@@ -40,15 +40,14 @@ apps/admin/
     ├── App.tsx                 BrowserRouter + routes
     ├── index.css               @import "tailwindcss"
     ├── types/
-    │   └── index.ts            Poi, Category, Tag, Icon
+    │   └── index.ts            Poi, Category, Subcategory, Icon
     ├── lib/
     │   └── firebase.ts         initializeApp, db, auth, storage; emulator in DEV
     ├── pages/
     │   ├── LoginPage.tsx           signInWithEmailAndPassword; Hebrew error messages
-    │   ├── DashboardPage.tsx       stats overview (placeholder)
+    │   ├── DashboardPage.tsx       stats overview (POIs, categories, subcategories, businesses)
     │   ├── PoisPage.tsx            list POIs + open PoiDrawer
     │   ├── CategoriesPage.tsx      list + CategoryModal
-    │   ├── TagsPage.tsx            list + TagModal (group + parentId fields)
     │   ├── SubcategoriesPage.tsx   list grouped by category + SubcategoryModal
     │   ├── IconsPage.tsx           upload + list + delete icons
     │   ├── BusinessesPage.tsx      list + BusinessModal; createBusinessUser callable
@@ -56,8 +55,7 @@ apps/admin/
     └── components/
         ├── AuthGuard.tsx           onAuthStateChanged + getIdTokenResult(); gate on admin/content_manager
         ├── CategoryModal.tsx       create/edit category; icon picker; color picker
-        ├── TagModal.tsx            create/edit tag; group select + parentId picker
-        ├── SubcategoryModal.tsx    create/edit subcategory; category select + group input
+        ├── SubcategoryModal.tsx    create/edit subcategory; category select + free-text group input with datalist autocomplete
         ├── MapPicker.tsx           Leaflet map + Nominatim search; click/drag/search to set lat/lng
         ├── PoiDrawer.tsx           slide-in panel; full POI CRUD + image upload + MapPicker + subcategory checkboxes
         ├── BusinessModal.tsx       create business + Firebase Auth user via createBusinessUser callable
@@ -75,7 +73,6 @@ apps/admin/
 / (index)         → DashboardPage (auth-gated)
 /pois             → PoisPage (auth-gated)
 /categories       → CategoriesPage (auth-gated)
-/tags             → TagsPage (auth-gated)
 /subcategories    → SubcategoriesPage (auth-gated)
 /icons            → IconsPage (auth-gated)
 /businesses       → BusinessesPage (auth-gated)
@@ -121,7 +118,7 @@ export interface Poi {
   email: string
   website: string           // '' means no website (domain only)
   categoryId: string
-  tags: string[]            // location tag IDs only
+  tags: string[]            // legacy field (always [])
   subcategoryIds: string[]  // subcategory IDs for per-category filter
   businessId: string | null
   active: boolean
@@ -141,20 +138,11 @@ export interface Category {
   updatedAt: unknown
 }
 
-export interface Tag {
-  id: string
-  name: string
-  group: string | null    // always "location" for area filter tags
-  parentId: string | null // null = top-level region; non-null = sub-region of that parent tag
-  createdAt: unknown
-  updatedAt: unknown
-}
-
 export interface Subcategory {
   id: string
   categoryId: string      // which category this refines
   name: string            // e.g. "כשר", "זול"
-  group: string | null    // groups within a category (AND-across, OR-within); null = ungrouped
+  group: string | null    // free-text group name (AND-across, OR-within); null = ungrouped
   createdAt: unknown
   updatedAt: unknown
 }
@@ -177,7 +165,6 @@ export interface Icon {
 |---|---|
 | `points_of_interest` | read all (admin), create, update, delete |
 | `categories` | read all, create, update, delete |
-| `tags` | read all, create, update, delete (includes group + parentId) |
 | `subcategories` | read all, create, update, delete |
 | `icons` | read all, create, delete |
 | `businesses` | read all, create |
