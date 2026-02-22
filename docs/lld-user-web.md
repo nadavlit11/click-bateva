@@ -39,6 +39,7 @@ apps/user-web/
     ├── lib/
     │   ├── firebase.ts         initializeApp, getFirestore, emulator gated on VITE_USE_EMULATOR
     │   ├── filterPois.ts       filterPois() + PoiFilter interface
+    │   ├── openingStatus.ts    getOpeningStatusText(), DAY_KEYS, DAY_NAMES_HE
     │   └── colorUtils.ts       lighten(), lightenBorder()
     ├── hooks/
     │   └── useFirestoreData.ts  usePois, useCategories, useSubcategories (onSnapshot hooks)

@@ -10,27 +10,32 @@ Cheatsheet for deploying this project's Firebase services.
 |---------|----------------|
 | `firebase deploy --only hosting:click-bateva` | Admin app (apps/admin/dist) |
 | `firebase deploy --only hosting:click-bateva-app` | User-web app (apps/user-web/dist) |
-| `firebase deploy --only hosting` | Both hosting sites |
+| `firebase deploy --only hosting:click-bateva-biz` | Business app (apps/business/dist) |
+| `firebase deploy --only hosting` | All 3 hosting sites |
 | `firebase deploy --only firestore:rules,firestore:indexes,storage` | Rules only |
 | `firebase deploy --only functions` | Cloud Functions only |
 | `firebase deploy` | Everything |
 
-**Always build before deploying hosting:**
+**CRITICAL: Always build ALL apps before deploying hosting.** Deploying without building pushes stale artifacts.
 ```bash
-cd apps/admin && npm run build
-cd apps/user-web && npm run build
+cd apps/admin && npm run build && cd ../user-web && npm run build && cd ../business && npm run build
+```
+Then deploy:
+```bash
+firebase deploy --only hosting
 ```
 
 ---
 
 ## Multi-site hosting setup
 
-This project has two Firebase Hosting sites:
+This project has three Firebase Hosting sites:
 
 | Site ID | URL | App |
 |---------|-----|-----|
 | `click-bateva` | https://click-bateva.web.app | Admin dashboard |
 | `click-bateva-app` | https://click-bateva-app.web.app | User-facing map app |
+| `click-bateva-biz` | https://click-bateva-biz.web.app | Business dashboard |
 
 **firebase.json structure** for multiple sites (use an array, not an object):
 ```json
@@ -84,4 +89,5 @@ The user must sign out and back in for the token to refresh.
 
 - Admin: https://click-bateva.web.app
 - User app: https://click-bateva-app.web.app
+- Business: https://click-bateva-biz.web.app
 - Firebase Console: https://console.firebase.google.com/project/click-bateva
