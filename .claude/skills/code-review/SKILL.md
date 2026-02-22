@@ -162,6 +162,12 @@ All tests must pass. If any fail, fix them before proceeding.
 
 ---
 
+## Step 4.5 — Update docs (if behavior changed)
+
+If the code changes affect any documented behavior — data model, UI flows, component APIs, routing, filtering logic, or admin features — run the `/update-docs` skill before committing. Skip this step for pure refactors, test-only changes, or config tweaks that don't change documented behavior.
+
+---
+
 ## Step 5 — Commit and push
 
 Once all subagents pass AND tests pass:

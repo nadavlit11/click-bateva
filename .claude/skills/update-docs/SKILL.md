@@ -19,16 +19,21 @@ Work through each file and update as needed:
 - Update the Key Data Flows section if data flow changed
 - Update Google Maps Platform, Storage bucket structure, or Auth claims if relevant
 
-### 3. `docs/work-plan.md`
-- Update or add the relevant phase step
-- If a new sub-task was discovered, add it
-- Mark completed items with ✅ if appropriate
+### 3. `docs/lld-user-web.md`
+- Update directory structure if files were added/removed/renamed
+- Update TypeScript types if interfaces changed
+- Update state architecture if App.tsx state changed
+- Update component props if component APIs changed
+- Update data layer hooks if Firestore hooks changed
 
-### 4. `docs/progress.md`
-- Mark any newly completed steps as ✅ Done
-- Update status of in-progress steps
-- Add notes for deviations from the original work plan
-- Add to "Known Deviations" section if something changed from the plan
+### 4. `docs/lld-admin-dashboard.md`
+- Update directory structure if files were added/removed/renamed
+- Update routing if routes were added/removed
+- Update TypeScript types if interfaces changed
+- Update Firestore collections table if collection usage changed
+
+### 5. `docs/lld-business-dashboard.md`
+- Update if any business dashboard behavior or types changed
 
 ## Common mistakes to check
 - `clicks` is a top-level collection, not a subcollection
@@ -37,3 +42,4 @@ Work through each file and update as needed:
 - Roles: `admin`, `content_manager`, `business_user`, `standard_user`
 - Storage rules use `request.auth.token.role` (custom claims), NOT `firestore.get()`
 - Firestore rules use `request.auth.token.role` (custom claims) for role checks — NOT `get()` on the users collection
+- Subcategory groups are free-text (not hardcoded enums) — admin uses `<input>` + `<datalist>` autocomplete
