@@ -56,9 +56,13 @@ service cloud.firestore {
     // ─── clicks ─────────────────────────────────────────────────────────────
 
     match /clicks/{clickId} {
-      // Anyone can create a click — validate required fields only
+      // Anyone can create a click — validate required fields and types
       allow create: if request.resource.data.keys().hasAll(['poiId', 'categoryId', 'timestamp']) &&
-                       request.resource.data.keys().hasOnly(['poiId', 'categoryId', 'timestamp']);
+                       request.resource.data.keys().hasOnly(['poiId', 'categoryId', 'timestamp']) &&
+                       request.resource.data.poiId is string &&
+                       request.resource.data.categoryId is string &&
+                       request.resource.data.poiId.size() < 100 &&
+                       request.resource.data.categoryId.size() < 100;
 
       // Only admin can read or delete clicks
       allow read, delete: if isAdmin();

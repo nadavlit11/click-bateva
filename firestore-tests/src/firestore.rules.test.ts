@@ -136,6 +136,54 @@ describe("clicks collection", () => {
         })
       );
     });
+
+    it("denies create when poiId is not a string", async () => {
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(
+        addDoc(collection(db, "clicks"), {
+          poiId: 123,
+          categoryId: "c1",
+          timestamp: serverTimestamp(),
+        })
+      );
+    });
+
+    it("denies create when categoryId is not a string", async () => {
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(
+        addDoc(collection(db, "clicks"), {
+          poiId: "p1",
+          categoryId: 456,
+          timestamp: serverTimestamp(),
+        })
+      );
+    });
+
+    it("denies create when poiId exceeds 100 characters", async () => {
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(
+        addDoc(collection(db, "clicks"), {
+          poiId: "a".repeat(100),
+          categoryId: "c1",
+          timestamp: serverTimestamp(),
+        })
+      );
+    });
+
+    it("denies create when categoryId exceeds 100 characters", async () => {
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(
+        addDoc(collection(db, "clicks"), {
+          poiId: "p1",
+          categoryId: "b".repeat(100),
+          timestamp: serverTimestamp(),
+        })
+      );
+    });
   });
 
   describe("READ", () => {

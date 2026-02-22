@@ -11,6 +11,9 @@ import type { Poi } from "./types";
 
 const PoiDetailPanel = lazy(() => import("./components/MapView/PoiDetailPanel").then(m => ({ default: m.PoiDetailPanel })));
 
+const recentClicks = new Map<string, number>();
+const CLICK_DEBOUNCE_MS = 3000;
+
 export default function App() {
   const { pois, loading: poisLoading } = usePois();
   const categories = useCategories();
@@ -65,11 +68,16 @@ export default function App() {
   }
 
   function handlePoiClick(poi: Poi) {
-    addDoc(collection(db, "clicks"), {
-      poiId: poi.id,
-      categoryId: poi.categoryId,
-      timestamp: serverTimestamp(),
-    }).catch((err) => reportError(err, { source: 'App.handlePoiClick' }));
+    const now = Date.now();
+    const lastClick = recentClicks.get(poi.id);
+    if (!lastClick || now - lastClick > CLICK_DEBOUNCE_MS) {
+      recentClicks.set(poi.id, now);
+      addDoc(collection(db, "clicks"), {
+        poiId: poi.id,
+        categoryId: poi.categoryId,
+        timestamp: serverTimestamp(),
+      }).catch((err) => reportError(err, { source: 'App.handlePoiClick' }));
+    }
     setSelectedPoi(poi);
   }
 
