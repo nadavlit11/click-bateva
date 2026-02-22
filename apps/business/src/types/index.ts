@@ -11,7 +11,6 @@ export interface Poi {
   email: string
   website: string           // '' means no website (domain only)
   categoryId: string
-  tags: string[]            // tag IDs
   businessId: string | null
   active: boolean
   openingHours: string | null

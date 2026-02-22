@@ -150,7 +150,6 @@ click-bateva/
 | email | string | |
 | website | string | |
 | categoryId | string | Reference to `categories` |
-| tags | array\<string\> | Legacy field (always `[]` — location filtering removed) |
 | subcategoryIds | array\<string\> | Reference to `subcategories` for per-category filters |
 | businessId | string \| null | Reference to `businesses` |
 | active | boolean | |

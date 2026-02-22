@@ -3,7 +3,6 @@
  *
  * Creates:
  *   - 6 categories (מסעדות, בתי מלון, טיולים, חופים, פארקים, אטרקציות)
- *   - Location tags with parent/child hierarchy (צפון → גולן/גליל/כרמל, etc.)
  *   - Subcategories per category (kashrut/price/audience for restaurants, etc.)
  *   - 1 fully-detailed showcase POI with every field populated
  *
@@ -45,32 +44,6 @@ await upsert('categories', 'hiking',      { name: 'טיולים',   color: '#43A
 await upsert('categories', 'beaches',     { name: 'חופים',    color: '#039BE5', iconId: null, iconUrl: null })
 await upsert('categories', 'parks',       { name: 'פארקים',   color: '#00897B', iconId: null, iconUrl: null })
 await upsert('categories', 'attractions', { name: 'אטרקציות', color: '#FB8C00', iconId: null, iconUrl: null })
-
-// ─── location tags ───────────────────────────────────────────────────────────
-console.log('\n🏷️  Tags (location)')
-
-// parents
-await upsert('tags', 'loc-north',     { name: 'צפון',    group: 'location', parentId: null })
-await upsert('tags', 'loc-center',    { name: 'מרכז',    group: 'location', parentId: null })
-await upsert('tags', 'loc-south',     { name: 'דרום',    group: 'location', parentId: null })
-await upsert('tags', 'loc-jerusalem', { name: 'ירושלים', group: 'location', parentId: null })
-await upsert('tags', 'loc-deadsea',  { name: 'ים המלח', group: 'location', parentId: null })
-await upsert('tags', 'loc-eilat',    { name: 'אילת',    group: 'location', parentId: null })
-
-// north children
-await upsert('tags', 'loc-golan',  { name: 'גולן',   group: 'location', parentId: 'loc-north' })
-await upsert('tags', 'loc-galil',  { name: 'גליל',   group: 'location', parentId: 'loc-north' })
-await upsert('tags', 'loc-carmel', { name: 'כרמל',   group: 'location', parentId: 'loc-north' })
-await upsert('tags', 'loc-gilboa', { name: 'גלבוע',  group: 'location', parentId: 'loc-north' })
-
-// center children
-await upsert('tags', 'loc-gushdan', { name: 'גוש דן', group: 'location', parentId: 'loc-center' })
-await upsert('tags', 'loc-sharon',  { name: 'שרון',   group: 'location', parentId: 'loc-center' })
-await upsert('tags', 'loc-shfela',  { name: 'שפלה',   group: 'location', parentId: 'loc-center' })
-
-// south children
-await upsert('tags', 'loc-negev',  { name: 'נגב',   group: 'location', parentId: 'loc-south' })
-await upsert('tags', 'loc-arava',  { name: 'ערבה',  group: 'location', parentId: 'loc-south' })
 
 // ─── subcategories ───────────────────────────────────────────────────────────
 console.log('\n🗂️  Subcategories')
@@ -148,7 +121,6 @@ await upsert('points_of_interest', 'demo-manta-ray', {
   openingHours: 'ראשון-חמישי: 12:00-23:30 | שישי: 12:00-15:00 | שבת: 20:00-23:30',
   price: 'ממוצע לסועד: 180-250 ₪',
   categoryId: 'restaurants',
-  tags: ['loc-center', 'loc-gushdan'],
   subcategoryIds: ['rest-kosher', 'rest-meat', 'rest-pricey', 'rest-couples'],
   businessId: null,
   active: true,

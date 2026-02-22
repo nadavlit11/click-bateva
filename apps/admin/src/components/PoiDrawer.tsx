@@ -196,7 +196,6 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         email: form.email.trim(),
         website: form.website.trim(),
         categoryId: form.categoryId,
-        tags: [],
         subcategoryIds: form.selectedSubcategoryIds,
         businessId: form.businessId.trim() || null,
         active: form.active,

@@ -20,7 +20,6 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>): Poi[] {
       openingHours: d.openingHours ?? null,
       price: d.price ?? null,
       categoryId: d.categoryId,
-      tags: d.tags ?? [],
       subcategoryIds: d.subcategoryIds ?? [],
     };
   });

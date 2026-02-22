@@ -10,7 +10,6 @@ export interface Poi {
   email: string
   website: string
   categoryId: string
-  tags: string[]           // location tag IDs only
   subcategoryIds: string[] // category-scoped refinement IDs
   businessId: string | null
   active: boolean
@@ -26,15 +25,6 @@ export interface Category {
   color: string
   iconId: string | null
   iconUrl: string | null
-  createdAt: unknown
-  updatedAt: unknown
-}
-
-export interface Tag {
-  id: string
-  name: string
-  group: string | null   // "location" | null
-  parentId: string | null
   createdAt: unknown
   updatedAt: unknown
 }

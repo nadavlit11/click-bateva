@@ -5,13 +5,6 @@ export interface Category {
   iconUrl: string | null;
 }
 
-export interface Tag {
-  id: string;
-  name: string;          // Hebrew e.g. "מתאים למשפחות"
-  group: string | null;  // "location" | null — only location tags remain as global tags
-  parentId: string | null; // for location hierarchy (e.g. גולן under צפון)
-}
-
 export interface Subcategory {
   id: string;
   categoryId: string;    // which category this refinement belongs to
@@ -32,6 +25,5 @@ export interface Poi {
   openingHours: string | null;
   price: string | null;
   categoryId: string;
-  tags: string[];         // location tag IDs only
   subcategoryIds: string[]; // category-scoped refinement IDs
 }

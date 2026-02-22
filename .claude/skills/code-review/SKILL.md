@@ -43,7 +43,7 @@ Prompt:
 > Review the following git diff for consistency with this project's patterns.
 >
 > Key patterns to enforce:
-> - Firestore collection names: `points_of_interest`, `categories`, `tags`, `icons`, `users`, `businesses`, `clicks`
+> - Firestore collection names: `points_of_interest`, `categories`, `subcategories`, `icons`, `users`, `businesses`, `clicks`
 > - `clicks` is a TOP-LEVEL collection (never a subcollection)
 > - `icons` documents have `path` field (NOT `url`, NOT `storagePath`)
 > - `categories` documents have `color`, `iconId`, `iconUrl` fields
@@ -57,7 +57,7 @@ Prompt:
 > - Firebase emulator connection must be gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`). Using `DEV` connects every local dev server to the emulator even when QA-ing against production data.
 > - Firebase Functions v2 `onCall` does NOT add CORS headers for arbitrary origins by default (unlike v1). Every `onCall` from `firebase-functions/v2/https` must include `{ cors: true }`: `onCall({ cors: true }, async (request) => { ... })`. Without this, calls from localhost and non-Firebase-Hosting origins fail with a CORS error.
 > - The `onUserCreated` Auth trigger fires for ALL new users, including those created by admin callable functions (e.g. `createBusinessUser`). Any `setCustomUserClaims` call in `onUserCreated` must first check `adminAuth.getUser(uid).customClaims?.role` and skip if a role is already set — otherwise it races with and overwrites claims set by the callable.
-> - Demo mode mock data: once production Firestore has been seeded with real catalog data (categories, tags, subcategories), all mock POIs must reference those real seeded document IDs. Never merge parallel MOCK_CATEGORIES/MOCK_TAGS/MOCK_SUBCATEGORIES arrays alongside real Firestore data — this causes duplicate entries in the UI.
+> - Demo mode mock data: once production Firestore has been seeded with real catalog data (categories, subcategories), all mock POIs must reference those real seeded document IDs. Never merge parallel MOCK_CATEGORIES/MOCK_SUBCATEGORIES arrays alongside real Firestore data — this causes duplicate entries in the UI.
 > - After adding a new Firestore collection, always deploy the updated security rules: `firebase deploy --only firestore:rules`. A rule written in the file but not deployed silently blocks all reads/writes.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).

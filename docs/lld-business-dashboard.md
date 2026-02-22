@@ -127,7 +127,6 @@ export interface Poi {
   email: string
   website: string           // '' means no website (domain only)
   categoryId: string
-  tags: string[]            // tag IDs
   businessId: string | null
   active: boolean
   openingHours: string | null
@@ -164,7 +163,7 @@ export interface BusinessContextValue {
 }
 ```
 
-**Read-only fields** (displayed in PoiEditPage but not editable by business users): `name`, `location`, `mainImage`, `categoryId`, `tags`, `active`, `openingHours`, `price`.
+**Read-only fields** (displayed in PoiEditPage but not editable by business users): `name`, `location`, `mainImage`, `categoryId`, `active`, `openingHours`, `price`.
 
 ---
 

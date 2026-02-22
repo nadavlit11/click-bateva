@@ -8,7 +8,6 @@ Use this skill before deploying `firestore.rules` or `storage.rules`. Validates 
 |--------------------|---------------------|-------------|-----------------|------------------------------|
 | points_of_interest | read (active only)  | full        | full            | read + update own POIs only  |
 | categories         | read                | full        | full            | read                         |
-| tags               | read                | full        | full            | read                         |
 | icons              | read                | full        | full            | read                         |
 | businesses         | none                | full        | none            | read own                     |
 | users              | none                | full        | none            | read own                     |

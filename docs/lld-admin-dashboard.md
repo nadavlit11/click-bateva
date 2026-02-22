@@ -118,7 +118,6 @@ export interface Poi {
   email: string
   website: string           // '' means no website (domain only)
   categoryId: string
-  tags: string[]            // legacy field (always [])
   subcategoryIds: string[]  // subcategory IDs for per-category filter
   businessId: string | null
   active: boolean

@@ -144,7 +144,6 @@ for (let i = 0; i < wpData.markers.length; i += batchSize) {
       email: '',
       website: '',
       categoryId: resolveCategory(marker),
-      tags: [],
       subcategoryIds: [],
       businessId: null,
       active: true,
@@ -165,4 +164,3 @@ console.log(`\n✅ Import complete!`)
 console.log(`   ${imported} POIs imported`)
 console.log(`   ${skipped} skipped`)
 console.log(`   ${Object.keys(WP_CATEGORIES).length} categories created`)
-console.log(`   Location tags preserved (not deleted)`)
