@@ -1,26 +1,22 @@
 import { useRef, useState, useEffect } from "react";
-import type { Category, Tag, Subcategory } from "../../types";
+import type { Category, Subcategory } from "../../types";
 import { CATEGORY_EMOJI } from "../../data/defaults";
 import { lighten, lightenBorder } from "../../lib/colorUtils";
 import { CategoryGrid } from "../Sidebar/CategoryGrid";
-import { TagList } from "../Sidebar/TagList";
 import { SubcategoryFilter } from "../Sidebar/SubcategoryFilter";
 import { SearchBar } from "../Sidebar/SearchBar";
 import { SidebarFooter } from "../Sidebar/SidebarFooter";
 
 interface BottomSheetProps {
   categories: Category[];
-  tags: Tag[];
   subcategories: Subcategory[];
   selectedCategories: Set<string>;
-  selectedTags: Set<string>;
   selectedSubcategories: Set<string>;
   searchQuery: string;
   filteredCount: number;
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   onCategoryToggle: (id: string) => void;
-  onTagToggle: (id: string) => void;
   onSubcategoryToggle: (id: string) => void;
   onSearchChange: (q: string) => void;
   onClearAll: () => void;
@@ -29,17 +25,14 @@ interface BottomSheetProps {
 
 export function BottomSheet({
   categories,
-  tags,
   subcategories,
   selectedCategories,
-  selectedTags,
   selectedSubcategories,
   searchQuery,
   filteredCount,
   expanded,
   onExpandedChange,
   onCategoryToggle,
-  onTagToggle,
   onSubcategoryToggle,
   onSearchChange,
   onClearAll,
@@ -107,11 +100,6 @@ export function BottomSheet({
                 className="h-full overflow-y-auto"
                 onScroll={checkScroll}
               >
-              <TagList
-                tags={tags}
-                selectedTags={selectedTags}
-                onToggle={onTagToggle}
-              />
               <CategoryGrid
                 categories={categories}
                 selectedCategories={selectedCategories}

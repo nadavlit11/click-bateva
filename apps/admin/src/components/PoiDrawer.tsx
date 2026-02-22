@@ -9,7 +9,7 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
-import type { Poi, Category, Tag, Subcategory, Business } from '../types/index.ts'
+import type { Poi, Category, Subcategory, Business } from '../types/index.ts'
 
 const SUBCAT_GROUP_LABELS: Record<string, string> = {
   kashrut:    'כשרות',
@@ -25,7 +25,6 @@ interface Props {
   onClose: () => void
   poi: Poi | null
   categories: Category[]
-  tags: Tag[]
   subcategories: Subcategory[]
   businesses: Business[]
   onSaved: () => void
@@ -43,7 +42,6 @@ interface FormState {
   email: string
   website: string
   categoryId: string
-  selectedTags: string[]
   selectedSubcategoryIds: string[]
   businessId: string
   active: boolean
@@ -63,7 +61,6 @@ const INITIAL_FORM: FormState = {
   email: '',
   website: '',
   categoryId: '',
-  selectedTags: [],
   selectedSubcategoryIds: [],
   businessId: '',
   active: true,
@@ -71,7 +68,7 @@ const INITIAL_FORM: FormState = {
   price: '',
 }
 
-export function PoiDrawer({ isOpen, onClose, poi, categories, tags, subcategories, businesses, onSaved }: Props) {
+export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, businesses, onSaved }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -98,7 +95,6 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, subcategorie
         email: poi.email,
         website: poi.website,
         categoryId: poi.categoryId,
-        selectedTags: [...poi.tags],
         selectedSubcategoryIds: [...(poi.subcategoryIds ?? [])],
         businessId: poi.businessId ?? '',
         active: poi.active,
@@ -180,15 +176,6 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, subcategorie
     setForm(prev => ({ ...prev, videos: prev.videos.filter((_, i) => i !== index) }))
   }
 
-  function toggleTag(tagId: string) {
-    setForm(prev => ({
-      ...prev,
-      selectedTags: prev.selectedTags.includes(tagId)
-        ? prev.selectedTags.filter(t => t !== tagId)
-        : [...prev.selectedTags, tagId],
-    }))
-  }
-
   function toggleSubcategory(subId: string) {
     setForm(prev => ({
       ...prev,
@@ -217,7 +204,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, subcategorie
         email: form.email.trim(),
         website: form.website.trim(),
         categoryId: form.categoryId,
-        tags: form.selectedTags,
+        tags: [],
         subcategoryIds: form.selectedSubcategoryIds,
         businessId: form.businessId.trim() || null,
         active: form.active,
@@ -545,40 +532,6 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, tags, subcategorie
                 placeholder="https://www.example.co.il"
               />
             </div>
-
-            {/* Location tags */}
-            {(() => {
-              const locationTags = tags.filter(t => t.group === 'location')
-              if (locationTags.length === 0) return null
-              const parents = locationTags.filter(t => !t.parentId)
-              const childrenOf = (pid: string) => locationTags.filter(t => t.parentId === pid)
-              return (
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">תגית אזור</label>
-                  {parents.map(parent => {
-                    const children = childrenOf(parent.id)
-                    return (
-                      <div key={parent.id}>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" checked={form.selectedTags.includes(parent.id)} onChange={() => toggleTag(parent.id)} className="accent-green-600" />
-                          <span className="text-sm font-medium text-gray-700">{parent.name}</span>
-                        </label>
-                        {children.length > 0 && (
-                          <div className="mr-6 mt-1 grid grid-cols-2 gap-1">
-                            {children.map(child => (
-                              <label key={child.id} className="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" checked={form.selectedTags.includes(child.id)} onChange={() => toggleTag(child.id)} className="accent-green-600" />
-                                <span className="text-sm text-gray-600">{child.name}</span>
-                              </label>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })()}
 
             {/* Subcategories (scoped to selected category) */}
             {form.categoryId && (() => {

@@ -19,23 +19,28 @@ const mkPoi = (overrides: Partial<Poi> & Pick<Poi, "id" | "categoryId">): Poi =>
 });
 
 const POIS: Poi[] = [
-  mkPoi({ id: "1", name: "שוק הכרמל",   categoryId: "restaurants", tags: ["north"] }),
-  mkPoi({ id: "2", name: "פארק הירקון", categoryId: "parks",       tags: ["center"] }),
-  mkPoi({ id: "3", name: "חוף בוגרשוב", categoryId: "beaches",     tags: ["center"] }),
-  mkPoi({ id: "4", name: "מצדה",        categoryId: "sites",       tags: ["south"] }),
+  mkPoi({ id: "1", name: "שוק הכרמל",   categoryId: "restaurants" }),
+  mkPoi({ id: "2", name: "פארק הירקון", categoryId: "parks" }),
+  mkPoi({ id: "3", name: "חוף בוגרשוב", categoryId: "beaches" }),
+  mkPoi({ id: "4", name: "מצדה",        categoryId: "sites" }),
 ];
 
 const noFilter = {
   selectedCategories: new Set<string>(),
-  selectedTags: new Set<string>(),
   selectedSubcategories: new Set<string>(),
   searchQuery: "",
   subcategories: [] as Subcategory[],
 };
 
+const allCategories = new Set(["restaurants", "parks", "beaches", "sites"]);
+
 describe("filterPois", () => {
-  it("returns all POIs when no filters are active", () => {
-    expect(filterPois(POIS, noFilter)).toHaveLength(4);
+  it("returns no POIs when no categories are selected", () => {
+    expect(filterPois(POIS, noFilter)).toHaveLength(0);
+  });
+
+  it("returns all POIs when all categories are selected", () => {
+    expect(filterPois(POIS, { ...noFilter, selectedCategories: allCategories })).toHaveLength(4);
   });
 
   it("filters by a single category", () => {
@@ -52,35 +57,23 @@ describe("filterPois", () => {
     expect(result).toHaveLength(2);
   });
 
-  it("filters by location tag (OR logic)", () => {
-    const result = filterPois(POIS, { ...noFilter, selectedTags: new Set(["center"]) });
-    expect(result).toHaveLength(2); // פארק הירקון + חוף בוגרשוב
-  });
-
-  it("multiple location tags use OR logic", () => {
-    const result = filterPois(POIS, { ...noFilter, selectedTags: new Set(["north", "south"]) });
-    expect(result).toHaveLength(2); // שוק הכרמל + מצדה
-  });
-
   it("filters by search query (substring match)", () => {
-    const result = filterPois(POIS, { ...noFilter, searchQuery: "חוף" });
+    const result = filterPois(POIS, {
+      ...noFilter,
+      selectedCategories: allCategories,
+      searchQuery: "חוף",
+    });
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("3");
   });
 
   it("search returns nothing for no match", () => {
-    const result = filterPois(POIS, { ...noFilter, searchQuery: "לונדון" });
-    expect(result).toHaveLength(0);
-  });
-
-  it("combines category + location tag filters (AND between filter types)", () => {
     const result = filterPois(POIS, {
       ...noFilter,
-      selectedCategories: new Set(["restaurants"]),
-      selectedTags: new Set(["north"]),
+      selectedCategories: allCategories,
+      searchQuery: "לונדון",
     });
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("1");
+    expect(result).toHaveLength(0);
   });
 
   it("combines category + search filters", () => {
@@ -93,7 +86,7 @@ describe("filterPois", () => {
     expect(result[0].id).toBe("4");
   });
 
-  it("returns empty array when no POIs match", () => {
+  it("returns empty array when no POIs match the category", () => {
     const result = filterPois(POIS, {
       ...noFilter,
       selectedCategories: new Set(["hotels"]),
@@ -116,9 +109,12 @@ describe("filterPois", () => {
     const couplesHotel = mkPoi({ id: "chotel", categoryId: "hotels", subcategoryIds: ["couples"] });
     const familyHotel  = mkPoi({ id: "fhotel", categoryId: "hotels", subcategoryIds: [] });
 
+    const allSubcatCategories = new Set(["hikes", "restaurants", "hotels"]);
+
     it("hike passes through kosher restaurant filter untouched", () => {
       const result = filterPois([hike, kosherRest, normalRest], {
         ...noFilter,
+        selectedCategories: allSubcatCategories,
         selectedSubcategories: new Set(["kosher"]),
         subcategories: [kosherSub],
       });
@@ -130,6 +126,7 @@ describe("filterPois", () => {
     it("non-matching restaurant is filtered out", () => {
       const result = filterPois([hike, kosherRest, normalRest], {
         ...noFilter,
+        selectedCategories: allSubcatCategories,
         selectedSubcategories: new Set(["kosher"]),
         subcategories: [kosherSub],
       });
@@ -140,6 +137,7 @@ describe("filterPois", () => {
       const pois = [hike, kosherRest, normalRest, couplesHotel, familyHotel];
       const result = filterPois(pois, {
         ...noFilter,
+        selectedCategories: allSubcatCategories,
         selectedSubcategories: new Set(["kosher", "couples"]),
         subcategories: [kosherSub, couplesSub],
       });
@@ -156,6 +154,7 @@ describe("filterPois", () => {
 
       const result = filterPois([cheapKosher, kosherOnly, cheapOnly], {
         ...noFilter,
+        selectedCategories: new Set(["restaurants"]),
         selectedSubcategories: new Set(["kosher", "cheap"]),
         subcategories: [kosherSub, cheapSub],
       });
@@ -172,6 +171,7 @@ describe("filterPois", () => {
 
       const result = filterPois([cheapRest, mediumRest, expRest], {
         ...noFilter,
+        selectedCategories: new Set(["restaurants"]),
         selectedSubcategories: new Set(["cheap", "medium"]),
         subcategories: [cheapSub, mediumSub],
       });
@@ -180,8 +180,11 @@ describe("filterPois", () => {
       expect(result.map(p => p.id)).toEqual(expect.arrayContaining(["cr", "mr"]));
     });
 
-    it("no subcategories selected — all POIs pass", () => {
-      const result = filterPois([hike, kosherRest, normalRest], noFilter);
+    it("no subcategories selected — all category-matched POIs pass", () => {
+      const result = filterPois([hike, kosherRest, normalRest], {
+        ...noFilter,
+        selectedCategories: allSubcatCategories,
+      });
       expect(result).toHaveLength(3);
     });
   });

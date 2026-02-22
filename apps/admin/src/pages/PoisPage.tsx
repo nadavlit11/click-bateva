@@ -11,13 +11,12 @@ import {
   getDocs,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
-import type { Poi, Category, Tag, Subcategory, Business } from '../types/index.ts'
+import type { Poi, Category, Subcategory, Business } from '../types/index.ts'
 import { PoiDrawer } from '../components/PoiDrawer.tsx'
 
 export function PoisPage() {
   const [pois, setPois] = useState<Poi[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [tags, setTags] = useState<Tag[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -31,14 +30,10 @@ export function PoisPage() {
     })
   }, [])
 
-  // Fetch categories and tags once on mount
+  // Fetch categories, subcategories, and businesses once on mount
   useEffect(() => {
     getDocs(collection(db, 'categories')).then(snap => {
       setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
-    }).catch(console.error)
-
-    getDocs(collection(db, 'tags')).then(snap => {
-      setTags(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Tag))
     }).catch(console.error)
 
     getDocs(collection(db, 'subcategories')).then(snap => {
@@ -161,7 +156,6 @@ export function PoisPage() {
         onClose={handleClose}
         poi={editingPoi}
         categories={categories}
-        tags={tags}
         subcategories={subcategories}
         businesses={businesses}
         onSaved={handleClose}

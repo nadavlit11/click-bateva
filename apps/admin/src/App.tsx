@@ -5,7 +5,6 @@ import { LoginPage } from './pages/LoginPage.tsx'
 import { DashboardPage } from './pages/DashboardPage.tsx'
 import { PoisPage } from './pages/PoisPage.tsx'
 import { CategoriesPage } from './pages/CategoriesPage.tsx'
-import { TagsPage } from './pages/TagsPage.tsx'
 import { IconsPage } from './pages/IconsPage.tsx'
 import { BusinessesPage } from './pages/BusinessesPage.tsx'
 import { AnalyticsPage } from './pages/AnalyticsPage.tsx'
@@ -21,7 +20,6 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="/pois" element={<PoisPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/tags" element={<TagsPage />} />
             <Route path="/icons" element={<IconsPage />} />
             <Route path="/businesses" element={<BusinessesPage />} />
             <Route path="/subcategories" element={<SubcategoriesPage />} />

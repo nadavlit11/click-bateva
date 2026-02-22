@@ -1,22 +1,18 @@
-import type { Category, Tag, Subcategory } from "../../types";
+import type { Category, Subcategory } from "../../types";
 import { AppHeader } from "./AppHeader";
 import { SearchBar } from "./SearchBar";
 import { CategoryGrid } from "./CategoryGrid";
-import { TagList } from "./TagList";
 import { SubcategoryFilter } from "./SubcategoryFilter";
 import { SidebarFooter } from "./SidebarFooter";
 
 interface SidebarProps {
   categories: Category[];
-  tags: Tag[];
   subcategories: Subcategory[];
   selectedCategories: Set<string>;
-  selectedTags: Set<string>;
   selectedSubcategories: Set<string>;
   searchQuery: string;
   filteredCount: number;
   onCategoryToggle: (id: string) => void;
-  onTagToggle: (id: string) => void;
   onSubcategoryToggle: (id: string) => void;
   onSearchChange: (q: string) => void;
   onClearAll: () => void;
@@ -25,15 +21,12 @@ interface SidebarProps {
 
 export function Sidebar({
   categories,
-  tags,
   subcategories,
   selectedCategories,
-  selectedTags,
   selectedSubcategories,
   searchQuery,
   filteredCount,
   onCategoryToggle,
-  onTagToggle,
   onSubcategoryToggle,
   onSearchChange,
   onClearAll,
@@ -47,7 +40,6 @@ export function Sidebar({
       <AppHeader />
       <div className="flex-1 overflow-y-auto">
         <SearchBar value={searchQuery} onChange={onSearchChange} />
-        <TagList tags={tags} selectedTags={selectedTags} onToggle={onTagToggle} />
         <CategoryGrid
           categories={categories}
           selectedCategories={selectedCategories}

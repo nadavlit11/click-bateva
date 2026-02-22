@@ -6,7 +6,7 @@ import { db } from '../lib/firebase.ts'
 interface CountState {
   pois: number
   categories: number
-  tags: number
+  subcategories: number
   businesses: number
   clicks: number
 }
@@ -27,15 +27,15 @@ export function DashboardPage() {
     Promise.all([
       getDocs(collection(db, 'points_of_interest')),
       getDocs(collection(db, 'categories')),
-      getDocs(collection(db, 'tags')),
+      getDocs(collection(db, 'subcategories')),
       getDocs(collection(db, 'businesses')),
       getDocs(collection(db, 'clicks')),
       getDocs(query(collection(db, 'points_of_interest'), orderBy('createdAt', 'desc'), limit(5))),
-    ]).then(([poisSnap, catsSnap, tagsSnap, bizSnap, clicksSnap, recentSnap]) => {
+    ]).then(([poisSnap, catsSnap, subcatsSnap, bizSnap, clicksSnap, recentSnap]) => {
       setCounts({
         pois: poisSnap.size,
         categories: catsSnap.size,
-        tags: tagsSnap.size,
+        subcategories: subcatsSnap.size,
         businesses: bizSnap.size,
         clicks: clicksSnap.size,
       })
@@ -67,7 +67,7 @@ export function DashboardPage() {
           {[
             { label: 'נקודות עניין', value: counts.pois,       href: '/pois' },
             { label: 'קטגוריות',    value: counts.categories,  href: '/categories' },
-            { label: 'תגיות',       value: counts.tags,        href: '/tags' },
+            { label: 'תת-קטגוריות', value: counts.subcategories, href: '/subcategories' },
             { label: 'עסקים',       value: counts.businesses,  href: '/businesses' },
             { label: 'קליקים',      value: counts.clicks,      href: '/analytics' },
           ].map(s => (
@@ -90,7 +90,7 @@ export function DashboardPage() {
           {[
             { label: '+ נקודת עניין חדשה', href: '/pois' },
             { label: '+ קטגוריה חדשה',    href: '/categories' },
-            { label: '+ תגית חדשה',       href: '/tags' },
+            { label: '+ תת-קטגוריה חדשה', href: '/subcategories' },
             { label: '+ עסק חדש',         href: '/businesses' },
           ].map(a => (
             <Link

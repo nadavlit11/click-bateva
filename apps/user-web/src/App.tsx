@@ -5,18 +5,16 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
 import { PoiDetailPanel } from "./components/MapView/PoiDetailPanel";
 import { BottomSheet } from "./components/BottomSheet/BottomSheet";
-import { usePois, useCategories, useTags, useSubcategories } from "./hooks/useFirestoreData";
+import { usePois, useCategories, useSubcategories } from "./hooks/useFirestoreData";
 import { filterPois } from "./lib/filterPois";
 import type { Poi } from "./types";
 
 export default function App() {
   const { pois, loading: poisLoading } = usePois();
   const categories = useCategories();
-  const tags = useTags();
   const subcategories = useSubcategories();
 
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
@@ -25,12 +23,11 @@ export default function App() {
   const filteredPois = useMemo(
     () => filterPois(pois, {
       selectedCategories,
-      selectedTags,
       selectedSubcategories,
       searchQuery,
       subcategories,
     }),
-    [pois, selectedCategories, selectedTags, selectedSubcategories, searchQuery, subcategories]
+    [pois, selectedCategories, selectedSubcategories, searchQuery, subcategories]
   );
 
   function handleCategoryToggle(id: string) {
@@ -51,14 +48,6 @@ export default function App() {
     }
   }
 
-  function handleTagToggle(id: string) {
-    setSelectedTags((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
   function handleSubcategoryToggle(id: string) {
     setSelectedSubcategories((prev) => {
       const next = new Set(prev);
@@ -69,7 +58,6 @@ export default function App() {
 
   function handleClearAll() {
     setSelectedCategories(new Set());
-    setSelectedTags(new Set());
     setSelectedSubcategories(new Set());
     setSearchQuery("");
   }
@@ -88,15 +76,12 @@ export default function App() {
       <Sidebar
         className="hidden md:flex"
         categories={categories}
-        tags={tags}
         subcategories={subcategories}
         selectedCategories={selectedCategories}
-        selectedTags={selectedTags}
         selectedSubcategories={selectedSubcategories}
         searchQuery={searchQuery}
         filteredCount={filteredPois.length}
         onCategoryToggle={handleCategoryToggle}
-        onTagToggle={handleTagToggle}
         onSubcategoryToggle={handleSubcategoryToggle}
         onSearchChange={setSearchQuery}
         onClearAll={handleClearAll}
@@ -114,15 +99,12 @@ export default function App() {
           expanded={sheetExpanded}
           onExpandedChange={setSheetExpanded}
           categories={categories}
-          tags={tags}
           subcategories={subcategories}
           selectedCategories={selectedCategories}
-          selectedTags={selectedTags}
           selectedSubcategories={selectedSubcategories}
           searchQuery={searchQuery}
           filteredCount={filteredPois.length}
           onCategoryToggle={handleCategoryToggle}
-          onTagToggle={handleTagToggle}
           onSubcategoryToggle={handleSubcategoryToggle}
           onSearchChange={setSearchQuery}
           onClearAll={handleClearAll}
@@ -138,7 +120,6 @@ export default function App() {
           <PoiDetailPanel
             poi={selectedPoi}
             category={categories.find(c => c.id === selectedPoi.categoryId)}
-            tags={tags.filter(t => selectedPoi.tags.includes(t.id))}
             onClose={() => setSelectedPoi(null)}
           />
         )}

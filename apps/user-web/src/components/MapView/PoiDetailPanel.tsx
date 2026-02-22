@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import type { CSSProperties } from "react";
-import type { Poi, Category, Tag } from "../../types";
+import type { Poi, Category } from "../../types";
 import { lighten } from "../../lib/colorUtils";
 
 interface PoiDetailPanelProps {
   poi: Poi;
   category: Category | undefined;
-  tags: Tag[];
   onClose: () => void;
 }
 
-export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelProps) {
+export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const color = category?.color ?? "#4caf50";
   // mainImage is always first; poi.images are the extra images
@@ -215,19 +214,6 @@ export function PoiDetailPanel({ poi, category, tags, onClose }: PoiDetailPanelP
           </div>
         )}
 
-        {/* Tags */}
-        {tags.length > 0 && (
-          <>
-            <div className="h-px bg-gray-100 my-3" />
-            <div className="flex flex-wrap gap-1.5">
-              {tags.map(tag => (
-                <span key={tag.id} className="bg-gray-100 text-gray-600 rounded-full text-xs px-2.5 py-0.5">
-                  {tag.name}
-                </span>
-              ))}
-            </div>
-          </>
-        )}
       </div>
     </div>
   );

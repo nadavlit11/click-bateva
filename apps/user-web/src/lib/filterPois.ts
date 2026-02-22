@@ -2,14 +2,13 @@ import type { Poi, Subcategory } from "../types";
 
 export interface PoiFilter {
   selectedCategories: Set<string>;
-  selectedTags: Set<string>;           // location tag IDs only
   selectedSubcategories: Set<string>;  // category-scoped refinement IDs
   searchQuery: string;
   subcategories: Subcategory[];        // for categoryId + group lookup
 }
 
 export function filterPois(pois: Poi[], filter: PoiFilter): Poi[] {
-  const { selectedCategories, selectedTags, selectedSubcategories, searchQuery, subcategories } = filter;
+  const { selectedCategories, selectedSubcategories, searchQuery, subcategories } = filter;
 
   // Build: category → group → selected subcategory IDs
   // AND-across-subcategory-groups, OR-within-group, scoped per category
@@ -26,11 +25,7 @@ export function filterPois(pois: Poi[], filter: PoiFilter): Poi[] {
 
   return pois.filter((poi) => {
     const matchesCategory =
-      selectedCategories.size === 0 || selectedCategories.has(poi.categoryId);
-
-    // Location tags: OR across all selected location tags
-    const matchesLocation =
-      selectedTags.size === 0 || poi.tags.some(t => selectedTags.has(t));
+      selectedCategories.size > 0 && selectedCategories.has(poi.categoryId);
 
     // Subcategories: AND-across-groups, OR-within-group — scoped to this POI's category
     // Hike: subsByCategory has no entry for hike's categoryId → catGroups is undefined → passes
@@ -43,6 +38,6 @@ export function filterPois(pois: Poi[], filter: PoiFilter): Poi[] {
 
     const matchesSearch = !searchQuery || poi.name.includes(searchQuery);
 
-    return matchesCategory && matchesLocation && matchesSubcategory && matchesSearch;
+    return matchesCategory && matchesSubcategory && matchesSearch;
   });
 }
