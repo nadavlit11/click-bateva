@@ -24,11 +24,7 @@ export function SubcategoryFilter({
   );
 
   if (activeCats.length === 0) {
-    return (
-      <div className="px-4 pb-3">
-        <p className="text-xs text-gray-400 text-right">בחר קטגוריה לסינון מפורט</p>
-      </div>
-    );
+    return null;
   }
 
   const defaultOpen = activeCats.length === 1;
