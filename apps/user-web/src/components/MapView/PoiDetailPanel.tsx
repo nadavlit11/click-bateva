@@ -274,6 +274,20 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
         )}
 
         {poi.videos.length > 0 && poi.videos.map((url, i) => {
+          const ytId = extractYouTubeId(url);
+          if (ytId) {
+            return (
+              <div key={i} className="mb-2 rounded-lg overflow-hidden">
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${ytId}`}
+                  title={`${poi.name} video ${i + 1}`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full aspect-video"
+                />
+              </div>
+            );
+          }
           let safeUrl: string | null = null;
           let displayText: string;
           try {
@@ -304,6 +318,20 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
       </div>
     </div>
   );
+}
+
+function extractYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname === "youtu.be") return u.pathname.slice(1).split("/")[0] || null;
+    if (u.hostname.includes("youtube.com")) {
+      // /watch?v=ID, /shorts/ID, /embed/ID
+      if (u.searchParams.has("v")) return u.searchParams.get("v");
+      const m = u.pathname.match(/^\/(shorts|embed)\/([^/?]+)/);
+      return m ? m[2] : null;
+    }
+    return null;
+  } catch { return null; }
 }
 
 function arrowStyle(side: "left" | "right"): CSSProperties {
