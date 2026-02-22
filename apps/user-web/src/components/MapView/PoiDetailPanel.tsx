@@ -196,7 +196,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
         )}
 
         {/* Restaurant buttons */}
-        {category?.id === "restaurants" && (poi.kashrutCertUrl || poi.menuUrl) && (
+        {category?.id === "food" && (poi.kashrutCertUrl || poi.menuUrl) && (
           <div className="flex gap-2 mt-3">
             {poi.kashrutCertUrl && (
               <a

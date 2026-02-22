@@ -522,7 +522,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
             </div>
 
             {/* Restaurant-specific: Kashrut Certificate & Menu */}
-            {form.categoryId === 'restaurants' && (
+            {form.categoryId === 'food' && (
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">תעודת כשרות</label>

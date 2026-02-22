@@ -260,7 +260,7 @@ export function PoiEditPage() {
         </div>
 
         {/* Restaurant-specific: Kashrut Certificate & Menu */}
-        {poi?.categoryId === 'restaurants' && (
+        {poi?.categoryId === 'food' && (
           <>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">תעודת כשרות</label>
