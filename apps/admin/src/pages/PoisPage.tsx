@@ -21,6 +21,8 @@ export function PoisPage() {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingPoi, setEditingPoi] = useState<Poi | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterCategoryId, setFilterCategoryId] = useState('')
 
   // Live POI list
   useEffect(() => {
@@ -80,6 +82,15 @@ export function PoisPage() {
     setEditingPoi(null)
   }
 
+  const filteredPois = pois.filter(poi => {
+    if (filterCategoryId && poi.categoryId !== filterCategoryId) return false
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      return poi.name.toLowerCase().includes(q) || poi.description.toLowerCase().includes(q)
+    }
+    return true
+  })
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -90,6 +101,29 @@ export function PoisPage() {
         >
           + הוסף נקודת עניין
         </button>
+      </div>
+
+      <div className="flex items-center gap-3 mb-4">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="חיפוש לפי שם או תיאור..."
+          className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+        <select
+          value={filterCategoryId}
+          onChange={e => setFilterCategoryId(e.target.value)}
+          className="px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+        >
+          <option value="">כל הקטגוריות</option>
+          {categories.map(cat => (
+            <option key={cat.id} value={cat.id}>{cat.name}</option>
+          ))}
+        </select>
+        <span className="text-sm text-gray-500 whitespace-nowrap">
+          {filteredPois.length} נקודות
+        </span>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -103,14 +137,14 @@ export function PoisPage() {
             </tr>
           </thead>
           <tbody>
-            {pois.length === 0 && (
+            {filteredPois.length === 0 && (
               <tr>
                 <td colSpan={4} className="text-center py-10 text-gray-400">
-                  אין נקודות עניין עדיין
+                  {pois.length === 0 ? 'אין נקודות עניין עדיין' : 'לא נמצאו תוצאות'}
                 </td>
               </tr>
             )}
-            {pois.map(poi => (
+            {filteredPois.map(poi => (
               <tr key={poi.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium text-gray-900">{poi.name}</td>
                 <td className="px-4 py-3">

@@ -27,7 +27,6 @@ interface FormState {
   description: string
   lat: string
   lng: string
-  mainImage: string
   images: string[]
   videos: string[]
   phone: string
@@ -46,7 +45,6 @@ const INITIAL_FORM: FormState = {
   description: '',
   lat: '0',
   lng: '0',
-  mainImage: '',
   images: [],
   videos: [],
   phone: '',
@@ -64,12 +62,10 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [uploadingMainImage, setUploadingMainImage] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
   const [uploadingVideos, setUploadingVideos] = useState(false)
   const [businessSearch, setBusinessSearch] = useState('')
 
-  const mainImageRef = useRef<HTMLInputElement>(null)
   const imagesRef = useRef<HTMLInputElement>(null)
   const videosRef = useRef<HTMLInputElement>(null)
 
@@ -80,8 +76,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         description: poi.description,
         lat: poi.location.lat.toString(),
         lng: poi.location.lng.toString(),
-        mainImage: poi.mainImage,
-        images: [...poi.images],
+        images: [poi.mainImage, ...poi.images].filter(Boolean),
         videos: [...poi.videos],
         phone: poi.phone,
         email: poi.email,
@@ -110,22 +105,6 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     const storageRef = ref(storage, path)
     await uploadBytes(storageRef, file)
     return getDownloadURL(storageRef)
-  }
-
-  async function handleMainImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploadingMainImage(true)
-    try {
-      const url = await uploadFile(file)
-      set('mainImage', url)
-    } catch (err) {
-      setError('שגיאה בהעלאת תמונה ראשית')
-      console.error(err)
-    } finally {
-      setUploadingMainImage(false)
-      e.target.value = ''
-    }
   }
 
   async function handleImagesSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -185,12 +164,13 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     setSaving(true)
     setError('')
     try {
+      const allImages = form.images.filter(Boolean)
       const data = {
         name: form.name.trim(),
         description: form.description.trim(),
         location: { lat: parseFloat(form.lat) || 0, lng: parseFloat(form.lng) || 0 },
-        mainImage: form.mainImage.trim(),
-        images: form.images.filter(Boolean),
+        mainImage: allImages[0] ?? '',
+        images: allImages.slice(1),
         videos: form.videos.filter(Boolean),
         phone: form.phone.trim(),
         email: form.email.trim(),
@@ -336,56 +316,9 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
               />
             </div>
 
-            {/* Main Image */}
+            {/* Images */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">תמונה ראשית</label>
-              <input
-                ref={mainImageRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleMainImageSelect}
-              />
-              {form.mainImage ? (
-                <div className="space-y-2">
-                  <img
-                    src={form.mainImage}
-                    alt="תמונה ראשית"
-                    className="w-full max-h-40 object-cover rounded-lg border border-gray-200"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      disabled={uploadingMainImage}
-                      onClick={() => mainImageRef.current?.click()}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
-                    >
-                      {uploadingMainImage ? 'מעלה...' : 'שנה תמונה'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => set('mainImage', '')}
-                      className="text-red-500 hover:text-red-700 text-sm font-medium"
-                    >
-                      הסר
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  disabled={uploadingMainImage}
-                  onClick={() => mainImageRef.current?.click()}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                >
-                  {uploadingMainImage ? 'מעלה...' : 'בחר תמונה'}
-                </button>
-              )}
-            </div>
-
-            {/* Additional Images */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">תמונות נוספות</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">תמונות</label>
               <input
                 ref={imagesRef}
                 type="file"
@@ -395,23 +328,44 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 onChange={handleImagesSelect}
               />
               {form.images.length > 0 && (
-                <div className="grid grid-cols-3 gap-2 mb-2">
-                  {form.images.map((url, i) => (
-                    <div key={i} className="relative">
-                      <img
-                        src={url}
-                        alt={`תמונה ${i + 1}`}
-                        className="w-full h-20 object-cover rounded-lg border border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(i)}
-                        className="absolute top-1 right-1 bg-white rounded-full w-5 h-5 flex items-center justify-center text-red-500 hover:text-red-700 text-xs shadow"
-                      >
-                        ✕
-                      </button>
+                <div className="space-y-2 mb-2">
+                  {/* First image displayed larger as the main image */}
+                  <div className="relative">
+                    <img
+                      src={form.images[0]}
+                      alt="תמונה ראשית"
+                      className="w-full max-h-40 object-cover rounded-lg border-2 border-green-400"
+                    />
+                    <span className="absolute bottom-1 left-1 bg-green-600 text-white text-[10px] px-1.5 py-0.5 rounded">ראשית</span>
+                    <button
+                      type="button"
+                      onClick={() => removeImage(0)}
+                      className="absolute top-1 right-1 bg-white rounded-full w-5 h-5 flex items-center justify-center text-red-500 hover:text-red-700 text-xs shadow"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {/* Remaining images in grid */}
+                  {form.images.length > 1 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {form.images.slice(1).map((url, i) => (
+                        <div key={i} className="relative">
+                          <img
+                            src={url}
+                            alt={`תמונה ${i + 2}`}
+                            className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(i + 1)}
+                            className="absolute top-1 right-1 bg-white rounded-full w-5 h-5 flex items-center justify-center text-red-500 hover:text-red-700 text-xs shadow"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
               <button
