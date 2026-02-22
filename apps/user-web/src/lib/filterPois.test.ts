@@ -14,6 +14,8 @@ const mkPoi = (overrides: Partial<Poi> & Pick<Poi, "id" | "categoryId">): Poi =>
   website: null,
   openingHours: null,
   price: null,
+  kashrutCertUrl: null,
+  menuUrl: null,
   subcategoryIds: [],
   ...overrides,
 });

@@ -20,6 +20,8 @@ export interface Poi {
   active: boolean
   openingHours: Record<string, DayHours | null> | string | null
   price: string | null
+  kashrutCertUrl: string    // '' means no certificate
+  menuUrl: string           // '' means no menu
   createdAt: unknown        // Firestore serverTimestamp
   updatedAt: unknown
 }
@@ -34,6 +36,8 @@ export interface PoiEditableFields {
   phone: string
   email: string
   website: string
+  kashrutCertUrl: string    // '' means no certificate
+  menuUrl: string           // '' means no menu
 }
 
 // Business record from the `businesses` Firestore collection

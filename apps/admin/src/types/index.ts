@@ -20,6 +20,8 @@ export interface Poi {
   active: boolean
   openingHours: Record<string, DayHours | null> | 'by_appointment' | null
   price: string | null
+  kashrutCertUrl: string
+  menuUrl: string
   createdAt: unknown
   updatedAt: unknown
 }

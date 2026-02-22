@@ -30,6 +30,8 @@ export interface Poi {
   website: string | null; // domain only e.g. "www.example.co.il"
   openingHours: Record<string, DayHours | null> | string | null; // structured or legacy string
   price: string | null;
+  kashrutCertUrl: string | null;
+  menuUrl: string | null;
   categoryId: string;
   subcategoryIds: string[]; // category-scoped refinement IDs
 }

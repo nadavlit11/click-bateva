@@ -45,6 +45,8 @@ interface FormState {
   active: boolean
   openingHours: Record<string, DayHours | null> | 'by_appointment'
   price: string
+  kashrutCertUrl: string
+  menuUrl: string
 }
 
 const INITIAL_FORM: FormState = {
@@ -63,6 +65,8 @@ const INITIAL_FORM: FormState = {
   active: true,
   openingHours: { ...EMPTY_HOURS },
   price: '',
+  kashrutCertUrl: '',
+  menuUrl: '',
 }
 
 export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, businesses, onSaved }: Props) {
@@ -97,6 +101,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
             ? { ...EMPTY_HOURS, ...poi.openingHours }
             : { ...EMPTY_HOURS },
         price: poi.price ?? '',
+        kashrutCertUrl: poi.kashrutCertUrl ?? '',
+        menuUrl: poi.menuUrl ?? '',
       })
     } else {
       setForm(INITIAL_FORM)
@@ -185,6 +191,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
           ? 'by_appointment'
           : Object.values(form.openingHours).every(v => v === null) ? null : form.openingHours,
         price: form.price.trim() || null,
+        kashrutCertUrl: form.kashrutCertUrl.trim() || null,
+        menuUrl: form.menuUrl.trim() || null,
         updatedAt: serverTimestamp(),
       }
 
@@ -512,6 +520,68 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 placeholder="₪30 למבוגר, חינם לילדים"
               />
             </div>
+
+            {/* Restaurant-specific: Kashrut Certificate & Menu */}
+            {form.categoryId === 'restaurants' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">תעודת כשרות</label>
+                  {form.kashrutCertUrl ? (
+                    <div className="space-y-2">
+                      <img src={form.kashrutCertUrl} alt="תעודת כשרות" className="w-full max-h-40 object-cover rounded-lg border border-gray-200" />
+                      <div className="flex gap-3">
+                        <label className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer">
+                          שנה
+                          <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                            const file = e.target.files?.[0]; if (!file) return
+                            try { const url = await uploadFile(file); set('kashrutCertUrl', url) } catch { setError('שגיאה בהעלאת תעודת כשרות') }
+                            e.target.value = ''
+                          }} />
+                        </label>
+                        <button type="button" onClick={() => set('kashrutCertUrl', '')} className="text-red-500 hover:text-red-700 text-sm font-medium">הסר</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="inline-block px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors">
+                      בחר תמונה
+                      <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                        const file = e.target.files?.[0]; if (!file) return
+                        try { const url = await uploadFile(file); set('kashrutCertUrl', url) } catch { setError('שגיאה בהעלאת תעודת כשרות') }
+                        e.target.value = ''
+                      }} />
+                    </label>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">תפריט</label>
+                  {form.menuUrl ? (
+                    <div className="space-y-2">
+                      <img src={form.menuUrl} alt="תפריט" className="w-full max-h-40 object-cover rounded-lg border border-gray-200" />
+                      <div className="flex gap-3">
+                        <label className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer">
+                          שנה
+                          <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                            const file = e.target.files?.[0]; if (!file) return
+                            try { const url = await uploadFile(file); set('menuUrl', url) } catch { setError('שגיאה בהעלאת תפריט') }
+                            e.target.value = ''
+                          }} />
+                        </label>
+                        <button type="button" onClick={() => set('menuUrl', '')} className="text-red-500 hover:text-red-700 text-sm font-medium">הסר</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="inline-block px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors">
+                      בחר תמונה
+                      <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                        const file = e.target.files?.[0]; if (!file) return
+                        try { const url = await uploadFile(file); set('menuUrl', url) } catch { setError('שגיאה בהעלאת תפריט') }
+                        e.target.value = ''
+                      }} />
+                    </label>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Phone */}
             <div>

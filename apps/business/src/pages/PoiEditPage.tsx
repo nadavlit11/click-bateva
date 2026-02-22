@@ -30,6 +30,8 @@ export function PoiEditPage() {
     phone: '',
     email: '',
     website: '',
+    kashrutCertUrl: '',
+    menuUrl: '',
   })
 
   useEffect(() => {
@@ -47,6 +49,8 @@ export function PoiEditPage() {
           phone: data.phone,
           email: data.email,
           website: data.website,
+          kashrutCertUrl: data.kashrutCertUrl ?? '',
+          menuUrl: data.menuUrl ?? '',
         })
         if (data.categoryId) {
           getDoc(doc(db, 'categories', data.categoryId))
@@ -79,6 +83,21 @@ export function PoiEditPage() {
     } finally {
       setUploadingMainImage(false)
       e.target.value = ''
+    }
+  }
+
+  async function handleFileUpload(file: File, field: 'kashrutCertUrl' | 'menuUrl') {
+    if (!poiId) return
+    setError('')
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg'
+      const storageRef = ref(storage, `poi-media/${poiId}-${field}-${Date.now()}.${ext}`)
+      await uploadBytesResumable(storageRef, file)
+      const url = await getDownloadURL(storageRef)
+      setForm(prev => ({ ...prev, [field]: url }))
+    } catch (err) {
+      console.error(`${field} upload error`, err)
+      setError('שגיאה בהעלאת קובץ')
     }
   }
 
@@ -239,6 +258,64 @@ export function PoiEditPage() {
             onChange={images => setForm(prev => ({ ...prev, images }))}
           />
         </div>
+
+        {/* Restaurant-specific: Kashrut Certificate & Menu */}
+        {poi?.categoryId === 'restaurants' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">תעודת כשרות</label>
+              {form.kashrutCertUrl ? (
+                <div className="space-y-2">
+                  <img src={form.kashrutCertUrl} alt="תעודת כשרות" className="w-full max-h-48 object-cover rounded-lg border border-gray-200" />
+                  <div className="flex gap-3">
+                    <label className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer">
+                      שנה
+                      <input type="file" accept="image/*" className="hidden" onChange={e => {
+                        const file = e.target.files?.[0]; if (!file) return
+                        handleFileUpload(file, 'kashrutCertUrl'); e.target.value = ''
+                      }} />
+                    </label>
+                    <button type="button" onClick={() => setForm(prev => ({ ...prev, kashrutCertUrl: '' }))} className="text-red-500 hover:text-red-700 text-sm font-medium">הסר</button>
+                  </div>
+                </div>
+              ) : (
+                <label className="inline-block px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors">
+                  בחר תמונה
+                  <input type="file" accept="image/*" className="hidden" onChange={e => {
+                    const file = e.target.files?.[0]; if (!file) return
+                    handleFileUpload(file, 'kashrutCertUrl'); e.target.value = ''
+                  }} />
+                </label>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">תפריט</label>
+              {form.menuUrl ? (
+                <div className="space-y-2">
+                  <img src={form.menuUrl} alt="תפריט" className="w-full max-h-48 object-cover rounded-lg border border-gray-200" />
+                  <div className="flex gap-3">
+                    <label className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer">
+                      שנה
+                      <input type="file" accept="image/*" className="hidden" onChange={e => {
+                        const file = e.target.files?.[0]; if (!file) return
+                        handleFileUpload(file, 'menuUrl'); e.target.value = ''
+                      }} />
+                    </label>
+                    <button type="button" onClick={() => setForm(prev => ({ ...prev, menuUrl: '' }))} className="text-red-500 hover:text-red-700 text-sm font-medium">הסר</button>
+                  </div>
+                </div>
+              ) : (
+                <label className="inline-block px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors">
+                  בחר תמונה
+                  <input type="file" accept="image/*" className="hidden" onChange={e => {
+                    const file = e.target.files?.[0]; if (!file) return
+                    handleFileUpload(file, 'menuUrl'); e.target.value = ''
+                  }} />
+                </label>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {error && <p className="text-red-600 text-sm">{error}</p>}

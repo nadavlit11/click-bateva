@@ -20,6 +20,8 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>): Poi[] {
       website: d.website || null,
       openingHours: d.openingHours ?? null,
       price: d.price ?? null,
+      kashrutCertUrl: d.kashrutCertUrl || null,
+      menuUrl: d.menuUrl || null,
       categoryId: d.categoryId,
       subcategoryIds: d.subcategoryIds ?? [],
     };
