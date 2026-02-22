@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://click-bateva-app.web.app/sitemap.xml
