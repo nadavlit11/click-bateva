@@ -63,11 +63,10 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [uploadingImages, setUploadingImages] = useState(false)
-  const [uploadingVideos, setUploadingVideos] = useState(false)
+  const [videoInput, setVideoInput] = useState('')
   const [businessSearch, setBusinessSearch] = useState('')
 
   const imagesRef = useRef<HTMLInputElement>(null)
-  const videosRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (poi) {
@@ -93,6 +92,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     }
     setError('')
     setBusinessSearch('')
+    setVideoInput('')
   }, [poi, isOpen])
 
   function set(field: keyof FormState, value: FormState[typeof field]) {
@@ -123,20 +123,11 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     }
   }
 
-  async function handleVideosSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
-    if (files.length === 0) return
-    setUploadingVideos(true)
-    try {
-      const urls = await Promise.all(files.map(f => uploadFile(f)))
-      setForm(prev => ({ ...prev, videos: [...prev.videos, ...urls] }))
-    } catch (err) {
-      setError('שגיאה בהעלאת סרטונים')
-      console.error(err)
-    } finally {
-      setUploadingVideos(false)
-      e.target.value = ''
-    }
+  function addVideoLink() {
+    const url = videoInput.trim()
+    if (!url) return
+    setForm(prev => ({ ...prev, videos: [...prev.videos, url] }))
+    setVideoInput('')
   }
 
   function removeImage(index: number) {
@@ -378,44 +369,42 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
               </button>
             </div>
 
-            {/* Videos */}
+            {/* Videos (links) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">סרטונים</label>
-              <input
-                ref={videosRef}
-                type="file"
-                accept="video/*"
-                multiple
-                className="hidden"
-                onChange={handleVideosSelect}
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">סרטונים (קישורים)</label>
               {form.videos.length > 0 && (
                 <div className="space-y-1 mb-2">
-                  {form.videos.map((url, i) => {
-                    const filename = url.split('/').pop()?.split('?')[0] ?? url
-                    return (
-                      <div key={i} className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                        <span className="text-sm text-gray-700 truncate">{filename}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeVideo(i)}
-                          className="text-red-500 hover:text-red-700 text-sm font-medium shrink-0"
-                        >
-                          הסר
-                        </button>
-                      </div>
-                    )
-                  })}
+                  {form.videos.map((url, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:text-blue-800 truncate">{url}</a>
+                      <button
+                        type="button"
+                        onClick={() => removeVideo(i)}
+                        className="text-red-500 hover:text-red-700 text-sm font-medium shrink-0"
+                      >
+                        הסר
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
-              <button
-                type="button"
-                disabled={uploadingVideos}
-                onClick={() => videosRef.current?.click()}
-                className="text-green-600 hover:text-green-800 text-sm font-medium disabled:opacity-50"
-              >
-                {uploadingVideos ? 'מעלה...' : '+ הוסף סרטונים'}
-              </button>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={videoInput}
+                  onChange={e => setVideoInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addVideoLink() } }}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                />
+                <button
+                  type="button"
+                  onClick={addVideoLink}
+                  className="px-3 py-2 text-green-600 hover:text-green-800 text-sm font-medium"
+                >
+                  + הוסף
+                </button>
+              </div>
             </div>
 
             {/* Opening Hours */}
