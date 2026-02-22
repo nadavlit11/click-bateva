@@ -149,6 +149,10 @@ click-bateva/
 | phone | string | |
 | email | string | |
 | website | string | |
+| openingHours | map \| string \| null | Structured per-day hours, `'by_appointment'`, or null |
+| price | string \| null | Free-text price info |
+| kashrutCertUrl | string \| null | Kashrut certificate image URL (restaurants only) |
+| menuUrl | string \| null | Menu image URL (restaurants only) |
 | categoryId | string | Reference to `categories` |
 | subcategoryIds | array\<string\> | Reference to `subcategories` for per-category filters |
 | businessId | string \| null | Reference to `businesses` |
