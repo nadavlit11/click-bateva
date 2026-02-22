@@ -47,6 +47,7 @@ interface FormState {
   price: string
   kashrutCertUrl: string
   menuUrl: string
+  facebook: string
 }
 
 const INITIAL_FORM: FormState = {
@@ -67,6 +68,7 @@ const INITIAL_FORM: FormState = {
   price: '',
   kashrutCertUrl: '',
   menuUrl: '',
+  facebook: '',
 }
 
 export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, businesses, onSaved }: Props) {
@@ -103,6 +105,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         price: poi.price ?? '',
         kashrutCertUrl: poi.kashrutCertUrl ?? '',
         menuUrl: poi.menuUrl ?? '',
+        facebook: poi.facebook ?? '',
       })
     } else {
       setForm(INITIAL_FORM)
@@ -193,6 +196,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         price: form.price.trim() || null,
         kashrutCertUrl: form.kashrutCertUrl.trim() || null,
         menuUrl: form.menuUrl.trim() || null,
+        facebook: form.facebook.trim() || null,
         updatedAt: serverTimestamp(),
       }
 
@@ -616,6 +620,18 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 onChange={e => set('website', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
                 placeholder="https://www.example.co.il"
+              />
+            </div>
+
+            {/* Facebook */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">פייסבוק</label>
+              <input
+                type="url"
+                value={form.facebook}
+                onChange={e => set('facebook', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                placeholder="https://facebook.com/businesspage"
               />
             </div>
 

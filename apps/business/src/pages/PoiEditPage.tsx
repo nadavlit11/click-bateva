@@ -32,6 +32,7 @@ export function PoiEditPage() {
     website: '',
     kashrutCertUrl: '',
     menuUrl: '',
+    facebook: '',
   })
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function PoiEditPage() {
           website: data.website,
           kashrutCertUrl: data.kashrutCertUrl ?? '',
           menuUrl: data.menuUrl ?? '',
+          facebook: data.facebook ?? '',
         })
         if (data.categoryId) {
           getDoc(doc(db, 'categories', data.categoryId))
@@ -244,6 +246,17 @@ export function PoiEditPage() {
             value={form.website}
             onChange={e => setForm(prev => ({ ...prev, website: e.target.value }))}
             placeholder="example.com"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            dir="ltr"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">פייסבוק</label>
+          <input
+            type="url"
+            value={form.facebook}
+            onChange={e => setForm(prev => ({ ...prev, facebook: e.target.value }))}
+            placeholder="https://facebook.com/businesspage"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             dir="ltr"
           />

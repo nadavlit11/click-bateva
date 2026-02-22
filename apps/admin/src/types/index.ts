@@ -22,6 +22,7 @@ export interface Poi {
   price: string | null
   kashrutCertUrl: string
   menuUrl: string
+  facebook: string
   createdAt: unknown
   updatedAt: unknown
 }

@@ -22,6 +22,7 @@ export interface Poi {
   price: string | null
   kashrutCertUrl: string    // '' means no certificate
   menuUrl: string           // '' means no menu
+  facebook: string          // '' means no facebook
   createdAt: unknown        // Firestore serverTimestamp
   updatedAt: unknown
 }
@@ -38,6 +39,7 @@ export interface PoiEditableFields {
   website: string
   kashrutCertUrl: string    // '' means no certificate
   menuUrl: string           // '' means no menu
+  facebook: string          // '' means no facebook
 }
 
 // Business record from the `businesses` Firestore collection

@@ -153,6 +153,7 @@ click-bateva/
 | price | string \| null | Free-text price info |
 | kashrutCertUrl | string \| null | Kashrut certificate image URL (restaurants only) |
 | menuUrl | string \| null | Menu image URL (restaurants only) |
+| facebook | string \| null | Facebook page URL |
 | categoryId | string | Reference to `categories` |
 | subcategoryIds | array\<string\> | Reference to `subcategories` for per-category filters |
 | businessId | string \| null | Reference to `businesses` |

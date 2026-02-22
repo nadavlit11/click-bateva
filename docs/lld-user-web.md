@@ -54,7 +54,7 @@ apps/user-web/
         ├── MapView/
         │   ├── MapView.tsx     APIProvider + Map (center Israel, zoom 8); bounds south=28.5
         │   ├── PoiMarker.tsx   AdvancedMarker with teardrop div + label
-        │   └── PoiDetailPanel.tsx  slide-up detail panel; image carousel; nav icon; restaurant buttons; max-h uses 100dvh
+        │   └── PoiDetailPanel.tsx  slide-up detail panel; image carousel; quick-action icon row (call, navigate, whatsapp, website, facebook); restaurant buttons; max-h uses 100dvh
         └── BottomSheet/
             └── BottomSheet.tsx   mobile filter panel; collapses to chip row peek; scroll fade indicator
 ```
@@ -95,6 +95,7 @@ export interface Poi {
   price: string | null;
   kashrutCertUrl: string | null;  // kashrut certificate image (restaurants only)
   menuUrl: string | null;         // menu image (restaurants only)
+  facebook: string | null;        // Facebook page URL
   categoryId: string;
   subcategoryIds: string[]; // subcategory IDs for per-category filtering
   // Note: `active` is NOT in the frontend type — the Firestore query filters

@@ -46,6 +46,26 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
     } catch { return null; }
   })();
 
+  // Validate facebook URL
+  const safeFacebookHref = (() => {
+    if (!poi.facebook) return null;
+    try {
+      const url = new URL(poi.facebook);
+      if (url.protocol === "https:" || url.protocol === "http:") return url.href;
+      return null;
+    } catch { return null; }
+  })();
+
+  // WhatsApp: normalize Israeli phone — strip non-digits, replace leading 0 with 972
+  const whatsappHref = (() => {
+    if (!poi.phone) return null;
+    const digits = poi.phone.replace(/\D/g, "");
+    const normalized = digits.startsWith("0") ? "972" + digits.slice(1) : digits;
+    return `https://wa.me/${normalized}`;
+  })();
+
+  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${poi.location.lat},${poi.location.lng}`;
+
   return (
     <div
       className="absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100dvh-120px-2rem)] md:max-h-[calc(100dvh-2rem)] overflow-y-auto"
@@ -160,21 +180,15 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
           </span>
         )}
 
-        <div className="flex items-start justify-between gap-2 mt-2">
-          <h2 className="text-xl font-bold text-gray-800">{poi.name}</h2>
-          <a
-            href={`https://www.google.com/maps/dir/?api=1&destination=${poi.location.lat},${poi.location.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-2 py-1 rounded-lg shrink-0 hover:bg-gray-100 transition-colors text-xs font-medium"
-            style={{ color }}
-            aria-label="ניווט"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
-            </svg>
-            ניווט
-          </a>
+        <h2 className="text-xl font-bold text-gray-800 mt-2">{poi.name}</h2>
+
+        {/* Quick-action icon row */}
+        <div className="flex justify-center gap-3 mt-3">
+          {poi.phone && <ActionIcon href={`tel:${poi.phone}`} icon={ICON_PHONE} label="שיחה" color={color} />}
+          <ActionIcon href={googleMapsUrl} icon={ICON_PIN} label="ניווט" color={color} external />
+          {whatsappHref && <ActionIcon href={whatsappHref} icon={ICON_WHATSAPP} label="הודעה" color={color} external />}
+          {safeWebsiteHref && <ActionIcon href={safeWebsiteHref} icon={ICON_GLOBE} label="אתר" color={color} external />}
+          {safeFacebookHref && <ActionIcon href={safeFacebookHref} icon={ICON_FACEBOOK} label="פייסבוק" color={color} external />}
         </div>
 
         {poi.description && (
@@ -225,7 +239,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
         )}
 
         {/* Info + contact section */}
-        {(poi.openingHours || poi.price || poi.phone || poi.email || poi.website || poi.videos.length > 0) && (
+        {(poi.openingHours || poi.price || poi.email || poi.videos.length > 0) && (
           <div className="h-px bg-gray-100 my-3" />
         )}
 
@@ -281,34 +295,11 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
           </div>
         )}
 
-        {poi.phone && (
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">📞</span>
-            <a href={`tel:${poi.phone}`} className="text-sm text-gray-700">
-              {poi.phone}
-            </a>
-          </div>
-        )}
-
         {poi.email && (
           <div className="flex items-center gap-2 mb-2">
             <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">✉️</span>
             <a href={`mailto:${poi.email}`} className="text-sm text-gray-700 truncate">
               {poi.email}
-            </a>
-          </div>
-        )}
-
-        {safeWebsiteHref && (
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">🌐</span>
-            <a
-              href={safeWebsiteHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-emerald-600 font-medium hover:text-emerald-700 truncate"
-            >
-              {poi.website}
             </a>
           </div>
         )}
@@ -359,6 +350,31 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
     </div>
   );
 }
+
+function ActionIcon({ href, icon, label, color, external }: {
+  href: string; icon: string; label: string; color: string; external?: boolean;
+}) {
+  return (
+    <a
+      href={href}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className="flex flex-col items-center gap-1"
+    >
+      <span className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: color }}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-5 h-5">
+          <path d={icon} />
+        </svg>
+      </span>
+      <span className="text-[10px] font-medium" style={{ color }}>{label}</span>
+    </a>
+  );
+}
+
+const ICON_PHONE = "M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.24 1.01l-2.21 2.2z";
+const ICON_PIN = "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z";
+const ICON_WHATSAPP = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z";
+const ICON_GLOBE = "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z";
+const ICON_FACEBOOK = "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z";
 
 function extractYouTubeId(url: string): string | null {
   try {

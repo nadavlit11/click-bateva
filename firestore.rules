@@ -49,7 +49,7 @@ service cloud.firestore {
          get(/databases/$(database)/documents/businesses/$(resource.data.businessId))
            .data.associatedUserIds.hasAny([request.auth.uid]) &&
          request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['mainImage', 'description', 'images', 'videos', 'phone', 'email', 'website', 'kashrutCertUrl', 'menuUrl', 'updatedAt'])
+           .hasOnly(['mainImage', 'description', 'images', 'videos', 'phone', 'email', 'website', 'kashrutCertUrl', 'menuUrl', 'facebook', 'updatedAt'])
         );
     }
 

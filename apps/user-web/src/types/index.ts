@@ -32,6 +32,7 @@ export interface Poi {
   price: string | null;
   kashrutCertUrl: string | null;
   menuUrl: string | null;
+  facebook: string | null;
   categoryId: string;
   subcategoryIds: string[]; // category-scoped refinement IDs
 }
