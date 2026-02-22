@@ -1,3 +1,8 @@
+export interface DayHours {
+  open: string   // "09:00"
+  close: string  // "17:00"
+}
+
 // Full POI shape as stored in Firestore (mirrors apps/admin types)
 export interface Poi {
   id: string
@@ -13,7 +18,7 @@ export interface Poi {
   categoryId: string
   businessId: string | null
   active: boolean
-  openingHours: string | null
+  openingHours: Record<string, DayHours | null> | string | null
   price: string | null
   createdAt: unknown        // Firestore serverTimestamp
   updatedAt: unknown

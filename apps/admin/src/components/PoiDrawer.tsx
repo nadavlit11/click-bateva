@@ -9,8 +9,15 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
-import type { Poi, Category, Subcategory, Business } from '../types/index.ts'
+import type { Poi, Category, Subcategory, Business, DayHours } from '../types/index.ts'
 
+const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
+const DAY_NAMES_HE: Record<string, string> = {
+  sunday: 'ראשון', monday: 'שני', tuesday: 'שלישי', wednesday: 'רביעי',
+  thursday: 'חמישי', friday: 'שישי', saturday: 'שבת',
+}
+const DEFAULT_HOURS: DayHours = { open: '09:00', close: '17:00' }
+const EMPTY_HOURS = Object.fromEntries(DAY_KEYS.map(k => [k, null])) as Record<string, DayHours | null>
 
 interface Props {
   isOpen: boolean
@@ -36,7 +43,7 @@ interface FormState {
   selectedSubcategoryIds: string[]
   businessId: string
   active: boolean
-  openingHours: string
+  openingHours: Record<string, DayHours | null>
   price: string
 }
 
@@ -54,7 +61,7 @@ const INITIAL_FORM: FormState = {
   selectedSubcategoryIds: [],
   businessId: '',
   active: true,
-  openingHours: '',
+  openingHours: { ...EMPTY_HOURS },
   price: '',
 }
 
@@ -84,7 +91,9 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         selectedSubcategoryIds: [...(poi.subcategoryIds ?? [])],
         businessId: poi.businessId ?? '',
         active: poi.active,
-        openingHours: poi.openingHours ?? '',
+        openingHours: (typeof poi.openingHours === 'object' && poi.openingHours !== null)
+          ? { ...EMPTY_HOURS, ...poi.openingHours }
+          : { ...EMPTY_HOURS },
         price: poi.price ?? '',
       })
     } else {
@@ -170,7 +179,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         subcategoryIds: form.selectedSubcategoryIds,
         businessId: form.businessId.trim() || null,
         active: form.active,
-        openingHours: form.openingHours.trim() || null,
+        openingHours: Object.values(form.openingHours).every(v => v === null) ? null : form.openingHours,
         price: form.price.trim() || null,
         updatedAt: serverTimestamp(),
       }
@@ -407,16 +416,61 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
               </div>
             </div>
 
-            {/* Opening Hours */}
+            {/* Opening Hours — structured per-day */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">שעות פתיחה</label>
-              <textarea
-                value={form.openingHours}
-                onChange={e => set('openingHours', e.target.value)}
-                rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 resize-none"
-                placeholder={'א׳–ה׳ 09:00–17:00\nשישי 09:00–13:00\nשבת סגור'}
-              />
+              <div className="space-y-2">
+                {DAY_KEYS.map(day => {
+                  const hours = form.openingHours[day]
+                  const isOpen = hours !== null
+                  return (
+                    <div key={day} className="flex items-center gap-2">
+                      <span className="text-sm text-gray-700 w-14 shrink-0">{DAY_NAMES_HE[day]}</span>
+                      <label className="flex items-center gap-1 cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={isOpen}
+                          onChange={() =>
+                            setForm(prev => ({
+                              ...prev,
+                              openingHours: { ...prev.openingHours, [day]: isOpen ? null : { ...DEFAULT_HOURS } },
+                            }))
+                          }
+                          className="accent-green-600"
+                        />
+                        <span className="text-xs text-gray-500">{isOpen ? 'פתוח' : 'סגור'}</span>
+                      </label>
+                      {isOpen && (
+                        <div className="flex items-center gap-1 flex-1" dir="ltr">
+                          <input
+                            type="time"
+                            value={hours.open}
+                            onChange={e =>
+                              setForm(prev => ({
+                                ...prev,
+                                openingHours: { ...prev.openingHours, [day]: { ...prev.openingHours[day]!, open: e.target.value } },
+                              }))
+                            }
+                            className="border border-gray-300 rounded px-2 py-1 text-sm"
+                          />
+                          <span className="text-gray-400">–</span>
+                          <input
+                            type="time"
+                            value={hours.close}
+                            onChange={e =>
+                              setForm(prev => ({
+                                ...prev,
+                                openingHours: { ...prev.openingHours, [day]: { ...prev.openingHours[day]!, close: e.target.value } },
+                              }))
+                            }
+                            className="border border-gray-300 rounded px-2 py-1 text-sm"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Price */}

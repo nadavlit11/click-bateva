@@ -1,3 +1,8 @@
+export interface DayHours {
+  open: string   // "09:00"
+  close: string  // "17:00"
+}
+
 export interface Poi {
   id: string
   name: string
@@ -13,7 +18,7 @@ export interface Poi {
   subcategoryIds: string[] // category-scoped refinement IDs
   businessId: string | null
   active: boolean
-  openingHours: string | null
+  openingHours: Record<string, DayHours | null> | null
   price: string | null
   createdAt: unknown
   updatedAt: unknown

@@ -8,6 +8,7 @@ const mkPoi = (overrides: Partial<Poi> & Pick<Poi, "id" | "categoryId">): Poi =>
   location: { lat: 32.0, lng: 34.8 },
   mainImage: null,
   images: [],
+  videos: [],
   phone: null,
   email: null,
   website: null,

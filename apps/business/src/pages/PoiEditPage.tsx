@@ -4,7 +4,13 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
 import { ImageUploader } from '../components/ImageUploader.tsx'
-import type { Poi, PoiEditableFields } from '../types/index.ts'
+import type { Poi, PoiEditableFields, DayHours } from '../types/index.ts'
+
+const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
+const DAY_NAMES_HE: Record<string, string> = {
+  sunday: 'ראשון', monday: 'שני', tuesday: 'שלישי', wednesday: 'רביעי',
+  thursday: 'חמישי', friday: 'שישי', saturday: 'שבת',
+}
 
 export function PoiEditPage() {
   const { poiId } = useParams<{ poiId: string }>()
@@ -109,7 +115,27 @@ export function PoiEditPage() {
         <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 text-sm text-gray-600 space-y-1">
           <p><span className="font-medium text-gray-900">קטגוריה:</span> {categoryName || poi.categoryId}</p>
           <p><span className="font-medium text-gray-900">סטטוס:</span> {poi.active ? 'פעיל' : 'לא פעיל'}</p>
-          {poi.openingHours && <p><span className="font-medium text-gray-900">שעות פתיחה:</span> {poi.openingHours}</p>}
+          {poi.openingHours && (
+            <div>
+              <span className="font-medium text-gray-900">שעות פתיחה:</span>
+              {typeof poi.openingHours === 'string'
+                ? <span className="mr-1">{poi.openingHours}</span>
+                : (
+                  <div className="mt-1 space-y-0.5">
+                    {DAY_KEYS.map(day => {
+                      const hours = (poi.openingHours as Record<string, DayHours | null>)[day]
+                      return (
+                        <div key={day} className="flex justify-between text-sm">
+                          <span>{DAY_NAMES_HE[day]}</span>
+                          <span dir="ltr">{hours ? `${hours.open}–${hours.close}` : 'סגור'}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              }
+            </div>
+          )}
           {poi.price && <p><span className="font-medium text-gray-900">מחיר:</span> {poi.price}</p>}
         </div>
       )}

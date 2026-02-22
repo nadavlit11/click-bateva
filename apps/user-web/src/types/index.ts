@@ -12,6 +12,11 @@ export interface Subcategory {
   name: string;          // Hebrew e.g. "כשר", "זול"
 }
 
+export interface DayHours {
+  open: string;   // "09:00"
+  close: string;  // "17:00"
+}
+
 export interface Poi {
   id: string;
   name: string;
@@ -19,10 +24,11 @@ export interface Poi {
   location: { lat: number; lng: number };
   mainImage: string | null;
   images: string[];       // ordered image URLs; empty = show placeholder
+  videos: string[];       // external video URLs (YouTube etc.)
   phone: string | null;
   email: string | null;
   website: string | null; // domain only e.g. "www.example.co.il"
-  openingHours: string | null;
+  openingHours: Record<string, DayHours | null> | string | null; // structured or legacy string
   price: string | null;
   categoryId: string;
   subcategoryIds: string[]; // category-scoped refinement IDs
