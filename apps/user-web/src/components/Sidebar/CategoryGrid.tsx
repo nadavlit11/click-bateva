@@ -23,8 +23,7 @@ export function CategoryGrid({ categories, selectedCategories, onToggle }: Categ
               style={{
                 backgroundColor: lighten(cat.color),
                 borderColor: isSelected ? cat.color : lightenBorder(cat.color),
-                outline: isSelected ? `2px solid ${cat.color}` : "none",
-                outlineOffset: "2px",
+                boxShadow: isSelected ? `0 0 0 2px ${cat.color}` : "none",
               }}
             >
               <span
