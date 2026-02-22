@@ -59,6 +59,7 @@ Prompt:
 > - The `onUserCreated` Auth trigger fires for ALL new users, including those created by admin callable functions (e.g. `createBusinessUser`). Any `setCustomUserClaims` call in `onUserCreated` must first check `adminAuth.getUser(uid).customClaims?.role` and skip if a role is already set — otherwise it races with and overwrites claims set by the callable.
 > - Demo mode mock data: once production Firestore has been seeded with real catalog data (categories, subcategories), all mock POIs must reference those real seeded document IDs. Never merge parallel MOCK_CATEGORIES/MOCK_SUBCATEGORIES arrays alongside real Firestore data — this causes duplicate entries in the UI.
 > - After adding a new Firestore collection, always deploy the updated security rules: `firebase deploy --only firestore:rules`. A rule written in the file but not deployed silently blocks all reads/writes.
+> - When removing a concept/entity from the codebase (e.g., deleting a collection, removing a feature), search `.claude/skills/` for references too — skill files encode collection names, field lists, and permission matrices that become stale if not updated.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >

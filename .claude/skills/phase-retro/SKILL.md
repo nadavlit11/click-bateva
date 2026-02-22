@@ -53,14 +53,9 @@ Was an LLD doc created for any new app or major feature area built this phase?
 
 **If an LLD was skipped:** create it now (post-hoc is better than never), then add a reminder that next time, LLDs should be written **at the end of planning, before implementation starts**.
 
-### 5. Update `docs/progress.md`
-
-- Mark completed steps as ✅ Done
-- Add notes on deviations from the work plan
-
-### 6. Commit everything
+### 5. Commit everything
 
 ```bash
-git add .claude/skills/ docs/progress.md
-git commit -m "chore: phase retro — update skills and progress after phase <N>"
+git add .claude/skills/ docs/
+git commit -m "chore: phase retro — update skills and docs after <summary>"
 ```
