@@ -62,6 +62,7 @@ Prompt:
 > - When removing a concept/entity from the codebase (e.g., deleting a collection, removing a feature), search `.claude/skills/` for references too — skill files encode collection names, field lists, and permission matrices that become stale if not updated.
 > - When adding a new field to `PoiEditableFields` (business-editable fields), the `firestore.rules` `affectedKeys().hasOnly(...)` allowlist for `points_of_interest` updates MUST also be updated to include the new field. Without this, business-user saves silently fail with permission-denied.
 > - When saving new optional fields to Firestore, use `.trim() || null` (not just `.trim()`) to avoid writing empty strings. Follow the same pattern used by `price`.
+> - Hardcoded category IDs must match actual Firestore document IDs (from WordPress import), NOT old mock data. Real IDs: `accommodation`, `food`, `offroad`, `attractions`, `wineries`, `water`, `venues`, `shows`, `hiking`. Common mistake: using `'restaurants'` (old mock) instead of `'food'` (real).
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >
