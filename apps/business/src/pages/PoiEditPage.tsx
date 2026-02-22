@@ -180,6 +180,8 @@ export function PoiEditPage() {
                 src={form.mainImage}
                 alt="תמונה ראשית"
                 className="w-full max-h-48 object-cover rounded-lg border border-gray-200"
+                loading="lazy"
+                decoding="async"
               />
               <div className="flex gap-3">
                 <button
@@ -280,7 +282,7 @@ export function PoiEditPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">תעודת כשרות</label>
               {form.kashrutCertUrl ? (
                 <div className="space-y-2">
-                  <img src={form.kashrutCertUrl} alt="תעודת כשרות" className="w-full max-h-48 object-cover rounded-lg border border-gray-200" />
+                  <img src={form.kashrutCertUrl} alt="תעודת כשרות" className="w-full max-h-48 object-cover rounded-lg border border-gray-200" loading="lazy" decoding="async" />
                   <div className="flex gap-3">
                     <label className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer">
                       שנה
@@ -306,7 +308,7 @@ export function PoiEditPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">תפריט</label>
               {form.menuUrl ? (
                 <div className="space-y-2">
-                  <img src={form.menuUrl} alt="תפריט" className="w-full max-h-48 object-cover rounded-lg border border-gray-200" />
+                  <img src={form.menuUrl} alt="תפריט" className="w-full max-h-48 object-cover rounded-lg border border-gray-200" loading="lazy" decoding="async" />
                   <div className="flex gap-3">
                     <label className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer">
                       שנה

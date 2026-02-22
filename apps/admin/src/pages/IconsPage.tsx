@@ -132,6 +132,8 @@ export function IconsPage() {
                       src={resolvedUrls[icon.id]}
                       alt={icon.name}
                       className="w-10 h-10 object-contain rounded border border-gray-200 bg-gray-50"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded border border-gray-200 bg-gray-100 animate-pulse" />

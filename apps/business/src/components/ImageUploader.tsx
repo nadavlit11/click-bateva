@@ -47,7 +47,7 @@ export function ImageUploader({ poiId, images, onChange }: ImageUploaderProps) {
         <div className="grid grid-cols-3 gap-2">
           {images.map(url => (
             <div key={url} className="relative group">
-              <img src={url} alt="" className="w-full h-24 object-cover rounded-lg" />
+              <img src={url} alt="" className="w-full h-24 object-cover rounded-lg" loading="lazy" decoding="async" />
               <button
                 onClick={() => removeImage(url)}
                 className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"

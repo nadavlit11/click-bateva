@@ -92,6 +92,8 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
                 key={i}
                 src={url}
                 alt={poi.name}
+                loading="lazy"
+                decoding="async"
                 style={{ flex: "0 0 100%", height: "100%", objectFit: "cover" }}
               />
             ))

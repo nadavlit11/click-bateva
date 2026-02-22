@@ -9,7 +9,7 @@ export function PoiCard({ poi }: PoiCardProps) {
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
       {/* Image */}
       {poi.mainImage ? (
-        <img src={poi.mainImage} alt={poi.name} className="w-full h-36 object-cover" />
+        <img src={poi.mainImage} alt={poi.name} className="w-full h-36 object-cover" loading="lazy" decoding="async" />
       ) : (
         <div className="w-full h-36 bg-gray-100 flex items-center justify-center text-gray-400 text-2xl">📍</div>
       )}

@@ -352,6 +352,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                       src={form.images[0]}
                       alt="תמונה ראשית"
                       className="w-full max-h-40 object-cover rounded-lg border-2 border-green-400"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <span className="absolute bottom-1 left-1 bg-green-600 text-white text-[10px] px-1.5 py-0.5 rounded">ראשית</span>
                     <button
@@ -371,6 +373,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                             src={url}
                             alt={`תמונה ${i + 2}`}
                             className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                            loading="lazy"
+                            decoding="async"
                           />
                           <button
                             type="button"
@@ -533,7 +537,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                   <label className="block text-sm font-medium text-gray-700 mb-1">תעודת כשרות</label>
                   {form.kashrutCertUrl ? (
                     <div className="space-y-2">
-                      <img src={form.kashrutCertUrl} alt="תעודת כשרות" className="w-full max-h-40 object-cover rounded-lg border border-gray-200" />
+                      <img src={form.kashrutCertUrl} alt="תעודת כשרות" className="w-full max-h-40 object-cover rounded-lg border border-gray-200" loading="lazy" decoding="async" />
                       <div className="flex gap-3">
                         <label className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer">
                           שנה
@@ -561,7 +565,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                   <label className="block text-sm font-medium text-gray-700 mb-1">תפריט</label>
                   {form.menuUrl ? (
                     <div className="space-y-2">
-                      <img src={form.menuUrl} alt="תפריט" className="w-full max-h-40 object-cover rounded-lg border border-gray-200" />
+                      <img src={form.menuUrl} alt="תפריט" className="w-full max-h-40 object-cover rounded-lg border border-gray-200" loading="lazy" decoding="async" />
                       <div className="flex gap-3">
                         <label className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer">
                           שנה
