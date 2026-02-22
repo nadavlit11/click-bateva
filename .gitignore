@@ -47,6 +47,9 @@ coverage/
 # Misc
 .cache/
 
+# WordPress data export
+clickbateva-data.json
+
 # Firebase service account keys (never commit)
 serviceAccount.json
 *serviceAccount*.json

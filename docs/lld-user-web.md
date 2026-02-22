@@ -36,8 +36,6 @@ apps/user-web/
     ├── index.css               @import "tailwindcss"; Rubik font
     ├── types/
     │   └── index.ts            Poi, Category, Tag, Subcategory interfaces
-    ├── data/
-    │   └── mockData.ts         MOCK_POIS only (references real seeded Firestore IDs)
     ├── lib/
     │   ├── firebase.ts         initializeApp, getFirestore, emulator gated on VITE_USE_EMULATOR
     │   ├── filterPois.ts       filterPois() + PoiFilter interface
@@ -118,7 +116,7 @@ All filter state lives in `App.tsx` (lifted state — no Redux/Zustand needed fo
 
 ```
 App.tsx
-  ├── pois: Poi[]                           ← from usePois() + MOCK_POIS in demo mode
+  ├── pois: Poi[]                           ← from usePois()
   ├── categories: Category[]                ← useCategories()
   ├── tags: Tag[]                           ← useTags() (location tags only, group === "location")
   ├── subcategories: Subcategory[]          ← useSubcategories()

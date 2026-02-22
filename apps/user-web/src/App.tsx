@@ -7,7 +7,6 @@ import { PoiDetailPanel } from "./components/MapView/PoiDetailPanel";
 import { BottomSheet } from "./components/BottomSheet/BottomSheet";
 import { usePois, useCategories, useTags, useSubcategories } from "./hooks/useFirestoreData";
 import { filterPois } from "./lib/filterPois";
-import { MOCK_POIS } from "./data/mockData";
 import type { Poi } from "./types";
 
 export default function App() {
@@ -22,20 +21,16 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
-  const [showMocks, setShowMocks] = useState(false);
-
-  // Demo mode adds mock POIs using real seeded category/tag/subcategory IDs — no duplicate catalogs
-  const effectivePois = showMocks ? [...pois, ...MOCK_POIS] : pois;
 
   const filteredPois = useMemo(
-    () => filterPois(effectivePois, {
+    () => filterPois(pois, {
       selectedCategories,
       selectedTags,
       selectedSubcategories,
       searchQuery,
       subcategories,
     }),
-    [effectivePois, selectedCategories, selectedTags, selectedSubcategories, searchQuery, subcategories]
+    [pois, selectedCategories, selectedTags, selectedSubcategories, searchQuery, subcategories]
   );
 
   function handleCategoryToggle(id: string) {
@@ -113,13 +108,7 @@ export default function App() {
           selectedPoiId={selectedPoi?.id ?? null}
           onPoiClick={handlePoiClick}
         />
-        <button
-          onClick={() => setShowMocks(m => !m)}
-          className="absolute top-4 right-4 z-30 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg transition-colors"
-          style={{ background: showMocks ? "#4CAF50" : "#374151", color: "white" }}
-        >
-          {showMocks ? "✓ דמו פעיל (200)" : "הצג דמו"}
-        </button>
+
         <BottomSheet
           className="md:hidden absolute bottom-0 left-0 right-0 z-20"
           expanded={sheetExpanded}
