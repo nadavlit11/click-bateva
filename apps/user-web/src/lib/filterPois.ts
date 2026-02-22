@@ -24,11 +24,21 @@ export function filterPois(pois: Poi[], filter: PoiFilter): Poi[] {
   }
 
   return pois.filter((poi) => {
+    const hasSearch = searchQuery !== "";
+    const matchesSearch = hasSearch && poi.name.includes(searchQuery);
+
+    // Category gate: if categories are selected, POI must be in one of them.
+    // If none selected, only search-matching POIs pass through.
     const matchesCategory =
-      selectedCategories.size > 0 && selectedCategories.has(poi.categoryId);
+      selectedCategories.size === 0
+        ? matchesSearch
+        : selectedCategories.has(poi.categoryId);
+    if (!matchesCategory) return false;
+
+    // Search filter (when active and categories are selected)
+    if (hasSearch && !matchesSearch) return false;
 
     // Subcategories: AND-across-groups, OR-within-group — scoped to this POI's category
-    // Hike: subsByCategory has no entry for hike's categoryId → catGroups is undefined → passes
     const catGroups = subsByCategory.get(poi.categoryId);
     const matchesSubcategory =
       !catGroups ||
@@ -36,8 +46,6 @@ export function filterPois(pois: Poi[], filter: PoiFilter): Poi[] {
         groupSet => (poi.subcategoryIds ?? []).some(s => groupSet.has(s))
       );
 
-    const matchesSearch = !searchQuery || poi.name.includes(searchQuery);
-
-    return matchesCategory && matchesSubcategory && matchesSearch;
+    return matchesSubcategory;
   });
 }

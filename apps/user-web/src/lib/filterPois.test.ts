@@ -38,8 +38,23 @@ const noFilter = {
 const allCategories = new Set(["restaurants", "parks", "beaches", "sites"]);
 
 describe("filterPois", () => {
-  it("returns no POIs when no categories are selected", () => {
+  it("returns no POIs when no categories selected and no search query", () => {
     expect(filterPois(POIS, noFilter)).toHaveLength(0);
+  });
+
+  it("search finds POIs across all categories when none selected", () => {
+    const result = filterPois(POIS, { ...noFilter, searchQuery: "מצדה" });
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("4");
+  });
+
+  it("search scoped to selected categories when some are selected", () => {
+    const result = filterPois(POIS, {
+      ...noFilter,
+      selectedCategories: new Set(["parks"]),
+      searchQuery: "מצדה",
+    });
+    expect(result).toHaveLength(0); // מצדה is in "sites", not "parks"
   });
 
   it("returns all POIs when all categories are selected", () => {
