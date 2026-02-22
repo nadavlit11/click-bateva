@@ -1,8 +1,8 @@
-import { initializeApp, getApps } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { auth } from "firebase-functions/v1";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import {initializeApp, getApps} from "firebase-admin/app";
+import {getAuth} from "firebase-admin/auth";
+import {getFirestore, FieldValue} from "firebase-admin/firestore";
+import {auth} from "firebase-functions/v1";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 
 if (getApps().length === 0) {
@@ -42,17 +42,17 @@ export const onUserCreated = auth.user().onCreate(async (user) => {
       createdAt: now,
       updatedAt: now,
     }),
-    adminAuth.setCustomUserClaims(user.uid, { role }),
+    adminAuth.setCustomUserClaims(user.uid, {role}),
   ]);
 
-  logger.info("User created", { uid: user.uid, email: user.email });
+  logger.info("User created", {uid: user.uid, email: user.email});
 });
 
 /**
  * Callable function: admin-only — assigns a role to a user.
  * Updates both the Firestore user document and the Auth custom claim.
  */
-export const setUserRole = onCall({ cors: true }, async (request) => {
+export const setUserRole = onCall({cors: true}, async (request) => {
   // Verify caller is authenticated
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
@@ -63,7 +63,7 @@ export const setUserRole = onCall({ cors: true }, async (request) => {
     throw new HttpsError("permission-denied", "Only admins can assign roles.");
   }
 
-  const { uid, role } = request.data as { uid: unknown; role: unknown };
+  const {uid, role} = request.data as { uid: unknown; role: unknown };
 
   // Validate inputs
   if (typeof uid !== "string" || !uid) {
@@ -83,10 +83,10 @@ export const setUserRole = onCall({ cors: true }, async (request) => {
       role: validRole,
       updatedAt: FieldValue.serverTimestamp(),
     }),
-    adminAuth.setCustomUserClaims(uid, { role: validRole }),
+    adminAuth.setCustomUserClaims(uid, {role: validRole}),
   ]);
 
-  logger.info("User role updated", { uid, role: validRole, by: request.auth.uid });
+  logger.info("User role updated", {uid, role: validRole, by: request.auth.uid});
 
-  return { success: true };
+  return {success: true};
 });

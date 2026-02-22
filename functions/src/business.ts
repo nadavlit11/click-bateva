@@ -1,6 +1,6 @@
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import {getAuth} from "firebase-admin/auth";
+import {getFirestore, FieldValue} from "firebase-admin/firestore";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 
 const adminAuth = getAuth();
@@ -11,7 +11,7 @@ const db = getFirestore();
  * Creates a Firebase Auth user, sets the business_user custom claim, and
  * atomically writes user and business documents to Firestore.
  */
-export const createBusinessUser = onCall({ cors: true }, async (request) => {
+export const createBusinessUser = onCall({cors: true}, async (request) => {
   // Verify caller is authenticated
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
@@ -22,7 +22,7 @@ export const createBusinessUser = onCall({ cors: true }, async (request) => {
     throw new HttpsError("permission-denied", "Only admins can create business users.");
   }
 
-  const { name, email, password } = request.data as {
+  const {name, email, password} = request.data as {
     name: unknown;
     email: unknown;
     password: unknown;
@@ -42,7 +42,7 @@ export const createBusinessUser = onCall({ cors: true }, async (request) => {
   // Create Firebase Auth user — catch known errors and convert to HttpsError
   let userRecord;
   try {
-    userRecord = await adminAuth.createUser({ email: email.trim(), password });
+    userRecord = await adminAuth.createUser({email: email.trim(), password});
   } catch (err: unknown) {
     const code = (err as { code?: string }).code ?? "";
     if (code === "auth/email-already-exists") {
@@ -55,7 +55,7 @@ export const createBusinessUser = onCall({ cors: true }, async (request) => {
 
   // Set custom claims: role + businessRef (Firestore path used by security rules)
   const businessRef = `/databases/(default)/documents/businesses/${uid}`;
-  await adminAuth.setCustomUserClaims(uid, { role: "business_user", businessRef });
+  await adminAuth.setCustomUserClaims(uid, {role: "business_user", businessRef});
 
   // Atomically write user and business documents
   const now = FieldValue.serverTimestamp();
@@ -75,23 +75,23 @@ export const createBusinessUser = onCall({ cors: true }, async (request) => {
     name: name.trim(),
     email: email.trim(),
     ownerUid: uid,
-    associatedUserIds: [uid],   // required by POI update security rule
+    associatedUserIds: [uid], // required by POI update security rule
     createdAt: now,
     updatedAt: now,
   });
 
   await batch.commit();
 
-  logger.info("Business user created", { uid, email, name, by: request.auth.uid });
+  logger.info("Business user created", {uid, email, name, by: request.auth.uid});
 
-  return { uid };
+  return {uid};
 });
 
 /**
  * Callable function: admin-only — deletes a business user account.
  * Deletes the Firebase Auth user and atomically removes the user + business documents.
  */
-export const deleteBusinessUser = onCall({ cors: true }, async (request) => {
+export const deleteBusinessUser = onCall({cors: true}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
   }
@@ -99,7 +99,7 @@ export const deleteBusinessUser = onCall({ cors: true }, async (request) => {
     throw new HttpsError("permission-denied", "Only admins can delete business users.");
   }
 
-  const { uid } = request.data as { uid: unknown };
+  const {uid} = request.data as { uid: unknown };
   if (typeof uid !== "string" || !uid.trim()) {
     throw new HttpsError("invalid-argument", "uid must be a non-empty string.");
   }
@@ -121,7 +121,7 @@ export const deleteBusinessUser = onCall({ cors: true }, async (request) => {
   batch.delete(db.collection("businesses").doc(uid));
   await batch.commit();
 
-  logger.info("Business user deleted", { uid, by: request.auth.uid });
+  logger.info("Business user deleted", {uid, by: request.auth.uid});
 
-  return { uid };
+  return {uid};
 });

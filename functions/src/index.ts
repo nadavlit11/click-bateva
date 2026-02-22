@@ -1,6 +1,6 @@
-import { setGlobalOptions } from "firebase-functions";
+import {setGlobalOptions} from "firebase-functions";
 
-setGlobalOptions({ maxInstances: 10 });
+setGlobalOptions({maxInstances: 10});
 
-export { onUserCreated, setUserRole } from "./auth.js";
-export { createBusinessUser, deleteBusinessUser } from "./business.js";
+export {onUserCreated, setUserRole} from "./auth.js";
+export {createBusinessUser, deleteBusinessUser} from "./business.js";
