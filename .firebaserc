@@ -5,6 +5,12 @@
   "targets": {
     "click-bateva": {
       "hosting": {
+        "click-bateva": [
+          "click-bateva"
+        ],
+        "click-bateva-app": [
+          "click-bateva-app"
+        ],
         "click-bateva-biz": [
           "click-bateva-biz"
         ]

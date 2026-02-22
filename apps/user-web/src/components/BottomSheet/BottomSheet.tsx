@@ -54,6 +54,7 @@ export function BottomSheet({
       const id = requestAnimationFrame(checkScroll);
       return () => cancelAnimationFrame(id);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset to false when collapsed (no cascading render)
       setCanScrollDown(false);
     }
   // Sets have new identity on every toggle (new Set(prev)), so this fires on each selection change — intended.

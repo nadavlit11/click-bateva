@@ -32,7 +32,7 @@ export function SubcategoryFilter({
   function toggleExpanded(catId: string) {
     setOverride(prev => {
       const next = new Set(prev);
-      next.has(catId) ? next.delete(catId) : next.add(catId);
+      if (next.has(catId)) { next.delete(catId); } else { next.add(catId); }
       return next;
     });
   }

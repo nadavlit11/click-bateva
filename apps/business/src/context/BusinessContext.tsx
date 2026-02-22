@@ -19,6 +19,7 @@ export function BusinessProvider({
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useBusinessContext(): BusinessContextValue {
   const ctx = useContext(BusinessContext)
   if (!ctx) throw new Error('useBusinessContext must be used inside BusinessProvider')

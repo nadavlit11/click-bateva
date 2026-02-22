@@ -24,6 +24,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
   const slideCount = hasImages ? allImages.length : 1;
 
   // Reset state when POI changes
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting local state on key change is intentional
   useEffect(() => { setCurrentSlide(0); setDescExpanded(false); setHoursExpanded(false); }, [poi.id]);
 
   // ESC to close

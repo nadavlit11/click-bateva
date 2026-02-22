@@ -34,7 +34,7 @@ export default function App() {
     const isCurrentlySelected = selectedCategories.has(id);
     setSelectedCategories(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
     if (isCurrentlySelected) {
@@ -51,7 +51,7 @@ export default function App() {
   function handleSubcategoryToggle(id: string) {
     setSelectedSubcategories((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   }
