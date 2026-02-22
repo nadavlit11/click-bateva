@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@sentry/react": "^10.39.0",
     "firebase": "^12.9.0",
     "leaflet": "^1.9.4",
     "react": "^19.2.0",

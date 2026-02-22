@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@sentry/react": "^10.39.0",
     "@vis.gl/react-google-maps": "^1.7.1",
     "firebase": "^12.9.0",
     "react": "^19.2.0",

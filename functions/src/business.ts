@@ -2,6 +2,7 @@ import {getAuth} from "firebase-admin/auth";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
+import * as Sentry from "@sentry/node";
 
 const adminAuth = getAuth();
 const db = getFirestore();
@@ -48,6 +49,7 @@ export const createBusinessUser = onCall({cors: true}, async (request) => {
     if (code === "auth/email-already-exists") {
       throw new HttpsError("already-exists", "(auth/email-already-in-use)");
     }
+    Sentry.captureException(err, {tags: {source: "createBusinessUser"}});
     logger.error("Unexpected error creating Firebase Auth user", err);
     throw new HttpsError("internal", "Failed to create user.");
   }
@@ -111,6 +113,7 @@ export const deleteBusinessUser = onCall({cors: true}, async (request) => {
     if (code === "auth/user-not-found") {
       // Auth user already gone — still clean up Firestore
     } else {
+      Sentry.captureException(err, {tags: {source: "deleteBusinessUser"}});
       logger.error("Unexpected error deleting Firebase Auth user", err);
       throw new HttpsError("internal", "Failed to delete user.");
     }

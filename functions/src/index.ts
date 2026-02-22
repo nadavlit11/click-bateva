@@ -1,4 +1,10 @@
 import {setGlobalOptions} from "firebase-functions";
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  enabled: !!process.env.SENTRY_DSN,
+});
 
 setGlobalOptions({maxInstances: 10});
 
