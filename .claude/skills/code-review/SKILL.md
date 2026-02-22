@@ -97,6 +97,7 @@ Prompt:
 > - Scroll indicators (arrows/fade that show "more content below"): initialize by checking actual scroll state on mount, not by assuming an initial value. Use `useEffect(() => { requestAnimationFrame(checkScroll); }, [expanded])` so the indicator reflects real overflow after layout settles.
 > - Footer shadows over a scroll container: a `box-shadow` on a footer sibling needs `position: relative; z-index: N` to paint on top of the adjacent scroll area. Without z-index, the scroll content may render on top and hide the shadow.
 > - After a refactor that removes intermediate variable aliases (e.g., `effectiveFoo = foo`), do a replace_all to update all consumers. Dead aliases left behind cause TS errors when the alias is later deleted.
+> - Absolute-positioned action buttons (delete/remove) within a repeated list of items must use the same corner (`top-1 right-1` or `top-1 left-1`) across all items. Mixing corners for the same action in the same component is a visual inconsistency bug.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >
