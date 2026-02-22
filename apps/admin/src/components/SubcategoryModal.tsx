@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 import type { Subcategory, Category } from '../types/index.ts'
 
 interface Props {
@@ -48,7 +49,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
       onSaved()
     } catch (err) {
       setError('שגיאה בשמירה. נסה שוב.')
-      console.error(err)
+      reportError(err, { source: 'SubcategoryModal.save' })
     } finally {
       setSaving(false)
     }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 import { useBusinessContext } from '../context/BusinessContext.tsx'
 import { PoiCard } from '../components/PoiCard.tsx'
 import type { Poi } from '../types/index.ts'
@@ -24,7 +25,7 @@ export function PoisListPage() {
         setLoading(false)
       },
       err => {
-        console.error('PoisListPage onSnapshot error', err)
+        reportError(err, { source: 'PoisListPage.onSnapshot' })
         setError('שגיאה בטעינת נקודות העניין')
         setLoading(false)
       }

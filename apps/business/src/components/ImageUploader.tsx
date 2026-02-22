@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { storage } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 
 interface ImageUploaderProps {
   poiId: string
@@ -28,7 +29,7 @@ export function ImageUploader({ poiId, images, onChange }: ImageUploaderProps) {
       }
       onChange([...images, ...newUrls])
     } catch (err) {
-      console.error('ImageUploader upload error', err)
+      reportError(err, { source: 'ImageUploader.upload' })
       setUploadError('שגיאה בהעלאת התמונה')
     } finally {
       setUploading(false)

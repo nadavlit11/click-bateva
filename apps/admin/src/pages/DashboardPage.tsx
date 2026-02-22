@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore'
 import { Link } from 'react-router-dom'
 import { db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 
 interface CountState {
   pois: number
@@ -47,7 +48,7 @@ export function DashboardPage() {
       })))
       setLoading(false)
     }).catch(err => {
-      console.error('DashboardPage fetch error', err)
+      reportError(err, { source: 'DashboardPage.fetch' })
       setLoading(false)
     })
   }, [])

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 import type { Subcategory, Category } from '../types/index.ts'
 import { SubcategoryModal } from '../components/SubcategoryModal.tsx'
 
@@ -102,7 +103,7 @@ export function SubcategoriesPage() {
                           עריכה
                         </button>
                         <button
-                          onClick={() => handleDelete(sub.id).catch(console.error)}
+                          onClick={() => handleDelete(sub.id).catch(err => reportError(err, { source: 'SubcategoriesPage.delete' }))}
                           className="text-red-500 hover:text-red-700 text-xs font-medium"
                         >
                           מחיקה
@@ -136,7 +137,7 @@ export function SubcategoriesPage() {
                           עריכה
                         </button>
                         <button
-                          onClick={() => handleDelete(sub.id).catch(console.error)}
+                          onClick={() => handleDelete(sub.id).catch(err => reportError(err, { source: 'SubcategoriesPage.delete' }))}
                           className="text-red-500 hover:text-red-700 text-xs font-medium"
                         >
                           מחיקה

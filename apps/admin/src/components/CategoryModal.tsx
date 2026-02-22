@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { ref, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 import type { Category, Icon } from '../types/index.ts'
 
 interface Props {
@@ -76,7 +77,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
       onSaved()
     } catch (err) {
       setError('שגיאה בשמירה. נסה שוב.')
-      console.error(err)
+      reportError(err, { source: 'CategoryModal.save' })
     } finally {
       setSaving(false)
     }

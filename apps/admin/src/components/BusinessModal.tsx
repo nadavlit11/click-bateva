@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 
 interface Props {
   isOpen: boolean
@@ -73,7 +74,7 @@ export function BusinessModal({ isOpen, onClose, onSaved }: Props) {
       const authCodeMatch = message.match(/\(([^)]+)\)/)
       const authCode = authCodeMatch ? authCodeMatch[1] : strippedCode
       setError(mapError(authCode))
-      console.error(err)
+      reportError(err, { source: 'BusinessModal.create' })
     } finally {
       setSaving(false)
     }

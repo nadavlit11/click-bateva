@@ -3,6 +3,7 @@ import { Outlet, Navigate, useNavigate } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 import { BusinessProvider } from '../context/BusinessContext.tsx'
 import type { BusinessContextValue, Business } from '../types/index.ts'
 
@@ -53,7 +54,7 @@ export function AuthGuard() {
         setContextValue({ businessId, businessName: bizData.name })
         setStatus('authorized')
       } catch (err) {
-        console.error('AuthGuard: unexpected auth error', err)
+        reportError(err, { source: 'AuthGuard.auth' })
         setStatus('unauthenticated')
       }
     })

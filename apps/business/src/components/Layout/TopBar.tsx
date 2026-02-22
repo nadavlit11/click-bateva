@@ -1,5 +1,6 @@
 import { signOut } from 'firebase/auth'
 import { auth } from '../../lib/firebase.ts'
+import { reportError } from '../../lib/errorReporting.ts'
 import { useBusinessContext } from '../../context/BusinessContext.tsx'
 
 export function TopBar() {
@@ -11,7 +12,7 @@ export function TopBar() {
         <p className="text-xs text-gray-500">פורטל עסקים — קליק בטבע</p>
       </div>
       <button
-        onClick={() => signOut(auth).catch(console.error)}
+        onClick={() => signOut(auth).catch(err => reportError(err, { source: 'TopBar.signOut' }))}
         className="text-sm text-red-600 hover:text-red-800 transition-colors"
       >
         התנתקות

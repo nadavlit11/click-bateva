@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import type { QuerySnapshot, DocumentData } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { reportError } from "../lib/errorReporting";
 import type { Category, Poi, Subcategory } from "../types";
 
 function snapshotToPois(snap: QuerySnapshot<DocumentData>): Poi[] {
@@ -39,7 +40,7 @@ export function usePois() {
       setPois(snapshotToPois(snap));
       setLoading(false);
     }, err => {
-      console.error("usePois:", err);
+      reportError(err, { source: 'usePois' });
       setLoading(false);
     });
     return unsub;
@@ -54,7 +55,7 @@ export function useCategories() {
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "categories"), snap => {
       setCategories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category)));
-    }, err => console.error("useCategories:", err));
+    }, err => reportError(err, { source: 'useCategories' }));
     return unsub;
   }, []);
 
@@ -67,7 +68,7 @@ export function useSubcategories() {
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "subcategories"), snap => {
       setSubcategories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subcategory)));
-    }, err => console.error("useSubcategories:", err));
+    }, err => reportError(err, { source: 'useSubcategories' }));
     return unsub;
   }, []);
 

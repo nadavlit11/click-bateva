@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 import type { Icon } from '../types/index.ts'
 
 export function IconsPage() {
@@ -27,7 +28,7 @@ export function IconsPage() {
       })
     ).then(entries => {
       setResolvedUrls(Object.fromEntries(entries))
-    }).catch(console.error)
+    }).catch(err => reportError(err, { source: 'IconsPage.resolveUrls' }))
   }, [icons])
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -45,7 +46,7 @@ export function IconsPage() {
       setName('')
     } catch (err) {
       setError('שגיאה בהעלאת האייקון')
-      console.error(err)
+      reportError(err, { source: 'IconsPage.upload' })
     } finally {
       setUploading(false)
       e.target.value = ''
@@ -58,7 +59,7 @@ export function IconsPage() {
       await deleteDoc(doc(db, 'icons', id))
     } catch (err) {
       setError('שגיאה במחיקה. נסה שוב.')
-      console.error(err)
+      reportError(err, { source: 'IconsPage.delete' })
     }
   }
 

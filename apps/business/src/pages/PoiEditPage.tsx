@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 import { ImageUploader } from '../components/ImageUploader.tsx'
 import type { Poi, PoiEditableFields, DayHours } from '../types/index.ts'
 
@@ -62,7 +63,7 @@ export function PoiEditPage() {
         setLoading(false)
       })
       .catch(err => {
-        console.error('PoiEditPage getDoc error', err)
+        reportError(err, { source: 'PoiEditPage.load' })
         setError('שגיאה בטעינת נקודת העניין')
         setLoading(false)
       })
@@ -80,7 +81,7 @@ export function PoiEditPage() {
       const url = await getDownloadURL(storageRef)
       setForm(prev => ({ ...prev, mainImage: url }))
     } catch (err) {
-      console.error('Main image upload error', err)
+      reportError(err, { source: 'PoiEditPage.mainImageUpload' })
       setError('שגיאה בהעלאת תמונה ראשית')
     } finally {
       setUploadingMainImage(false)
@@ -98,7 +99,7 @@ export function PoiEditPage() {
       const url = await getDownloadURL(storageRef)
       setForm(prev => ({ ...prev, [field]: url }))
     } catch (err) {
-      console.error(`${field} upload error`, err)
+      reportError(err, { source: `PoiEditPage.${field}Upload` })
       setError('שגיאה בהעלאת קובץ')
     }
   }
@@ -114,7 +115,7 @@ export function PoiEditPage() {
       })
       navigate('/')
     } catch (err) {
-      console.error('PoiEditPage save error', err)
+      reportError(err, { source: 'PoiEditPage.save' })
       setError('שגיאה בשמירה')
     } finally {
       setSaving(false)

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { db, functions } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 import type { Business } from '../types/index.ts'
 import { BusinessModal } from '../components/BusinessModal.tsx'
 
@@ -36,7 +37,7 @@ export function BusinessesPage() {
       await deleteBusinessUserFn({ uid: business.id })
     } catch (err: unknown) {
       alert('שגיאה במחיקת העסק')
-      console.error(err)
+      reportError(err, { source: 'BusinessesPage.delete' })
     } finally {
       setDeletingId(null)
     }

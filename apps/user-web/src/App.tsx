@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./lib/firebase";
+import { reportError } from "./lib/errorReporting";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
 import { PoiDetailPanel } from "./components/MapView/PoiDetailPanel";
@@ -67,7 +68,7 @@ export default function App() {
       poiId: poi.id,
       categoryId: poi.categoryId,
       timestamp: serverTimestamp(),
-    }).catch((err) => console.error("Failed to log POI click:", err));
+    }).catch((err) => reportError(err, { source: 'App.handlePoiClick' }));
     setSelectedPoi(poi);
   }
 

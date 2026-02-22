@@ -11,6 +11,7 @@ import {
   getDocs,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 import type { Poi, Category, Subcategory, Business } from '../types/index.ts'
 import { PoiDrawer } from '../components/PoiDrawer.tsx'
 
@@ -36,15 +37,15 @@ export function PoisPage() {
   useEffect(() => {
     getDocs(collection(db, 'categories')).then(snap => {
       setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
-    }).catch(console.error)
+    }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
 
     getDocs(collection(db, 'subcategories')).then(snap => {
       setSubcategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Subcategory))
-    }).catch(console.error)
+    }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
 
     getDocs(collection(db, 'businesses')).then(snap => {
       setBusinesses(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Business))
-    }).catch(console.error)
+    }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
   }, [])
 
   function categoryName(id: string) {
@@ -159,7 +160,7 @@ export function PoisPage() {
                   <input
                     type="checkbox"
                     checked={poi.active}
-                    onChange={() => toggleActive(poi).catch(console.error)}
+                    onChange={() => toggleActive(poi).catch(err => reportError(err, { source: 'PoisPage.toggleActive' }))}
                     className="accent-green-600 w-4 h-4 cursor-pointer"
                   />
                 </td>
@@ -172,7 +173,7 @@ export function PoisPage() {
                       עריכה
                     </button>
                     <button
-                      onClick={() => handleDelete(poi.id).catch(console.error)}
+                      onClick={() => handleDelete(poi.id).catch(err => reportError(err, { source: 'PoisPage.delete' }))}
                       className="text-red-500 hover:text-red-700 text-xs font-medium"
                     >
                       מחיקה

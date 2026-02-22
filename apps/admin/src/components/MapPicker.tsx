@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { reportError } from '../lib/errorReporting.ts'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -66,7 +67,7 @@ export function MapPicker({ lat, lng, onChange }: Props) {
         setSearchError(true)
       }
     } catch (err) {
-      console.error(err)
+      reportError(err, { source: 'MapPicker.search' })
       setSearchError(true)
     } finally {
       setSearching(false)

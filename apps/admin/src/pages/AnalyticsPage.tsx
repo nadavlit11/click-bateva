@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 
 interface ClickDoc {
   poiId: string
@@ -135,7 +136,7 @@ export function AnalyticsPage() {
         setLoading(false)
       })
       .catch(err => {
-        console.error('AnalyticsPage fetch error', err)
+        reportError(err, { source: 'AnalyticsPage.fetch' })
         setError('שגיאה בטעינת נתוני קליקים')
         setLoading(false)
       })

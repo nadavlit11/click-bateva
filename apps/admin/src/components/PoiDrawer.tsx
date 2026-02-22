@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
 import type { Poi, Category, Subcategory, Business, DayHours } from '../types/index.ts'
 
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
@@ -136,7 +137,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
       setForm(prev => ({ ...prev, images: [...prev.images, ...urls] }))
     } catch (err) {
       setError('שגיאה בהעלאת תמונות')
-      console.error(err)
+      reportError(err, { source: 'PoiDrawer.uploadImages' })
     } finally {
       setUploadingImages(false)
       e.target.value = ''
@@ -211,7 +212,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
       onSaved()
     } catch (err) {
       setError('שגיאה בשמירה. נסה שוב.')
-      console.error(err)
+      reportError(err, { source: 'PoiDrawer.save' })
     } finally {
       setSaving(false)
     }
