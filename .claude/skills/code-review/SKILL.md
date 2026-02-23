@@ -124,6 +124,11 @@ Prompt:
 > - Simple CRUD pages that only wire existing SDK calls (Firestore `getDocs`/`onSnapshot`/`updateDoc` with no business logic)
 > - Routing and layout scaffolding
 >
+> **Mutation testing coverage:**
+> - These files are under Stryker mutation testing: `apps/user-web/src/lib/filterPois.ts`, `apps/user-web/src/lib/openingStatus.ts`, `functions/src/auth.ts`
+> - When logic in these files changes, flag that `npm run test:mutate` should be run to verify the mutation score hasn't regressed
+> - When new pure-logic utility files are added with tests, suggest adding them to the relevant `stryker.config.json` `mutate` array
+>
 > For each piece of logic that requires a test, check if a corresponding test file exists in the diff (or already exists in the repo if you can verify). Output PASS if all required tests are present or if nothing testable was added. Output FAIL with a specific list of missing tests otherwise.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).

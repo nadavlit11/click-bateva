@@ -1,0 +1,53 @@
+name: Mutation Testing (Weekly)
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 06:00 UTC
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  mutate-user-web:
+    name: Mutation — User Web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/user-web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: apps/user-web/package-lock.json
+      - run: npm ci
+      - run: npx stryker run
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report-user-web
+          path: apps/user-web/reports/mutation.html
+          retention-days: 30
+
+  mutate-functions:
+    name: Mutation — Functions
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+      - run: npm ci
+      - run: npx stryker run
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report-functions
+          path: functions/reports/mutation.html
+          retention-days: 30
