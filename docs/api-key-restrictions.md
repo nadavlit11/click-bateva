@@ -2,10 +2,12 @@
 
 Manual steps to restrict API keys in Google Cloud Console for production security.
 
-## Firebase API Key
+## Browser Key (auto created by Firebase)
+
+This single key is used for both Firebase services and Google Maps.
 
 1. Go to [Google Cloud Console > APIs & Services > Credentials](https://console.cloud.google.com/apis/credentials?project=click-bateva)
-2. Click on the Firebase API key (Browser key)
+2. Click on **Browser key (auto created by Firebase)**
 3. Under **Application restrictions**, select **HTTP referrers (websites)**
 4. Add allowed referrers:
    - `click-bateva.web.app/*`
@@ -16,17 +18,8 @@ Manual steps to restrict API keys in Google Cloud Console for production securit
    - Firebase Installations API
    - Identity Toolkit API
    - Token Service API
-6. Save
-
-## Google Maps API Key
-
-1. In the same Credentials page, click on the Google Maps API key
-2. Under **Application restrictions**, select **HTTP referrers (websites)**
-3. Add allowed referrers:
-   - `click-bateva-app.web.app/*` (only user-web uses Maps)
-4. Under **API restrictions**, select **Restrict key** and enable only:
    - Maps JavaScript API
-5. Save
+6. Save
 
 ## Verification
 
