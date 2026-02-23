@@ -1,6 +1,9 @@
 {
   "scripts": {
-    "test:integration": "jest --config jest.config.integration.js"
+    "test:integration": "jest --config jest.config.integration.js",
+    "test:mutate": "npm run test:mutate --prefix apps/user-web && npm run test:mutate --prefix functions",
+    "test:mutate:user-web": "npm run test:mutate --prefix apps/user-web",
+    "test:mutate:functions": "npm run test:mutate --prefix functions"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

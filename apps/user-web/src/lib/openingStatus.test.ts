@@ -90,4 +90,23 @@ describe("getOpeningStatusText", () => {
     const now = dateAt(6, "20:00"); // Saturday 20:00
     expect(getOpeningStatusText(hours, now)).toBe("סגור. יפתח מחר ב-10:00");
   });
+
+  it("finds same-day-next-week when only open day is today (loop boundary i=7)", () => {
+    // Sunday 18:00, only Sunday is open — must loop all the way to i=7
+    const hours = mkHours({ sunday: { open: "09:00", close: "17:00" } });
+    const now = dateAt(0, "18:00");
+    expect(getOpeningStatusText(hours, now)).toBe("סגור. יפתח ביום ראשון 09:00");
+  });
+
+  it.each([
+    [5, 1, "monday", "שני"],     // Friday → Monday (3 days away)
+    [0, 2, "tuesday", "שלישי"],  // Sunday → Tuesday (2 days)
+    [0, 4, "thursday", "חמישי"], // Sunday → Thursday (4 days)
+    [0, 5, "friday", "שישי"],    // Sunday → Friday (5 days)
+    [0, 6, "saturday", "שבת"],   // Sunday → Saturday (6 days)
+  ] as const)("shows correct Hebrew day name for %s→%s", (fromDay, _toDay, dayKey, expectedName) => {
+    const hours = mkHours({ [dayKey]: { open: "08:00", close: "16:00" } });
+    const now = dateAt(fromDay, "18:00");
+    expect(getOpeningStatusText(hours, now)).toContain(expectedName);
+  });
 });

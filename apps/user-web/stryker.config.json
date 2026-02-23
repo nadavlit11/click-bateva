@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-js/master/packages/core/schema/stryker-schema.json",
+  "testRunner": "vitest",
+  "checkers": ["typescript"],
+  "tsconfigFile": "tsconfig.app.json",
+  "mutate": [
+    "src/lib/filterPois.ts",
+    "src/lib/openingStatus.ts"
+  ],
+  "reporters": ["clear-text", "html", "progress"],
+  "htmlReporter": {
+    "fileName": "reports/mutation.html"
+  },
+  "thresholds": {
+    "high": 90,
+    "low": 75,
+    "break": 70
+  },
+  "concurrency": 2,
+  "timeoutMS": 10000
+}

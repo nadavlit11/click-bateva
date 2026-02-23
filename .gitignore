@@ -43,6 +43,8 @@ yarn-error.log*
 
 # Testing
 coverage/
+.stryker-tmp/
+**/reports/mutation.html
 
 # Misc
 .cache/

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-js/master/packages/core/schema/stryker-schema.json",
+  "testRunner": "jest",
+  "jest": {
+    "configFile": "jest.config.unit.js"
+  },
+  "checkers": ["typescript"],
+  "tsconfigFile": "tsconfig.test.json",
+  "mutate": [
+    "src/auth.ts"
+  ],
+  "reporters": ["clear-text", "html", "progress"],
+  "htmlReporter": {
+    "fileName": "reports/mutation.html"
+  },
+  "thresholds": {
+    "high": 90,
+    "low": 75,
+    "break": 65
+  },
+  "concurrency": 2,
+  "timeoutMS": 15000
+}
