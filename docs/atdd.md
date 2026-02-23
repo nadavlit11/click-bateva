@@ -14,7 +14,7 @@ This document outlines the key features and their acceptance criteria for the Mi
 - Given the user navigates to the application.
 - When the map loads successfully.
 - Then a Google Map of Israel is displayed, centered appropriately.
-- And all active Points of Interest (POIs) are visible as markers on the map.
+- And no POI markers are visible on the map until a category is selected.
 
 #### Feature: Filter POIs by Category
 
@@ -35,8 +35,7 @@ This document outlines the key features and their acceptance criteria for the Mi
 
 **Scenario: Subcategory filter appears after selecting a category.**
 - Given the user has not selected any category.
-- When the "סינון מפורט" section is visible in the sidebar.
-- Then it shows a hint: "בחר קטגוריה לסינון מפורט" and no filter options.
+- Then the subcategory filter section is not displayed in the sidebar.
 
 **Scenario: User selects one category — subcategory section auto-expands.**
 - Given the map is displayed and no category is selected.
