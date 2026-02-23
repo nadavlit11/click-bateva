@@ -11,7 +11,6 @@ Manual steps to restrict API keys in Google Cloud Console for production securit
    - `click-bateva.web.app/*`
    - `click-bateva-app.web.app/*`
    - `click-bateva-biz.web.app/*`
-   - `localhost:*` (for local development)
 5. Under **API restrictions**, select **Restrict key** and enable only:
    - Cloud Firestore API
    - Firebase Authentication API
@@ -26,7 +25,6 @@ Manual steps to restrict API keys in Google Cloud Console for production securit
 2. Under **Application restrictions**, select **HTTP referrers (websites)**
 3. Add allowed referrers:
    - `click-bateva-app.web.app/*` (only user-web uses Maps)
-   - `localhost:*` (for local development)
 4. Under **API restrictions**, select **Restrict key** and enable only:
    - Maps JavaScript API
 5. Save
