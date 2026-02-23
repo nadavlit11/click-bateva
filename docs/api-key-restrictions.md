@@ -13,7 +13,6 @@ Manual steps to restrict API keys in Google Cloud Console for production securit
    - `click-bateva-biz.web.app/*`
 5. Under **API restrictions**, select **Restrict key** and enable only:
    - Cloud Firestore API
-   - Firebase Authentication API
    - Firebase Installations API
    - Identity Toolkit API
    - Token Service API
