@@ -27,6 +27,7 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>): Poi[] {
       facebook: d.facebook || null,
       categoryId: d.categoryId,
       subcategoryIds: d.subcategoryIds ?? [],
+      iconUrl: d.iconUrl || null,
     };
   });
 }

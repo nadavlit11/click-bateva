@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
-import type { Subcategory, Category } from '../types/index.ts'
+import type { Subcategory, Category, Icon } from '../types/index.ts'
 import { SubcategoryModal } from '../components/SubcategoryModal.tsx'
 
 export function SubcategoriesPage() {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [icons, setIcons] = useState<Icon[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingSub, setEditingSub] = useState<Subcategory | null>(null)
 
@@ -18,7 +19,10 @@ export function SubcategoriesPage() {
     const unsub2 = onSnapshot(collection(db, 'categories'), snap => {
       setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
     })
-    return () => { unsub1(); unsub2() }
+    const unsub3 = onSnapshot(collection(db, 'icons'), snap => {
+      setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
+    })
+    return () => { unsub1(); unsub2(); unsub3() }
   }, [])
 
   async function handleDelete(id: string) {
@@ -164,6 +168,7 @@ export function SubcategoriesPage() {
         subcategory={editingSub}
         categories={categories}
         existingGroups={[...new Set(subcategories.map(s => s.group).filter((g): g is string => !!g))]}
+        icons={icons}
         onSaved={handleClose}
       />
     </div>

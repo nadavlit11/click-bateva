@@ -35,6 +35,11 @@ export default function App() {
     [pois, selectedCategories, selectedSubcategories, searchQuery, subcategories]
   );
 
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    [categories]
+  );
+
   function handleCategoryToggle(id: string) {
     const isCurrentlySelected = selectedCategories.has(id);
     setSelectedCategories(prev => {
@@ -89,7 +94,7 @@ export default function App() {
     <div className="h-dvh w-screen flex overflow-hidden">
       <Sidebar
         className="hidden md:flex"
-        categories={categories}
+        categories={sortedCategories}
         subcategories={subcategories}
         selectedCategories={selectedCategories}
         selectedSubcategories={selectedSubcategories}
@@ -103,7 +108,8 @@ export default function App() {
       <main className="flex-1 h-full relative">
         <MapView
           pois={filteredPois}
-          categories={categories}
+          categories={sortedCategories}
+          subcategories={subcategories}
           selectedPoiId={selectedPoi?.id ?? null}
           onPoiClick={handlePoiClick}
           onMapClick={handleMapClick}
@@ -113,7 +119,7 @@ export default function App() {
           className="md:hidden absolute bottom-0 left-0 right-0 z-20"
           expanded={sheetExpanded}
           onExpandedChange={setSheetExpanded}
-          categories={categories}
+          categories={sortedCategories}
           subcategories={subcategories}
           selectedCategories={selectedCategories}
           selectedSubcategories={selectedSubcategories}
@@ -135,7 +141,7 @@ export default function App() {
           <Suspense fallback={null}>
             <PoiDetailPanel
               poi={selectedPoi}
-              category={categories.find(c => c.id === selectedPoi.categoryId)}
+              category={sortedCategories.find(c => c.id === selectedPoi.categoryId)}
               onClose={() => setSelectedPoi(null)}
             />
           </Suspense>

@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
-import type { Poi, Category, Subcategory, Business } from '../types/index.ts'
+import type { Poi, Category, Subcategory, Business, Icon } from '../types/index.ts'
 import { PoiDrawer } from '../components/PoiDrawer.tsx'
 
 export function PoisPage() {
@@ -18,6 +18,7 @@ export function PoisPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [businesses, setBusinesses] = useState<Business[]>([])
+  const [icons, setIcons] = useState<Icon[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingPoi, setEditingPoi] = useState<Poi | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -44,6 +45,10 @@ export function PoisPage() {
 
     getDocs(collection(db, 'businesses')).then(snap => {
       setBusinesses(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Business))
+    }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
+
+    getDocs(collection(db, 'icons')).then(snap => {
+      setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
     }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
   }, [])
 
@@ -192,6 +197,7 @@ export function PoisPage() {
         categories={categories}
         subcategories={subcategories}
         businesses={businesses}
+        icons={icons}
         onSaved={handleClose}
       />
     </div>

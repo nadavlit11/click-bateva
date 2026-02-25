@@ -17,6 +17,8 @@ export interface Poi {
   website: string
   categoryId: string
   subcategoryIds: string[] // category-scoped refinement IDs
+  iconId: string | null
+  iconUrl: string | null
   businessId: string | null
   active: boolean
   openingHours: Record<string, DayHours | null> | 'by_appointment' | null
@@ -34,6 +36,7 @@ export interface Category {
   color: string
   iconId: string | null
   iconUrl: string | null
+  order: number
   createdAt: unknown
   updatedAt: unknown
 }
@@ -43,6 +46,8 @@ export interface Subcategory {
   categoryId: string
   group: string | null   // e.g. "kashrut" | "price" | "audience" | null
   name: string
+  iconId: string | null
+  iconUrl: string | null
   createdAt: unknown
   updatedAt: unknown
 }

@@ -10,7 +10,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
-import type { Poi, Category, Subcategory, Business, DayHours } from '../types/index.ts'
+import type { Poi, Category, Subcategory, Business, DayHours, Icon } from '../types/index.ts'
 
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
 const DAY_NAMES_HE: Record<string, string> = {
@@ -27,6 +27,7 @@ interface Props {
   categories: Category[]
   subcategories: Subcategory[]
   businesses: Business[]
+  icons: Icon[]
   onSaved: () => void
 }
 
@@ -43,6 +44,7 @@ interface FormState {
   website: string
   categoryId: string
   selectedSubcategoryIds: string[]
+  iconId: string
   businessId: string
   active: boolean
   openingHours: Record<string, DayHours | null> | 'by_appointment'
@@ -65,6 +67,7 @@ const INITIAL_FORM: FormState = {
   website: '',
   categoryId: '',
   selectedSubcategoryIds: [],
+  iconId: '',
   businessId: '',
   active: true,
   openingHours: { ...EMPTY_HOURS },
@@ -74,7 +77,7 @@ const INITIAL_FORM: FormState = {
   facebook: '',
 }
 
-export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, businesses, onSaved }: Props) {
+export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, businesses, icons, onSaved }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -100,6 +103,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         website: poi.website,
         categoryId: poi.categoryId,
         selectedSubcategoryIds: [...(poi.subcategoryIds ?? [])],
+        iconId: poi.iconId ?? '',
         businessId: poi.businessId ?? '',
         active: poi.active,
         openingHours: poi.openingHours === 'by_appointment'
@@ -184,6 +188,17 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     setSaving(true)
     setError('')
     try {
+      let resolvedIconId: string | null = null
+      let resolvedIconUrl: string | null = null
+
+      if (form.iconId) {
+        const selectedIcon = icons.find(i => i.id === form.iconId)
+        if (selectedIcon) {
+          resolvedIconId = selectedIcon.id
+          resolvedIconUrl = await getDownloadURL(ref(storage, selectedIcon.path))
+        }
+      }
+
       const allImages = form.images.filter(Boolean)
       const data = {
         name: form.name.trim(),
@@ -198,6 +213,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         website: form.website.trim(),
         categoryId: form.categoryId,
         subcategoryIds: form.selectedSubcategoryIds,
+        iconId: resolvedIconId,
+        iconUrl: resolvedIconUrl,
         businessId: form.businessId.trim() || null,
         active: form.active,
         openingHours: form.openingHours === 'by_appointment'
@@ -728,6 +745,21 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 </div>
               )
             })()}
+
+            {/* Icon override */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">אייקון (דריסה)</label>
+              <select
+                value={form.iconId}
+                onChange={e => set('iconId', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
+              >
+                <option value="">ללא אייקון</option>
+                {icons.map(icon => (
+                  <option key={icon.id} value={icon.id}>{icon.name}</option>
+                ))}
+              </select>
+            </div>
 
             {/* Active */}
             <div>

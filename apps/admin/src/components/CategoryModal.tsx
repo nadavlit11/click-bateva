@@ -17,9 +17,10 @@ interface FormState {
   name: string
   color: string
   iconId: string
+  order: number
 }
 
-const INITIAL_FORM: FormState = { name: '', color: '#16a34a', iconId: '' }
+const INITIAL_FORM: FormState = { name: '', color: '#16a34a', iconId: '', order: 0 }
 
 export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
@@ -32,6 +33,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
         name: category.name,
         color: category.color,
         iconId: category.iconId ?? '',
+        order: category.order ?? 0,
       })
     } else {
       setForm(INITIAL_FORM)
@@ -66,6 +68,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
         color: form.color,
         iconId,
         iconUrl,
+        order: form.order,
         updatedAt: serverTimestamp(),
       }
 
@@ -145,6 +148,17 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
                 <option key={icon.id} value={icon.id}>{icon.name}</option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">סדר תצוגה</label>
+            <input
+              type="number"
+              value={form.order}
+              onChange={e => setForm(prev => ({ ...prev, order: parseInt(e.target.value, 10) || 0 }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              placeholder="0"
+            />
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}

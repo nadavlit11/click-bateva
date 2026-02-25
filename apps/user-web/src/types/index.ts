@@ -3,6 +3,7 @@ export interface Category {
   name: string;     // Hebrew e.g. "מסעדות"
   color: string;    // hex e.g. "#FF5733" — used for marker gradient
   iconUrl: string | null;
+  order: number;
 }
 
 export interface Subcategory {
@@ -10,6 +11,7 @@ export interface Subcategory {
   categoryId: string;    // which category this refinement belongs to
   group: string | null;  // e.g. "kashrut" | "price" | "audience" | null
   name: string;          // Hebrew e.g. "כשר", "זול"
+  iconUrl: string | null;
 }
 
 export interface DayHours {
@@ -36,4 +38,5 @@ export interface Poi {
   facebook: string | null;
   categoryId: string;
   subcategoryIds: string[]; // category-scoped refinement IDs
+  iconUrl: string | null;
 }

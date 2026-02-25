@@ -426,6 +426,32 @@ describe("points_of_interest collection", () => {
       );
     });
 
+    it("denies business_user from updating iconId/iconUrl (admin-only fields)", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "businesses", "biz-1"), {
+          name: "Test Business",
+          associatedUserIds: ["biz-user-uid"],
+        });
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-biz"),
+          ACTIVE_POI
+        );
+      });
+
+      const bizUser = env.authenticatedContext("biz-user-uid", {
+        role: "business_user",
+        businessRef: businessRefPath("biz-1"),
+      });
+      const db = bizUser.firestore();
+      await assertFails(
+        updateDoc(doc(db, "points_of_interest", "poi-biz"), {
+          iconId: "icon-123",
+          iconUrl: "https://example.com/icon.png",
+          updatedAt: serverTimestamp(),
+        })
+      );
+    });
+
     it("denies business_user from updating non-editable fields on their own POI", async () => {
       await env.withSecurityRulesDisabled(async (ctx) => {
         await setDoc(doc(ctx.firestore(), "businesses", "biz-1"), {
