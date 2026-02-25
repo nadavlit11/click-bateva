@@ -80,10 +80,15 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     if (!map) return;
     clusterer.current = new MarkerClusterer({
       map,
-      algorithm: new SuperClusterAlgorithm({ radius: 35, maxZoom: 14 }),
+      algorithm: new SuperClusterAlgorithm({ radius: 25, maxZoom: 14 }),
       onClusterClick: (_event, cluster, map) => {
         const currentZoom = map.getZoom() ?? 8;
-        map.panTo(cluster.position);
+        // Use bounds center (geographic center of actual markers) — more
+        // accurate than cluster.position (weighted centroid) at low zoom.
+        const center = cluster.bounds
+          ? cluster.bounds.getCenter()
+          : cluster.position;
+        map.panTo(center);
         map.setZoom(currentZoom + 3);
       },
       renderer: {
