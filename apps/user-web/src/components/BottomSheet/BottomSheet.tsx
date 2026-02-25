@@ -21,7 +21,7 @@ interface BottomSheetProps {
 
 export function BottomSheet({
   categories,
-  subcategories,
+  subcategories: _subcategories,
   selectedCategories,
   selectedSubcategories,
   filteredCount,
