@@ -13,6 +13,7 @@
     "test:mutate": "stryker run"
   },
   "dependencies": {
+    "@googlemaps/markerclusterer": "^2.6.2",
     "@sentry/react": "^10.39.0",
     "@vis.gl/react-google-maps": "^1.7.1",
     "firebase": "^12.9.0",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import type { Poi } from "../../types";
 
@@ -7,11 +7,17 @@ interface PoiMarkerProps {
   color: string;
   iconUrl: string | null;
   selected: boolean;
+  showLabel: boolean;
   onClick: () => void;
+  setMarkerRef: (marker: google.maps.marker.AdvancedMarkerElement | null, key: string) => void;
 }
 
-export function PoiMarker({ poi, color, iconUrl, selected, onClick }: PoiMarkerProps) {
+export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, setMarkerRef }: PoiMarkerProps) {
   const [hovered, setHovered] = useState(false);
+  const ref = useCallback(
+    (marker: google.maps.marker.AdvancedMarkerElement | null) => setMarkerRef(marker, poi.id),
+    [setMarkerRef, poi.id]
+  );
 
   const boxShadow = selected
     ? `0 0 0 3px white, 0 0 0 5px ${color}, 0 4px 12px rgba(0,0,0,0.25)`
@@ -20,7 +26,7 @@ export function PoiMarker({ poi, color, iconUrl, selected, onClick }: PoiMarkerP
       : "0 3px 10px rgba(0,0,0,0.25)";
 
   return (
-    <AdvancedMarker position={poi.location} onClick={onClick} zIndex={selected ? 10 : 1}>
+    <AdvancedMarker position={poi.location} onClick={onClick} zIndex={selected ? 10 : 1} ref={ref}>
       <div
         style={{
           display: "flex",
@@ -64,22 +70,24 @@ export function PoiMarker({ poi, color, iconUrl, selected, onClick }: PoiMarkerP
           )}
         </div>
 
-        {/* Name label */}
-        <div
-          style={{
-            marginTop: 6,
-            background: "white",
-            borderRadius: 999,
-            padding: "2px 9px",
-            fontSize: 11,
-            fontWeight: 500,
-            whiteSpace: "nowrap",
-            boxShadow: "0 1px 6px rgba(0,0,0,0.18)",
-            color: "#374151",
-          }}
-        >
-          {poi.name}
-        </div>
+        {/* Name label — only at high zoom */}
+        {showLabel && (
+          <div
+            style={{
+              marginTop: 6,
+              background: "white",
+              borderRadius: 999,
+              padding: "2px 9px",
+              fontSize: 11,
+              fontWeight: 500,
+              whiteSpace: "nowrap",
+              boxShadow: "0 1px 6px rgba(0,0,0,0.18)",
+              color: "#374151",
+            }}
+          >
+            {poi.name}
+          </div>
+        )}
       </div>
     </AdvancedMarker>
   );
