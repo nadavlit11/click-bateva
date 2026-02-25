@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { APIProvider, Map, useMap } from "@vis.gl/react-google-maps";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import { MarkerClusterer, SuperClusterAlgorithm } from "@googlemaps/markerclusterer";
 import type { Marker } from "@googlemaps/markerclusterer";
 import { PoiMarker } from "./PoiMarker";
 import type { Poi, Category, Subcategory } from "../../types";
@@ -80,6 +80,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     if (!map) return;
     clusterer.current = new MarkerClusterer({
       map,
+      algorithm: new SuperClusterAlgorithm({ radius: 35, maxZoom: 14 }),
       renderer: {
         render({ count, position }) {
           const size = Math.min(24 + Math.floor(count / 5) * 2, 48);
