@@ -13,6 +13,7 @@ export function BusinessesPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingBusiness, setEditingBusiness] = useState<Business | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -44,11 +45,18 @@ export function BusinessesPage() {
   }
 
   function openAdd() {
+    setEditingBusiness(null)
+    setModalOpen(true)
+  }
+
+  function openEdit(business: Business) {
+    setEditingBusiness(business)
     setModalOpen(true)
   }
 
   function handleClose() {
     setModalOpen(false)
+    setEditingBusiness(null)
   }
 
   return (
@@ -90,13 +98,21 @@ export function BusinessesPage() {
                   <td className="px-4 py-3 font-medium text-gray-900">{business.name}</td>
                   <td className="px-4 py-3 text-gray-600">{business.email}</td>
                   <td className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleDelete(business)}
-                      disabled={deletingId === business.id}
-                      className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-40"
-                    >
-                      {deletingId === business.id ? '...' : 'מחק'}
-                    </button>
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        onClick={() => openEdit(business)}
+                        className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      >
+                        עריכה
+                      </button>
+                      <button
+                        onClick={() => handleDelete(business)}
+                        disabled={deletingId === business.id}
+                        className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-40"
+                      >
+                        {deletingId === business.id ? '...' : 'מחק'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -109,6 +125,7 @@ export function BusinessesPage() {
         isOpen={modalOpen}
         onClose={handleClose}
         onSaved={handleClose}
+        business={editingBusiness}
       />
     </div>
   )

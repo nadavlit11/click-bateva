@@ -38,8 +38,9 @@ service cloud.firestore {
                      isAdminOrContentManager() ||
                      (isBusinessUser() && resource.data.businessId == request.auth.uid);
 
-      // Admin and content managers can create and delete
-      allow create, delete: if isAdminOrContentManager();
+      // Admin and content managers can create; only admin can delete
+      allow create: if isAdminOrContentManager();
+      allow delete: if isAdmin();
 
       // Admin and content managers can update anything;
       // Business users can only update their own POIs and only allowed fields

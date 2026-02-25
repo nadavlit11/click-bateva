@@ -12,8 +12,10 @@ import { db } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import type { Poi, Category, Subcategory, Business, Icon } from '../types/index.ts'
 import { PoiDrawer } from '../components/PoiDrawer.tsx'
+import { useUserRole } from '../hooks/useUserRole.ts'
 
 export function PoisPage() {
+  const role = useUserRole()
   const [pois, setPois] = useState<Poi[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
@@ -176,12 +178,14 @@ export function PoisPage() {
                     >
                       עריכה
                     </button>
-                    <button
-                      onClick={() => handleDelete(poi.id).catch(err => reportError(err, { source: 'PoisPage.delete' }))}
-                      className="text-red-500 hover:text-red-700 text-xs font-medium"
-                    >
-                      מחיקה
-                    </button>
+                    {role !== 'content_manager' && (
+                      <button
+                        onClick={() => handleDelete(poi.id).catch(err => reportError(err, { source: 'PoisPage.delete' }))}
+                        className="text-red-500 hover:text-red-700 text-xs font-medium"
+                      >
+                        מחיקה
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

@@ -2,18 +2,22 @@ import { NavLink } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
+import { useUserRole } from '../../hooks/useUserRole.ts'
 
 const NAV = [
-  { path: '/',            label: 'לוח בקרה',      end: true },
-  { path: '/pois',        label: 'נקודות עניין',  end: false },
-  { path: '/categories',  label: 'קטגוריות',      end: false },
-  { path: '/subcategories',  label: 'תת-קטגוריות',   end: false },
-  { path: '/icons',       label: 'אייקונים',      end: false },
-  { path: '/businesses',  label: 'עסקים',         end: false },
-  { path: '/analytics',  label: 'אנליטיקס',      end: true },
+  { path: '/',            label: 'לוח בקרה',      end: true,  adminOnly: false },
+  { path: '/pois',        label: 'נקודות עניין',  end: false, adminOnly: false },
+  { path: '/categories',  label: 'קטגוריות',      end: false, adminOnly: false },
+  { path: '/subcategories',  label: 'תת-קטגוריות',   end: false, adminOnly: false },
+  { path: '/icons',       label: 'אייקונים',      end: false, adminOnly: false },
+  { path: '/businesses',  label: 'עסקים',         end: false, adminOnly: true },
+  { path: '/users',       label: 'מנהלי תוכן',   end: false, adminOnly: true },
+  { path: '/analytics',  label: 'אנליטיקס',      end: true,  adminOnly: false },
 ]
 
 export function Sidebar() {
+  const role = useUserRole()
+
   return (
     <aside className="w-64 bg-white border-s border-gray-200 flex flex-col h-full shrink-0">
       <div className="p-6 border-b border-gray-200">
@@ -22,7 +26,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5">
-        {NAV.map(item => (
+        {NAV.filter(item => !item.adminOnly || role === 'admin').map(item => (
           <NavLink
             key={item.path}
             to={item.path}

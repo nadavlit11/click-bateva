@@ -530,6 +530,51 @@ describe("points_of_interest collection", () => {
       );
     });
   });
+
+  describe("DELETE", () => {
+    it("allows admin to delete a POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "points_of_interest", "poi-del"), ACTIVE_POI);
+      });
+
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertSucceeds(deleteDoc(doc(db, "points_of_interest", "poi-del")));
+    });
+
+    it("denies content_manager from deleting a POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "points_of_interest", "poi-del"), ACTIVE_POI);
+      });
+
+      const cm = env.authenticatedContext("cm-uid", { role: "content_manager" });
+      const db = cm.firestore();
+      await assertFails(deleteDoc(doc(db, "points_of_interest", "poi-del")));
+    });
+
+    it("denies business_user from deleting a POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "points_of_interest", "poi-del"), ACTIVE_POI);
+      });
+
+      const bizUser = env.authenticatedContext("biz-uid", {
+        role: "business_user",
+        businessRef: "/databases/(default)/documents/businesses/biz-1",
+      });
+      const db = bizUser.firestore();
+      await assertFails(deleteDoc(doc(db, "points_of_interest", "poi-del")));
+    });
+
+    it("denies unauthenticated user from deleting a POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "points_of_interest", "poi-del"), ACTIVE_POI);
+      });
+
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(deleteDoc(doc(db, "points_of_interest", "poi-del")));
+    });
+  });
 });
 
 // ── businesses collection ─────────────────────────────────────────────────────

@@ -10,3 +10,4 @@ setGlobalOptions({maxInstances: 10});
 
 export {onUserCreated, setUserRole} from "./auth.js";
 export {createBusinessUser, deleteBusinessUser} from "./business.js";
+export {deleteContentManager, blockContentManager} from "./users.js";

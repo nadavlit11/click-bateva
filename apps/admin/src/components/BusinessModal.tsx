@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '../lib/firebase.ts'
+import { updateDoc, doc, serverTimestamp } from 'firebase/firestore'
+import { db, functions } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
+import type { Business } from '../types/index.ts'
 
 interface Props {
   isOpen: boolean
   onClose: () => void
   onSaved: () => void
+  business: Business | null
 }
 
 interface CreateBusinessUserData {
@@ -30,51 +33,72 @@ function mapError(code: string): string {
   }
 }
 
-export function BusinessModal({ isOpen, onClose, onSaved }: Props) {
+export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  const isEdit = business !== null
+
   useEffect(() => {
     if (isOpen) {
-      setName('')
-      setEmail('')
+      setName(business?.name ?? '')
+      setEmail(business?.email ?? '')
       setPassword('')
       setError('')
     }
-  }, [isOpen])
+  }, [isOpen, business])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!name.trim()) { setError('שם העסק הוא שדה חובה'); return }
     if (!email.trim()) { setError('האימייל הוא שדה חובה'); return }
-    if (password.length < 6) { setError('הסיסמה חייבת להכיל לפחות 6 תווים'); return }
+    if (!isEdit && password.length < 6) { setError('הסיסמה חייבת להכיל לפחות 6 תווים'); return }
 
     setSaving(true)
     setError('')
 
     try {
-      const createBusinessUser = httpsCallable<CreateBusinessUserData, CreateBusinessUserResult>(
-        functions,
-        'createBusinessUser'
-      )
-      await createBusinessUser({ name: name.trim(), email: email.trim(), password })
-      alert('העסק נוצר בהצלחה')
-      onSaved()
+      if (isEdit) {
+        await updateDoc(doc(db, 'businesses', business.id), {
+          name: name.trim(),
+          email: email.trim(),
+          updatedAt: serverTimestamp(),
+        })
+        await updateDoc(doc(db, 'users', business.id), {
+          email: email.trim(),
+          updatedAt: serverTimestamp(),
+        })
+        alert('העסק עודכן בהצלחה')
+        onSaved()
+      } else {
+        const createBusinessUser = httpsCallable<CreateBusinessUserData, CreateBusinessUserResult>(
+          functions,
+          'createBusinessUser'
+        )
+        await createBusinessUser({ name: name.trim(), email: email.trim(), password })
+        alert('העסק נוצר בהצלחה')
+        onSaved()
+      }
     } catch (err: unknown) {
-      const firebaseError = err as { code?: string; message?: string }
-      const code = firebaseError.code ?? ''
-      // Cloud Functions wrap the error code under functions/... prefix; strip it
-      const strippedCode = code.replace(/^functions\//, '')
-      // The actual auth error code may be in the message
-      const message = firebaseError.message ?? ''
-      const authCodeMatch = message.match(/\(([^)]+)\)/)
-      const authCode = authCodeMatch ? authCodeMatch[1] : strippedCode
-      setError(mapError(authCode))
-      reportError(err, { source: 'BusinessModal.create' })
+      if (isEdit) {
+        setError('שגיאה בעדכון העסק. נסה שנית.')
+        reportError(err, { source: 'BusinessModal.edit' })
+      } else {
+        const firebaseError = err as { code?: string; message?: string }
+        const code = firebaseError.code ?? ''
+        // Cloud Functions wrap the error code under functions/... prefix; strip it
+        const strippedCode = code.replace(/^functions\//, '')
+        // The actual auth error code may be in the message
+        const message = firebaseError.message ?? ''
+        const authCodeMatch = message.match(/\(([^)]+)\)/)
+        const authCode = authCodeMatch ? authCodeMatch[1] : strippedCode
+        setError(mapError(authCode))
+        reportError(err, { source: 'BusinessModal.create' })
+      }
     } finally {
       setSaving(false)
     }
@@ -88,7 +112,7 @@ export function BusinessModal({ isOpen, onClose, onSaved }: Props) {
 
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-gray-900">הוספת עסק</h2>
+          <h2 className="text-base font-semibold text-gray-900">{isEdit ? 'עריכת עסק' : 'הוספת עסק'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">
             ✕
           </button>
@@ -119,17 +143,19 @@ export function BusinessModal({ isOpen, onClose, onSaved }: Props) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">סיסמה *</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-              placeholder="לפחות 6 תווים"
-              dir="ltr"
-            />
-          </div>
+          {!isEdit && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">סיסמה *</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                placeholder="לפחות 6 תווים"
+                dir="ltr"
+              />
+            </div>
+          )}
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
@@ -139,7 +165,7 @@ export function BusinessModal({ isOpen, onClose, onSaved }: Props) {
               disabled={saving}
               className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
             >
-              {saving ? 'יוצר...' : 'יצירה'}
+              {saving ? (isEdit ? 'שומר...' : 'יוצר...') : (isEdit ? 'שמירה' : 'יצירה')}
             </button>
             <button
               type="button"
