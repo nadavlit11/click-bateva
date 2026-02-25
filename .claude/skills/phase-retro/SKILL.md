@@ -12,6 +12,7 @@ While the details are fresh, ask:
 - Did anything go wrong or require an unexpected fix?
 - Is there a gotcha worth adding to an existing skill?
 - Did a checklist step turn out to be wrong or incomplete?
+- Could we create or update something (a skill, memory entry, codebase-map page, utility) that would make a similar task faster next time?
 
 If yes → update the relevant skill file now. No commit needed yet.
 
@@ -44,7 +45,15 @@ Worth creating if:
 - A common mistake needs a checklist to prevent it
 - A deploy/test workflow has specific steps worth encoding
 
-### 4. Update codebase-map
+### 4. Look for future investments
+
+Beyond new skills, think broadly: memory entries, codebase-map pages, shared utilities, test helpers, deploy scripts, documentation.
+
+The question: **"If a new conversation started this exact phase from scratch, what would have saved the most ramp-up time or prevented the most friction?"**
+
+If something comes to mind → create or update it now as part of this retro.
+
+### 5. Update codebase-map
 
 Review the `/codebase-map` sub-pages (`.claude/skills/codebase-map/*.md`) for the areas touched during this phase:
 - Update key file lists if files were added, renamed, or removed
@@ -52,7 +61,7 @@ Review the `/codebase-map` sub-pages (`.claude/skills/codebase-map/*.md`) for th
 - Add new patterns or gotchas discovered during this phase
 - Remove outdated information
 
-### 5. Check for missing LLD docs
+### 6. Check for missing LLD docs
 
 Was an LLD doc created for any new app or major feature area built this phase?
 - `docs/lld-user-web.md` — user-facing map app ✅
@@ -61,7 +70,7 @@ Was an LLD doc created for any new app or major feature area built this phase?
 
 **If an LLD was skipped:** create it now (post-hoc is better than never), then add a reminder that next time, LLDs should be written **at the end of planning, before implementation starts**.
 
-### 6. Commit everything
+### 7. Commit everything
 
 ```bash
 git add .claude/skills/ docs/

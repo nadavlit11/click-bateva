@@ -55,7 +55,22 @@ Run the `/code-review` skill on the bug fix diff before committing. Do not skip 
 
 ---
 
-## Step 5 — Run relevant tests
+## Step 5 — Look for a future investment
+
+Ask: is there something we could create or update **now** that would have made this bug faster to find or fix next time?
+
+Examples:
+- A new skill or checklist
+- A memory entry capturing a gotcha
+- A codebase-map update clarifying a confusing area
+- A helper utility, test pattern, or better logging
+
+If yes → do it as part of this retro and include the files in the commit.
+If nothing comes to mind, move on — not every bug warrants an investment.
+
+---
+
+## Step 6 — Run relevant tests
 
 ```bash
 # Cloud Function changes:
@@ -72,7 +87,7 @@ Run whichever test suite covers the changed code. All tests must pass before com
 
 ---
 
-## Step 6 — Commit (fix + lesson together)
+## Step 7 — Commit (fix + lesson together)
 
 ```bash
 # Stage the fix files + the updated code-review skill
@@ -91,4 +106,5 @@ chore: encode bug lesson — <one-line summary of the rule added>"
 - [ ] Code-review skill run on the fix — all subagents PASS
 - [ ] Relevant tests run and passing
 - [ ] Concrete rule added to the right code-review subagent
+- [ ] Considered future investment opportunity
 - [ ] Committed
