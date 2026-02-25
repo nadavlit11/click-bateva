@@ -26,6 +26,7 @@ export interface Poi {
   images: string[];       // ordered image URLs; empty = show placeholder
   videos: string[];       // external video URLs (YouTube etc.)
   phone: string | null;
+  whatsapp: string | null;
   email: string | null;
   website: string | null; // domain only e.g. "www.example.co.il"
   openingHours: Record<string, DayHours | null> | string | null; // structured or legacy string

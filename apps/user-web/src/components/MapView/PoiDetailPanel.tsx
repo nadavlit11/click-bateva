@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import type { Poi, Category, DayHours } from "../../types";
 import { lighten } from "../../lib/colorUtils";
 import { DAY_KEYS, DAY_NAMES_HE, getOpeningStatusText } from "../../lib/openingStatus";
+import { renderBoldText } from "../../lib/renderBoldText";
 
 interface PoiDetailPanelProps {
   poi: Poi;
@@ -59,8 +60,8 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
 
   // WhatsApp: normalize Israeli phone — strip non-digits, replace leading 0 with 972
   const whatsappHref = (() => {
-    if (!poi.phone) return null;
-    const digits = poi.phone.replace(/\D/g, "");
+    if (!poi.whatsapp) return null;
+    const digits = poi.whatsapp.replace(/\D/g, "");
     const normalized = digits.startsWith("0") ? "972" + digits.slice(1) : digits;
     return `https://wa.me/${normalized}?text=${encodeURIComponent("שלום, הגעתי אליכם דרך מפת קליק בטבע")}`;
   })();
@@ -201,7 +202,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
             <p
               className={`text-sm text-gray-500 leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}
             >
-              {poi.description}
+              {renderBoldText(poi.description)}
             </p>
             {poi.description.length > 120 && (
               <button

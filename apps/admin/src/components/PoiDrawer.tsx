@@ -38,6 +38,7 @@ interface FormState {
   images: string[]
   videos: string[]
   phone: string
+  whatsapp: string
   email: string
   website: string
   categoryId: string
@@ -59,6 +60,7 @@ const INITIAL_FORM: FormState = {
   images: [],
   videos: [],
   phone: '',
+  whatsapp: '',
   email: '',
   website: '',
   categoryId: '',
@@ -81,6 +83,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
   const [businessSearch, setBusinessSearch] = useState('')
 
   const imagesRef = useRef<HTMLInputElement>(null)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (poi) {
@@ -92,6 +95,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         images: [poi.mainImage, ...poi.images].filter(Boolean),
         videos: [...poi.videos],
         phone: poi.phone,
+        whatsapp: poi.whatsapp ?? '',
         email: poi.email,
         website: poi.website,
         categoryId: poi.categoryId,
@@ -172,6 +176,10 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     e.preventDefault()
     if (!form.name.trim()) { setError('שם הנקודה הוא שדה חובה'); return }
     if (!form.categoryId) { setError('יש לבחור קטגוריה'); return }
+    if (!form.phone.trim()) { setError('טלפון הוא שדה חובה'); return }
+    if (!form.whatsapp.trim()) { setError('וואטסאפ הוא שדה חובה'); return }
+    if (!form.description.trim()) { setError('תיאור הוא שדה חובה'); return }
+    if (form.images.length === 0) { setError('יש להעלות לפחות תמונה אחת'); return }
 
     setSaving(true)
     setError('')
@@ -185,6 +193,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         images: allImages.slice(1),
         videos: form.videos.filter(Boolean),
         phone: form.phone.trim(),
+        whatsapp: form.whatsapp.trim() || null,
         email: form.email.trim(),
         website: form.website.trim(),
         categoryId: form.categoryId,
@@ -253,23 +262,23 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">שם *</label>
+              <label className="block text-sm font-medium text-red-600 mb-1">שם *</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={e => set('name', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-green-50/30"
                 placeholder="שם הנקודה"
               />
             </div>
 
             {/* Category */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">קטגוריה *</label>
+              <label className="block text-sm font-medium text-red-600 mb-1">קטגוריה *</label>
               <select
                 value={form.categoryId}
                 onChange={e => setForm(prev => ({ ...prev, categoryId: e.target.value, selectedSubcategoryIds: [] }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
+                className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-green-50/30"
               >
                 <option value="">בחר קטגוריה</option>
                 {categories.map(cat => (
@@ -317,12 +326,39 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">תיאור</label>
+              <label className="block text-sm font-medium text-red-600 mb-1">תיאור *</label>
+              <div className="flex gap-1 mb-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const textarea = descriptionRef.current
+                    if (!textarea) return
+                    const start = textarea.selectionStart
+                    const end = textarea.selectionEnd
+                    const text = form.description
+                    const before = text.slice(0, start)
+                    const selected = text.slice(start, end)
+                    const after = text.slice(end)
+                    const newText = selected ? `${before}**${selected}**${after}` : `${before}****${after}`
+                    set('description', newText)
+                    requestAnimationFrame(() => {
+                      textarea.focus()
+                      const cursorPos = selected ? end + 4 : start + 2
+                      textarea.setSelectionRange(cursorPos, cursorPos)
+                    })
+                  }}
+                  className="px-2 py-0.5 text-xs font-bold border border-gray-300 rounded hover:bg-gray-100"
+                  title="הדגש טקסט נבחר"
+                >
+                  B
+                </button>
+              </div>
               <textarea
+                ref={descriptionRef}
                 value={form.description}
                 onChange={e => set('description', e.target.value)}
                 rows={3}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 resize-none"
+                className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 resize-none bg-green-50/30"
                 placeholder="תיאור קצר"
               />
             </div>
@@ -339,7 +375,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* Images */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">תמונות</label>
+              <label className="block text-sm font-medium text-red-600 mb-1">תמונות *</label>
               <input
                 ref={imagesRef}
                 type="file"
@@ -598,13 +634,25 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">טלפון</label>
+              <label className="block text-sm font-medium text-red-600 mb-1">טלפון *</label>
               <input
                 type="tel"
                 value={form.phone}
                 onChange={e => set('phone', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-green-50/30"
                 placeholder="03-000-0000"
+              />
+            </div>
+
+            {/* WhatsApp */}
+            <div>
+              <label className="block text-sm font-medium text-red-600 mb-1">וואטסאפ *</label>
+              <input
+                type="tel"
+                value={form.whatsapp}
+                onChange={e => set('whatsapp', e.target.value)}
+                className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-green-50/30"
+                placeholder="050-000-0000"
               />
             </div>
 

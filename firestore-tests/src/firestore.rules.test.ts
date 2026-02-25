@@ -401,6 +401,31 @@ describe("points_of_interest collection", () => {
       );
     });
 
+    it("allows business_user to update whatsapp field on their own POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "businesses", "biz-1"), {
+          name: "Test Business",
+          associatedUserIds: ["biz-user-uid"],
+        });
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-biz"),
+          ACTIVE_POI
+        );
+      });
+
+      const bizUser = env.authenticatedContext("biz-user-uid", {
+        role: "business_user",
+        businessRef: businessRefPath("biz-1"),
+      });
+      const db = bizUser.firestore();
+      await assertSucceeds(
+        updateDoc(doc(db, "points_of_interest", "poi-biz"), {
+          whatsapp: "972-50-1234567",
+          updatedAt: serverTimestamp(),
+        })
+      );
+    });
+
     it("denies business_user from updating non-editable fields on their own POI", async () => {
       await env.withSecurityRulesDisabled(async (ctx) => {
         await setDoc(doc(ctx.firestore(), "businesses", "biz-1"), {

@@ -12,6 +12,7 @@ export interface Poi {
   images: string[]
   videos: string[]
   phone: string
+  whatsapp: string
   email: string
   website: string
   categoryId: string

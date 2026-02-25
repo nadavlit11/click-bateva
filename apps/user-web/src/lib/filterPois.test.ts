@@ -10,6 +10,7 @@ const mkPoi = (overrides: Partial<Poi> & Pick<Poi, "id" | "categoryId">): Poi =>
   images: [],
   videos: [],
   phone: null,
+  whatsapp: null,
   email: null,
   website: null,
   openingHours: null,

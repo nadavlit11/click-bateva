@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
@@ -23,12 +23,14 @@ export function PoiEditPage() {
   const [error, setError] = useState('')
   const [uploadingMainImage, setUploadingMainImage] = useState(false)
   const mainImageRef = useRef<HTMLInputElement>(null)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const [form, setForm] = useState<PoiEditableFields>({
     mainImage: '',
     description: '',
     images: [],
     videos: [],
     phone: '',
+    whatsapp: '',
     email: '',
     website: '',
     kashrutCertUrl: '',
@@ -49,6 +51,7 @@ export function PoiEditPage() {
           images: data.images,
           videos: data.videos,
           phone: data.phone,
+          whatsapp: data.whatsapp ?? '',
           email: data.email,
           website: data.website,
           kashrutCertUrl: data.kashrutCertUrl ?? '',
@@ -103,6 +106,22 @@ export function PoiEditPage() {
       setError('שגיאה בהעלאת קובץ')
     }
   }
+
+  const insertBold = useCallback(() => {
+    const ta = descriptionRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const text = form.description
+    const selected = text.slice(start, end)
+    const updated = text.slice(0, start) + '**' + selected + '**' + text.slice(end)
+    setForm(prev => ({ ...prev, description: updated }))
+    requestAnimationFrame(() => {
+      ta.focus()
+      ta.selectionStart = start + 2
+      ta.selectionEnd = end + 2
+    })
+  }, [form.description])
 
   async function handleSave() {
     if (!poiId) return
@@ -215,7 +234,18 @@ export function PoiEditPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">תיאור</label>
+          <div className="flex gap-1 mb-1">
+            <button
+              type="button"
+              onClick={insertBold}
+              className="px-2 py-1 text-xs font-bold border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+              title="הדגשה (Bold)"
+            >
+              B
+            </button>
+          </div>
           <textarea
+            ref={descriptionRef}
             value={form.description}
             onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
             rows={4}
@@ -229,6 +259,18 @@ export function PoiEditPage() {
             value={form.phone}
             onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            dir="ltr"
+          />
+        </div>
+        {/* WhatsApp */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">וואטסאפ</label>
+          <input
+            type="tel"
+            value={form.whatsapp}
+            onChange={e => setForm(prev => ({ ...prev, whatsapp: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            placeholder="050-000-0000"
             dir="ltr"
           />
         </div>

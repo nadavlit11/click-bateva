@@ -13,6 +13,7 @@ export interface Poi {
   images: string[]          // ordered URLs
   videos: string[]          // video URLs
   phone: string             // '' means no phone
+  whatsapp: string          // '' means no whatsapp
   email: string
   website: string           // '' means no website (domain only)
   categoryId: string
@@ -35,6 +36,7 @@ export interface PoiEditableFields {
   images: string[]          // ordered URLs after upload
   videos: string[]          // video URLs
   phone: string
+  whatsapp: string          // '' means no whatsapp
   email: string
   website: string
   kashrutCertUrl: string    // '' means no certificate
