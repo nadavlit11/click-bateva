@@ -81,6 +81,11 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     clusterer.current = new MarkerClusterer({
       map,
       algorithm: new SuperClusterAlgorithm({ radius: 35, maxZoom: 14 }),
+      onClusterClick: (_event, cluster, map) => {
+        const currentZoom = map.getZoom() ?? 8;
+        map.panTo(cluster.position);
+        map.setZoom(currentZoom + 3);
+      },
       renderer: {
         render({ count, position }) {
           const size = Math.min(24 + Math.floor(count / 5) * 2, 48);
