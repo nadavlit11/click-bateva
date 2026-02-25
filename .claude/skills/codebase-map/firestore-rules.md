@@ -4,7 +4,7 @@
 
 - `firestore.rules` — all security rules (root of monorepo)
 - `storage.rules` — Cloud Storage rules (root of monorepo)
-- `firestore-tests/src/firestore.rules.test.ts` — 40+ integration tests (Jest + emulator)
+- `firestore-tests/src/firestore.rules.test.ts` — 50 integration tests (Jest + emulator)
 - `firestore-tests/package.json` — standalone package with `@firebase/rules-unit-testing`
 - `firestore-tests/jest.config.js` — test config
 
@@ -16,7 +16,7 @@ Helper functions: isSignedIn, userRole, isAdmin, isContentManager, isAdminOrCont
 points_of_interest/{poiId}
   read:   active == true OR admin/cm OR (business_user && businessId == uid)
   create: admin/cm
-  delete: admin/cm
+  delete: admin ONLY (content managers CANNOT delete)
   update: admin/cm OR (business_user && in associatedUserIds && affectedKeys allowlist)
 
 clicks/{clickId}
@@ -52,6 +52,8 @@ users/{userId}
 - After modifying rules, MUST deploy: `firebase deploy --only firestore:rules`
 - A rule written in the file but not deployed silently blocks all reads/writes
 - clicks documents require EXACTLY `poiId`, `categoryId`, `timestamp` — no extra fields allowed
+- POI delete is admin-only (split from create rule). Content managers can create but NOT delete POIs.
+- Business user POI update allowlist includes: `whatsapp`, `iconId`, `iconUrl` (added in UI/UX batch)
 
 ## Running Tests
 

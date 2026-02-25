@@ -5,7 +5,9 @@
 - `functions/src/index.ts` — exports all functions; Sentry init; `setGlobalOptions({ maxInstances: 10 })`
 - `functions/src/auth.ts` — `onUserCreated` (v1 auth trigger) + `setUserRole` (v2 callable)
 - `functions/src/business.ts` — `createBusinessUser` + `deleteBusinessUser` (v2 callables)
+- `functions/src/users.ts` — `deleteContentManager` + `blockContentManager` (v2 callables, admin-only)
 - `functions/src/__tests__/auth.unit.test.ts` — unit tests for auth functions (no emulator)
+- `functions/src/__tests__/users.unit.test.ts` — unit tests for user management functions
 - `tests/integration/auth-functions.test.ts` — integration tests (emulator required)
 - `functions/stryker.config.json` — mutation testing config for `auth.ts`
 
@@ -17,6 +19,8 @@
 | `setUserRole` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `createBusinessUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `deleteBusinessUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
+| `deleteContentManager` | v2 `onCall({ cors: true })` | Admin callable | admin only |
+| `blockContentManager` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 
 ## Data Flow
 
@@ -40,6 +44,16 @@ createBusinessUser (v2 callable)
 deleteBusinessUser (v2 callable)
   ├─ Deletes Firebase Auth user (tolerates auth/user-not-found)
   └─ Batch deletes: users/ doc + businesses/ doc
+
+deleteContentManager (v2 callable)
+  ├─ Validates caller is admin + target has content_manager role
+  ├─ Deletes Firebase Auth user (tolerates auth/user-not-found)
+  └─ Deletes users/ doc
+
+blockContentManager (v2 callable)
+  ├─ Validates caller is admin + target has content_manager role
+  ├─ Sets auth user disabled: true (tolerates already-disabled)
+  └─ Updates users/ doc with blocked: true
 ```
 
 ## Patterns & Conventions
@@ -57,3 +71,6 @@ deleteBusinessUser (v2 callable)
 - `createBusinessUser` sets claims BEFORE `onUserCreated` fires, but there's a race — the guard in `onUserCreated` handles it
 - Test runner: Jest (NOT Vitest) — `functions/jest.config.unit.js` for unit tests
 - Mutation testing score is 69% (infra/logger lines are expected survivors)
+- **MUST run `npm run build` before deploying new functions** — `firebase deploy` reads compiled JS, not TS. New exports in `index.ts` are silently skipped if JS is stale.
+- `deleteContentManager`/`blockContentManager` validate target user has `content_manager` role before acting
+- All 22 function unit tests must pass before deploy: `cd functions && npm test`

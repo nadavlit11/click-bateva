@@ -63,6 +63,9 @@ Prompt:
 > - When adding a new field to `PoiEditableFields` (business-editable fields), the `firestore.rules` `affectedKeys().hasOnly(...)` allowlist for `points_of_interest` updates MUST also be updated to include the new field. Without this, business-user saves silently fail with permission-denied.
 > - When saving new optional fields to Firestore, use `.trim() || null` (not just `.trim()`) to avoid writing empty strings. Follow the same pattern used by `price`.
 > - Hardcoded category IDs must match actual Firestore document IDs (from WordPress import), NOT old mock data. Real IDs: `accommodation`, `food`, `offroad`, `attractions`, `wineries`, `water`, `venues`, `shows`, `hiking`. Common mistake: using `'restaurants'` (old mock) instead of `'food'` (real).
+> - After adding new Cloud Functions exports to `functions/src/index.ts`, you MUST run `cd functions && npm run build` before `firebase deploy --only functions` — otherwise the deploy silently skips new functions (only sees the stale compiled JS).
+> - Admin app role-based UI gating uses the `useUserRole()` hook (`apps/admin/src/hooks/useUserRole.ts`). When adding admin-only UI (nav links, buttons, pages), check that the `useUserRole()` hook gates visibility rather than relying solely on route-level auth.
+> - Firestore security rules: `allow create` and `allow delete` should be SEPARATE rules when they have different permission levels (e.g., create: admin/CM, delete: admin only). Never combine them in a single `allow create, delete` if the permissions differ.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >
@@ -102,6 +105,9 @@ Prompt:
 > - After a refactor that removes intermediate variable aliases (e.g., `effectiveFoo = foo`), do a replace_all to update all consumers. Dead aliases left behind cause TS errors when the alias is later deleted.
 > - Absolute-positioned action buttons (delete/remove) within a repeated list of items must use the same corner (`top-1 right-1` or `top-1 left-1`) across all items. Mixing corners for the same action in the same component is a visual inconsistency bug.
 > - Text parsers that split on a delimiter (e.g. `split("**")`) must handle unmatched/odd delimiters gracefully. When `split` produces an even-length array (odd number of delimiters = unclosed pair), return the raw text instead of applying formatting — otherwise everything after the stray delimiter gets incorrectly formatted.
+> - When the same pure utility (validation, formatting, constants) is used by 2+ components in the same app, extract it to `lib/` immediately. Don't duplicate `getStrength`/`isPasswordValid`-style functions across multiple component files within one app — the copies drift. Cross-app duplication (admin vs business) is acceptable since they're independent deployments.
+> - `setTimeout` in React components that trigger state updates (e.g., auto-close after success) MUST use `useRef` to store the timer ID and clear it in a `useEffect` cleanup. Without this, unmounting the component before the timer fires causes a state-update-on-unmounted-component warning.
+> - `Record<string, string>` maps keyed by a known union type (e.g., `'weak' | 'medium' | 'strong'`) should use `Record<UnionType, string>` instead. This preserves type safety and prevents typo-based lookups.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >

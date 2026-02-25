@@ -6,7 +6,7 @@
 
 The business dashboard is a role-gated single-page app for business owners to view and edit the POIs assigned to their business. Access is restricted to `business_user` roles via Firebase Auth custom claims. Business users can edit a limited subset of POI fields (description, images, videos, phone, email, website) and cannot create, delete, or structurally modify POIs.
 
-Deployed at: https://click-bateva-biz.web.app (Firebase Hosting target — TBD, not yet created)
+Deployed at: https://click-bateva-biz.web.app
 
 ---
 
@@ -44,7 +44,9 @@ apps/business/
     ├── types/
     │   └── index.ts            Poi (business subset), Business
     ├── lib/
-    │   └── firebase.ts         initializeApp, db, auth, storage; emulator in DEV
+    │   ├── firebase.ts             initializeApp, db, auth, storage; emulator gated on VITE_USE_EMULATOR
+    │   ├── errorReporting.ts       Sentry reportError wrapper
+    │   └── passwordStrength.ts     getStrength(), isPasswordValid(), PASSWORD_ERROR, strength maps
     ├── context/
     │   └── BusinessContext.tsx createContext, BusinessProvider, useBusinessContext
     ├── pages/
@@ -56,9 +58,10 @@ apps/business/
         ├── AuthGuard.tsx       onAuthStateChanged + getIdTokenResult(); gate on business_user; loads business from claim
         ├── PoiCard.tsx         card showing POI name, mainImage, description snippet; links to /pois/:poiId
         ├── ImageUploader.tsx   upload images to poi-media/; renders preview list; supports delete
+        ├── ChangePasswordModal.tsx  change password (reauthenticate + updatePassword); strength indicator
         └── Layout/
             ├── AppLayout.tsx   flex layout: TopBar + <Outlet />
-            └── TopBar.tsx      business name + signOut button
+            └── TopBar.tsx      business name + "שנה סיסמה" + signOut buttons
 ```
 
 ---
@@ -126,6 +129,7 @@ export interface Poi {
   images: string[]          // ordered URLs
   videos: string[]          // video URLs
   phone: string             // '' means no phone
+  whatsapp: string          // '' means no whatsapp
   email: string
   website: string           // '' means no website (domain only)
   categoryId: string
@@ -140,10 +144,11 @@ export interface Poi {
 // The subset of Poi fields that a business user may edit.
 // Used to type the edit form state and the Firestore updateDoc payload.
 export interface PoiEditableFields {
-  description: string
+  description: string       // supports **bold** markdown syntax; bold toolbar in edit form
   images: string[]          // ordered URLs after upload
   videos: string[]          // video URLs
   phone: string
+  whatsapp: string          // WhatsApp number
   email: string
   website: string
 }

@@ -42,23 +42,23 @@ apps/user-web/
     │   ├── firebase.ts         initializeApp, getFirestore, emulator gated on VITE_USE_EMULATOR
     │   ├── filterPois.ts       filterPois() + PoiFilter interface
     │   ├── openingStatus.ts    getOpeningStatusText(), DAY_KEYS, DAY_NAMES_HE
-    │   └── colorUtils.ts       lighten(), lightenBorder()
+    │   ├── colorUtils.ts       lighten(), lightenBorder()
+    │   └── renderBoldText.tsx  **bold** markdown parser (handles unmatched delimiters)
     ├── hooks/
     │   └── useFirestoreData.ts  usePois, useCategories, useSubcategories (onSnapshot hooks)
     └── components/
         ├── Sidebar/
-        │   ├── Sidebar.tsx         flex-col container (w-80, shadow)
+        │   ├── Sidebar.tsx         flex-col container (w-80, shadow); collapsible (hidden when sidebarOpen=false)
         │   ├── AppHeader.tsx       logo icon + "קליק בטבע" + "גלה את ישראל"
-        │   ├── SearchBar.tsx       text input, emits searchQuery
-        │   ├── CategoryGrid.tsx    2-col grid of category chips
-        │   ├── SubcategoryFilter.tsx  per-category subcategory pills, grouped by group
+        │   ├── CategoryGrid.tsx    2-col grid of category chips + filter badge → SubcategoryModal
         │   └── SidebarFooter.tsx   count text + "נקה הכל" button; upward shadow via z-index
         ├── MapView/
-        │   ├── MapView.tsx     APIProvider + Map (center Israel, zoom 8); bounds south=28.5
-        │   ├── PoiMarker.tsx   AdvancedMarker with teardrop div + label
-        │   └── PoiDetailPanel.tsx  slide-up detail panel; image carousel; quick-action icon row (call, navigate, whatsapp, website, facebook); restaurant buttons; max-h uses 100dvh
-        └── BottomSheet/
-            └── BottomSheet.tsx   mobile filter panel; collapses to chip row peek; scroll fade indicator
+        │   ├── MapView.tsx     APIProvider + Map + MarkerClusterer; sorts categories by `order`; icon override chain (poi→sub→cat)
+        │   ├── PoiMarker.tsx   AdvancedMarker with teardrop div (28px) + name pill (zoom >= 14 only)
+        │   └── PoiDetailPanel.tsx  slide-up detail panel; carousel (contain); whatsapp via poi.whatsapp; bold text; click-outside-close
+        ├── BottomSheet/
+        │   └── BottomSheet.tsx   mobile filter panel; collapses to chip row peek; scroll fade indicator
+        └── SubcategoryModal.tsx    per-category subcategory toggle modal (all selected by default)
 ```
 
 ---
@@ -73,6 +73,7 @@ export interface Category {
   name: string;       // Hebrew e.g. "מסעדות"
   color: string;      // hex e.g. "#FF5733" — used for marker gradient
   iconUrl: string | null;
+  order: number;      // presentation order (sorted ascending)
 }
 
 export interface Subcategory {
@@ -80,6 +81,7 @@ export interface Subcategory {
   categoryId: string;     // which category this refines
   name: string;           // Hebrew e.g. "כשר", "זול"
   group: string | null;   // free-text group name for AND-across-groups logic e.g. "כשרות", "מחיר"; null = ungrouped
+  iconUrl: string | null; // icon override (falls back to category icon)
 }
 
 export interface Poi {
@@ -91,6 +93,7 @@ export interface Poi {
   images: string[];       // all images for carousel
   videos: string[];       // video URLs (YouTube embeds or external links)
   phone: string | null;
+  whatsapp: string | null;   // WhatsApp number (used for wa.me link, NOT phone)
   email: string | null;
   website: string | null;
   openingHours: Record<string, DayHours | null> | string | null; // structured, 'by_appointment', or legacy string
@@ -98,6 +101,7 @@ export interface Poi {
   kashrutCertUrl: string | null;  // kashrut certificate image (restaurants only)
   menuUrl: string | null;         // menu image (restaurants only)
   facebook: string | null;        // Facebook page URL
+  iconUrl: string | null;         // POI-level icon override (falls back to subcategory → category)
   categoryId: string;
   subcategoryIds: string[]; // subcategory IDs for per-category filtering
   // Note: `active` is NOT in the frontend type — the Firestore query filters
