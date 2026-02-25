@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { APIProvider, Map, useMap } from "@vis.gl/react-google-maps";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Marker } from "@googlemaps/markerclusterer";
@@ -58,7 +58,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
   const map = useMap();
   const [zoom, setZoom] = useState(8);
   const clusterer = useRef<MarkerClusterer | null>(null);
-  const markersRef = useRef<Record<string, Marker>>({});
+  const [markers, setMarkers] = useState<Record<string, Marker>>({});
 
   const colorMap = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c.color])),
@@ -75,10 +75,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     [subcategories]
   );
 
-  const [clustererReady, setClustererReady] = useState(false);
-  const syncPending = useRef(false);
-
-  // Initialize clusterer when map is ready; cleanup on map change
+  // Initialize clusterer when map is ready
   useEffect(() => {
     if (!map) return;
     clusterer.current = new MarkerClusterer({
@@ -106,11 +103,9 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
         },
       },
     });
-    setClustererReady(true);
     return () => {
       clusterer.current?.clearMarkers();
       clusterer.current = null;
-      setClustererReady(false);
     };
   }, [map]);
 
@@ -123,39 +118,30 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     return () => listener.remove();
   }, [map]);
 
-  // Sync markers with clusterer when POIs change or clusterer becomes ready
+  // Sync clusterer whenever the markers state changes
   useEffect(() => {
     if (!clusterer.current) return;
-    clusterer.current.clearMarkers();
-    const currentMarkers = Object.values(markersRef.current);
-    if (currentMarkers.length > 0) {
-      clusterer.current.addMarkers(currentMarkers);
-    }
-  }, [pois, clustererReady]);
+    clusterer.current.clearMarkers(true);
+    clusterer.current.addMarkers(Object.values(markers));
+  }, [markers]);
 
-  // Debounced clusterer sync — batches rapid marker ref callbacks into one update
-  const scheduleSync = useCallback(() => {
-    if (syncPending.current) return;
-    syncPending.current = true;
-    Promise.resolve().then(() => {
-      syncPending.current = false;
-      if (clusterer.current) {
-        clusterer.current.clearMarkers();
-        clusterer.current.addMarkers(Object.values(markersRef.current));
-      }
-    });
-  }, []);
-
+  // Ref callback: register/unregister marker elements via state (not ref)
+  // so the sync effect re-runs when markers actually become available
   const setMarkerRef = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement | null, key: string) => {
-      if (marker) {
-        markersRef.current[key] = marker;
-      } else {
-        delete markersRef.current[key];
-      }
-      scheduleSync();
+      setMarkers(prev => {
+        if (marker && prev[key]) return prev;
+        if (!marker && !prev[key]) return prev;
+        if (marker) {
+          return { ...prev, [key]: marker };
+        } else {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        }
+      });
     },
-    [scheduleSync]
+    []
   );
 
   const showLabels = zoom >= LABEL_ZOOM_THRESHOLD;
