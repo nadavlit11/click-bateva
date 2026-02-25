@@ -28,6 +28,7 @@ export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiC
         mapId={MAP_ID}
         gestureHandling="greedy"
         mapTypeControl={false}
+        fullscreenControl={false}
         minZoom={8}
         restriction={{ latLngBounds: ISRAEL_BOUNDS, strictBounds: false }}
         className="w-full h-full"
