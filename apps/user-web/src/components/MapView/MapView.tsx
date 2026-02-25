@@ -8,13 +8,14 @@ interface MapViewProps {
   categories: Category[];
   selectedPoiId: string | null;
   onPoiClick: (poi: Poi) => void;
+  onMapClick?: () => void;
 }
 
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
 const MAP_ID = "DEMO_MAP_ID";
 const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
 
-export function MapView({ pois, categories, selectedPoiId, onPoiClick }: MapViewProps) {
+export function MapView({ pois, categories, selectedPoiId, onPoiClick, onMapClick }: MapViewProps) {
   const colorMap = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c.color])),
     [categories]
@@ -35,6 +36,7 @@ export function MapView({ pois, categories, selectedPoiId, onPoiClick }: MapView
         minZoom={8}
         restriction={{ latLngBounds: ISRAEL_BOUNDS, strictBounds: false }}
         className="w-full h-full"
+        onClick={onMapClick}
       >
         {pois.map((poi) => (
           <PoiMarker

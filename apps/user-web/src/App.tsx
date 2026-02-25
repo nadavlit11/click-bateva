@@ -67,6 +67,10 @@ export default function App() {
     setSearchQuery("");
   }
 
+  function handleMapClick() {
+    if (selectedPoi) setSelectedPoi(null);
+  }
+
   function handlePoiClick(poi: Poi) {
     const now = Date.now();
     const lastClick = recentClicks.get(poi.id);
@@ -102,6 +106,7 @@ export default function App() {
           categories={categories}
           selectedPoiId={selectedPoi?.id ?? null}
           onPoiClick={handlePoiClick}
+          onMapClick={handleMapClick}
         />
 
         <BottomSheet

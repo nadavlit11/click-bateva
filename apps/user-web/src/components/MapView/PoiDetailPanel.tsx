@@ -62,16 +62,33 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
     if (!poi.phone) return null;
     const digits = poi.phone.replace(/\D/g, "");
     const normalized = digits.startsWith("0") ? "972" + digits.slice(1) : digits;
-    return `https://wa.me/${normalized}`;
+    return `https://wa.me/${normalized}?text=${encodeURIComponent("שלום, הגעתי אליכם דרך מפת קליק בטבע")}`;
   })();
 
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${poi.location.lat},${poi.location.lng}`;
 
   return (
     <div
-      className="absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100dvh-120px-2rem)] md:max-h-[calc(100dvh-2rem)] overflow-y-auto"
+      className="absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100dvh-120px-2rem)] md:max-h-[calc(100dvh-2rem)]"
       style={{ outline: `3px solid ${color}` }}
     >
+
+      {/* Floating close button — positioned over scrollable content */}
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 10, left: 10,
+          width: 30, height: 30,
+          background: "white", border: "none", borderRadius: "50%", cursor: "pointer",
+          fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.2)", color: "#374151", zIndex: 10,
+        }}
+        aria-label="סגור"
+      >
+        ×
+      </button>
+
+      <div className="overflow-y-auto max-h-[inherit]">
 
       {/* ── Carousel ── */}
       <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
@@ -94,7 +111,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
                 alt={poi.name}
                 loading="lazy"
                 decoding="async"
-                style={{ flex: "0 0 100%", height: "100%", objectFit: "cover" }}
+                style={{ flex: "0 0 100%", height: "100%", objectFit: "contain", backgroundColor: "#f3f4f6" }}
               />
             ))
           ) : (
@@ -146,21 +163,6 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
             ))}
           </div>
         )}
-
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          style={{
-            position: "absolute", top: 10, right: 10,
-            width: 30, height: 30,
-            background: "white", border: "none", borderRadius: "50%", cursor: "pointer",
-            fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.2)", color: "#374151", zIndex: 3,
-          }}
-          aria-label="סגור"
-        >
-          ×
-        </button>
       </div>
 
       {/* ── Body ── */}
@@ -350,6 +352,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
         })}
 
       </div>
+      </div>{/* end scrollable wrapper */}
     </div>
   );
 }

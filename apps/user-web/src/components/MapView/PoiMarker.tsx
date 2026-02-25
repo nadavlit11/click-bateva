@@ -35,8 +35,8 @@ export function PoiMarker({ poi, color, iconUrl, selected, onClick }: PoiMarkerP
         {/* Teardrop marker */}
         <div
           style={{
-            width: 36,
-            height: 36,
+            width: 28,
+            height: 28,
             borderRadius: "50% 50% 50% 0",
             transform: hovered ? "rotate(-45deg) scale(1.15)" : "rotate(-45deg)",
             background: `linear-gradient(135deg, ${color}dd, ${color})`,
@@ -53,8 +53,8 @@ export function PoiMarker({ poi, color, iconUrl, selected, onClick }: PoiMarkerP
               alt=""
               style={{
                 transform: "rotate(45deg)",
-                width: 20,
-                height: 20,
+                width: 16,
+                height: 16,
                 objectFit: "contain",
                 display: "block",
               }}
