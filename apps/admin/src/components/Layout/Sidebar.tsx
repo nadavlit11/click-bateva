@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { useUserRole } from '../../hooks/useUserRole.ts'
+import { ChangePasswordModal } from '../ChangePasswordModal.tsx'
 
 const NAV = [
   { path: '/',            label: 'לוח בקרה',      end: true,  adminOnly: false },
@@ -17,6 +19,7 @@ const NAV = [
 
 export function Sidebar() {
   const role = useUserRole()
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false)
 
   return (
     <aside className="w-64 bg-white border-s border-gray-200 flex flex-col h-full shrink-0">
@@ -46,12 +49,20 @@ export function Sidebar() {
 
       <div className="p-3 border-t border-gray-200">
         <button
+          onClick={() => setPasswordModalOpen(true)}
+          className="w-full text-start px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          שנה סיסמה
+        </button>
+        <button
           onClick={() => { signOut(auth).catch(err => reportError(err, { source: 'Sidebar.signOut' })) }}
           className="w-full text-start px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
         >
           התנתקות
         </button>
       </div>
+
+      <ChangePasswordModal isOpen={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
     </aside>
   )
 }

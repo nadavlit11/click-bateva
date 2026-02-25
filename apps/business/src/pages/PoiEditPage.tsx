@@ -177,7 +177,14 @@ export function PoiEditPage() {
               }
             </div>
           )}
-          {poi.price && <p><span className="font-medium text-gray-900">מחיר:</span> {poi.price}</p>}
+          {poi.price && (
+            <>
+              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                יש לציין אם המחיר כולל מע״מ או לא
+              </p>
+              <p><span className="font-medium text-gray-900">מחיר:</span> {poi.price}</p>
+            </>
+          )}
         </div>
       )}
 

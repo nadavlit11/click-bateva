@@ -3,6 +3,7 @@ import { httpsCallable } from 'firebase/functions'
 import { updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { db, functions } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
+import { getStrength, isPasswordValid, PASSWORD_ERROR, strengthLabel, strengthColor, strengthWidth } from '../lib/passwordStrength.ts'
 import type { Business } from '../types/index.ts'
 
 interface Props {
@@ -27,7 +28,7 @@ function mapError(code: string): string {
     case 'auth/email-already-in-use':
       return 'כתובת האימייל כבר בשימוש'
     case 'auth/weak-password':
-      return 'הסיסמה חייבת להכיל לפחות 6 תווים'
+      return PASSWORD_ERROR
     default:
       return 'שגיאה ביצירת העסק. נסה שנית.'
   }
@@ -56,7 +57,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
 
     if (!name.trim()) { setError('שם העסק הוא שדה חובה'); return }
     if (!email.trim()) { setError('האימייל הוא שדה חובה'); return }
-    if (!isEdit && password.length < 6) { setError('הסיסמה חייבת להכיל לפחות 6 תווים'); return }
+    if (!isEdit && !isPasswordValid(password)) { setError(PASSWORD_ERROR); return }
 
     setSaving(true)
     setError('')
@@ -106,6 +107,8 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
 
   if (!isOpen) return null
 
+  const strength = !isEdit && password.length > 0 ? getStrength(password) : null
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -151,9 +154,19 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                placeholder="לפחות 6 תווים"
+                placeholder="לפחות 8 תווים, אות ומספר"
                 dir="ltr"
               />
+              {strength && (
+                <div className="mt-2">
+                  <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${strengthColor[strength]} ${strengthWidth[strength]}`} />
+                  </div>
+                  <p className={`text-xs mt-1 ${strength === 'weak' ? 'text-red-600' : strength === 'medium' ? 'text-yellow-600' : 'text-green-600'}`}>
+                    {strengthLabel[strength]}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
