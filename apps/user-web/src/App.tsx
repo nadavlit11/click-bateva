@@ -129,7 +129,7 @@ export default function App() {
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
-            className="hidden md:flex absolute top-3 right-3 z-10 w-10 h-10 bg-white rounded-xl shadow-lg items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
+            className="hidden md:flex absolute top-3 start-3 z-20 w-10 h-10 bg-white rounded-xl shadow-lg items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
             title="פתח תפריט"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,8 +138,8 @@ export default function App() {
           </button>
         )}
 
-        {/* Floating search */}
-        <div className={`absolute top-3 left-3 z-10 ${!sidebarOpen ? "right-16 md:right-auto md:left-auto md:w-80" : "right-3 md:right-auto md:left-auto md:w-80"}`}>
+        {/* Floating search — on mobile stretches full width; on desktop fixed-width on physical left (end in RTL) */}
+        <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`}>
           <div className="relative">
             <input
               type="text"
