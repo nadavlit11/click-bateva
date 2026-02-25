@@ -244,8 +244,12 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         </div>
 
         {/* Scrollable form */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={e => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault() }}
+          className="flex-1 overflow-y-auto min-h-0"
+        >
+          <div className="px-5 py-4 space-y-4">
 
             {/* Name */}
             <div>
@@ -691,24 +695,24 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
             </div>
 
             {error && <p className="text-red-600 text-sm">{error}</p>}
-          </div>
 
-          {/* Footer */}
-          <div className="px-5 py-4 border-t border-gray-200 flex gap-2 justify-start">
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
-            >
-              {saving ? 'שומר...' : 'שמירה'}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              ביטול
-            </button>
+            {/* Save / Cancel */}
+            <div className="pt-4 border-t border-gray-200 flex gap-2 justify-start">
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+              >
+                {saving ? 'שומר...' : 'שמירה'}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                ביטול
+              </button>
+            </div>
           </div>
         </form>
       </div>

@@ -6,8 +6,6 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
-  query,
-  orderBy,
   getDocs,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
@@ -27,9 +25,10 @@ export function PoisPage() {
 
   // Live POI list
   useEffect(() => {
-    const q = query(collection(db, 'points_of_interest'), orderBy('createdAt', 'desc'))
-    return onSnapshot(q, snap => {
-      setPois(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Poi))
+    return onSnapshot(collection(db, 'points_of_interest'), snap => {
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }) as Poi)
+      docs.sort((a, b) => a.name.localeCompare(b.name, 'he'))
+      setPois(docs)
     })
   }, [])
 
@@ -87,7 +86,7 @@ export function PoisPage() {
     if (filterCategoryId && poi.categoryId !== filterCategoryId) return false
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
-      return poi.name.toLowerCase().includes(q) || poi.description.toLowerCase().includes(q)
+      return poi.name.toLowerCase().includes(q)
     }
     return true
   })
@@ -109,7 +108,7 @@ export function PoisPage() {
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          placeholder="חיפוש לפי שם או תיאור..."
+          placeholder="חיפוש לפי שם..."
           className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
         <select
