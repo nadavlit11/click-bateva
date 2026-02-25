@@ -1,5 +1,7 @@
 # LLD: apps/admin — Admin Dashboard
 
+> **Design doc** — created during initial implementation. For current architecture navigation, see `/codebase-map` (`.claude/skills/codebase-map/admin.md`).
+
 ## Context
 
 The admin dashboard is a role-gated single-page app for managing all project content (POIs, categories, subcategories, icons). Access is restricted to `admin` and `content_manager` roles via Firebase Auth custom claims.

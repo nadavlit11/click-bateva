@@ -1,5 +1,7 @@
 # LLD: apps/user-web — User-Facing Map App
 
+> **Design doc** — created during initial implementation. For current architecture navigation, see `/codebase-map` (`.claude/skills/codebase-map/user-web.md`).
+
 ## Context
 
 The user-facing web app is being built before the admin/business dashboards to get visible features live faster. Phases 1.5, 1.6, and 4.5 (click tracking, security rules tests) are deferred. Design chosen: **design-1-light** — white sidebar (right, RTL), 2-column category grid chips, teardrop POI markers with name labels, Rubik font, Hebrew first.

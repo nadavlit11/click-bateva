@@ -1,5 +1,7 @@
 # LLD: apps/business — Business Dashboard
 
+> **Design doc** — created during initial implementation. For current architecture navigation, see `/codebase-map` (`.claude/skills/codebase-map/business.md`).
+
 ## Context
 
 The business dashboard is a role-gated single-page app for business owners to view and edit the POIs assigned to their business. Access is restricted to `business_user` roles via Firebase Auth custom claims. Business users can edit a limited subset of POI fields (description, images, videos, phone, email, website) and cannot create, delete, or structurally modify POIs.

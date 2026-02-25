@@ -44,7 +44,15 @@ Worth creating if:
 - A common mistake needs a checklist to prevent it
 - A deploy/test workflow has specific steps worth encoding
 
-### 4. Check for missing LLD docs
+### 4. Update codebase-map
+
+Review the `/codebase-map` sub-pages (`.claude/skills/codebase-map/*.md`) for the areas touched during this phase:
+- Update key file lists if files were added, renamed, or removed
+- Update data flow diagrams if component structure changed
+- Add new patterns or gotchas discovered during this phase
+- Remove outdated information
+
+### 5. Check for missing LLD docs
 
 Was an LLD doc created for any new app or major feature area built this phase?
 - `docs/lld-user-web.md` — user-facing map app ✅
@@ -53,7 +61,7 @@ Was an LLD doc created for any new app or major feature area built this phase?
 
 **If an LLD was skipped:** create it now (post-hoc is better than never), then add a reminder that next time, LLDs should be written **at the end of planning, before implementation starts**.
 
-### 5. Commit everything
+### 6. Commit everything
 
 ```bash
 git add .claude/skills/ docs/

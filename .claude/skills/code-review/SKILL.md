@@ -176,6 +176,8 @@ All tests must pass. If any fail, fix them before proceeding.
 
 If the code changes affect any documented behavior — data model, UI flows, component APIs, routing, filtering logic, or admin features — run the `/update-docs` skill before committing. Skip this step for pure refactors, test-only changes, or config tweaks that don't change documented behavior.
 
+**Codebase map check:** If this change modifies component structure, data flow, key file paths, or introduces new patterns/gotchas, update the relevant `/codebase-map` sub-page (`.claude/skills/codebase-map/*.md`) before committing.
+
 ---
 
 ## Step 5 — Commit and push
