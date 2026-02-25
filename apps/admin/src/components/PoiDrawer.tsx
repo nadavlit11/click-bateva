@@ -323,7 +323,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 >
                   <option value="">— ללא עסק —</option>
                   {businesses
-                    .filter(b => { const q = businessSearch.toLowerCase(); return b.name.toLowerCase().includes(q) || b.email.toLowerCase().includes(q) })
+                    .filter(b => { const q = businessSearch.toLowerCase(); return b.name.toLowerCase().includes(q) || b.username.toLowerCase().includes(q) })
                     .map(b => (
                       <option key={b.id} value={b.id}>{b.name}</option>
                     ))

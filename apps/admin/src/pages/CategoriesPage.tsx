@@ -70,7 +70,7 @@ export function CategoriesPage() {
                 </td>
               </tr>
             )}
-            {categories.map(cat => (
+            {[...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map(cat => (
               <tr key={cat.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <div

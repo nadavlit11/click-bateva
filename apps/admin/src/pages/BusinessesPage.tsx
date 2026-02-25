@@ -81,7 +81,7 @@ export function BusinessesPage() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="text-right px-4 py-3 font-medium text-gray-600">שם העסק</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">אימייל</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-600">שם משתמש</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -96,7 +96,7 @@ export function BusinessesPage() {
               {businesses.map(business => (
                 <tr key={business.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-900">{business.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{business.email}</td>
+                  <td className="px-4 py-3 text-gray-600" dir="ltr">{business.username}</td>
                   <td className="px-4 py-3 text-left">
                     <div className="flex gap-2 justify-end">
                       <button

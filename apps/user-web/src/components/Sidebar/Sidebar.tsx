@@ -1,10 +1,11 @@
-import type { Category } from "../../types";
+import type { Category, Subcategory } from "../../types";
 import { AppHeader } from "./AppHeader";
 import { CategoryGrid } from "./CategoryGrid";
 import { SidebarFooter } from "./SidebarFooter";
 
 interface SidebarProps {
   categories: Category[];
+  subcategories: Subcategory[];
   selectedCategories: Set<string>;
   filteredCount: number;
   onCategoryToggle: (id: string) => void;
@@ -16,6 +17,7 @@ interface SidebarProps {
 
 export function Sidebar({
   categories,
+  subcategories,
   selectedCategories,
   filteredCount,
   onCategoryToggle,
@@ -44,6 +46,7 @@ export function Sidebar({
       <div className="flex-1 overflow-y-auto">
         <CategoryGrid
           categories={categories}
+          subcategories={subcategories}
           selectedCategories={selectedCategories}
           onToggle={onCategoryToggle}
           onSubcategoryFilter={onSubcategoryFilter}

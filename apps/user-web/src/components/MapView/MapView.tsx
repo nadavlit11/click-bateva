@@ -17,7 +17,7 @@ interface MapViewProps {
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
 const MAP_ID = "DEMO_MAP_ID";
 const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
-const LABEL_ZOOM_THRESHOLD = 14;
+const LABEL_ZOOM_THRESHOLD = 10;
 
 export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick }: MapViewProps) {
   return (
@@ -87,8 +87,6 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
         // when the clusterer re-renders on the next idle event.
         const pos = cluster.bounds?.getCenter() ?? cluster.position;
         const ll = new google.maps.LatLng(pos);
-        // Atomic camera change — panTo + setZoom race each other and
-        // the map ends up at the wrong location.
         map.moveCamera({ center: { lat: ll.lat(), lng: ll.lng() }, zoom: currentZoom + 3 });
       },
       renderer: {

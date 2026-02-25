@@ -23,9 +23,9 @@ export const createBusinessUser = onCall({cors: true}, async (request) => {
     throw new HttpsError("permission-denied", "Only admins can create business users.");
   }
 
-  const {name, email, password} = request.data as {
+  const {name, username, password} = request.data as {
     name: unknown;
-    email: unknown;
+    username: unknown;
     password: unknown;
   };
 
@@ -33,17 +33,26 @@ export const createBusinessUser = onCall({cors: true}, async (request) => {
   if (typeof name !== "string" || !name.trim()) {
     throw new HttpsError("invalid-argument", "name must be a non-empty string.");
   }
-  if (typeof email !== "string" || !email.trim()) {
-    throw new HttpsError("invalid-argument", "email must be a non-empty string.");
+  if (typeof username !== "string" || !username.trim()) {
+    throw new HttpsError("invalid-argument", "username must be a non-empty string.");
+  }
+  if (username.trim().length < 3) {
+    throw new HttpsError("invalid-argument", "username must be at least 3 characters.");
+  }
+  if (!/^[a-zA-Z0-9_.-]+$/.test(username.trim())) {
+    throw new HttpsError("invalid-argument", "username may only contain letters, numbers, dot, hyphen, underscore.");
   }
   if (typeof password !== "string" || password.length < 6) {
     throw new HttpsError("invalid-argument", "password must be at least 6 characters.");
   }
 
+  // Generate internal email from username (Firebase Auth requires an email)
+  const email = `${username.trim().toLowerCase()}@click-bateva.app`;
+
   // Create Firebase Auth user — catch known errors and convert to HttpsError
   let userRecord;
   try {
-    userRecord = await adminAuth.createUser({email: email.trim(), password});
+    userRecord = await adminAuth.createUser({email, password});
   } catch (err: unknown) {
     const code = (err as { code?: string }).code ?? "";
     if (code === "auth/email-already-exists") {
@@ -65,7 +74,8 @@ export const createBusinessUser = onCall({cors: true}, async (request) => {
 
   batch.set(db.collection("users").doc(uid), {
     uid,
-    email: email.trim(),
+    email,
+    username: username.trim(),
     role: "business_user",
     businessRef,
     createdAt: now,
@@ -75,7 +85,8 @@ export const createBusinessUser = onCall({cors: true}, async (request) => {
   batch.set(db.collection("businesses").doc(uid), {
     id: uid,
     name: name.trim(),
-    email: email.trim(),
+    email,
+    username: username.trim(),
     ownerUid: uid,
     associatedUserIds: [uid], // required by POI update security rule
     createdAt: now,
@@ -84,7 +95,7 @@ export const createBusinessUser = onCall({cors: true}, async (request) => {
 
   await batch.commit();
 
-  logger.info("Business user created", {uid, email, name, by: request.auth.uid});
+  logger.info("Business user created", {uid, username: username, name, by: request.auth.uid});
 
   return {uid};
 });

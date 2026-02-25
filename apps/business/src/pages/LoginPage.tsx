@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { auth } from '../lib/firebase.ts'
 
 export function LoginPage() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,10 +15,11 @@ export function LoginPage() {
     setLoading(true)
     setError('')
     try {
+      const email = `${username.trim().toLowerCase()}@click-bateva.app`
       await signInWithEmailAndPassword(auth, email, password)
       navigate('/')
     } catch {
-      setError('אימייל או סיסמה שגויים')
+      setError('שם משתמש או סיסמה שגויים')
     } finally {
       setLoading(false)
     }
@@ -32,15 +33,16 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">אימייל</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">שם משתמש</label>
             <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-              placeholder="business@example.com"
+              placeholder="username"
               required
               autoFocus
+              dir="ltr"
             />
           </div>
           <div>

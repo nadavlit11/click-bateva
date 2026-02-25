@@ -107,6 +107,7 @@ export default function App() {
         <Sidebar
           className="hidden md:flex"
           categories={sortedCategories}
+          subcategories={subcategories}
           selectedCategories={selectedCategories}
           filteredCount={filteredPois.length}
           onCategoryToggle={handleCategoryToggle}

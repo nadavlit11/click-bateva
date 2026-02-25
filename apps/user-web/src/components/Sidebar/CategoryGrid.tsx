@@ -1,15 +1,16 @@
 import { CATEGORY_EMOJI } from "../../data/defaults";
-import type { Category } from "../../types";
+import type { Category, Subcategory } from "../../types";
 import { lighten, lightenBorder } from "../../lib/colorUtils";
 
 interface CategoryGridProps {
   categories: Category[];
+  subcategories: Subcategory[];
   selectedCategories: Set<string>;
   onToggle: (id: string) => void;
   onSubcategoryFilter?: (categoryId: string) => void;
 }
 
-export function CategoryGrid({ categories, selectedCategories, onToggle, onSubcategoryFilter }: CategoryGridProps) {
+export function CategoryGrid({ categories, subcategories, selectedCategories, onToggle, onSubcategoryFilter }: CategoryGridProps) {
   return (
     <div className="px-4 pb-4">
       <h2 className="text-lg font-semibold text-gray-700 mb-3">קטגוריות</h2>
@@ -39,7 +40,7 @@ export function CategoryGrid({ categories, selectedCategories, onToggle, onSubca
                 </span>
                 <span className="text-sm font-medium text-gray-700">{cat.name}</span>
               </button>
-              {isSelected && onSubcategoryFilter && (
+              {isSelected && onSubcategoryFilter && subcategories.some(s => s.categoryId === cat.id) && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

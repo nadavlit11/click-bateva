@@ -21,7 +21,7 @@ interface BottomSheetProps {
 
 export function BottomSheet({
   categories,
-  subcategories: _subcategories,
+  subcategories,
   selectedCategories,
   selectedSubcategories,
   filteredCount,
@@ -96,6 +96,7 @@ export function BottomSheet({
               >
               <CategoryGrid
                 categories={categories}
+                subcategories={subcategories}
                 selectedCategories={selectedCategories}
                 onToggle={onCategoryToggle}
                 onSubcategoryFilter={onSubcategoryFilter}
