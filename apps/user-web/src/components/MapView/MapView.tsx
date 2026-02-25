@@ -83,13 +83,16 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
       algorithm: new SuperClusterAlgorithm({ radius: 25, maxZoom: 14 }),
       onClusterClick: (_event, cluster, map) => {
         const currentZoom = map.getZoom() ?? 8;
-        // Use bounds center (geographic center of actual markers) — more
-        // accurate than cluster.position (weighted centroid) at low zoom.
-        const center = cluster.bounds
+        const pos = cluster.bounds
           ? cluster.bounds.getCenter()
           : cluster.position;
-        map.panTo(center);
-        map.setZoom(currentZoom + 3);
+        // Extract primitives immediately — LatLng object references
+        // can go stale when the clusterer re-renders on the next idle.
+        const lat = typeof pos.lat === "function" ? pos.lat() : pos.lat;
+        const lng = typeof pos.lng === "function" ? pos.lng() : pos.lng;
+        // Atomic camera change — panTo + setZoom race each other and
+        // the map ends up at the wrong location.
+        map.moveCamera({ center: { lat, lng }, zoom: currentZoom + 3 });
       },
       renderer: {
         render({ count, position }) {
@@ -115,7 +118,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
       },
     });
     return () => {
-      clusterer.current?.clearMarkers();
+      clusterer.current?.setMap(null);
       clusterer.current = null;
     };
   }, [map]);
