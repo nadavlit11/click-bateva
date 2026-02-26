@@ -24,8 +24,8 @@ All apps share: Vite, React, TypeScript, Tailwind CSS v4, Rubik font, Hebrew RTL
 
 | Collection | Purpose |
 |---|---|
-| `points_of_interest` | 1025 POIs (imported from WordPress), doc IDs: `wp-{markerId}` |
-| `categories` | 9 categories: accommodation, food, offroad, attractions, wineries, water, venues, shows, hiking |
+| `points_of_interest` | POIs managed via admin/business dashboards |
+| `categories` | POI categories (Hebrew names, with color + order fields) |
 | `subcategories` | Groups within categories, `group` field for AND-across/OR-within logic |
 | `icons` | Icon assets, `path` field (NOT `url`) |
 | `users` | User profiles, `role` field mirrors custom claim |
