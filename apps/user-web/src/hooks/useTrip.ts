@@ -75,9 +75,10 @@ export function useTrip(uid: string | null) {
   const addPoi = useCallback(async (poiId: string) => {
     if (!uid) return;
     let tripId = trip?.id;
-    const currentNumDays = trip?.numDays ?? 1;
+    let currentNumDays = trip?.numDays ?? 1;
     if (!tripId) {
       tripId = await createTrip();
+      currentNumDays = 1; // fresh trip always starts at day 1
     }
     const entry: TripPoiEntry = { poiId, addedAt: Date.now(), dayNumber: currentNumDays };
     await updateDoc(doc(db, "trips", tripId), {
@@ -122,8 +123,22 @@ export function useTrip(uid: string | null) {
   }, [trip]);
 
   const newTrip = useCallback(async () => {
-    await createTrip().catch(err => reportError(err, { source: "useTrip.newTrip" }));
-  }, [createTrip]);
+    if (!uid) return;
+    const now = Date.now();
+    const ref = await addDoc(collection(db, "trips"), {
+      agentId: uid,
+      clientName: "",
+      pois: [],
+      numDays: 1,
+      isShared: false,
+      createdAt: now,
+      updatedAt: now,
+    }).catch(err => { reportError(err, { source: "useTrip.newTrip" }); return null; });
+    if (!ref) return;
+    // Optimistically update state immediately so subsequent addPoi
+    // uses the new trip (don't wait for the onSnapshot round-trip)
+    setTrip({ id: ref.id, agentId: uid, clientName: "", pois: [], numDays: 1, isShared: false, createdAt: now, updatedAt: now });
+  }, [uid]);
 
   return { trip, addPoi, removePoi, addDay, setClientName, clearTrip, shareTrip, newTrip };
 }
