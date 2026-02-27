@@ -76,14 +76,19 @@ export default function App() {
   }, [tripShareId]);
 
   // ── Trip (agent editing) ─────────────────────────────────────────────────
-  const { trip, addPoi, removePoi, setNumDays, setClientName, clearTrip, shareTrip, newTrip } = useTrip(
+  const { trip, addPoi, removePoi, addDay, setClientName, clearTrip, shareTrip, newTrip } = useTrip(
     isTravelAgent ? (currentUser?.uid ?? null) : null
   );
 
   const activeTrip = tripShareId ? sharedTrip : trip;
 
   const orderedTripPoiIds = useMemo(
-    () => [...(activeTrip?.pois ?? [])].sort((a, b) => a.addedAt - b.addedAt).map(p => p.poiId),
+    () => [...(activeTrip?.pois ?? [])]
+      .sort((a, b) => {
+        const dayDiff = (a.dayNumber ?? 1) - (b.dayNumber ?? 1);
+        return dayDiff !== 0 ? dayDiff : a.addedAt - b.addedAt;
+      })
+      .map(p => p.poiId),
     [activeTrip]
   );
   const tripPoiIdSet = useMemo(() => new Set(orderedTripPoiIds), [orderedTripPoiIds]);
@@ -283,7 +288,7 @@ export default function App() {
           allPois={pois}
           orderedTripPoiIds={orderedTripPoiIds}
           onRemovePoi={removePoi}
-          onSetNumDays={setNumDays}
+          onAddDay={addDay}
           onSetClientName={setClientName}
           onClearTrip={clearTrip}
           onShareTrip={shareTrip}

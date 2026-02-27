@@ -26,7 +26,7 @@ interface SidebarProps {
   allPois: Poi[];
   orderedTripPoiIds: string[];
   onRemovePoi: (poiId: string) => void;
-  onSetNumDays: (n: number) => void;
+  onAddDay: () => void;
   onSetClientName: (name: string) => void;
   onClearTrip: () => void;
   onShareTrip: () => Promise<string>;
@@ -54,7 +54,7 @@ export function Sidebar({
   allPois,
   orderedTripPoiIds,
   onRemovePoi,
-  onSetNumDays,
+  onAddDay,
   onSetClientName,
   onClearTrip,
   onShareTrip,
@@ -134,7 +134,7 @@ export function Sidebar({
           categories={categories}
           orderedTripPoiIds={orderedTripPoiIds}
           onRemovePoi={onRemovePoi}
-          onSetNumDays={onSetNumDays}
+          onAddDay={onAddDay}
           onSetClientName={onSetClientName}
           onClearTrip={onClearTrip}
           onShareTrip={onShareTrip}

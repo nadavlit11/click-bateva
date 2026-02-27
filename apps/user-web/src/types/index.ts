@@ -21,7 +21,8 @@ export interface DayHours {
 
 export interface TripPoiEntry {
   poiId: string;
-  addedAt: number; // ms timestamp for ordering
+  addedAt: number;   // ms timestamp for ordering within a day
+  dayNumber: number; // 1-indexed day this POI belongs to
 }
 
 export interface TripDoc {

@@ -42,7 +42,7 @@ export function useTrip(uid: string | null) {
             agentId: data.agentId,
             clientName: data.clientName ?? "",
             pois: data.pois ?? [],
-            numDays: data.numDays ?? 2,
+            numDays: data.numDays ?? 1,
             isShared: data.isShared ?? false,
             createdAt: data.createdAt ?? 0,
             updatedAt: data.updatedAt ?? 0,
@@ -64,7 +64,7 @@ export function useTrip(uid: string | null) {
       agentId: uid,
       clientName: "",
       pois: [],
-      numDays: 2,
+      numDays: 1,
       isShared: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -75,10 +75,11 @@ export function useTrip(uid: string | null) {
   const addPoi = useCallback(async (poiId: string) => {
     if (!uid) return;
     let tripId = trip?.id;
+    const currentNumDays = trip?.numDays ?? 1;
     if (!tripId) {
       tripId = await createTrip();
     }
-    const entry: TripPoiEntry = { poiId, addedAt: Date.now() };
+    const entry: TripPoiEntry = { poiId, addedAt: Date.now(), dayNumber: currentNumDays };
     await updateDoc(doc(db, "trips", tripId), {
       pois: arrayUnion(entry),
       updatedAt: Date.now(),
@@ -96,10 +97,10 @@ export function useTrip(uid: string | null) {
     }).catch(err => reportError(err, { source: "useTrip.removePoi" }));
   }, [trip]);
 
-  const setNumDays = useCallback(async (n: number) => {
+  const addDay = useCallback(async () => {
     if (!trip) return;
-    await updateDoc(doc(db, "trips", trip.id), { numDays: n, updatedAt: Date.now() })
-      .catch(err => reportError(err, { source: "useTrip.setNumDays" }));
+    await updateDoc(doc(db, "trips", trip.id), { numDays: trip.numDays + 1, updatedAt: Date.now() })
+      .catch(err => reportError(err, { source: "useTrip.addDay" }));
   }, [trip]);
 
   const setClientName = useCallback(async (name: string) => {
@@ -110,7 +111,7 @@ export function useTrip(uid: string | null) {
 
   const clearTrip = useCallback(async () => {
     if (!trip) return;
-    await updateDoc(doc(db, "trips", trip.id), { pois: [], updatedAt: Date.now() })
+    await updateDoc(doc(db, "trips", trip.id), { pois: [], numDays: 1, updatedAt: Date.now() })
       .catch(err => reportError(err, { source: "useTrip.clearTrip" }));
   }, [trip]);
 
@@ -124,5 +125,5 @@ export function useTrip(uid: string | null) {
     await createTrip().catch(err => reportError(err, { source: "useTrip.newTrip" }));
   }, [createTrip]);
 
-  return { trip, addPoi, removePoi, setNumDays, setClientName, clearTrip, shareTrip, newTrip };
+  return { trip, addPoi, removePoi, addDay, setClientName, clearTrip, shareTrip, newTrip };
 }
