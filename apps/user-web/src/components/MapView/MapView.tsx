@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { APIProvider, Map, useMap } from "@vis.gl/react-google-maps";
+import { APIProvider, Map as GoogleMap, useMap } from "@vis.gl/react-google-maps";
 import { MarkerClusterer, SuperClusterAlgorithm } from "@googlemaps/markerclusterer";
 import type { Marker } from "@googlemaps/markerclusterer";
 import { PoiMarker } from "./PoiMarker";
@@ -28,7 +28,7 @@ const LABEL_ZOOM_THRESHOLD = 11;
 export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed, pinSize = 24, highlightPoi, orderedTripPoiIds = [] }: MapViewProps) {
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} language="he" region="IL">
-      <Map
+      <GoogleMap
         defaultCenter={ISRAEL_CENTER}
         defaultZoom={8}
         mapId={MAP_ID}
@@ -52,7 +52,7 @@ export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiC
           highlightPoi={highlightPoi}
           orderedTripPoiIds={orderedTripPoiIds}
         />
-      </Map>
+      </GoogleMap>
     </APIProvider>
   );
 }
