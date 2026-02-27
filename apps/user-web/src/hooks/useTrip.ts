@@ -72,20 +72,32 @@ export function useTrip(uid: string | null) {
     return ref.id;
   }, [uid]);
 
-  const addPoi = useCallback(async (poiId: string) => {
+  const addPoi = useCallback(async (poiId: string, dayNumber?: number) => {
     if (!uid) return;
     let tripId = trip?.id;
-    let currentNumDays = trip?.numDays ?? 1;
+    let resolvedDay = dayNumber ?? trip?.numDays ?? 1;
     if (!tripId) {
       tripId = await createTrip();
-      currentNumDays = 1; // fresh trip always starts at day 1
+      resolvedDay = dayNumber ?? 1;
     }
-    const entry: TripPoiEntry = { poiId, addedAt: Date.now(), dayNumber: currentNumDays };
+    const entry: TripPoiEntry = { poiId, addedAt: Date.now(), dayNumber: resolvedDay };
     await updateDoc(doc(db, "trips", tripId), {
       pois: arrayUnion(entry),
       updatedAt: Date.now(),
     }).catch(err => reportError(err, { source: "useTrip.addPoi" }));
   }, [uid, trip, createTrip]);
+
+  const movePoi = useCallback(async (poiId: string, newDayNumber: number) => {
+    if (!trip) return;
+    const safeDay = Math.max(1, Math.min(newDayNumber, trip.numDays));
+    const updatedPois = trip.pois.map(e =>
+      e.poiId === poiId ? { ...e, dayNumber: safeDay } : e
+    );
+    await updateDoc(doc(db, "trips", trip.id), {
+      pois: updatedPois,
+      updatedAt: Date.now(),
+    }).catch(err => reportError(err, { source: "useTrip.movePoi" }));
+  }, [trip]);
 
   const removePoi = useCallback(async (poiId: string) => {
     if (!trip) return;
@@ -140,5 +152,5 @@ export function useTrip(uid: string | null) {
     setTrip({ id: ref.id, agentId: uid, clientName: "", pois: [], numDays: 1, isShared: false, createdAt: now, updatedAt: now });
   }, [uid]);
 
-  return { trip, addPoi, removePoi, addDay, setClientName, clearTrip, shareTrip, newTrip };
+  return { trip, addPoi, removePoi, movePoi, addDay, setClientName, clearTrip, shareTrip, newTrip };
 }

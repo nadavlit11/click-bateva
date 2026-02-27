@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
 import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { reportError } from "./lib/errorReporting";
@@ -68,9 +68,32 @@ export default function App() {
   }, [tripShareId]);
 
   // ── Trip (agent editing) ─────────────────────────────────────────────────
-  const { trip, addPoi, removePoi, addDay, setClientName, clearTrip, shareTrip, newTrip } = useTrip(
+  const { trip, addPoi, removePoi, movePoi, addDay, setClientName, clearTrip, shareTrip, newTrip } = useTrip(
     isTravelAgent ? (user?.uid ?? null) : null
   );
+
+  // Which day new POIs are added to (1-indexed). Defaults to 1, switches to
+  // the new day when the agent adds a day or clicks a day header.
+  const [activeDayNumber, setActiveDayNumber] = useState(1);
+
+  // Keep activeDayNumber in bounds whenever numDays changes
+  const tripNumDays = trip?.numDays ?? 1;
+  const clampedActiveDay = Math.min(activeDayNumber, tripNumDays);
+
+  const handleAddDay = useCallback(async () => {
+    await addDay();
+    setActiveDayNumber(n => n + 1);
+  }, [addDay]);
+
+  const handleNewTrip = useCallback(async () => {
+    await newTrip();
+    setActiveDayNumber(1);
+  }, [newTrip]);
+
+  const handleClearTrip = useCallback(async () => {
+    await clearTrip();
+    setActiveDayNumber(1);
+  }, [clearTrip]);
 
   const activeTrip = tripShareId ? sharedTrip : trip;
 
@@ -304,12 +327,15 @@ export default function App() {
           trip={trip}
           allPois={pois}
           orderedTripPoiIds={orderedTripPoiIds}
+          activeDayNumber={clampedActiveDay}
+          onSetActiveDayNumber={setActiveDayNumber}
           onRemovePoi={removePoi}
-          onAddDay={addDay}
+          onMovePoi={movePoi}
+          onAddDay={handleAddDay}
           onSetClientName={setClientName}
-          onClearTrip={clearTrip}
+          onClearTrip={handleClearTrip}
           onShareTrip={shareTrip}
-          onNewTrip={newTrip}
+          onNewTrip={handleNewTrip}
           onPoiSelect={handlePoiSelectFromTrip}
         />
       )}
@@ -386,7 +412,7 @@ export default function App() {
               category={sortedCategories.find(c => c.id === selectedPoi.categoryId)}
               onClose={() => setSelectedPoi(null)}
               tripPoiIds={isTravelAgent ? tripPoiIdSet : undefined}
-              onAddToTrip={isTravelAgent ? addPoi : undefined}
+              onAddToTrip={isTravelAgent ? (id) => addPoi(id, clampedActiveDay) : undefined}
               onRemoveFromTrip={isTravelAgent ? removePoi : undefined}
             />
           </Suspense>
