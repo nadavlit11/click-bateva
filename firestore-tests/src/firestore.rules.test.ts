@@ -744,3 +744,203 @@ describe("icons collection", () => {
     });
   });
 });
+
+// ── trips collection ──────────────────────────────────────────────────────────
+
+describe("trips collection", () => {
+  const AGENT_UID = "agent-uid-1";
+  const OTHER_AGENT_UID = "agent-uid-2";
+
+  const UNSHARED_TRIP = {
+    agentId: AGENT_UID,
+    clientName: "משפחת כהן",
+    pois: [],
+    numDays: 2,
+    isShared: false,
+    createdAt: 1700000000000,
+    updatedAt: 1700000000000,
+  };
+
+  const SHARED_TRIP = {
+    agentId: AGENT_UID,
+    clientName: "משפחת לוי",
+    pois: [],
+    numDays: 3,
+    isShared: true,
+    createdAt: 1700000000000,
+    updatedAt: 1700000000000,
+  };
+
+  function travelAgent(uid: string) {
+    return env.authenticatedContext(uid, { role: "travel_agent" });
+  }
+
+  describe("CREATE", () => {
+    it("allows travel_agent to create a trip with their own agentId", async () => {
+      const agent = travelAgent(AGENT_UID);
+      const db = agent.firestore();
+      await assertSucceeds(
+        addDoc(collection(db, "trips"), UNSHARED_TRIP)
+      );
+    });
+
+    it("denies travel_agent from creating a trip with someone else's agentId", async () => {
+      const agent = travelAgent(AGENT_UID);
+      const db = agent.firestore();
+      await assertFails(
+        addDoc(collection(db, "trips"), {
+          ...UNSHARED_TRIP,
+          agentId: OTHER_AGENT_UID,
+        })
+      );
+    });
+
+    it("denies unauthenticated user from creating a trip", async () => {
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(
+        addDoc(collection(db, "trips"), UNSHARED_TRIP)
+      );
+    });
+
+    it("denies standard_user from creating a trip", async () => {
+      const user = env.authenticatedContext(AGENT_UID, {
+        role: "standard_user",
+      });
+      const db = user.firestore();
+      await assertFails(
+        addDoc(collection(db, "trips"), UNSHARED_TRIP)
+      );
+    });
+
+    it("denies admin from creating a trip (not a travel_agent)", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertFails(
+        addDoc(collection(db, "trips"), { ...UNSHARED_TRIP, agentId: "admin-uid" })
+      );
+    });
+  });
+
+  describe("READ", () => {
+    beforeEach(async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "trips", "trip-unshared"), UNSHARED_TRIP);
+        await setDoc(doc(ctx.firestore(), "trips", "trip-shared"), SHARED_TRIP);
+        await setDoc(doc(ctx.firestore(), "trips", "trip-other-agent"), {
+          ...UNSHARED_TRIP,
+          agentId: OTHER_AGENT_UID,
+        });
+      });
+    });
+
+    it("allows travel_agent to read their own unshared trip", async () => {
+      const agent = travelAgent(AGENT_UID);
+      const db = agent.firestore();
+      await assertSucceeds(getDoc(doc(db, "trips", "trip-unshared")));
+    });
+
+    it("allows travel_agent to read their own shared trip", async () => {
+      const agent = travelAgent(AGENT_UID);
+      const db = agent.firestore();
+      await assertSucceeds(getDoc(doc(db, "trips", "trip-shared")));
+    });
+
+    it("denies travel_agent from reading another agent's trip", async () => {
+      const agent = travelAgent(AGENT_UID);
+      const db = agent.firestore();
+      await assertFails(getDoc(doc(db, "trips", "trip-other-agent")));
+    });
+
+    it("allows unauthenticated user to read a shared trip", async () => {
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertSucceeds(getDoc(doc(db, "trips", "trip-shared")));
+    });
+
+    it("denies unauthenticated user from reading an unshared trip", async () => {
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(getDoc(doc(db, "trips", "trip-unshared")));
+    });
+
+    it("denies standard_user from reading any trip", async () => {
+      const user = env.authenticatedContext("user-uid", {
+        role: "standard_user",
+      });
+      const db = user.firestore();
+      await assertFails(getDoc(doc(db, "trips", "trip-unshared")));
+    });
+  });
+
+  describe("UPDATE", () => {
+    beforeEach(async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "trips", "trip-1"), UNSHARED_TRIP);
+        await setDoc(doc(ctx.firestore(), "trips", "trip-other"), {
+          ...UNSHARED_TRIP,
+          agentId: OTHER_AGENT_UID,
+        });
+      });
+    });
+
+    it("allows travel_agent to update their own trip", async () => {
+      const agent = travelAgent(AGENT_UID);
+      const db = agent.firestore();
+      await assertSucceeds(
+        updateDoc(doc(db, "trips", "trip-1"), {
+          clientName: "משפחת גולן",
+          updatedAt: Date.now(),
+        })
+      );
+    });
+
+    it("denies travel_agent from updating another agent's trip", async () => {
+      const agent = travelAgent(AGENT_UID);
+      const db = agent.firestore();
+      await assertFails(
+        updateDoc(doc(db, "trips", "trip-other"), {
+          clientName: "Hacked",
+        })
+      );
+    });
+
+    it("denies unauthenticated user from updating a trip", async () => {
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(
+        updateDoc(doc(db, "trips", "trip-1"), { clientName: "Hacked" })
+      );
+    });
+  });
+
+  describe("DELETE", () => {
+    beforeEach(async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "trips", "trip-del"), UNSHARED_TRIP);
+        await setDoc(doc(ctx.firestore(), "trips", "trip-other-del"), {
+          ...UNSHARED_TRIP,
+          agentId: OTHER_AGENT_UID,
+        });
+      });
+    });
+
+    it("allows travel_agent to delete their own trip", async () => {
+      const agent = travelAgent(AGENT_UID);
+      const db = agent.firestore();
+      await assertSucceeds(deleteDoc(doc(db, "trips", "trip-del")));
+    });
+
+    it("denies travel_agent from deleting another agent's trip", async () => {
+      const agent = travelAgent(AGENT_UID);
+      const db = agent.firestore();
+      await assertFails(deleteDoc(doc(db, "trips", "trip-other-del")));
+    });
+
+    it("denies unauthenticated user from deleting a trip", async () => {
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(deleteDoc(doc(db, "trips", "trip-del")));
+    });
+  });
+});

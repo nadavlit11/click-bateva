@@ -47,7 +47,7 @@ Prompt:
 > - `clicks` is a TOP-LEVEL collection (never a subcollection)
 > - `icons` documents have `path` field (NOT `url`, NOT `storagePath`)
 > - `categories` documents have `color`, `iconId`, `iconUrl` fields
-> - Roles: `admin`, `content_manager`, `business_user`, `standard_user` (no other values)
+> - Roles: `admin`, `content_manager`, `business_user`, `standard_user`, `travel_agent` (no other values)
 > - Storage rules use `request.auth.token.role` (custom claims) — NEVER `firestore.get()`
 > - Firestore rules use `get(/databases/$(database)/documents/users/$(request.auth.uid))` for role checks
 > - Denormalize fields (e.g. `iconUrl` on categories) rather than doing extra reads at query time

@@ -13,8 +13,9 @@ const NAV = [
   { path: '/subcategories',  label: 'תת-קטגוריות',   end: false, adminOnly: false },
   { path: '/icons',       label: 'אייקונים',      end: false, adminOnly: false },
   { path: '/businesses',  label: 'עסקים',         end: false, adminOnly: true },
-  { path: '/users',       label: 'מנהלי תוכן',   end: false, adminOnly: true },
-  { path: '/analytics',  label: 'אנליטיקס',      end: true,  adminOnly: false },
+  { path: '/users',          label: 'מנהלי תוכן',   end: false, adminOnly: true },
+  { path: '/travel-agents', label: 'סוכני טיולים', end: false, adminOnly: true },
+  { path: '/analytics',     label: 'אנליטיקס',     end: true,  adminOnly: false },
 ]
 
 export function Sidebar() {

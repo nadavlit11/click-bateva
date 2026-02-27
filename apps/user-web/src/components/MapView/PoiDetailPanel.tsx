@@ -9,9 +9,12 @@ interface PoiDetailPanelProps {
   poi: Poi;
   category: Category | undefined;
   onClose: () => void;
+  tripPoiIds?: Set<string>;
+  onAddToTrip?: (id: string) => void;
+  onRemoveFromTrip?: (id: string) => void;
 }
 
-export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) {
+export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip, onRemoveFromTrip }: PoiDetailPanelProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [descExpanded, setDescExpanded] = useState(false);
   const [hoursExpanded, setHoursExpanded] = useState(false);
@@ -195,6 +198,14 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
           {whatsappHref && <ActionIcon href={whatsappHref} icon={ICON_WHATSAPP} label="הודעה" color={color} external />}
           {safeWebsiteHref && <ActionIcon href={safeWebsiteHref} icon={ICON_GLOBE} label="אתר" color={color} external />}
           {safeFacebookHref && <ActionIcon href={safeFacebookHref} icon={ICON_FACEBOOK} label="פייסבוק" color={color} external />}
+          {onAddToTrip && onRemoveFromTrip && (
+            <TripButton
+              inTrip={tripPoiIds?.has(poi.id) ?? false}
+              color={color}
+              onAdd={() => onAddToTrip(poi.id)}
+              onRemove={() => onRemoveFromTrip(poi.id)}
+            />
+          )}
         </div>
 
         {poi.description && (
@@ -355,6 +366,30 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
       </div>
       </div>{/* end scrollable wrapper */}
     </div>
+  );
+}
+
+function TripButton({ inTrip, color, onAdd, onRemove }: {
+  inTrip: boolean; color: string; onAdd: () => void; onRemove: () => void;
+}) {
+  return (
+    <button onClick={() => inTrip ? onRemove() : onAdd()} className="flex flex-col items-center gap-1">
+      <span
+        className="w-11 h-11 rounded-full flex items-center justify-center"
+        style={{ background: inTrip ? "#16a34a" : color }}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-5 h-5">
+          {inTrip ? (
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          ) : (
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+          )}
+        </svg>
+      </span>
+      <span className="text-[10px] font-medium" style={{ color: inTrip ? "#16a34a" : color }}>
+        {inTrip ? "הסר" : "הוסף"}
+      </span>
+    </button>
   );
 }
 

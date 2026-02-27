@@ -5,7 +5,8 @@
   "tsconfigFile": "tsconfig.app.json",
   "mutate": [
     "src/lib/filterPois.ts",
-    "src/lib/openingStatus.ts"
+    "src/lib/openingStatus.ts",
+    "src/lib/tripUtils.ts"
   ],
   "reporters": ["clear-text", "html", "progress"],
   "htmlReporter": {

@@ -29,6 +29,10 @@ service cloud.firestore {
       return isSignedIn() && userRole() == 'business_user';
     }
 
+    function isTravelAgent() {
+      return isSignedIn() && userRole() == 'travel_agent';
+    }
+
     // ─── points_of_interest ─────────────────────────────────────────────────
 
     match /points_of_interest/{poiId} {
@@ -100,6 +104,20 @@ service cloud.firestore {
       // Business documents are keyed by the owner's UID, so uid == businessId is sufficient.
       allow read: if isAdmin() ||
         (isBusinessUser() && request.auth.uid == businessId);
+    }
+
+    // ─── trips ──────────────────────────────────────────────────────────────
+
+    match /trips/{tripId} {
+      // Travel agent who owns the trip can read and update
+      allow read, update, delete: if isTravelAgent() && resource.data.agentId == request.auth.uid;
+
+      // Travel agent can create a trip for themselves
+      allow create: if isTravelAgent() && request.resource.data.agentId == request.auth.uid;
+
+      // Anyone can get a shared trip by direct ID (for client link — no auth required)
+      // Using `allow get` (not `allow read`) to prevent unauthenticated list/query of all shared trips
+      allow get: if resource.data.isShared == true;
     }
 
     // ─── users ──────────────────────────────────────────────────────────────
