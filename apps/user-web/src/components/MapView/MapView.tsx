@@ -3,6 +3,7 @@ import { APIProvider, Map, useMap } from "@vis.gl/react-google-maps";
 import { MarkerClusterer, SuperClusterAlgorithm } from "@googlemaps/markerclusterer";
 import type { Marker } from "@googlemaps/markerclusterer";
 import { PoiMarker } from "./PoiMarker";
+import { TripRouteOverlay } from "./TripRouteOverlay";
 import type { Poi, Category, Subcategory } from "../../types";
 
 interface MapViewProps {
@@ -16,6 +17,7 @@ interface MapViewProps {
   onFocusConsumed?: () => void;
   pinSize?: number;
   highlightPoi?: Poi | null;
+  orderedTripPoiIds?: string[];
 }
 
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
@@ -23,7 +25,7 @@ const MAP_ID = "DEMO_MAP_ID";
 const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
 const LABEL_ZOOM_THRESHOLD = 11;
 
-export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed, pinSize = 24, highlightPoi }: MapViewProps) {
+export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed, pinSize = 24, highlightPoi, orderedTripPoiIds = [] }: MapViewProps) {
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} language="he" region="IL">
       <Map
@@ -48,6 +50,7 @@ export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiC
           onFocusConsumed={onFocusConsumed}
           pinSize={pinSize}
           highlightPoi={highlightPoi}
+          orderedTripPoiIds={orderedTripPoiIds}
         />
       </Map>
     </APIProvider>
@@ -64,9 +67,10 @@ interface ClusteredPoiMarkersProps {
   onFocusConsumed?: () => void;
   pinSize: number;
   highlightPoi?: Poi | null;
+  orderedTripPoiIds: string[];
 }
 
-function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed, pinSize, highlightPoi }: ClusteredPoiMarkersProps) {
+function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed, pinSize, highlightPoi, orderedTripPoiIds }: ClusteredPoiMarkersProps) {
   const map = useMap();
   const [zoom, setZoom] = useState(8);
   const clusterer = useRef<MarkerClusterer | null>(null);
@@ -85,6 +89,20 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
       subcategories.filter((s) => s.iconUrl != null).map((s) => [s.id, s.iconUrl])
     ),
     [subcategories]
+  );
+
+  // Trip number map: poiId → 1-indexed position
+  const tripNumberMap = useMemo(
+    () => new Map(orderedTripPoiIds.map((id, i) => [id, i + 1])),
+    [orderedTripPoiIds]
+  );
+  const hasTripPois = orderedTripPoiIds.length > 0;
+
+  // Ordered Poi objects for route overlay
+  const poiMap = useMemo(() => new Map(pois.map(p => [p.id, p])), [pois]);
+  const orderedTripPois = useMemo(
+    () => orderedTripPoiIds.map(id => poiMap.get(id)).filter(Boolean) as Poi[],
+    [orderedTripPoiIds, poiMap]
   );
 
   // Initialize clusterer when map is ready
@@ -187,6 +205,8 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
           null
         );
         const resolvedIconUrl = poi.iconUrl ?? subcategoryIcon ?? iconUrlMap[poi.categoryId] ?? null;
+        const tripNumber = tripNumberMap.get(poi.id);
+        const isDimmed = hasTripPois && tripNumber === undefined;
         return (
           <PoiMarker
             key={poi.id}
@@ -198,9 +218,14 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
             pinSize={pinSize}
             onClick={() => onPoiClick(poi)}
             setMarkerRef={setMarkerRef}
+            tripNumber={tripNumber}
+            isDimmed={isDimmed}
           />
         );
       })}
+      {orderedTripPois.length >= 2 && (
+        <TripRouteOverlay orderedPois={orderedTripPois} />
+      )}
     </>
   );
 }
