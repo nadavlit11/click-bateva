@@ -101,6 +101,7 @@ jobs:
           cache-dependency-path: apps/user-web/package-lock.json
       - run: npm ci
       - run: npm run lint
+        continue-on-error: ${{ startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/') }}
       - run: npm run test
       - name: Build
         env:

@@ -20,10 +20,7 @@ export function useTrip(uid: string | null) {
   const [trip, setTrip] = useState<TripDoc | null>(null);
 
   useEffect(() => {
-    if (!uid) {
-      setTrip(null);
-      return;
-    }
+    if (!uid) return;
 
     const q = query(
       collection(db, "trips"),
@@ -55,7 +52,10 @@ export function useTrip(uid: string | null) {
       (err) => reportError(err, { source: "useTrip" })
     );
 
-    return unsub;
+    return () => {
+      unsub();
+      setTrip(null);
+    };
   }, [uid]);
 
   const createTrip = useCallback(async (): Promise<string> => {
