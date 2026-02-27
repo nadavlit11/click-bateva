@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'feat/**', 'fix/**']
   pull_request:
     branches: [main]
 
@@ -286,4 +286,39 @@ jobs:
           projectId: click-bateva
           target: click-bateva-app
           channelId: staging
+          expires: 7d
+
+  # ── Deploy: Feature branch preview (feat/**, fix/**) ──────────────────
+  deploy-feature-preview:
+    name: Deploy Feature Preview — User Web
+    needs: [changes, ci-user-web]
+    if: >-
+      always() &&
+      (startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) &&
+      github.event_name == 'push' &&
+      needs.changes.outputs.user-web == 'true' &&
+      needs.ci-user-web.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download user-web dist
+        uses: actions/download-artifact@v4
+        with:
+          name: user-web-dist
+          path: apps/user-web/dist
+      - name: Slugify branch name
+        id: slug
+        run: |
+          SLUG=$(echo "${{ github.ref_name }}" | sed 's|/|-|g' | tr '[:upper:]' '[:lower:]' | cut -c1-20)
+          echo "channel=$SLUG" >> $GITHUB_OUTPUT
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: click-bateva
+          target: click-bateva-app
+          channelId: ${{ steps.slug.outputs.channel }}
           expires: 7d
