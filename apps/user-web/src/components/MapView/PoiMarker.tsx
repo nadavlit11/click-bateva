@@ -39,8 +39,8 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, s
         {/* White circle bubble marker */}
         <div
           style={{
-            width: 28,
-            height: 28,
+            width: 24,
+            height: 24,
             borderRadius: "50%",
             background: "white",
             display: "flex",
