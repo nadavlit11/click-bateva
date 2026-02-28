@@ -196,9 +196,9 @@ export function UsersPage() {
                 {addPassword && (
                   <div className="mt-1">
                     <div className="h-1 rounded-full bg-gray-100 overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: strengthWidth(getStrength(addPassword)), background: strengthColor(getStrength(addPassword)) }} />
+                      <div className="h-full rounded-full transition-all" style={{ width: strengthWidth[getStrength(addPassword)], background: strengthColor[getStrength(addPassword)] }} />
                     </div>
-                    <p className="text-xs mt-0.5" style={{ color: strengthColor(getStrength(addPassword)) }}>{strengthLabel(getStrength(addPassword))}</p>
+                    <p className="text-xs mt-0.5" style={{ color: strengthColor[getStrength(addPassword)] }}>{strengthLabel[getStrength(addPassword)]}</p>
                   </div>
                 )}
               </div>

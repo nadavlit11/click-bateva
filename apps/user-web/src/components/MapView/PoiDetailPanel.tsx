@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { CSSProperties } from "react";
 import type { Poi, Category, DayHours } from "../../types";
 import { lighten } from "../../lib/colorUtils";
@@ -13,7 +13,7 @@ interface PoiDetailPanelProps {
 
 export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) {
   const [virtualSlide, setVirtualSlide] = useState(0);
-  const skipTransition = useRef(false);
+  const [skipTransition, setSkipTransition] = useState(false);
   const isDesktop = useMemo(() => typeof window !== "undefined" && !("ontouchstart" in window), []);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
@@ -49,16 +49,21 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
   function next() { setVirtualSlide(s => s + 1); }
   function prev() { setVirtualSlide(s => s - 1); }
 
+  // Reset skipTransition after one frame (avoids reading ref during render)
+  useEffect(() => {
+    if (!skipTransition) return;
+    const id = requestAnimationFrame(() => setSkipTransition(false));
+    return () => cancelAnimationFrame(id);
+  }, [skipTransition]);
+
   function handleTransitionEnd() {
     if (slideCount <= 1) return;
     if (virtualSlide < slideCount) {
-      skipTransition.current = true;
+      setSkipTransition(true);
       setVirtualSlide(virtualSlide + slideCount);
-      requestAnimationFrame(() => { skipTransition.current = false; });
     } else if (virtualSlide >= 2 * slideCount) {
-      skipTransition.current = true;
+      setSkipTransition(true);
       setVirtualSlide(virtualSlide - slideCount);
-      requestAnimationFrame(() => { skipTransition.current = false; });
     }
   }
 
@@ -123,7 +128,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
             display: "flex",
             height: "100%",
             direction: "ltr",
-            transition: skipTransition.current ? "none" : "transform 0.3s ease",
+            transition: skipTransition ? "none" : "transform 0.3s ease",
             transform: `translateX(${-virtualSlide * 100}%)`,
           }}
           onTransitionEnd={handleTransitionEnd}

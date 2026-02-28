@@ -7,6 +7,11 @@ interface GeoResult {
   lng: number;
 }
 
+interface GeocodingResult {
+  formatted_address: string;
+  geometry: { location: { lat: number; lng: number } };
+}
+
 interface FloatingSearchProps {
   pois: Poi[];
   mapsApiKey: string;
@@ -56,7 +61,7 @@ export function FloatingSearch({ pois, mapsApiKey, onPoiSelect, onLocationSelect
       const res = await fetch(url);
       const data = await res.json();
       if (data.status === "OK" && Array.isArray(data.results)) {
-        const locs: GeoResult[] = data.results.slice(0, 3).map((r: any) => ({
+        const locs: GeoResult[] = data.results.slice(0, 3).map((r: GeocodingResult) => ({
           label: r.formatted_address as string,
           lat: r.geometry.location.lat as number,
           lng: r.geometry.location.lng as number,
