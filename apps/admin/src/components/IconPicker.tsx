@@ -36,6 +36,7 @@ export function IconPicker({ icons, value, onChange }: Props) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [open])
 
+  const sorted = [...icons].sort((a, b) => a.name.localeCompare(b.name, 'he'))
   const selected = icons.find(i => i.id === value)
 
   return (
@@ -71,7 +72,7 @@ export function IconPicker({ icons, value, onChange }: Props) {
           >
             ללא אייקון
           </button>
-          {icons.map(icon => (
+          {sorted.map(icon => (
             <button
               type="button"
               key={icon.id}
