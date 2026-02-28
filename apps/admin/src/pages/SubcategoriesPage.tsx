@@ -4,8 +4,10 @@ import { db } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import type { Subcategory, Category, Icon } from '../types/index.ts'
 import { SubcategoryModal } from '../components/SubcategoryModal.tsx'
+import { useUserRole } from '../hooks/useUserRole.ts'
 
 export function SubcategoriesPage() {
+  const role = useUserRole()
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [icons, setIcons] = useState<Icon[]>([])
@@ -106,12 +108,14 @@ export function SubcategoriesPage() {
                         >
                           עריכה
                         </button>
-                        <button
-                          onClick={() => handleDelete(sub.id).catch(err => reportError(err, { source: 'SubcategoriesPage.delete' }))}
-                          className="text-red-500 hover:text-red-700 text-xs font-medium"
-                        >
-                          מחיקה
-                        </button>
+                        {role === 'admin' && (
+                          <button
+                            onClick={() => handleDelete(sub.id).catch(err => reportError(err, { source: 'SubcategoriesPage.delete' }))}
+                            className="text-red-500 hover:text-red-700 text-xs font-medium"
+                          >
+                            מחיקה
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -140,12 +144,14 @@ export function SubcategoriesPage() {
                         >
                           עריכה
                         </button>
-                        <button
-                          onClick={() => handleDelete(sub.id).catch(err => reportError(err, { source: 'SubcategoriesPage.delete' }))}
-                          className="text-red-500 hover:text-red-700 text-xs font-medium"
-                        >
-                          מחיקה
-                        </button>
+                        {role === 'admin' && (
+                          <button
+                            onClick={() => handleDelete(sub.id).catch(err => reportError(err, { source: 'SubcategoriesPage.delete' }))}
+                            className="text-red-500 hover:text-red-700 text-xs font-medium"
+                          >
+                            מחיקה
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

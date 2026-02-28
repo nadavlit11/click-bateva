@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { signOut } from 'firebase/auth'
+import { signOut, onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { useUserRole } from '../../hooks/useUserRole.ts'
@@ -14,13 +14,18 @@ const NAV = [
   { path: '/icons',       label: 'אייקונים',      end: false, adminOnly: false },
   { path: '/businesses',  label: 'עסקים',         end: false, adminOnly: true },
   { path: '/users',       label: 'מנהלי תוכן',   end: false, adminOnly: true },
-  { path: '/analytics',  label: 'אנליטיקס',      end: true,  adminOnly: false },
-  { path: '/map-settings', label: 'הגדרות מפה',  end: false, adminOnly: true },
+  { path: '/analytics',  label: 'אנליטיקס',      end: true,  adminOnly: true },
+
 ]
 
 export function Sidebar() {
   const role = useUserRole()
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
+  const [email, setEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    return onAuthStateChanged(auth, user => setEmail(user?.email ?? null))
+  }, [])
 
   return (
     <aside className="w-64 bg-white border-s border-gray-200 flex flex-col h-full shrink-0">
@@ -49,6 +54,11 @@ export function Sidebar() {
       </nav>
 
       <div className="p-3 border-t border-gray-200">
+        {email && (
+          <div className="px-3 py-2 mb-1">
+            <p className="text-xs text-gray-400 truncate">{email}</p>
+          </div>
+        )}
         <button
           onClick={() => setPasswordModalOpen(true)}
           className="w-full text-start px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"

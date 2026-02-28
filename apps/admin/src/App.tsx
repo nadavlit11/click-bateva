@@ -1,7 +1,15 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { AuthGuard } from './components/AuthGuard.tsx'
 import { AppLayout } from './components/Layout/AppLayout.tsx'
+import { useUserRole } from './hooks/useUserRole.ts'
+
+function AdminOnlyRoute() {
+  const role = useUserRole()
+  if (role === null) return null
+  if (role !== 'admin') return <Navigate to="/" replace />
+  return <Outlet />
+}
 
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx').then(m => ({ default: m.LoginPage })))
 const DashboardPage = lazy(() => import('./pages/DashboardPage.tsx').then(m => ({ default: m.DashboardPage })))
@@ -12,7 +20,6 @@ const BusinessesPage = lazy(() => import('./pages/BusinessesPage.tsx').then(m =>
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage.tsx').then(m => ({ default: m.AnalyticsPage })))
 const SubcategoriesPage = lazy(() => import('./pages/SubcategoriesPage.tsx').then(m => ({ default: m.SubcategoriesPage })))
 const UsersPage = lazy(() => import('./pages/UsersPage.tsx').then(m => ({ default: m.UsersPage })))
-const MapSettingsPage = lazy(() => import('./pages/MapSettingsPage.tsx').then(m => ({ default: m.MapSettingsPage })))
 
 const Loading = () => <div className="text-center py-10 text-gray-400">טוען...</div>
 
@@ -31,8 +38,9 @@ export default function App() {
               <Route path="/businesses" element={<BusinessesPage />} />
               <Route path="/subcategories" element={<SubcategoriesPage />} />
               <Route path="/users" element={<UsersPage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/map-settings" element={<MapSettingsPage />} />
+              <Route element={<AdminOnlyRoute />}>
+                <Route path="/analytics" element={<AnalyticsPage />} />
+              </Route>
             </Route>
           </Route>
         </Routes>
