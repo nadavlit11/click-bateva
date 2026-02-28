@@ -82,7 +82,7 @@ export function UsersPage() {
       setAddPassword('')
     } catch (err: unknown) {
       const code = (err as { code?: string }).code
-      if (code === 'already-exists') {
+      if (code === 'functions/already-exists') {
         setAddError('כתובת האימייל כבר בשימוש')
       } else {
         setAddError('שגיאה ביצירת המשתמש')
