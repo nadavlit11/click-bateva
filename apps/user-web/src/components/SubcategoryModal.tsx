@@ -92,12 +92,19 @@ export function SubcategoryModal({
                         <button
                           key={sub.id}
                           onClick={() => onToggle(sub.id)}
-                          className={`py-1.5 px-3 rounded-full text-sm border transition-all ${
+                          className={`py-1.5 px-3 rounded-full text-sm border transition-all flex items-center gap-1.5 ${
                             isSelected
                               ? "bg-green-500 text-white border-green-500"
                               : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-green-50"
                           }`}
                         >
+                          {sub.iconUrl && (
+                            <img
+                              src={sub.iconUrl}
+                              alt=""
+                              style={{ width: 14, height: 14, objectFit: "contain", flexShrink: 0 }}
+                            />
+                          )}
                           {sub.name}
                         </button>
                       );

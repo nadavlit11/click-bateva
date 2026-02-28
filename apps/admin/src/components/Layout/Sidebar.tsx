@@ -15,6 +15,7 @@ const NAV = [
   { path: '/businesses',  label: 'עסקים',         end: false, adminOnly: true },
   { path: '/users',       label: 'מנהלי תוכן',   end: false, adminOnly: true },
   { path: '/analytics',  label: 'אנליטיקס',      end: true,  adminOnly: false },
+  { path: '/map-settings', label: 'הגדרות מפה',  end: false, adminOnly: true },
 ]
 
 export function Sidebar() {

@@ -56,3 +56,5 @@ clickbateva-data.json
 serviceAccount.json
 *serviceAccount*.json
 *service-account*.json
+*.tar.gz
+.claude/worktrees/

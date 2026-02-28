@@ -14,6 +14,7 @@ interface MapViewProps {
   onMapClick?: () => void;
   focusLocation?: { lat: number; lng: number; zoom: number } | null;
   onFocusConsumed?: () => void;
+  pinSize?: number;
 }
 
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
@@ -21,7 +22,7 @@ const MAP_ID = "DEMO_MAP_ID";
 const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
 const LABEL_ZOOM_THRESHOLD = 11;
 
-export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed }: MapViewProps) {
+export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed, pinSize = 24 }: MapViewProps) {
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} language="he" region="IL">
       <Map
@@ -44,6 +45,7 @@ export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiC
           onPoiClick={onPoiClick}
           focusLocation={focusLocation}
           onFocusConsumed={onFocusConsumed}
+          pinSize={pinSize}
         />
       </Map>
     </APIProvider>
@@ -58,9 +60,10 @@ interface ClusteredPoiMarkersProps {
   onPoiClick: (poi: Poi) => void;
   focusLocation?: { lat: number; lng: number; zoom: number } | null;
   onFocusConsumed?: () => void;
+  pinSize: number;
 }
 
-function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed }: ClusteredPoiMarkersProps) {
+function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed, pinSize }: ClusteredPoiMarkersProps) {
   const map = useMap();
   const [zoom, setZoom] = useState(8);
   const clusterer = useRef<MarkerClusterer | null>(null);
@@ -184,6 +187,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
             iconUrl={resolvedIconUrl}
             selected={poi.id === selectedPoiId}
             showLabel={showLabels}
+            pinSize={pinSize}
             onClick={() => onPoiClick(poi)}
             setMarkerRef={setMarkerRef}
           />
