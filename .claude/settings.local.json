@@ -25,7 +25,12 @@
       "Bash(firebase login:list:*)",
       "Bash(firebase projects:list:*)",
       "Bash(firebase use:*)",
-      "Bash(firebase init:*)"
+      "Bash(firebase init:*)",
+      "Bash(open:*)",
+      "Bash(pip3 install:*)",
+      "Bash(npx playwright:*)",
+      "Bash(sudo installer:*)",
+      "Bash(python3.12:*)"
     ]
   }
 }

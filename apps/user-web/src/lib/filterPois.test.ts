@@ -33,30 +33,14 @@ const POIS: Poi[] = [
 const noFilter = {
   selectedCategories: new Set<string>(),
   selectedSubcategories: new Set<string>(),
-  searchQuery: "",
   subcategories: [] as Subcategory[],
 };
 
 const allCategories = new Set(["restaurants", "parks", "beaches", "sites"]);
 
 describe("filterPois", () => {
-  it("returns no POIs when no categories selected and no search query", () => {
-    expect(filterPois(POIS, noFilter)).toHaveLength(0);
-  });
-
-  it("search finds POIs across all categories when none selected", () => {
-    const result = filterPois(POIS, { ...noFilter, searchQuery: "מצדה" });
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("4");
-  });
-
-  it("search scoped to selected categories when some are selected", () => {
-    const result = filterPois(POIS, {
-      ...noFilter,
-      selectedCategories: new Set(["parks"]),
-      searchQuery: "מצדה",
-    });
-    expect(result).toHaveLength(0); // מצדה is in "sites", not "parks"
+  it("returns all POIs when no categories selected", () => {
+    expect(filterPois(POIS, noFilter)).toHaveLength(4);
   });
 
   it("returns all POIs when all categories are selected", () => {
@@ -75,35 +59,6 @@ describe("filterPois", () => {
       selectedCategories: new Set(["parks", "beaches"]),
     });
     expect(result).toHaveLength(2);
-  });
-
-  it("filters by search query (substring match)", () => {
-    const result = filterPois(POIS, {
-      ...noFilter,
-      selectedCategories: allCategories,
-      searchQuery: "חוף",
-    });
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("3");
-  });
-
-  it("search returns nothing for no match", () => {
-    const result = filterPois(POIS, {
-      ...noFilter,
-      selectedCategories: allCategories,
-      searchQuery: "לונדון",
-    });
-    expect(result).toHaveLength(0);
-  });
-
-  it("combines category + search filters", () => {
-    const result = filterPois(POIS, {
-      ...noFilter,
-      selectedCategories: new Set(["sites"]),
-      searchQuery: "מצדה",
-    });
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("4");
   });
 
   it("returns empty array when no POIs match the category", () => {

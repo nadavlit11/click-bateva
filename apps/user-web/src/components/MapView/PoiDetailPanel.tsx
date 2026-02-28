@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import type { CSSProperties } from "react";
 import type { Poi, Category, DayHours } from "../../types";
 import { lighten } from "../../lib/colorUtils";
@@ -12,7 +12,10 @@ interface PoiDetailPanelProps {
 }
 
 export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) {
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [virtualSlide, setVirtualSlide] = useState(0);
+  const skipTransition = useRef(false);
+  const isDesktop = useMemo(() => typeof window !== "undefined" && !("ontouchstart" in window), []);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const [hoursExpanded, setHoursExpanded] = useState(false);
   const color = category?.color ?? "#4caf50";
@@ -23,21 +26,41 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
   ];
   const hasImages = allImages.length > 0;
   const slideCount = hasImages ? allImages.length : 1;
+  // For infinite carousel: triple the array when there are multiple slides
+  const tripled = slideCount > 1 ? [...allImages, ...allImages, ...allImages] : allImages;
 
   // Reset state when POI changes
   // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting local state on key change is intentional
-  useEffect(() => { setCurrentSlide(0); setDescExpanded(false); setHoursExpanded(false); }, [poi.id]);
+  useEffect(() => { setVirtualSlide(slideCount > 1 ? slideCount : 0); setDescExpanded(false); setHoursExpanded(false); setShowPhoneModal(false); }, [poi.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ESC to close
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showPhoneModal) { setShowPhoneModal(false); }
+        else { onClose(); }
+      }
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [onClose, showPhoneModal]);
 
   // RTL: left button = next, right button = prev
-  function next() { setCurrentSlide(s => (s + 1) % slideCount); }
-  function prev() { setCurrentSlide(s => (s - 1 + slideCount) % slideCount); }
+  function next() { setVirtualSlide(s => s + 1); }
+  function prev() { setVirtualSlide(s => s - 1); }
+
+  function handleTransitionEnd() {
+    if (slideCount <= 1) return;
+    if (virtualSlide < slideCount) {
+      skipTransition.current = true;
+      setVirtualSlide(virtualSlide + slideCount);
+      requestAnimationFrame(() => { skipTransition.current = false; });
+    } else if (virtualSlide >= 2 * slideCount) {
+      skipTransition.current = true;
+      setVirtualSlide(virtualSlide - slideCount);
+      requestAnimationFrame(() => { skipTransition.current = false; });
+    }
+  }
 
   // Guard against username@host URL confusion attacks (e.g. "trusted.com@evil.com")
   const safeWebsiteHref = (() => {
@@ -100,12 +123,13 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
             display: "flex",
             height: "100%",
             direction: "ltr",
-            transition: "transform 0.3s ease",
-            transform: `translateX(${-currentSlide * 100}%)`,
+            transition: skipTransition.current ? "none" : "transform 0.3s ease",
+            transform: `translateX(${-virtualSlide * 100}%)`,
           }}
+          onTransitionEnd={handleTransitionEnd}
         >
           {hasImages ? (
-            allImages.map((url, i) => (
+            tripled.map((url, i) => (
               <img
                 key={i}
                 src={url}
@@ -153,11 +177,11 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
             {Array.from({ length: slideCount }).map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrentSlide(i)}
+                onClick={() => setVirtualSlide(slideCount + i)}
                 aria-label={`תמונה ${i + 1}`}
                 style={{
                   width: 6, height: 6, borderRadius: "50%", border: "none", padding: 0, cursor: "pointer",
-                  background: i === currentSlide ? "white" : "rgba(255,255,255,0.5)",
+                  background: i === virtualSlide % slideCount ? "white" : "rgba(255,255,255,0.5)",
                   transition: "background 0.2s",
                 }}
               />
@@ -190,7 +214,11 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
 
         {/* Quick-action icon row */}
         <div className="flex justify-center gap-3 mt-3">
-          {poi.phone && <ActionIcon href={`tel:${poi.phone}`} icon={ICON_PHONE} label="שיחה" color={color} />}
+          {poi.phone && (
+            isDesktop
+              ? <ActionIcon href={`tel:${poi.phone}`} icon={ICON_PHONE} label="שיחה" color={color} asButton onClick={() => setShowPhoneModal(true)} />
+              : <ActionIcon href={`tel:${poi.phone}`} icon={ICON_PHONE} label="שיחה" color={color} />
+          )}
           <ActionIcon href={googleMapsUrl} icon={ICON_PIN} label="ניווט" color={color} external />
           {whatsappHref && <ActionIcon href={whatsappHref} icon={ICON_WHATSAPP} label="הודעה" color={color} external />}
           {safeWebsiteHref && <ActionIcon href={safeWebsiteHref} icon={ICON_GLOBE} label="אתר" color={color} external />}
@@ -354,25 +382,88 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
 
       </div>
       </div>{/* end scrollable wrapper */}
+
+      {/* Phone modal — desktop only */}
+      {showPhoneModal && (
+        <div
+          onClick={() => setShowPhoneModal(false)}
+          style={{
+            position: "fixed", inset: 0,
+            background: "rgba(0,0,0,0.4)",
+            zIndex: 50,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "white", borderRadius: 16,
+              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+              padding: "1.5rem",
+              textAlign: "center",
+              minWidth: 240,
+            }}
+          >
+            <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 4 }}>מספר טלפון</p>
+            <p className="text-2xl font-bold text-gray-800 my-3 dir-ltr">{poi.phone}</p>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 12 }}>
+              <a
+                href={`tel:${poi.phone}`}
+                style={{
+                  background: "#16a34a", color: "white",
+                  padding: "8px 20px", borderRadius: 8,
+                  fontWeight: 600, fontSize: 14,
+                  textDecoration: "none",
+                }}
+              >
+                חייג
+              </a>
+              <button
+                onClick={() => setShowPhoneModal(false)}
+                style={{
+                  background: "#e5e7eb", color: "#374151",
+                  padding: "8px 20px", borderRadius: 8,
+                  fontWeight: 600, fontSize: 14,
+                  border: "none", cursor: "pointer",
+                }}
+              >
+                סגור
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function ActionIcon({ href, icon, label, color, external }: {
-  href: string; icon: string; label: string; color: string; external?: boolean;
+function ActionIcon({ href, icon, label, color, external, asButton, onClick }: {
+  href: string; icon: string; label: string; color: string; external?: boolean; asButton?: boolean; onClick?: () => void;
 }) {
-  return (
-    <a
-      href={href}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      className="flex flex-col items-center gap-1"
-    >
+  const inner = (
+    <>
       <span className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: color }}>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-5 h-5">
           <path d={icon} />
         </svg>
       </span>
       <span className="text-[10px] font-medium" style={{ color }}>{label}</span>
+    </>
+  );
+  if (asButton) {
+    return (
+      <button onClick={onClick} className="flex flex-col items-center gap-1" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+        {inner}
+      </button>
+    );
+  }
+  return (
+    <a
+      href={href}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className="flex flex-col items-center gap-1"
+    >
+      {inner}
     </a>
   );
 }

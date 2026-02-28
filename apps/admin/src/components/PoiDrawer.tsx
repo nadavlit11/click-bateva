@@ -178,7 +178,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name.trim()) { setError('שם הנקודה הוא שדה חובה'); return }
+    if (!form.name.trim()) { setError('כותרת הנקודה היא שדה חובה'); return }
     if (!form.categoryId) { setError('יש לבחור קטגוריה'); return }
     if (!form.phone.trim()) { setError('טלפון הוא שדה חובה'); return }
     if (!form.whatsapp.trim()) { setError('וואטסאפ הוא שדה חובה'); return }
@@ -279,13 +279,13 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-red-600 mb-1">שם *</label>
+              <label className="block text-sm font-medium text-red-600 mb-1">כותרת *</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={e => set('name', e.target.value)}
                 className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-green-50/30"
-                placeholder="שם הנקודה"
+                placeholder="כותרת הנקודה"
               />
             </div>
 
