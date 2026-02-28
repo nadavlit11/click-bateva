@@ -20,11 +20,24 @@ type Role = (typeof VALID_ROLES)[number];
  * Creates a Firestore user document and sets the default custom claim.
  */
 export const onUserCreated = auth.user().onCreate(async (user) => {
-  // If another function (e.g. createBusinessUser) already set custom claims,
-  // skip — that function handles its own Firestore doc and claims.
-  const userRecord = await adminAuth.getUser(user.uid);
+  // If another callable (e.g. createBusinessUser, createContentManager) already set
+  // custom claims, skip — that function handles its own Firestore doc and claims.
+  // We check twice with a short delay to handle the race where the callable creates
+  // the Auth user first, then sets claims asynchronously.
+  let userRecord = await adminAuth.getUser(user.uid);
   if (userRecord.customClaims?.role) {
     logger.info("User created with existing role, skipping standard_user setup", {
+      uid: user.uid,
+      role: userRecord.customClaims.role,
+    });
+    return;
+  }
+
+  // Wait briefly for any concurrent callable to finish setting claims
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  userRecord = await adminAuth.getUser(user.uid);
+  if (userRecord.customClaims?.role) {
+    logger.info("User created with existing role (after delay), skipping standard_user setup", {
       uid: user.uid,
       role: userRecord.customClaims.role,
     });
