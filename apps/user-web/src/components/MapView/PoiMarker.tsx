@@ -14,17 +14,17 @@ interface PoiMarkerProps {
 }
 
 export function PoiMarker({ poi, color, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef }: PoiMarkerProps) {
-  const circle = pinSize;
-  const icon = Math.round(pinSize * 0.72);
   const [hovered, setHovered] = useState(false);
   const ref = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement | null) => setMarkerRef(marker, poi.id),
     [setMarkerRef, poi.id]
   );
 
-  const boxShadow = hovered
-    ? "0 4px 14px rgba(0,0,0,0.35)"
-    : "0 2px 8px rgba(0,0,0,0.25)";
+  const dropShadow = selected
+    ? `drop-shadow(0 0 5px ${color}) drop-shadow(0 2px 4px rgba(0,0,0,0.3))`
+    : hovered
+    ? "drop-shadow(0 3px 8px rgba(0,0,0,0.45))"
+    : "drop-shadow(0 2px 5px rgba(0,0,0,0.3))";
 
   return (
     <AdvancedMarker position={poi.location} onClick={onClick} zIndex={selected ? 10 : 1} ref={ref}>
@@ -39,38 +39,32 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, pinSize, o
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        {/* White circle bubble marker */}
-        <div
-          style={{
-            width: circle,
-            height: circle,
-            borderRadius: "50%",
-            background: "white",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow,
-            outline: selected ? `3px solid ${color}` : "none",
-            outlineOffset: "0px",
-            transform: hovered || selected ? "scale(1.15)" : "scale(1)",
-            transition: "transform 0.2s ease, box-shadow 0.2s ease",
-          }}
-        >
-          {iconUrl ? (
-            <img
-              src={iconUrl}
-              alt=""
-              style={{
-                width: icon,
-                height: icon,
-                objectFit: "contain",
-                display: "block",
-              }}
-            />
-          ) : (
-            <span style={{ fontSize: 20, lineHeight: 1 }}>📍</span>
-          )}
-        </div>
+        {iconUrl ? (
+          <img
+            src={iconUrl}
+            alt=""
+            style={{
+              width: pinSize,
+              height: pinSize,
+              objectFit: "contain",
+              display: "block",
+              filter: dropShadow,
+              transform: hovered || selected ? "scale(1.2)" : "scale(1)",
+              transition: "transform 0.2s ease, filter 0.2s ease",
+            }}
+          />
+        ) : (
+          <span
+            style={{
+              fontSize: pinSize,
+              lineHeight: 1,
+              filter: dropShadow,
+              transform: hovered || selected ? "scale(1.2)" : "scale(1)",
+              transition: "transform 0.2s ease, filter 0.2s ease",
+              display: "block",
+            }}
+          >📍</span>
+        )}
 
         {/* Name label — only at high zoom */}
         {showLabel && (
