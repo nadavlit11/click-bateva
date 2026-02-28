@@ -19,7 +19,7 @@ interface MapViewProps {
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
 const MAP_ID = "DEMO_MAP_ID";
 const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
-const LABEL_ZOOM_THRESHOLD = 12;
+const LABEL_ZOOM_THRESHOLD = 11;
 
 export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed }: MapViewProps) {
   return (
