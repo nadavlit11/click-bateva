@@ -4,6 +4,7 @@ import { ref, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import type { Subcategory, Category, Icon } from '../types/index.ts'
+import { IconPicker } from './IconPicker.tsx'
 
 interface Props {
   isOpen: boolean
@@ -135,16 +136,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">אייקון</label>
-            <select
-              value={iconId}
-              onChange={e => setIconId(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
-            >
-              <option value="">ללא אייקון</option>
-              {icons.map(icon => (
-                <option key={icon.id} value={icon.id}>{icon.name}</option>
-              ))}
-            </select>
+            <IconPicker icons={icons} value={iconId} onChange={setIconId} />
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}

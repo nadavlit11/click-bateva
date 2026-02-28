@@ -11,6 +11,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import type { Poi, Category, Subcategory, Business, DayHours, Icon } from '../types/index.ts'
+import { IconPicker } from './IconPicker.tsx'
 
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
 const DAY_NAMES_HE: Record<string, string> = {
@@ -749,16 +750,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
             {/* Icon override */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">אייקון (דריסה)</label>
-              <select
-                value={form.iconId}
-                onChange={e => set('iconId', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
-              >
-                <option value="">ללא אייקון</option>
-                {icons.map(icon => (
-                  <option key={icon.id} value={icon.id}>{icon.name}</option>
-                ))}
-              </select>
+              <IconPicker icons={icons} value={form.iconId} onChange={v => set('iconId', v)} />
             </div>
 
             {/* Active */}

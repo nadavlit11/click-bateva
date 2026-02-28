@@ -58,6 +58,7 @@ export function CategoriesPage() {
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
               <th className="text-right px-4 py-3 font-medium text-gray-600">צבע</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">אייקון</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">שם</th>
               <th className="px-4 py-3"></th>
             </tr>
@@ -65,7 +66,7 @@ export function CategoriesPage() {
           <tbody>
             {categories.length === 0 && (
               <tr>
-                <td colSpan={3} className="text-center py-10 text-gray-400">
+                <td colSpan={4} className="text-center py-10 text-gray-400">
                   אין קטגוריות עדיין
                 </td>
               </tr>
@@ -77,6 +78,12 @@ export function CategoriesPage() {
                     className="w-6 h-6 rounded-full border border-gray-200"
                     style={{ backgroundColor: cat.color }}
                   />
+                </td>
+                <td className="px-4 py-3">
+                  {cat.iconUrl
+                    ? <img src={cat.iconUrl} alt="" className="w-7 h-7 object-contain" />
+                    : <span className="text-gray-300 text-xs">—</span>
+                  }
                 </td>
                 <td className="px-4 py-3 font-medium text-gray-900">{cat.name}</td>
                 <td className="px-4 py-3">
