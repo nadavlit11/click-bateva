@@ -4,6 +4,7 @@ import { updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { db, functions } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { getStrength, isPasswordValid, PASSWORD_ERROR, strengthLabel, strengthColor, strengthWidth } from '../lib/passwordStrength.ts'
+import { PasswordInput } from './PasswordInput.tsx'
 import type { Business } from '../types/index.ts'
 
 interface Props {
@@ -152,11 +153,9 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
           {!isEdit && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">סיסמה *</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
                 placeholder="לפחות 8 תווים, אות ומספר"
                 dir="ltr"
               />

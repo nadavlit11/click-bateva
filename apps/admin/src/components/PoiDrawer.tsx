@@ -84,7 +84,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Set<string>>(new Set())
   const [uploadingImages, setUploadingImages] = useState(false)
-  const formScrollRef = useRef<HTMLDivElement>(null)
+  const formScrollRef = useRef<HTMLFormElement>(null)
   const [videoInput, setVideoInput] = useState('')
   const [businessSearch, setBusinessSearch] = useState('')
 
