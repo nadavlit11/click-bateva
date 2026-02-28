@@ -39,8 +39,8 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, s
         {/* White circle bubble marker */}
         <div
           style={{
-            width: 36,
-            height: 36,
+            width: 28,
+            height: 28,
             borderRadius: "50%",
             background: "white",
             display: "flex",
@@ -48,7 +48,7 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, s
             justifyContent: "center",
             boxShadow,
             outline: selected ? `3px solid ${color}` : "none",
-            outlineOffset: "2px",
+            outlineOffset: "0px",
             transform: hovered || selected ? "scale(1.15)" : "scale(1)",
             transition: "transform 0.2s ease, box-shadow 0.2s ease",
           }}
@@ -58,8 +58,8 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, s
               src={iconUrl}
               alt=""
               style={{
-                width: 22,
-                height: 22,
+                width: 18,
+                height: 18,
                 objectFit: "contain",
                 display: "block",
               }}
