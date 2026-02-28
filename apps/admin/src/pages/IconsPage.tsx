@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import type { Icon } from '../types/index.ts'
+import { useUserRole } from '../hooks/useUserRole.ts'
 
 type BulkItemStatus = 'pending' | 'uploading' | 'done' | 'error'
 interface BulkItem { name: string; status: BulkItemStatus }
@@ -15,6 +16,7 @@ const BULK_STATUS: Record<BulkItemStatus, { dot: string; label: string }> = {
 }
 
 export function IconsPage() {
+  const role = useUserRole()
   const [icons, setIcons] = useState<Icon[]>([])
   const [resolvedUrls, setResolvedUrls] = useState<Record<string, string>>({})
   const [name, setName] = useState('')
@@ -216,12 +218,14 @@ export function IconsPage() {
                 </td>
                 <td className="px-4 py-3 font-medium text-gray-900">{icon.name}</td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => { handleDelete(icon.id) }}
-                    className="text-red-500 hover:text-red-700 text-xs font-medium"
-                  >
-                    מחיקה
-                  </button>
+                  {role === 'admin' && (
+                    <button
+                      onClick={() => { handleDelete(icon.id) }}
+                      className="text-red-500 hover:text-red-700 text-xs font-medium"
+                    >
+                      מחיקה
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

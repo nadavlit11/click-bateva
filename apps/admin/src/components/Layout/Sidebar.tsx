@@ -14,7 +14,7 @@ const NAV = [
   { path: '/icons',       label: 'אייקונים',      end: false, adminOnly: false },
   { path: '/businesses',  label: 'עסקים',         end: false, adminOnly: true },
   { path: '/users',       label: 'מנהלי תוכן',   end: false, adminOnly: true },
-  { path: '/analytics',  label: 'אנליטיקס',      end: true,  adminOnly: false },
+  { path: '/analytics',  label: 'אנליטיקס',      end: true,  adminOnly: true },
   { path: '/map-settings', label: 'הגדרות מפה',  end: false, adminOnly: true },
 ]
 

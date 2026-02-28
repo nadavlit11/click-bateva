@@ -4,8 +4,10 @@ import { db } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import type { Category, Icon } from '../types/index.ts'
 import { CategoryModal } from '../components/CategoryModal.tsx'
+import { useUserRole } from '../hooks/useUserRole.ts'
 
 export function CategoriesPage() {
+  const role = useUserRole()
   const [categories, setCategories] = useState<Category[]>([])
   const [icons, setIcons] = useState<Icon[]>([])
   const [modalOpen, setModalOpen] = useState(false)
@@ -94,12 +96,14 @@ export function CategoriesPage() {
                     >
                       עריכה
                     </button>
-                    <button
-                      onClick={() => handleDelete(cat.id).catch(err => reportError(err, { source: 'CategoriesPage.delete' }))}
-                      className="text-red-500 hover:text-red-700 text-xs font-medium"
-                    >
-                      מחיקה
-                    </button>
+                    {role === 'admin' && (
+                      <button
+                        onClick={() => handleDelete(cat.id).catch(err => reportError(err, { source: 'CategoriesPage.delete' }))}
+                        className="text-red-500 hover:text-red-700 text-xs font-medium"
+                      >
+                        מחיקה
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
