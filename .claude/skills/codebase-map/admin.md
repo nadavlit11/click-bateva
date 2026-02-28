@@ -11,7 +11,7 @@
 - `apps/admin/src/pages/SubcategoriesPage.tsx` + `SubcategoryModal.tsx` — subcategory CRUD with group datalist autocomplete
 - `apps/admin/src/pages/IconsPage.tsx` — upload/list/delete icons (Cloud Storage `icons/` prefix)
 - `apps/admin/src/pages/BusinessesPage.tsx` + `BusinessModal.tsx` — business CRUD (create via `createBusinessUser` callable, edit via direct Firestore update)
-- `apps/admin/src/pages/UsersPage.tsx` — content manager management (list, delete, block) via `deleteContentManager`/`blockContentManager` callables
+- `apps/admin/src/pages/UsersPage.tsx` — content manager management (list, add, delete, block) via `createContentManager`/`deleteContentManager`/`blockContentManager` callables; add modal has password strength meter
 - `apps/admin/src/pages/AnalyticsPage.tsx` — click totals per POI + per category
 - `apps/admin/src/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
 - `apps/admin/src/components/Layout/AppLayout.tsx` + `Sidebar.tsx` — flex layout with nav links (admin-only gating via `useUserRole`)

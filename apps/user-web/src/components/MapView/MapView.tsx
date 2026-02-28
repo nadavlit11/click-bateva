@@ -12,14 +12,16 @@ interface MapViewProps {
   selectedPoiId: string | null;
   onPoiClick: (poi: Poi) => void;
   onMapClick?: () => void;
+  focusLocation?: { lat: number; lng: number; zoom: number } | null;
+  onFocusConsumed?: () => void;
 }
 
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
 const MAP_ID = "DEMO_MAP_ID";
 const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
-const LABEL_ZOOM_THRESHOLD = 10;
+const LABEL_ZOOM_THRESHOLD = 11;
 
-export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick }: MapViewProps) {
+export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed }: MapViewProps) {
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} language="he" region="IL">
       <Map
@@ -40,6 +42,8 @@ export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiC
           subcategories={subcategories}
           selectedPoiId={selectedPoiId}
           onPoiClick={onPoiClick}
+          focusLocation={focusLocation}
+          onFocusConsumed={onFocusConsumed}
         />
       </Map>
     </APIProvider>
@@ -52,9 +56,11 @@ interface ClusteredPoiMarkersProps {
   subcategories: Subcategory[];
   selectedPoiId: string | null;
   onPoiClick: (poi: Poi) => void;
+  focusLocation?: { lat: number; lng: number; zoom: number } | null;
+  onFocusConsumed?: () => void;
 }
 
-function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick }: ClusteredPoiMarkersProps) {
+function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed }: ClusteredPoiMarkersProps) {
   const map = useMap();
   const [zoom, setZoom] = useState(8);
   const clusterer = useRef<MarkerClusterer | null>(null);
@@ -133,6 +139,13 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     clusterer.current.clearMarkers(true);
     clusterer.current.addMarkers(Object.values(markers));
   }, [markers]);
+
+  // Pan and zoom to a focused location when requested
+  useEffect(() => {
+    if (!map || !focusLocation) return;
+    map.moveCamera({ center: { lat: focusLocation.lat, lng: focusLocation.lng }, zoom: focusLocation.zoom });
+    onFocusConsumed?.();
+  }, [focusLocation, map, onFocusConsumed]);
 
   // Ref callback: register/unregister marker elements via state (not ref)
   // so the sync effect re-runs when markers actually become available

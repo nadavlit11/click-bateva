@@ -19,11 +19,9 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, s
     [setMarkerRef, poi.id]
   );
 
-  const boxShadow = selected
-    ? `0 0 0 3px white, 0 0 0 5px ${color}, 0 4px 12px rgba(0,0,0,0.25)`
-    : hovered
-      ? "0 5px 15px rgba(0,0,0,0.3)"
-      : "0 3px 10px rgba(0,0,0,0.25)";
+  const boxShadow = hovered
+    ? "0 4px 14px rgba(0,0,0,0.35)"
+    : "0 2px 8px rgba(0,0,0,0.25)";
 
   return (
     <AdvancedMarker position={poi.location} onClick={onClick} zIndex={selected ? 10 : 1} ref={ref}>
@@ -38,18 +36,20 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, s
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        {/* Teardrop marker */}
+        {/* White circle bubble marker */}
         <div
           style={{
-            width: 28,
-            height: 28,
-            borderRadius: "50% 50% 50% 0",
-            transform: hovered ? "rotate(-45deg) scale(1.15)" : "rotate(-45deg)",
-            background: `linear-gradient(135deg, ${color}dd, ${color})`,
+            width: 24,
+            height: 24,
+            borderRadius: "50%",
+            background: "white",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             boxShadow,
+            outline: selected ? `3px solid ${color}` : "none",
+            outlineOffset: "0px",
+            transform: hovered || selected ? "scale(1.15)" : "scale(1)",
             transition: "transform 0.2s ease, box-shadow 0.2s ease",
           }}
         >
@@ -58,15 +58,14 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, s
               src={iconUrl}
               alt=""
               style={{
-                transform: "rotate(45deg)",
-                width: 16,
-                height: 16,
+                width: 18,
+                height: 18,
                 objectFit: "contain",
                 display: "block",
               }}
             />
           ) : (
-            <span style={{ transform: "rotate(45deg)", fontSize: 16, lineHeight: 1 }}>📍</span>
+            <span style={{ fontSize: 20, lineHeight: 1 }}>📍</span>
           )}
         </div>
 

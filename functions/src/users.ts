@@ -78,3 +78,51 @@ export const blockContentManager = onCall({cors: true}, async (request) => {
 
   return {uid};
 });
+
+/**
+ * Callable function: admin-only — creates a new content manager account.
+ * Creates a Firebase Auth user, sets the content_manager custom claim,
+ * and writes the user document to Firestore.
+ */
+export const createContentManager = onCall({cors: true}, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Must be authenticated.");
+  }
+  if (request.auth.token.role !== "admin") {
+    throw new HttpsError("permission-denied", "Admin access required");
+  }
+
+  const {email, password} = request.data as { email: string; password: string };
+  if (typeof email !== "string" || !email.trim()) {
+    throw new HttpsError("invalid-argument", "Email is required");
+  }
+  if (typeof password !== "string" || !password.trim()) {
+    throw new HttpsError("invalid-argument", "Password is required");
+  }
+
+  let uid: string;
+  try {
+    const userRecord = await adminAuth.createUser({email: email.trim(), password});
+    uid = userRecord.uid;
+  } catch (err: unknown) {
+    const code = (err as { code?: string }).code;
+    if (code === "auth/email-already-exists") {
+      throw new HttpsError("already-exists", "auth/email-already-in-use");
+    }
+    Sentry.captureException(err);
+    throw new HttpsError("internal", "Failed to create user");
+  }
+
+  await adminAuth.setCustomUserClaims(uid, {role: "content_manager"});
+
+  await db.collection("users").doc(uid).set({
+    email: email.trim(),
+    role: "content_manager",
+    blocked: false,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+
+  logger.info("Content manager created", {uid, by: request.auth.uid});
+
+  return {uid};
+});

@@ -111,6 +111,7 @@ Prompt:
 > - When the same pure utility (validation, formatting, constants) is used by 2+ components in the same app, extract it to `lib/` immediately. Don't duplicate `getStrength`/`isPasswordValid`-style functions across multiple component files within one app — the copies drift. Cross-app duplication (admin vs business) is acceptable since they're independent deployments.
 > - `setTimeout` in React components that trigger state updates (e.g., auto-close after success) MUST use `useRef` to store the timer ID and clear it in a `useEffect` cleanup. Without this, unmounting the component before the timer fires causes a state-update-on-unmounted-component warning.
 > - `Record<string, string>` maps keyed by a known union type (e.g., `'weak' | 'medium' | 'strong'`) should use `Record<UnionType, string>` instead. This preserves type safety and prevents typo-based lookups.
+> - **State-reset effect completeness:** When a component has an existing `useEffect` that resets local state on entity change (e.g., `useEffect(() => { setX(0); setY(false); }, [poi.id])`), any new UI state variable (modal visibility, expanded flags, etc.) MUST also be reset in that same effect. Omitting it leaves stale UI state — e.g. a phone modal stays open when the user navigates to a different POI.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >

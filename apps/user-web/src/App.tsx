@@ -6,6 +6,7 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
 import { BottomSheet } from "./components/BottomSheet/BottomSheet";
 import { SubcategoryModal } from "./components/SubcategoryModal";
+import { FloatingSearch } from "./components/FloatingSearch";
 import { usePois, useCategories, useSubcategories } from "./hooks/useFirestoreData";
 import { filterPois } from "./lib/filterPois";
 import type { Poi } from "./types";
@@ -22,8 +23,8 @@ export default function App() {
 
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
+  const [focusLocation, setFocusLocation] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [subcategoryModalCategoryId, setSubcategoryModalCategoryId] = useState<string | null>(null);
@@ -32,10 +33,9 @@ export default function App() {
     () => filterPois(pois, {
       selectedCategories,
       selectedSubcategories,
-      searchQuery,
       subcategories,
     }),
-    [pois, selectedCategories, selectedSubcategories, searchQuery, subcategories]
+    [pois, selectedCategories, selectedSubcategories, subcategories]
   );
 
   const sortedCategories = useMemo(
@@ -80,7 +80,6 @@ export default function App() {
   function handleClearAll() {
     setSelectedCategories(new Set());
     setSelectedSubcategories(new Set());
-    setSearchQuery("");
   }
 
   function handleMapClick() {
@@ -124,6 +123,8 @@ export default function App() {
           selectedPoiId={selectedPoi?.id ?? null}
           onPoiClick={handlePoiClick}
           onMapClick={handleMapClick}
+          focusLocation={focusLocation}
+          onFocusConsumed={() => setFocusLocation(null)}
         />
 
         {/* Floating sidebar toggle (desktop, when sidebar is closed) */}
@@ -141,18 +142,12 @@ export default function App() {
 
         {/* Floating search — on mobile stretches full width; on desktop fixed-width on physical left (end in RTL) */}
         <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`}>
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="חפש מקום..."
-              className="w-full py-2.5 px-4 ps-10 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 shadow-lg"
-            />
-            <svg className="w-4 h-4 text-gray-400 absolute start-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+          <FloatingSearch
+            pois={pois}
+            mapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+            onPoiSelect={handlePoiClick}
+            onLocationSelect={setFocusLocation}
+          />
         </div>
 
         <BottomSheet

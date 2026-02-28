@@ -8,10 +8,13 @@
 
 const mockDocDelete = jest.fn().mockResolvedValue(undefined);
 const mockUpdate = jest.fn().mockResolvedValue(undefined);
-const mockDoc = jest.fn(() => ({delete: mockDocDelete, update: mockUpdate}));
+const mockSet = jest.fn().mockResolvedValue(undefined);
+const mockDoc = jest.fn(() => ({delete: mockDocDelete, update: mockUpdate, set: mockSet}));
 const mockCollection = jest.fn(() => ({doc: mockDoc}));
 const mockDeleteUser = jest.fn().mockResolvedValue(undefined);
 const mockUpdateUser = jest.fn().mockResolvedValue(undefined);
+const mockCreateUser = jest.fn().mockResolvedValue({uid: "new-uid"});
+const mockSetCustomUserClaims = jest.fn().mockResolvedValue(undefined);
 
 jest.mock("firebase-admin/app", () => ({
   initializeApp: jest.fn(),
@@ -29,6 +32,8 @@ jest.mock("firebase-admin/auth", () => ({
   getAuth: jest.fn(() => ({
     deleteUser: mockDeleteUser,
     updateUser: mockUpdateUser,
+    createUser: mockCreateUser,
+    setCustomUserClaims: mockSetCustomUserClaims,
   })),
 }));
 
@@ -44,7 +49,7 @@ jest.mock("@sentry/node", () => ({
 // ── Imports (after mocks) ─────────────────────────────────────────────────────
 
 import firebaseFunctionsTest from "firebase-functions-test";
-import {deleteContentManager, blockContentManager} from "../users.js";
+import {deleteContentManager, blockContentManager, createContentManager} from "../users.js";
 
 const testEnv = firebaseFunctionsTest();
 
@@ -145,5 +150,65 @@ describe("blockContentManager — success path", () => {
       blocked: true,
       updatedAt: "mock-timestamp",
     });
+  });
+});
+
+function makeCreateRequest(overrides: object) {
+  return {
+    auth: {uid: "admin-uid", token: {role: "admin"}},
+    data: {email: "new@example.com", password: "StrongPass1!"},
+    rawRequest: {},
+    ...overrides,
+  } as any;
+}
+
+describe("createContentManager — validation", () => {
+  it("throws permission-denied for a non-admin caller", async () => {
+    await expect(
+      createContentManager.run(
+        makeCreateRequest({auth: {uid: "u1", token: {role: "content_manager"}}})
+      )
+    ).rejects.toMatchObject({code: "permission-denied"});
+  });
+
+  it("throws invalid-argument for a missing email", async () => {
+    await expect(
+      createContentManager.run(makeCreateRequest({data: {email: "", password: "StrongPass1!"}}))
+    ).rejects.toMatchObject({code: "invalid-argument"});
+  });
+
+  it("throws invalid-argument for a missing password", async () => {
+    await expect(
+      createContentManager.run(makeCreateRequest({data: {email: "new@example.com", password: ""}}))
+    ).rejects.toMatchObject({code: "invalid-argument"});
+  });
+});
+
+describe("createContentManager — success path", () => {
+  it("creates Auth user, sets custom claims, and writes Firestore doc", async () => {
+    const result = await createContentManager.run(makeCreateRequest({}));
+
+    expect(result).toEqual({uid: "new-uid"});
+    expect(mockCreateUser).toHaveBeenCalledWith({
+      email: "new@example.com",
+      password: "StrongPass1!",
+    });
+    expect(mockSetCustomUserClaims).toHaveBeenCalledWith("new-uid", {role: "content_manager"});
+    expect(mockCollection).toHaveBeenCalledWith("users");
+    expect(mockDoc).toHaveBeenCalledWith("new-uid");
+    expect(mockSet).toHaveBeenCalledWith({
+      email: "new@example.com",
+      role: "content_manager",
+      blocked: false,
+      createdAt: "mock-timestamp",
+    });
+  });
+
+  it("maps auth/email-already-exists to already-exists HttpsError", async () => {
+    mockCreateUser.mockRejectedValueOnce({code: "auth/email-already-exists"});
+
+    await expect(
+      createContentManager.run(makeCreateRequest({}))
+    ).rejects.toMatchObject({code: "already-exists"});
   });
 });
