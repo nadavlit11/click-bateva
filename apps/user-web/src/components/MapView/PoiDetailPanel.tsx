@@ -411,18 +411,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
           >
             <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 4 }}>מספר טלפון</p>
             <p className="text-2xl font-bold text-gray-800 my-3 dir-ltr">{poi.phone}</p>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 12 }}>
-              <a
-                href={`tel:${poi.phone}`}
-                style={{
-                  background: "#16a34a", color: "white",
-                  padding: "8px 20px", borderRadius: 8,
-                  fontWeight: 600, fontSize: 14,
-                  textDecoration: "none",
-                }}
-              >
-                חייג
-              </a>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
               <button
                 onClick={() => setShowPhoneModal(false)}
                 style={{

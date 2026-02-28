@@ -24,6 +24,8 @@ function ClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) =
 }
 
 const ISRAEL_CENTER: [number, number] = [31.5, 34.75]
+// Bounding box with padding to keep the map focused on Israel
+const ISRAEL_BOUNDS: L.LatLngBoundsExpression = [[29.2, 33.8], [33.5, 36.0]]
 
 export function MapPicker({ lat, lng, onChange }: Props) {
   const [search, setSearch] = useState('')
@@ -101,6 +103,9 @@ export function MapPicker({ lat, lng, onChange }: Props) {
       <MapContainer
         center={center}
         zoom={hasPin ? 14 : 8}
+        minZoom={7}
+        maxBounds={ISRAEL_BOUNDS}
+        maxBoundsViscosity={1.0}
         style={{ height: '280px', borderRadius: '8px', border: '1px solid #e5e7eb' }}
         ref={setMap}
       >
