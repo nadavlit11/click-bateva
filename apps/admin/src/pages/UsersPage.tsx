@@ -4,6 +4,7 @@ import { httpsCallable } from 'firebase/functions'
 import { db, functions } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { getStrength, isPasswordValid, PASSWORD_ERROR, strengthLabel, strengthColor, strengthWidth } from '../lib/passwordStrength.ts'
+import { PasswordInput } from '../components/PasswordInput.tsx'
 
 interface ContentManager {
   id: string
@@ -185,8 +186,7 @@ export function UsersPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">סיסמה *</label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={addPassword}
                   onChange={e => setAddPassword(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
