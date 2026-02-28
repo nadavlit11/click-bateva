@@ -60,14 +60,6 @@ export default function App() {
         catSubIds.forEach(sid => next.delete(sid));
         return next;
       });
-    } else {
-      // Auto-select all subcategories when enabling a category
-      const catSubIds = subcategories.filter(s => s.categoryId === id).map(s => s.id);
-      setSelectedSubcategories(prev => {
-        const next = new Set(prev);
-        catSubIds.forEach(sid => next.add(sid));
-        return next;
-      });
     }
   }
 
