@@ -82,7 +82,9 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Set<string>>(new Set())
   const [uploadingImages, setUploadingImages] = useState(false)
+  const formScrollRef = useRef<HTMLDivElement>(null)
   const [videoInput, setVideoInput] = useState('')
   const [businessSearch, setBusinessSearch] = useState('')
 
@@ -92,16 +94,16 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
   useEffect(() => {
     if (poi) {
       setForm({
-        name: poi.name,
-        description: poi.description,
+        name: poi.name ?? '',
+        description: poi.description ?? '',
         lat: poi.location.lat.toString(),
         lng: poi.location.lng.toString(),
         images: [poi.mainImage, ...poi.images].filter(Boolean),
         videos: [...poi.videos],
-        phone: poi.phone,
+        phone: poi.phone ?? '',
         whatsapp: poi.whatsapp ?? '',
-        email: poi.email,
-        website: poi.website,
+        email: poi.email ?? '',
+        website: poi.website ?? '',
         categoryId: poi.categoryId,
         selectedSubcategoryIds: [...(poi.subcategoryIds ?? [])],
         iconId: poi.iconId ?? '',
@@ -121,12 +123,14 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
       setForm(INITIAL_FORM)
     }
     setError('')
+    setFieldErrors(new Set())
     setBusinessSearch('')
     setVideoInput('')
   }, [poi, isOpen])
 
   function set(field: keyof FormState, value: FormState[typeof field]) {
     setForm(prev => ({ ...prev, [field]: value }))
+    setFieldErrors(prev => { const next = new Set(prev); next.delete(field); return next })
   }
 
   async function uploadFile(file: File): Promise<string> {
@@ -144,6 +148,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     try {
       const urls = await Promise.all(files.map(f => uploadFile(f)))
       setForm(prev => ({ ...prev, images: [...prev.images, ...urls] }))
+      setFieldErrors(prev => { const next = new Set(prev); next.delete('images'); return next })
     } catch (err) {
       setError('שגיאה בהעלאת תמונות')
       reportError(err, { source: 'PoiDrawer.uploadImages' })
@@ -179,12 +184,26 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name.trim()) { setError('כותרת הנקודה היא שדה חובה'); return }
-    if (!form.categoryId) { setError('יש לבחור קטגוריה'); return }
-    if (!form.phone.trim()) { setError('טלפון הוא שדה חובה'); return }
-    if (!form.whatsapp.trim()) { setError('וואטסאפ הוא שדה חובה'); return }
-    if (!form.description.trim()) { setError('תיאור הוא שדה חובה'); return }
-    if (form.images.length === 0) { setError('יש להעלות לפחות תמונה אחת'); return }
+    const errors = new Set<string>()
+    if (!form.name.trim()) errors.add('name')
+    if (!form.categoryId) errors.add('categoryId')
+    if (!form.phone.trim()) errors.add('phone')
+    if (!form.whatsapp.trim()) errors.add('whatsapp')
+    if (!form.description.trim()) errors.add('description')
+    if (form.images.length === 0) errors.add('images')
+
+    if (errors.size > 0) {
+      setFieldErrors(errors)
+      setError('')
+      const firstField = ['name', 'categoryId', 'description', 'images', 'phone', 'whatsapp'].find(f => errors.has(f))
+      if (firstField) {
+        requestAnimationFrame(() => {
+          formScrollRef.current?.querySelector<HTMLElement>(`[data-field="${firstField}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        })
+      }
+      return
+    }
+    setFieldErrors(new Set())
 
     setSaving(true)
     setError('')
@@ -275,34 +294,37 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
           onSubmit={handleSubmit}
           onKeyDown={e => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault() }}
           className="flex-1 overflow-y-auto min-h-0"
+          ref={formScrollRef}
         >
           <div className="px-5 py-4 space-y-4">
 
             {/* Name */}
-            <div>
+            <div data-field="name">
               <label className="block text-sm font-medium text-red-600 mb-1">כותרת *</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={e => set('name', e.target.value)}
-                className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-green-50/30"
+                className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none bg-green-50/30 ${fieldErrors.has('name') ? 'border-red-500 bg-red-50/30 focus:border-red-500' : 'border-green-200 focus:border-green-500'}`}
                 placeholder="כותרת הנקודה"
               />
+              {fieldErrors.has('name') && <p className="text-red-500 text-xs mt-1">שדה חובה</p>}
             </div>
 
             {/* Category */}
-            <div>
+            <div data-field="categoryId">
               <label className="block text-sm font-medium text-red-600 mb-1">קטגוריה *</label>
               <select
                 value={form.categoryId}
-                onChange={e => setForm(prev => ({ ...prev, categoryId: e.target.value, selectedSubcategoryIds: [] }))}
-                className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-green-50/30"
+                onChange={e => { setForm(prev => ({ ...prev, categoryId: e.target.value, selectedSubcategoryIds: [] })); setFieldErrors(prev => { const next = new Set(prev); next.delete('categoryId'); return next }) }}
+                className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none bg-green-50/30 ${fieldErrors.has('categoryId') ? 'border-red-500 bg-red-50/30 focus:border-red-500' : 'border-green-200 focus:border-green-500'}`}
               >
                 <option value="">בחר קטגוריה</option>
                 {categories.map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
+              {fieldErrors.has('categoryId') && <p className="text-red-500 text-xs mt-1">יש לבחור קטגוריה</p>}
             </div>
 
             {/* Business */}
@@ -343,7 +365,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
             )}
 
             {/* Description */}
-            <div>
+            <div data-field="description">
               <label className="block text-sm font-medium text-red-600 mb-1">תיאור *</label>
               <div className="flex gap-1 mb-1">
                 <button
@@ -376,9 +398,10 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 value={form.description}
                 onChange={e => set('description', e.target.value)}
                 rows={3}
-                className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 resize-none bg-green-50/30"
+                className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none resize-none bg-green-50/30 ${fieldErrors.has('description') ? 'border-red-500 bg-red-50/30 focus:border-red-500' : 'border-green-200 focus:border-green-500'}`}
                 placeholder="תיאור קצר"
               />
+              {fieldErrors.has('description') && <p className="text-red-500 text-xs mt-1">שדה חובה</p>}
             </div>
 
             {/* Location */}
@@ -392,7 +415,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
             </div>
 
             {/* Images */}
-            <div>
+            <div data-field="images">
               <label className="block text-sm font-medium text-red-600 mb-1">תמונות *</label>
               <input
                 ref={imagesRef}
@@ -455,6 +478,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
               >
                 {uploadingImages ? 'מעלה...' : '+ הוסף תמונות'}
               </button>
+              {fieldErrors.has('images') && <p className="text-red-500 text-xs mt-1">יש להעלות לפחות תמונה אחת</p>}
             </div>
 
             {/* Videos (links) */}
@@ -651,27 +675,29 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
             )}
 
             {/* Phone */}
-            <div>
+            <div data-field="phone">
               <label className="block text-sm font-medium text-red-600 mb-1">טלפון *</label>
               <input
                 type="tel"
                 value={form.phone}
                 onChange={e => set('phone', e.target.value)}
-                className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-green-50/30"
+                className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none bg-green-50/30 ${fieldErrors.has('phone') ? 'border-red-500 bg-red-50/30 focus:border-red-500' : 'border-green-200 focus:border-green-500'}`}
                 placeholder="03-000-0000"
               />
+              {fieldErrors.has('phone') && <p className="text-red-500 text-xs mt-1">שדה חובה</p>}
             </div>
 
             {/* WhatsApp */}
-            <div>
+            <div data-field="whatsapp">
               <label className="block text-sm font-medium text-red-600 mb-1">וואטסאפ *</label>
               <input
                 type="tel"
                 value={form.whatsapp}
                 onChange={e => set('whatsapp', e.target.value)}
-                className="w-full border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-green-50/30"
+                className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none bg-green-50/30 ${fieldErrors.has('whatsapp') ? 'border-red-500 bg-red-50/30 focus:border-red-500' : 'border-green-200 focus:border-green-500'}`}
                 placeholder="050-000-0000"
               />
+              {fieldErrors.has('whatsapp') && <p className="text-red-500 text-xs mt-1">שדה חובה</p>}
             </div>
 
             {/* Email */}
@@ -766,7 +792,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
               </label>
             </div>
 
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {/* Save-time error (Firestore failures) */}
+            {error && <p className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
 
             {/* Save / Cancel */}
             <div className="pt-4 border-t border-gray-200 flex gap-2 justify-start">
