@@ -3,6 +3,7 @@ import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from 
 import { auth } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { getStrength, isPasswordValid, PASSWORD_ERROR, strengthLabel, strengthColor, strengthWidth } from '../lib/passwordStrength.ts'
+import { PasswordInput } from './PasswordInput.tsx'
 
 interface Props {
   isOpen: boolean
@@ -103,11 +104,9 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">סיסמה נוכחית</label>
-            <input
-              type="password"
+            <PasswordInput
               value={currentPassword}
               onChange={e => setCurrentPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               dir="ltr"
               autoFocus
             />
@@ -115,11 +114,9 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">סיסמה חדשה</label>
-            <input
-              type="password"
+            <PasswordInput
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               dir="ltr"
             />
             {strength && (
@@ -136,11 +133,9 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">אימות סיסמה חדשה</label>
-            <input
-              type="password"
+            <PasswordInput
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               dir="ltr"
             />
           </div>
