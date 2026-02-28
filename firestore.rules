@@ -102,6 +102,13 @@ service cloud.firestore {
         (isBusinessUser() && request.auth.uid == businessId);
     }
 
+    // ─── settings ───────────────────────────────────────────────────────────
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ─── users ──────────────────────────────────────────────────────────────
 
     match /users/{userId} {

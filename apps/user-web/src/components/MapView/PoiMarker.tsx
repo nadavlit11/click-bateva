@@ -8,11 +8,14 @@ interface PoiMarkerProps {
   iconUrl: string | null;
   selected: boolean;
   showLabel: boolean;
+  pinSize: number;
   onClick: () => void;
   setMarkerRef: (marker: google.maps.marker.AdvancedMarkerElement | null, key: string) => void;
 }
 
-export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, setMarkerRef }: PoiMarkerProps) {
+export function PoiMarker({ poi, color, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef }: PoiMarkerProps) {
+  const circle = pinSize;
+  const icon = Math.round(pinSize * 0.72);
   const [hovered, setHovered] = useState(false);
   const ref = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement | null) => setMarkerRef(marker, poi.id),
@@ -39,8 +42,8 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, s
         {/* White circle bubble marker */}
         <div
           style={{
-            width: 24,
-            height: 24,
+            width: circle,
+            height: circle,
             borderRadius: "50%",
             background: "white",
             display: "flex",
@@ -58,8 +61,8 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, onClick, s
               src={iconUrl}
               alt=""
               style={{
-                width: 18,
-                height: 18,
+                width: icon,
+                height: icon,
                 objectFit: "contain",
                 display: "block",
               }}

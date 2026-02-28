@@ -8,6 +8,7 @@ import { BottomSheet } from "./components/BottomSheet/BottomSheet";
 import { SubcategoryModal } from "./components/SubcategoryModal";
 import { FloatingSearch } from "./components/FloatingSearch";
 import { usePois, useCategories, useSubcategories } from "./hooks/useFirestoreData";
+import { useMapSettings } from "./hooks/useMapSettings";
 import { filterPois } from "./lib/filterPois";
 import type { Poi } from "./types";
 
@@ -20,6 +21,7 @@ export default function App() {
   const { pois, loading: poisLoading } = usePois();
   const categories = useCategories();
   const subcategories = useSubcategories();
+  const pinSize = useMapSettings();
 
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
@@ -125,6 +127,7 @@ export default function App() {
           onMapClick={handleMapClick}
           focusLocation={focusLocation}
           onFocusConsumed={() => setFocusLocation(null)}
+          pinSize={pinSize}
         />
 
         {/* Floating sidebar toggle (desktop, when sidebar is closed) */}

@@ -5,6 +5,15 @@ import { db, storage } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import type { Icon } from '../types/index.ts'
 
+type BulkItemStatus = 'pending' | 'uploading' | 'done' | 'error'
+interface BulkItem { name: string; status: BulkItemStatus }
+const BULK_STATUS: Record<BulkItemStatus, { dot: string; label: string }> = {
+  pending:   { dot: 'bg-gray-300',                      label: 'ממתין'  },
+  uploading: { dot: 'bg-yellow-400 animate-pulse',       label: 'מעלה...' },
+  done:      { dot: 'bg-green-500',                      label: '✓'      },
+  error:     { dot: 'bg-red-500',                        label: 'שגיאה'  },
+}
+
 export function IconsPage() {
   const [icons, setIcons] = useState<Icon[]>([])
   const [resolvedUrls, setResolvedUrls] = useState<Record<string, string>>({})
@@ -12,6 +21,9 @@ export function IconsPage() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const bulkFileRef = useRef<HTMLInputElement>(null)
+  const [bulkItems, setBulkItems] = useState<BulkItem[]>([])
+  const [bulkUploading, setBulkUploading] = useState(false)
 
   useEffect(() => {
     return onSnapshot(collection(db, 'icons'), snap => {
@@ -51,6 +63,33 @@ export function IconsPage() {
       setUploading(false)
       e.target.value = ''
     }
+  }
+
+  async function handleBulkSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    const items: BulkItem[] = files.map(f => ({
+      name: f.name.replace(/\.[^.]+$/, ''),
+      status: 'pending',
+    }))
+    setBulkItems(items)
+    setBulkUploading(true)
+    await Promise.all(files.map(async (file, i) => {
+      setBulkItems(prev => prev.map((it, j) => j === i ? { ...it, status: 'uploading' } : it))
+      try {
+        const ext = file.name.split('.').pop() ?? ''
+        const path = `icons/${crypto.randomUUID()}.${ext}`
+        const storageRef = ref(storage, path)
+        await uploadBytes(storageRef, file)
+        await addDoc(collection(db, 'icons'), { name: items[i].name, path, createdAt: serverTimestamp() })
+        setBulkItems(prev => prev.map((it, j) => j === i ? { ...it, status: 'done' } : it))
+      } catch (err) {
+        setBulkItems(prev => prev.map((it, j) => j === i ? { ...it, status: 'error' } : it))
+        reportError(err, { source: 'IconsPage.bulkUpload' })
+      }
+    }))
+    setBulkUploading(false)
+    e.target.value = ''
   }
 
   async function handleDelete(id: string) {
@@ -104,6 +143,42 @@ export function IconsPage() {
           </button>
         </div>
         {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+      </div>
+
+      {/* Bulk upload */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-700">העלאה מרובה (שם הקובץ = שם האייקון)</h2>
+          <input
+            ref={bulkFileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleBulkSelect}
+          />
+          <button
+            type="button"
+            disabled={bulkUploading}
+            onClick={() => { setBulkItems([]); bulkFileRef.current?.click() }}
+            className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+          >
+            {bulkUploading ? 'מעלה...' : 'בחר קבצים'}
+          </button>
+        </div>
+        {bulkItems.length > 0 && (
+          <ul className="space-y-1 max-h-48 overflow-y-auto">
+            {bulkItems.map((item, i) => (
+              <li key={i} className="flex items-center gap-2 text-sm">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${BULK_STATUS[item.status].dot}`} />
+                <span className="text-gray-700 truncate">{item.name}</span>
+                <span className="text-xs text-gray-400 ms-auto flex-shrink-0">
+                  {BULK_STATUS[item.status].label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Icons table */}
