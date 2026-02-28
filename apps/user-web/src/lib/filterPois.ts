@@ -20,8 +20,10 @@ export function filterPois(pois: Poi[], filter: PoiFilter): Poi[] {
     groupMap.get(group)!.add(subId);
   }
 
+  if (selectedCategories.size === 0) return [];
+
   return pois.filter((poi) => {
-    if (selectedCategories.size > 0 && !selectedCategories.has(poi.categoryId)) return false;
+    if (!selectedCategories.has(poi.categoryId)) return false;
 
     const catGroups = subsByCategory.get(poi.categoryId);
     const matchesSubcategory =

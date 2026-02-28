@@ -39,8 +39,8 @@ const noFilter = {
 const allCategories = new Set(["restaurants", "parks", "beaches", "sites"]);
 
 describe("filterPois", () => {
-  it("returns all POIs when no categories selected", () => {
-    expect(filterPois(POIS, noFilter)).toHaveLength(4);
+  it("returns no POIs when no categories selected", () => {
+    expect(filterPois(POIS, noFilter)).toHaveLength(0);
   });
 
   it("returns all POIs when all categories are selected", () => {
