@@ -284,7 +284,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
         )}
 
         {/* Info + contact section */}
-        {(poi.openingHours || poi.price || poi.email || poi.videos.length > 0) && (
+        {(poi.openingHours || poi.price || poi.videos.length > 0) && (
           <div className="h-px bg-gray-100 my-3" />
         )}
 
@@ -350,15 +350,6 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
                 {priceExpanded ? 'הצג פחות' : 'קרא עוד'}
               </button>
             )}
-          </div>
-        )}
-
-        {poi.email && (
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">✉️</span>
-            <a href={`mailto:${poi.email}`} className="text-sm text-gray-700 truncate">
-              {poi.email}
-            </a>
           </div>
         )}
 

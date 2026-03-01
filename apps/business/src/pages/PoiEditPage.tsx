@@ -31,7 +31,6 @@ export function PoiEditPage() {
     videos: [],
     phone: '',
     whatsapp: '',
-    email: '',
     website: '',
     kashrutCertUrl: '',
     menuUrl: '',
@@ -52,7 +51,6 @@ export function PoiEditPage() {
           videos: data.videos,
           phone: data.phone,
           whatsapp: data.whatsapp ?? '',
-          email: data.email,
           website: data.website,
           kashrutCertUrl: data.kashrutCertUrl ?? '',
           menuUrl: data.menuUrl ?? '',
@@ -278,16 +276,6 @@ export function PoiEditPage() {
             onChange={e => setForm(prev => ({ ...prev, whatsapp: e.target.value }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             placeholder="050-000-0000"
-            dir="ltr"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">אימייל</label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             dir="ltr"
           />
         </div>

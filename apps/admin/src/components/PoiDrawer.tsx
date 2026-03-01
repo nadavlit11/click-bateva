@@ -234,7 +234,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         videos: form.videos.filter(Boolean),
         phone: form.phone.trim(),
         whatsapp: form.whatsapp.trim() || null,
-        email: form.email.trim(),
+        email: null,
         website: form.website.trim(),
         categoryId: form.categoryId,
         subcategoryIds: form.selectedSubcategoryIds,
@@ -703,18 +703,6 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 placeholder="050-000-0000"
               />
               {fieldErrors.has('whatsapp') && <p className="text-red-500 text-xs mt-1">שדה חובה</p>}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">אימייל</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={e => set('email', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                placeholder="info@example.co.il"
-              />
             </div>
 
             {/* Website */}
