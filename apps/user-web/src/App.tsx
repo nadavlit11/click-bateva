@@ -26,7 +26,7 @@ export default function App() {
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
-  const [focusLocation, setFocusLocation] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
+  const [focusLocation, setFocusLocation] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [subcategoryModalCategoryId, setSubcategoryModalCategoryId] = useState<string | null>(null);
@@ -96,7 +96,7 @@ export default function App() {
 
   function handleSearchPoiSelect(poi: Poi) {
     handlePoiClick(poi);
-    setFocusLocation({ lat: poi.location.lat, lng: poi.location.lng, zoom: 15 });
+    setFocusLocation({ lat: poi.location.lat, lng: poi.location.lng });
   }
 
   return (

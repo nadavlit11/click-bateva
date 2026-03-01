@@ -45,13 +45,15 @@ export function PoisPage() {
       setSubcategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Subcategory))
     }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
 
-    getDocs(collection(db, 'businesses')).then(snap => {
+    const unsubBusinesses = onSnapshot(collection(db, 'businesses'), snap => {
       setBusinesses(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Business))
-    }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
+    }, err => reportError(err, { source: 'PoisPage.fetch' }))
 
     getDocs(collection(db, 'icons')).then(snap => {
       setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
     }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
+
+    return () => unsubBusinesses()
   }, [])
 
   function categoryName(id: string) {
