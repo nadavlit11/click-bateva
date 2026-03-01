@@ -94,6 +94,11 @@ export default function App() {
     setSelectedPoi(poi);
   }
 
+  function handleSearchPoiSelect(poi: Poi) {
+    handlePoiClick(poi);
+    setFocusLocation({ lat: poi.location.lat, lng: poi.location.lng, zoom: 15 });
+  }
+
   return (
     <div className="h-dvh w-screen flex overflow-hidden">
       {sidebarOpen && (
@@ -120,6 +125,7 @@ export default function App() {
           focusLocation={focusLocation}
           onFocusConsumed={() => setFocusLocation(null)}
           pinSize={pinSize}
+          highlightPoi={selectedPoi}
         />
 
         {/* Floating sidebar toggle (desktop, when sidebar is closed) */}
@@ -142,7 +148,7 @@ export default function App() {
             categories={sortedCategories}
             subcategories={subcategories}
             mapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-            onPoiSelect={handlePoiClick}
+            onPoiSelect={handleSearchPoiSelect}
             onLocationSelect={setFocusLocation}
           />
         </div>

@@ -15,6 +15,7 @@ interface MapViewProps {
   focusLocation?: { lat: number; lng: number; zoom: number } | null;
   onFocusConsumed?: () => void;
   pinSize?: number;
+  highlightPoi?: Poi | null;
 }
 
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
@@ -22,7 +23,7 @@ const MAP_ID = "DEMO_MAP_ID";
 const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
 const LABEL_ZOOM_THRESHOLD = 11;
 
-export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed, pinSize = 24 }: MapViewProps) {
+export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed, pinSize = 24, highlightPoi }: MapViewProps) {
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} language="he" region="IL">
       <Map
@@ -46,6 +47,7 @@ export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiC
           focusLocation={focusLocation}
           onFocusConsumed={onFocusConsumed}
           pinSize={pinSize}
+          highlightPoi={highlightPoi}
         />
       </Map>
     </APIProvider>
@@ -61,9 +63,10 @@ interface ClusteredPoiMarkersProps {
   focusLocation?: { lat: number; lng: number; zoom: number } | null;
   onFocusConsumed?: () => void;
   pinSize: number;
+  highlightPoi?: Poi | null;
 }
 
-function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed, pinSize }: ClusteredPoiMarkersProps) {
+function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed, pinSize, highlightPoi }: ClusteredPoiMarkersProps) {
   const map = useMap();
   const [zoom, setZoom] = useState(8);
   const clusterer = useRef<MarkerClusterer | null>(null);
@@ -169,11 +172,16 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     []
   );
 
+  const effectivePois = useMemo(() => {
+    if (!highlightPoi || pois.some(p => p.id === highlightPoi.id)) return pois;
+    return [...pois, highlightPoi];
+  }, [pois, highlightPoi]);
+
   const showLabels = zoom >= LABEL_ZOOM_THRESHOLD;
 
   return (
     <>
-      {pois.map((poi) => {
+      {effectivePois.map((poi) => {
         const subcategoryIcon = poi.subcategoryIds.reduce<string | null>(
           (found, sid) => found ?? (subcategoryIconMap[sid] ?? null),
           null
