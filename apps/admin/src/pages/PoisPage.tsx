@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
-import type { Poi, Category, Subcategory, Business, Icon } from '../types/index.ts'
+import type { Poi, Category, Subcategory, Icon } from '../types/index.ts'
 import { PoiDrawer } from '../components/PoiDrawer.tsx'
 import { useUserRole } from '../hooks/useUserRole.ts'
 
@@ -19,7 +19,6 @@ export function PoisPage() {
   const [pois, setPois] = useState<Poi[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
-  const [businesses, setBusinesses] = useState<Business[]>([])
   const [icons, setIcons] = useState<Icon[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingPoi, setEditingPoi] = useState<Poi | null>(null)
@@ -35,7 +34,7 @@ export function PoisPage() {
     })
   }, [])
 
-  // Fetch categories, subcategories, and businesses once on mount
+  // Fetch categories, subcategories, and icons once on mount
   useEffect(() => {
     getDocs(collection(db, 'categories')).then(snap => {
       setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
@@ -45,15 +44,9 @@ export function PoisPage() {
       setSubcategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Subcategory))
     }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
 
-    const unsubBusinesses = onSnapshot(collection(db, 'businesses'), snap => {
-      setBusinesses(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Business))
-    }, err => reportError(err, { source: 'PoisPage.fetch' }))
-
     getDocs(collection(db, 'icons')).then(snap => {
       setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
     }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
-
-    return () => unsubBusinesses()
   }, [])
 
   function categoryName(id: string) {
@@ -202,7 +195,6 @@ export function PoisPage() {
         poi={editingPoi}
         categories={categories}
         subcategories={subcategories}
-        businesses={businesses}
         icons={icons}
         onSaved={handleClose}
       />

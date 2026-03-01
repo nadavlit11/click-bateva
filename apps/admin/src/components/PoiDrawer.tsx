@@ -10,7 +10,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
-import type { Poi, Category, Subcategory, Business, DayHours, Icon } from '../types/index.ts'
+import type { Poi, Category, Subcategory, DayHours, Icon } from '../types/index.ts'
 import { IconPicker } from './IconPicker.tsx'
 
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
@@ -27,7 +27,6 @@ interface Props {
   poi: Poi | null
   categories: Category[]
   subcategories: Subcategory[]
-  businesses: Business[]
   icons: Icon[]
   onSaved: () => void
 }
@@ -46,7 +45,8 @@ interface FormState {
   categoryId: string
   selectedSubcategoryIds: string[]
   iconId: string
-  businessId: string
+  businessPlaceId: string
+  businessName: string
   active: boolean
   openingHours: Record<string, DayHours | null> | 'by_appointment'
   price: string
@@ -69,7 +69,8 @@ const INITIAL_FORM: FormState = {
   categoryId: '',
   selectedSubcategoryIds: [],
   iconId: '',
-  businessId: '',
+  businessPlaceId: '',
+  businessName: '',
   active: true,
   openingHours: { ...EMPTY_HOURS },
   price: '',
@@ -78,7 +79,7 @@ const INITIAL_FORM: FormState = {
   facebook: '',
 }
 
-export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, businesses, icons, onSaved }: Props) {
+export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, icons, onSaved }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -86,7 +87,10 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
   const [uploadingImages, setUploadingImages] = useState(false)
   const formScrollRef = useRef<HTMLFormElement>(null)
   const [videoInput, setVideoInput] = useState('')
-  const [businessSearch, setBusinessSearch] = useState('')
+  const [placeQuery, setPlaceQuery] = useState('')
+  const [placeResults, setPlaceResults] = useState<Array<{ placeId: string; name: string; address: string }>>([])
+  const [placeLoading, setPlaceLoading] = useState(false)
+  const placeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const imagesRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
@@ -107,7 +111,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         categoryId: poi.categoryId,
         selectedSubcategoryIds: [...(poi.subcategoryIds ?? [])],
         iconId: poi.iconId ?? '',
-        businessId: poi.businessId ?? '',
+        businessPlaceId: poi.businessPlaceId ?? '',
+        businessName: poi.businessName ?? '',
         active: poi.active,
         openingHours: poi.openingHours === 'by_appointment'
           ? 'by_appointment'
@@ -124,9 +129,50 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     }
     setError('')
     setFieldErrors(new Set())
-    setBusinessSearch('')
+    setPlaceQuery('')
+    setPlaceResults([])
     setVideoInput('')
   }, [poi, isOpen])
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => { if (placeDebounceRef.current) clearTimeout(placeDebounceRef.current) }
+  }, [])
+
+  async function searchPlaces(query: string) {
+    if (!query.trim()) { setPlaceResults([]); return }
+    setPlaceLoading(true)
+    try {
+      const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': import.meta.env.VITE_GOOGLE_MAPS_API_KEY },
+        body: JSON.stringify({
+          input: query,
+          locationBias: { circle: { center: { latitude: 31.5, longitude: 34.75 }, radius: 200000.0 } },
+          languageCode: 'he',
+          regionCode: 'IL',
+          includedPrimaryTypes: ['establishment'],
+        }),
+      })
+      const data = await res.json()
+      const suggestions = (data.suggestions ?? []).slice(0, 6).map((s: { placePrediction?: { placeId?: string; text?: { text?: string }; structuredFormat?: { secondaryText?: { text?: string } } } }) => ({
+        placeId: s.placePrediction?.placeId ?? '',
+        name: s.placePrediction?.structuredFormat?.secondaryText ? s.placePrediction?.text?.text?.replace(`, ${s.placePrediction.structuredFormat.secondaryText.text}`, '') ?? '' : s.placePrediction?.text?.text ?? '',
+        address: s.placePrediction?.structuredFormat?.secondaryText?.text ?? '',
+      }))
+      setPlaceResults(suggestions)
+    } catch {
+      setPlaceResults([])
+    } finally {
+      setPlaceLoading(false)
+    }
+  }
+
+  function handlePlaceQueryChange(value: string) {
+    setPlaceQuery(value)
+    if (placeDebounceRef.current) clearTimeout(placeDebounceRef.current)
+    placeDebounceRef.current = setTimeout(() => searchPlaces(value), 300)
+  }
 
   function set(field: keyof FormState, value: FormState[typeof field]) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -237,7 +283,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         subcategoryIds: form.selectedSubcategoryIds,
         iconId: resolvedIconId,
         iconUrl: resolvedIconUrl,
-        businessId: form.businessId.trim() || null,
+        businessPlaceId: form.businessPlaceId.trim() || null,
+        businessName: form.businessName.trim() || null,
         active: form.active,
         openingHours: form.openingHours === 'by_appointment'
           ? 'by_appointment'
@@ -329,58 +376,50 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
               {fieldErrors.has('categoryId') && <p className="text-red-500 text-xs mt-1">יש לבחור קטגוריה</p>}
             </div>
 
-            {/* Business */}
-            {businesses.length > 0 && (
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">עסק משויך</label>
-                {form.businessId ? (
-                  <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                    <span className="flex-1 text-gray-900">{businesses.find(b => b.id === form.businessId)?.name ?? form.businessId}</span>
-                    <button
-                      type="button"
-                      onClick={() => { set('businessId', ''); setBusinessSearch('') }}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <input
-                      type="text"
-                      value={businessSearch}
-                      onChange={e => setBusinessSearch(e.target.value)}
-                      placeholder="חיפוש עסק..."
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                    />
-                    {businessSearch.trim() && (() => {
-                      const filtered = businesses.filter(b => {
-                        const q = businessSearch.toLowerCase()
-                        return (b.name ?? '').toLowerCase().includes(q) || (b.username ?? '').toLowerCase().includes(q)
-                      })
-                      return (
-                        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {filtered.slice(0, 6).map(b => (
-                            <button
-                              key={b.id}
-                              type="button"
-                              onClick={() => { set('businessId', b.id); setBusinessSearch('') }}
-                              className="w-full text-start px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              <span className="font-medium">{b.name}</span>
-                              <span className="text-gray-400 ms-2 text-xs">{b.username}</span>
-                            </button>
-                          ))}
-                          {filtered.length === 0 && (
-                            <div className="px-3 py-2 text-sm text-gray-400">לא נמצאו עסקים</div>
-                          )}
-                        </div>
-                      )
-                    })()}
-                  </>
-                )}
-              </div>
-            )}
+            {/* Business (Google Places) */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">עסק משויך</label>
+              {form.businessName ? (
+                <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+                  <span className="flex-1 text-gray-900">{form.businessName}</span>
+                  <button
+                    type="button"
+                    onClick={() => { set('businessPlaceId', ''); set('businessName', ''); setPlaceQuery('') }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    value={placeQuery}
+                    onChange={e => handlePlaceQueryChange(e.target.value)}
+                    placeholder="חפש עסק בגוגל..."
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                  />
+                  {(placeResults.length > 0 || placeLoading) && (
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      {placeLoading && placeResults.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-gray-400">מחפש...</div>
+                      )}
+                      {placeResults.map(p => (
+                        <button
+                          key={p.placeId}
+                          type="button"
+                          onClick={() => { set('businessPlaceId', p.placeId); set('businessName', p.name); setPlaceQuery(''); setPlaceResults([]) }}
+                          className="w-full text-start px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <span className="font-medium">{p.name}</span>
+                          {p.address && <span className="text-gray-400 ms-2 text-xs">{p.address}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
 
             {/* Description */}
             <div data-field="description">
