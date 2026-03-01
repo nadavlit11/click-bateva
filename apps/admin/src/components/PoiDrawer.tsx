@@ -185,15 +185,14 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     const errors = new Set<string>()
     if (!form.name.trim()) errors.add('name')
     if (!form.categoryId) errors.add('categoryId')
-    if (!form.whatsapp.trim()) errors.add('whatsapp')
     if (!form.description.trim()) errors.add('description')
 
-    if (form.phone.trim()) {
-      const stripped = form.phone.replace(/[\s\-()]/g, '')
-      if (stripped.length < 9 || !/^[\d\s\-()+ ]+$/.test(form.phone.trim())) {
-        errors.add('phone')
-      }
+    function isInvalidPhone(value: string) {
+      const stripped = value.replace(/[\s\-()]/g, '')
+      return stripped.length < 9 || !/^[\d\s\-()+ ]+$/.test(value.trim())
     }
+    if (form.phone.trim() && isInvalidPhone(form.phone)) errors.add('phone')
+    if (form.whatsapp.trim() && isInvalidPhone(form.whatsapp)) errors.add('whatsapp')
 
     if (errors.size > 0) {
       setFieldErrors(errors)
@@ -230,7 +229,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         mainImage: allImages[0] ?? '',
         images: allImages.slice(1),
         videos: form.videos.filter(Boolean),
-        phone: form.phone.trim(),
+        phone: form.phone.trim() || null,
         whatsapp: form.whatsapp.trim() || null,
         email: null,
         website: form.website.trim(),
@@ -332,37 +331,53 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* Business */}
             {businesses.length > 0 && (
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">עסק משויך</label>
-                <input
-                  type="text"
-                  value={businessSearch}
-                  onChange={e => setBusinessSearch(e.target.value)}
-                  placeholder="חיפוש עסק..."
-                  className="w-full border border-gray-300 rounded-t-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 border-b-0"
-                />
-                <select
-                  value={form.businessId}
-                  onChange={e => set('businessId', e.target.value)}
-                  size={4}
-                  className="w-full border border-gray-300 rounded-b-lg px-3 py-1 text-sm focus:outline-none focus:border-green-500 bg-white"
-                >
-                  <option value="">— ללא עסק —</option>
-                  {businesses
-                    .filter(b => { const q = businessSearch.toLowerCase(); return b.name.toLowerCase().includes(q) || b.username.toLowerCase().includes(q) })
-                    .map(b => (
-                      <option key={b.id} value={b.id}>{b.name}</option>
-                    ))
-                  }
-                </select>
-                {form.businessId && (
-                  <button
-                    type="button"
-                    onClick={() => set('businessId', '')}
-                    className="mt-1 text-xs text-gray-400 hover:text-gray-600 underline"
-                  >
-                    נקה שיוך
-                  </button>
+                {form.businessId ? (
+                  <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+                    <span className="flex-1 text-gray-900">{businesses.find(b => b.id === form.businessId)?.name ?? form.businessId}</span>
+                    <button
+                      type="button"
+                      onClick={() => { set('businessId', ''); setBusinessSearch('') }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      value={businessSearch}
+                      onChange={e => setBusinessSearch(e.target.value)}
+                      placeholder="חיפוש עסק..."
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                    />
+                    {businessSearch.trim() && (() => {
+                      const filtered = businesses.filter(b => {
+                        const q = businessSearch.toLowerCase()
+                        return (b.name ?? '').toLowerCase().includes(q) || (b.username ?? '').toLowerCase().includes(q)
+                      })
+                      return (
+                        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {filtered.slice(0, 6).map(b => (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => { set('businessId', b.id); setBusinessSearch('') }}
+                              className="w-full text-start px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            >
+                              <span className="font-medium">{b.name}</span>
+                              <span className="text-gray-400 ms-2 text-xs">{b.username}</span>
+                            </button>
+                          ))}
+                          {filtered.length === 0 && (
+                            <div className="px-3 py-2 text-sm text-gray-400">לא נמצאו עסקים</div>
+                          )}
+                        </div>
+                      )
+                    })()}
+                  </>
                 )}
               </div>
             )}
@@ -693,7 +708,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* WhatsApp */}
             <div data-field="whatsapp">
-              <label className="block text-sm font-medium text-red-600 mb-1">וואטסאפ *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">וואטסאפ</label>
               <input
                 type="tel"
                 value={form.whatsapp}
@@ -701,7 +716,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none bg-green-50/30 ${fieldErrors.has('whatsapp') ? 'border-red-500 bg-red-50/30 focus:border-red-500' : 'border-green-200 focus:border-green-500'}`}
                 placeholder="050-000-0000"
               />
-              {fieldErrors.has('whatsapp') && <p className="text-red-500 text-xs mt-1">שדה חובה</p>}
+              {fieldErrors.has('whatsapp') && <p className="text-red-500 text-xs mt-1">מספר וואטסאפ לא תקין</p>}
             </div>
 
             {/* Website */}

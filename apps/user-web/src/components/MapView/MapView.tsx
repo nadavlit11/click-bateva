@@ -12,7 +12,7 @@ interface MapViewProps {
   selectedPoiId: string | null;
   onPoiClick: (poi: Poi) => void;
   onMapClick?: () => void;
-  focusLocation?: { lat: number; lng: number; zoom: number } | null;
+  focusLocation?: { lat: number; lng: number; zoom?: number } | null;
   onFocusConsumed?: () => void;
   pinSize?: number;
   highlightPoi?: Poi | null;
@@ -60,7 +60,7 @@ interface ClusteredPoiMarkersProps {
   subcategories: Subcategory[];
   selectedPoiId: string | null;
   onPoiClick: (poi: Poi) => void;
-  focusLocation?: { lat: number; lng: number; zoom: number } | null;
+  focusLocation?: { lat: number; lng: number; zoom?: number } | null;
   onFocusConsumed?: () => void;
   pinSize: number;
   highlightPoi?: Poi | null;
@@ -149,7 +149,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
   // Pan and zoom to a focused location when requested
   useEffect(() => {
     if (!map || !focusLocation) return;
-    map.moveCamera({ center: { lat: focusLocation.lat, lng: focusLocation.lng }, zoom: focusLocation.zoom });
+    map.moveCamera({ center: { lat: focusLocation.lat, lng: focusLocation.lng }, ...(focusLocation.zoom != null && { zoom: focusLocation.zoom }) });
     onFocusConsumed?.();
   }, [focusLocation, map, onFocusConsumed]);
 
