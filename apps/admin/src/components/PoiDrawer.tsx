@@ -148,7 +148,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, ico
         headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': import.meta.env.VITE_GOOGLE_MAPS_API_KEY },
         body: JSON.stringify({
           input: query,
-          locationBias: { circle: { center: { latitude: 31.5, longitude: 34.75 }, radius: 200000.0 } },
+          locationBias: { rectangle: { low: { latitude: 29.5, longitude: 34.2 }, high: { latitude: 33.3, longitude: 35.9 } } },
           languageCode: 'he',
           regionCode: 'IL',
           includedPrimaryTypes: ['establishment'],
