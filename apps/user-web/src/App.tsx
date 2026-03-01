@@ -139,6 +139,8 @@ export default function App() {
         <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`}>
           <FloatingSearch
             pois={pois}
+            categories={sortedCategories}
+            subcategories={subcategories}
             mapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
             onPoiSelect={handlePoiClick}
             onLocationSelect={setFocusLocation}
