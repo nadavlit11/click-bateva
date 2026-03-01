@@ -112,6 +112,8 @@ Prompt:
 > - `setTimeout` in React components that trigger state updates (e.g., auto-close after success) MUST use `useRef` to store the timer ID and clear it in a `useEffect` cleanup. Without this, unmounting the component before the timer fires causes a state-update-on-unmounted-component warning.
 > - `Record<string, string>` maps keyed by a known union type (e.g., `'weak' | 'medium' | 'strong'`) should use `Record<UnionType, string>` instead. This preserves type safety and prevents typo-based lookups.
 > - **State-reset effect completeness:** When a component has an existing `useEffect` that resets local state on entity change (e.g., `useEffect(() => { setX(0); setY(false); }, [poi.id])`), any new UI state variable (modal visibility, expanded flags, etc.) MUST also be reset in that same effect. Omitting it leaves stale UI state — e.g. a phone modal stays open when the user navigates to a different POI.
+> - **Silent `catch` blocks on external API calls:** Every `fetch` to an external API (Google Places, geocoding, etc.) must check `res.ok` and log/report non-2xx responses — do NOT silently swallow errors with an empty `catch` or by ignoring the status code. Silent failures make bugs invisible (e.g., a 400 from an invalid parameter looks identical to "no results found").
+> - **External API parameter validation before commit:** When adding a new external API integration (`fetch` to Google, Stripe, etc.), verify the exact request parameters work by testing with `curl` or browser dev tools BEFORE committing. API constraints (max radius, required fields, rate limits) are not always obvious from docs and silently break when violated.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >

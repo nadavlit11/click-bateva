@@ -148,12 +148,17 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, ico
         headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': import.meta.env.VITE_GOOGLE_MAPS_API_KEY },
         body: JSON.stringify({
           input: query,
-          locationBias: { circle: { center: { latitude: 31.5, longitude: 34.75 }, radius: 200000.0 } },
+          locationBias: { rectangle: { low: { latitude: 29.5, longitude: 34.2 }, high: { latitude: 33.3, longitude: 35.9 } } },
           languageCode: 'he',
           regionCode: 'IL',
           includedPrimaryTypes: ['establishment'],
         }),
       })
+      if (!res.ok) {
+        reportError(new Error(`Places API ${res.status}: ${res.statusText}`), { source: 'PoiDrawer.searchPlaces' })
+        setPlaceResults([])
+        return
+      }
       const data = await res.json()
       const suggestions = (data.suggestions ?? []).slice(0, 6).map((s: { placePrediction?: { placeId?: string; text?: { text?: string }; structuredFormat?: { secondaryText?: { text?: string } } } }) => ({
         placeId: s.placePrediction?.placeId ?? '',
@@ -161,7 +166,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, ico
         address: s.placePrediction?.structuredFormat?.secondaryText?.text ?? '',
       }))
       setPlaceResults(suggestions)
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'PoiDrawer.searchPlaces' })
       setPlaceResults([])
     } finally {
       setPlaceLoading(false)
