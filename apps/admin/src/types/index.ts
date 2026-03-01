@@ -20,6 +20,8 @@ export interface Poi {
   iconId: string | null
   iconUrl: string | null
   businessId: string | null
+  businessPlaceId: string | null
+  businessName: string | null
   active: boolean
   openingHours: Record<string, DayHours | null> | 'by_appointment' | null
   price: string | null
