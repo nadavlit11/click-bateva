@@ -154,6 +154,11 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, ico
           includedPrimaryTypes: ['establishment'],
         }),
       })
+      if (!res.ok) {
+        reportError(new Error(`Places API ${res.status}: ${res.statusText}`), { source: 'PoiDrawer.searchPlaces' })
+        setPlaceResults([])
+        return
+      }
       const data = await res.json()
       const suggestions = (data.suggestions ?? []).slice(0, 6).map((s: { placePrediction?: { placeId?: string; text?: { text?: string }; structuredFormat?: { secondaryText?: { text?: string } } } }) => ({
         placeId: s.placePrediction?.placeId ?? '',
@@ -161,7 +166,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, ico
         address: s.placePrediction?.structuredFormat?.secondaryText?.text ?? '',
       }))
       setPlaceResults(suggestions)
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'PoiDrawer.searchPlaces' })
       setPlaceResults([])
     } finally {
       setPlaceLoading(false)
