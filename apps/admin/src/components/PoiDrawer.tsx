@@ -173,12 +173,10 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     setForm(prev => ({ ...prev, videos: prev.videos.filter((_, i) => i !== index) }))
   }
 
-  function toggleSubcategory(subId: string) {
+  function selectSubcategory(subId: string) {
     setForm(prev => ({
       ...prev,
-      selectedSubcategoryIds: prev.selectedSubcategoryIds.includes(subId)
-        ? prev.selectedSubcategoryIds.filter(s => s !== subId)
-        : [...prev.selectedSubcategoryIds, subId],
+      selectedSubcategoryIds: subId ? [subId] : [],
     }))
   }
 
@@ -729,7 +727,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
               />
             </div>
 
-            {/* Subcategories (scoped to selected category) */}
+            {/* Subcategory (scoped to selected category) */}
             {form.categoryId && (() => {
               const catSubs = subcategories.filter(s => s.categoryId === form.categoryId)
               if (catSubs.length === 0) return null
@@ -740,28 +738,30 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 if (!seen.has(g)) { seen.add(g); groupOrder.push(g) }
               }
               return (
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">תת-קטגוריות</label>
-                  {groupOrder.map(group => {
-                    const groupSubs = catSubs.filter(s => (s.group ?? null) === group)
-                    return (
-                      <div key={group ?? '__null__'}>
-                        {group && (
-                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
-                            {group}
-                          </p>
-                        )}
-                        <div className="grid grid-cols-2 gap-2">
-                          {groupSubs.map(sub => (
-                            <label key={sub.id} className="flex items-center gap-2 cursor-pointer">
-                              <input type="checkbox" checked={form.selectedSubcategoryIds.includes(sub.id)} onChange={() => toggleSubcategory(sub.id)} className="accent-green-600" />
-                              <span className="text-sm text-gray-700">{sub.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">תת-קטגוריה</label>
+                  <select
+                    value={form.selectedSubcategoryIds[0] ?? ''}
+                    onChange={e => selectSubcategory(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
+                  >
+                    <option value="">— ללא תת-קטגוריה —</option>
+                    {groupOrder.map(group => {
+                      const groupSubs = catSubs.filter(s => (s.group ?? null) === group)
+                      if (group) {
+                        return (
+                          <optgroup key={group} label={group}>
+                            {groupSubs.map(sub => (
+                              <option key={sub.id} value={sub.id}>{sub.name}</option>
+                            ))}
+                          </optgroup>
+                        )
+                      }
+                      return groupSubs.map(sub => (
+                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                      ))
+                    })}
+                  </select>
                 </div>
               )
             })()}
