@@ -54,17 +54,16 @@ export function MapPicker({ lat, lng, onChange }: Props) {
     setSearching(true)
     setSearchError(false)
     try {
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(search)}&format=json&limit=1`,
-        { headers: { 'Accept-Language': 'he' } }
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(search)}&language=he&region=IL&components=country:IL&key=${apiKey}`
       )
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const results = await res.json() as Array<{ lat: string; lon: string }>
-      if (results[0]) {
-        const newLat = parseFloat(results[0].lat)
-        const newLng = parseFloat(results[0].lon)
-        onChange(newLat.toFixed(6), newLng.toFixed(6))
-        map?.flyTo([newLat, newLng], 15)
+      const data = await res.json()
+      if (data.status === 'OK' && data.results?.[0]) {
+        const loc = data.results[0].geometry.location
+        onChange(loc.lat.toFixed(6), loc.lng.toFixed(6))
+        map?.flyTo([loc.lat, loc.lng], 15)
       } else {
         setSearchError(true)
       }
