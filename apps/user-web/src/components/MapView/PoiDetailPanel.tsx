@@ -17,6 +17,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
   const isDesktop = useMemo(() => typeof window !== "undefined" && !("ontouchstart" in window), []);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [priceExpanded, setPriceExpanded] = useState(false);
   const [hoursExpanded, setHoursExpanded] = useState(false);
   const color = category?.color ?? "#4caf50";
   // mainImage is always first; poi.images are the extra images
@@ -31,7 +32,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
 
   // Reset state when POI changes
   // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting local state on key change is intentional
-  useEffect(() => { setVirtualSlide(slideCount > 1 ? slideCount : 0); setDescExpanded(false); setHoursExpanded(false); setShowPhoneModal(false); }, [poi.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setVirtualSlide(slideCount > 1 ? slideCount : 0); setDescExpanded(false); setPriceExpanded(false); setHoursExpanded(false); setShowPhoneModal(false); }, [poi.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ESC to close
   useEffect(() => {
@@ -71,8 +72,13 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
   const safeWebsiteHref = (() => {
     if (!poi.website) return null;
     try {
-      const url = new URL(`https://${poi.website}`);
-      return url.hostname === poi.website ? url.href : null;
+      const raw = poi.website.trim();
+      if (raw.startsWith('http://') || raw.startsWith('https://')) {
+        const url = new URL(raw);
+        return (url.protocol === 'https:' || url.protocol === 'http:') ? url.href : null;
+      }
+      const url = new URL(`https://${raw}`);
+      return url.href;
     } catch { return null; }
   })();
 
@@ -249,8 +255,8 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
           </div>
         )}
 
-        {/* Restaurant buttons */}
-        {category?.id === "food" && (poi.kashrutCertUrl || poi.menuUrl) && (
+        {/* Restaurant buttons — Firestore doc ID for "מסעדות וארוחות" category */}
+        {category?.id === "GACgSvKyWbBZegz02zI5" && (poi.kashrutCertUrl || poi.menuUrl) && (
           <div className="flex gap-2 mt-3">
             {poi.kashrutCertUrl && (
               <a
@@ -278,7 +284,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
         )}
 
         {/* Info + contact section */}
-        {(poi.openingHours || poi.price || poi.email || poi.videos.length > 0) && (
+        {(poi.openingHours || poi.price || poi.videos.length > 0) && (
           <div className="h-px bg-gray-100 my-3" />
         )}
 
@@ -328,18 +334,22 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
         )}
 
         {poi.price && (
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">💰</span>
-            <span className="text-sm text-gray-700">{poi.price}</span>
-          </div>
-        )}
-
-        {poi.email && (
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">✉️</span>
-            <a href={`mailto:${poi.email}`} className="text-sm text-gray-700 truncate">
-              {poi.email}
-            </a>
+          <div className="mb-2">
+            <div className="flex items-start gap-2">
+              <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">💰</span>
+              <span className={`text-sm text-gray-700 whitespace-pre-wrap ${priceExpanded ? '' : 'line-clamp-2'}`}>
+                {poi.price}
+              </span>
+            </div>
+            {poi.price.length > 60 && (
+              <button
+                onClick={() => setPriceExpanded(v => !v)}
+                className="text-xs font-medium mt-1 ms-9"
+                style={{ color }}
+              >
+                {priceExpanded ? 'הצג פחות' : 'קרא עוד'}
+              </button>
+            )}
           </div>
         )}
 

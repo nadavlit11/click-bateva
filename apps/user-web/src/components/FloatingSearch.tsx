@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import type { Poi } from "../types";
+import type { Poi, Category, Subcategory } from "../types";
 
 interface GeoResult {
   label: string;
@@ -14,12 +14,14 @@ interface GeocodingResult {
 
 interface FloatingSearchProps {
   pois: Poi[];
+  categories: Category[];
+  subcategories: Subcategory[];
   mapsApiKey: string;
   onPoiSelect: (poi: Poi) => void;
   onLocationSelect: (loc: { lat: number; lng: number; zoom: number }) => void;
 }
 
-export function FloatingSearch({ pois, mapsApiKey, onPoiSelect, onLocationSelect }: FloatingSearchProps) {
+export function FloatingSearch({ pois, categories, subcategories, mapsApiKey, onPoiSelect, onLocationSelect }: FloatingSearchProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [poiResults, setPoiResults] = useState<Poi[]>([]);
@@ -96,6 +98,15 @@ export function FloatingSearch({ pois, mapsApiKey, onPoiSelect, onLocationSelect
     setOpen(false);
   }
 
+  function resolvePoiIcon(poi: Poi): string | null {
+    if (poi.iconUrl) return poi.iconUrl;
+    const subIcon = poi.subcategoryIds?.reduce<string | null>(
+      (found, sid) => found ?? (subcategories.find(s => s.id === sid)?.iconUrl ?? null), null
+    );
+    if (subIcon) return subIcon;
+    return categories.find(c => c.id === poi.categoryId)?.iconUrl ?? null;
+  }
+
   const hasResults = poiResults.length > 0 || locationResults.length > 0;
 
   return (
@@ -128,9 +139,16 @@ export function FloatingSearch({ pois, mapsApiKey, onPoiSelect, onLocationSelect
                   onMouseDown={() => handlePoiClick(poi)}
                   className="w-full text-right px-3 py-2 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
                 >
-                  <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-                  </svg>
+                  {(() => {
+                    const iconUrl = resolvePoiIcon(poi);
+                    return iconUrl ? (
+                      <img src={iconUrl} alt="" className="w-4 h-4 object-contain shrink-0" />
+                    ) : (
+                      <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                      </svg>
+                    );
+                  })()}
                   {poi.name}
                 </button>
               ))}

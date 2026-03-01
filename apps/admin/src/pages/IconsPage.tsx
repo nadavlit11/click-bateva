@@ -26,6 +26,7 @@ export function IconsPage() {
   const bulkFileRef = useRef<HTMLInputElement>(null)
   const [bulkItems, setBulkItems] = useState<BulkItem[]>([])
   const [bulkUploading, setBulkUploading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     return onSnapshot(collection(db, 'icons'), snap => {
@@ -103,6 +104,10 @@ export function IconsPage() {
       reportError(err, { source: 'IconsPage.delete' })
     }
   }
+
+  const sortedIcons = [...icons]
+    .sort((a, b) => a.name.localeCompare(b.name, 'he'))
+    .filter(i => !searchQuery || i.name.includes(searchQuery))
 
   return (
     <div className="p-6">
@@ -183,6 +188,17 @@ export function IconsPage() {
         )}
       </div>
 
+      {/* Search */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="חפש אייקון..."
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+        />
+      </div>
+
       {/* Icons table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
@@ -194,14 +210,14 @@ export function IconsPage() {
             </tr>
           </thead>
           <tbody>
-            {icons.length === 0 && (
+            {sortedIcons.length === 0 && (
               <tr>
                 <td colSpan={3} className="text-center py-10 text-gray-400">
-                  אין אייקונים עדיין
+                  {icons.length > 0 ? 'לא נמצאו אייקונים' : 'אין אייקונים עדיין'}
                 </td>
               </tr>
             )}
-            {icons.map(icon => (
+            {sortedIcons.map(icon => (
               <tr key={icon.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="px-4 py-3">
                   {resolvedUrls[icon.id] ? (

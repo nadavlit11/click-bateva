@@ -11,6 +11,7 @@ interface Props {
 
 export function IconPicker({ icons, value, onChange }: Props) {
   const [open, setOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [urls, setUrls] = useState<Record<string, string>>({})
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -26,7 +27,10 @@ export function IconPicker({ icons, value, onChange }: Props) {
   }, [icons])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      setSearchQuery('')
+      return
+    }
     function handleClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false)
@@ -64,7 +68,17 @@ export function IconPicker({ icons, value, onChange }: Props) {
       </button>
 
       {open && (
-        <div className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-52 overflow-y-auto">
+        <div className="absolute bottom-full mb-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+          <div className="sticky top-0 bg-white border-b border-gray-100 p-2 z-10">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="חפש אייקון..."
+              className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-green-500"
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
           <button
             type="button"
             onClick={() => { onChange(''); setOpen(false) }}
@@ -72,7 +86,7 @@ export function IconPicker({ icons, value, onChange }: Props) {
           >
             ללא אייקון
           </button>
-          {sorted.map(icon => (
+          {sorted.filter(i => !searchQuery || i.name.includes(searchQuery)).map(icon => (
             <button
               type="button"
               key={icon.id}

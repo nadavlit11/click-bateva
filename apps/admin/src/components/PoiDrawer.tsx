@@ -173,12 +173,10 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     setForm(prev => ({ ...prev, videos: prev.videos.filter((_, i) => i !== index) }))
   }
 
-  function toggleSubcategory(subId: string) {
+  function selectSubcategory(subId: string) {
     setForm(prev => ({
       ...prev,
-      selectedSubcategoryIds: prev.selectedSubcategoryIds.includes(subId)
-        ? prev.selectedSubcategoryIds.filter(s => s !== subId)
-        : [...prev.selectedSubcategoryIds, subId],
+      selectedSubcategoryIds: subId ? [subId] : [],
     }))
   }
 
@@ -187,15 +185,20 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     const errors = new Set<string>()
     if (!form.name.trim()) errors.add('name')
     if (!form.categoryId) errors.add('categoryId')
-    if (!form.phone.trim()) errors.add('phone')
     if (!form.whatsapp.trim()) errors.add('whatsapp')
     if (!form.description.trim()) errors.add('description')
-    if (form.images.length === 0) errors.add('images')
+
+    if (form.phone.trim()) {
+      const stripped = form.phone.replace(/[\s\-()]/g, '')
+      if (stripped.length < 9 || !/^[\d\s\-()+ ]+$/.test(form.phone.trim())) {
+        errors.add('phone')
+      }
+    }
 
     if (errors.size > 0) {
       setFieldErrors(errors)
       setError('')
-      const firstField = ['name', 'categoryId', 'description', 'images', 'phone', 'whatsapp'].find(f => errors.has(f))
+      const firstField = ['name', 'categoryId', 'description', 'whatsapp'].find(f => errors.has(f))
       if (firstField) {
         requestAnimationFrame(() => {
           formScrollRef.current?.querySelector<HTMLElement>(`[data-field="${firstField}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -229,7 +232,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
         videos: form.videos.filter(Boolean),
         phone: form.phone.trim(),
         whatsapp: form.whatsapp.trim() || null,
-        email: form.email.trim(),
+        email: null,
         website: form.website.trim(),
         categoryId: form.categoryId,
         subcategoryIds: form.selectedSubcategoryIds,
@@ -416,7 +419,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* Images */}
             <div data-field="images">
-              <label className="block text-sm font-medium text-red-600 mb-1">תמונות *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">תמונות</label>
               <input
                 ref={imagesRef}
                 type="file"
@@ -613,7 +616,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
             </div>
 
             {/* Restaurant-specific: Kashrut Certificate & Menu */}
-            {form.categoryId === 'food' && (
+            {/* Firestore doc ID for "מסעדות וארוחות" category */}
+            {form.categoryId === 'GACgSvKyWbBZegz02zI5' && (
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">תעודת כשרות</label>
@@ -676,7 +680,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* Phone */}
             <div data-field="phone">
-              <label className="block text-sm font-medium text-red-600 mb-1">טלפון *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">טלפון</label>
               <input
                 type="tel"
                 value={form.phone}
@@ -684,7 +688,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none bg-green-50/30 ${fieldErrors.has('phone') ? 'border-red-500 bg-red-50/30 focus:border-red-500' : 'border-green-200 focus:border-green-500'}`}
                 placeholder="03-000-0000"
               />
-              {fieldErrors.has('phone') && <p className="text-red-500 text-xs mt-1">שדה חובה</p>}
+              {fieldErrors.has('phone') && <p className="text-red-500 text-xs mt-1">מספר טלפון לא תקין</p>}
             </div>
 
             {/* WhatsApp */}
@@ -698,18 +702,6 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 placeholder="050-000-0000"
               />
               {fieldErrors.has('whatsapp') && <p className="text-red-500 text-xs mt-1">שדה חובה</p>}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">אימייל</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={e => set('email', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                placeholder="info@example.co.il"
-              />
             </div>
 
             {/* Website */}
@@ -736,7 +728,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
               />
             </div>
 
-            {/* Subcategories (scoped to selected category) */}
+            {/* Subcategory (scoped to selected category) */}
             {form.categoryId && (() => {
               const catSubs = subcategories.filter(s => s.categoryId === form.categoryId)
               if (catSubs.length === 0) return null
@@ -747,28 +739,30 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 if (!seen.has(g)) { seen.add(g); groupOrder.push(g) }
               }
               return (
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">תת-קטגוריות</label>
-                  {groupOrder.map(group => {
-                    const groupSubs = catSubs.filter(s => (s.group ?? null) === group)
-                    return (
-                      <div key={group ?? '__null__'}>
-                        {group && (
-                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
-                            {group}
-                          </p>
-                        )}
-                        <div className="grid grid-cols-2 gap-2">
-                          {groupSubs.map(sub => (
-                            <label key={sub.id} className="flex items-center gap-2 cursor-pointer">
-                              <input type="checkbox" checked={form.selectedSubcategoryIds.includes(sub.id)} onChange={() => toggleSubcategory(sub.id)} className="accent-green-600" />
-                              <span className="text-sm text-gray-700">{sub.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">תת-קטגוריה</label>
+                  <select
+                    value={form.selectedSubcategoryIds[0] ?? ''}
+                    onChange={e => selectSubcategory(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
+                  >
+                    <option value="">— ללא תת-קטגוריה —</option>
+                    {groupOrder.map(group => {
+                      const groupSubs = catSubs.filter(s => (s.group ?? null) === group)
+                      if (group) {
+                        return (
+                          <optgroup key={group} label={group}>
+                            {groupSubs.map(sub => (
+                              <option key={sub.id} value={sub.id}>{sub.name}</option>
+                            ))}
+                          </optgroup>
+                        )
+                      }
+                      return groupSubs.map(sub => (
+                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                      ))
+                    })}
+                  </select>
                 </div>
               )
             })()}

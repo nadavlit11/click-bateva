@@ -37,7 +37,6 @@ export interface PoiEditableFields {
   videos: string[]          // video URLs
   phone: string
   whatsapp: string          // '' means no whatsapp
-  email: string
   website: string
   kashrutCertUrl: string    // '' means no certificate
   menuUrl: string           // '' means no menu

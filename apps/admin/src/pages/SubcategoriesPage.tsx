@@ -90,7 +90,14 @@ export function SubcategoriesPage() {
               <tbody>
                 {subs.map(sub => (
                   <tr key={sub.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="px-4 py-2.5 font-medium text-gray-900">{sub.name}</td>
+                    <td className="px-4 py-2.5 font-medium text-gray-900">
+                      <span className="flex items-center gap-2">
+                        {sub.iconUrl && (
+                          <img src={sub.iconUrl} alt="" className="w-5 h-5 object-contain shrink-0" />
+                        )}
+                        {sub.name}
+                      </span>
+                    </td>
                     <td className="px-4 py-2.5">
                       {sub.group ? (
                         <span className="inline-block px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200">
@@ -134,7 +141,14 @@ export function SubcategoriesPage() {
               <tbody>
                 {unknownCatSubs.map(sub => (
                   <tr key={sub.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="px-4 py-2.5 font-medium text-gray-900">{sub.name}</td>
+                    <td className="px-4 py-2.5 font-medium text-gray-900">
+                      <span className="flex items-center gap-2">
+                        {sub.iconUrl && (
+                          <img src={sub.iconUrl} alt="" className="w-5 h-5 object-contain shrink-0" />
+                        )}
+                        {sub.name}
+                      </span>
+                    </td>
                     <td className="px-4 py-2.5 text-gray-400 text-xs">{sub.categoryId}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex gap-2 justify-end">
