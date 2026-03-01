@@ -45,8 +45,6 @@ interface FormState {
   categoryId: string
   selectedSubcategoryIds: string[]
   iconId: string
-  businessPlaceId: string
-  businessName: string
   active: boolean
   openingHours: Record<string, DayHours | null> | 'by_appointment'
   price: string
@@ -69,8 +67,6 @@ const INITIAL_FORM: FormState = {
   categoryId: '',
   selectedSubcategoryIds: [],
   iconId: '',
-  businessPlaceId: '',
-  businessName: '',
   active: true,
   openingHours: { ...EMPTY_HOURS },
   price: '',
@@ -87,11 +83,6 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, ico
   const [uploadingImages, setUploadingImages] = useState(false)
   const formScrollRef = useRef<HTMLFormElement>(null)
   const [videoInput, setVideoInput] = useState('')
-  const [placeQuery, setPlaceQuery] = useState('')
-  const [placeResults, setPlaceResults] = useState<Array<{ placeId: string; name: string; address: string }>>([])
-  const [placeLoading, setPlaceLoading] = useState(false)
-  const placeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const imagesRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
@@ -111,8 +102,6 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, ico
         categoryId: poi.categoryId,
         selectedSubcategoryIds: [...(poi.subcategoryIds ?? [])],
         iconId: poi.iconId ?? '',
-        businessPlaceId: poi.businessPlaceId ?? '',
-        businessName: poi.businessName ?? '',
         active: poi.active,
         openingHours: poi.openingHours === 'by_appointment'
           ? 'by_appointment'
@@ -129,56 +118,8 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, ico
     }
     setError('')
     setFieldErrors(new Set())
-    setPlaceQuery('')
-    setPlaceResults([])
     setVideoInput('')
   }, [poi, isOpen])
-
-  // Cleanup debounce timer on unmount
-  useEffect(() => {
-    return () => { if (placeDebounceRef.current) clearTimeout(placeDebounceRef.current) }
-  }, [])
-
-  async function searchPlaces(query: string) {
-    if (!query.trim()) { setPlaceResults([]); return }
-    setPlaceLoading(true)
-    try {
-      const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': import.meta.env.VITE_GOOGLE_MAPS_API_KEY },
-        body: JSON.stringify({
-          input: query,
-          locationBias: { rectangle: { low: { latitude: 29.5, longitude: 34.2 }, high: { latitude: 33.3, longitude: 35.9 } } },
-          languageCode: 'he',
-          regionCode: 'IL',
-          includedPrimaryTypes: ['establishment'],
-        }),
-      })
-      if (!res.ok) {
-        reportError(new Error(`Places API ${res.status}: ${res.statusText}`), { source: 'PoiDrawer.searchPlaces' })
-        setPlaceResults([])
-        return
-      }
-      const data = await res.json()
-      const suggestions = (data.suggestions ?? []).slice(0, 6).map((s: { placePrediction?: { placeId?: string; text?: { text?: string }; structuredFormat?: { secondaryText?: { text?: string } } } }) => ({
-        placeId: s.placePrediction?.placeId ?? '',
-        name: s.placePrediction?.structuredFormat?.secondaryText ? s.placePrediction?.text?.text?.replace(`, ${s.placePrediction.structuredFormat.secondaryText.text}`, '') ?? '' : s.placePrediction?.text?.text ?? '',
-        address: s.placePrediction?.structuredFormat?.secondaryText?.text ?? '',
-      }))
-      setPlaceResults(suggestions)
-    } catch (err) {
-      reportError(err, { source: 'PoiDrawer.searchPlaces' })
-      setPlaceResults([])
-    } finally {
-      setPlaceLoading(false)
-    }
-  }
-
-  function handlePlaceQueryChange(value: string) {
-    setPlaceQuery(value)
-    if (placeDebounceRef.current) clearTimeout(placeDebounceRef.current)
-    placeDebounceRef.current = setTimeout(() => searchPlaces(value), 300)
-  }
 
   function set(field: keyof FormState, value: FormState[typeof field]) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -289,8 +230,6 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, ico
         subcategoryIds: form.selectedSubcategoryIds,
         iconId: resolvedIconId,
         iconUrl: resolvedIconUrl,
-        businessPlaceId: form.businessPlaceId.trim() || null,
-        businessName: form.businessName.trim() || null,
         active: form.active,
         openingHours: form.openingHours === 'by_appointment'
           ? 'by_appointment'
@@ -382,50 +321,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, ico
               {fieldErrors.has('categoryId') && <p className="text-red-500 text-xs mt-1">יש לבחור קטגוריה</p>}
             </div>
 
-            {/* Business (Google Places) */}
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">עסק משויך</label>
-              {form.businessName ? (
-                <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                  <span className="flex-1 text-gray-900">{form.businessName}</span>
-                  <button
-                    type="button"
-                    onClick={() => { set('businessPlaceId', ''); set('businessName', ''); setPlaceQuery('') }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <input
-                    type="text"
-                    value={placeQuery}
-                    onChange={e => handlePlaceQueryChange(e.target.value)}
-                    placeholder="חפש עסק בגוגל..."
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                  />
-                  {(placeResults.length > 0 || placeLoading) && (
-                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                      {placeLoading && placeResults.length === 0 && (
-                        <div className="px-3 py-2 text-sm text-gray-400">מחפש...</div>
-                      )}
-                      {placeResults.map(p => (
-                        <button
-                          key={p.placeId}
-                          type="button"
-                          onClick={() => { set('businessPlaceId', p.placeId); set('businessName', p.name); setPlaceQuery(''); setPlaceResults([]) }}
-                          className="w-full text-start px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                        >
-                          <span className="font-medium">{p.name}</span>
-                          {p.address && <span className="text-gray-400 ms-2 text-xs">{p.address}</span>}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+
 
             {/* Description */}
             <div data-field="description">
