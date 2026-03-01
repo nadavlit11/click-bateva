@@ -312,8 +312,8 @@ export function PoiEditPage() {
           />
         </div>
 
-        {/* Restaurant-specific: Kashrut Certificate & Menu */}
-        {poi?.categoryId === 'food' && (
+        {/* Restaurant-specific: Kashrut Certificate & Menu — Firestore doc ID for "מסעדות וארוחות" */}
+        {poi?.categoryId === 'GACgSvKyWbBZegz02zI5' && (
           <>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">תעודת כשרות</label>

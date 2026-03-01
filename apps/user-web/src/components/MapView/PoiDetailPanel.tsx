@@ -255,8 +255,8 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
           </div>
         )}
 
-        {/* Restaurant buttons */}
-        {category?.id === "food" && (poi.kashrutCertUrl || poi.menuUrl) && (
+        {/* Restaurant buttons — Firestore doc ID for "מסעדות וארוחות" category */}
+        {category?.id === "GACgSvKyWbBZegz02zI5" && (poi.kashrutCertUrl || poi.menuUrl) && (
           <div className="flex gap-2 mt-3">
             {poi.kashrutCertUrl && (
               <a
