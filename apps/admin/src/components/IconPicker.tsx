@@ -27,13 +27,11 @@ export function IconPicker({ icons, value, onChange }: Props) {
   }, [icons])
 
   useEffect(() => {
-    if (!open) {
-      setSearchQuery('')
-      return
-    }
+    if (!open) return
     function handleClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false)
+        setSearchQuery('')
       }
     }
     document.addEventListener('mousedown', handleClick)
@@ -47,7 +45,7 @@ export function IconPicker({ icons, value, onChange }: Props) {
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { if (open) setSearchQuery(''); setOpen(o => !o) }}
         className="w-full flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-green-500 text-start"
       >
         {selected ? (
