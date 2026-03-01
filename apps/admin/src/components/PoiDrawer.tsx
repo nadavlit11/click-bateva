@@ -187,15 +187,20 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
     const errors = new Set<string>()
     if (!form.name.trim()) errors.add('name')
     if (!form.categoryId) errors.add('categoryId')
-    if (!form.phone.trim()) errors.add('phone')
     if (!form.whatsapp.trim()) errors.add('whatsapp')
     if (!form.description.trim()) errors.add('description')
-    if (form.images.length === 0) errors.add('images')
+
+    if (form.phone.trim()) {
+      const stripped = form.phone.replace(/[\s\-()]/g, '')
+      if (stripped.length < 9 || !/^[\d\s\-()+ ]+$/.test(form.phone.trim())) {
+        errors.add('phone')
+      }
+    }
 
     if (errors.size > 0) {
       setFieldErrors(errors)
       setError('')
-      const firstField = ['name', 'categoryId', 'description', 'images', 'phone', 'whatsapp'].find(f => errors.has(f))
+      const firstField = ['name', 'categoryId', 'description', 'whatsapp'].find(f => errors.has(f))
       if (firstField) {
         requestAnimationFrame(() => {
           formScrollRef.current?.querySelector<HTMLElement>(`[data-field="${firstField}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -416,7 +421,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* Images */}
             <div data-field="images">
-              <label className="block text-sm font-medium text-red-600 mb-1">תמונות *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">תמונות</label>
               <input
                 ref={imagesRef}
                 type="file"
@@ -676,7 +681,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
 
             {/* Phone */}
             <div data-field="phone">
-              <label className="block text-sm font-medium text-red-600 mb-1">טלפון *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">טלפון</label>
               <input
                 type="tel"
                 value={form.phone}
@@ -684,7 +689,7 @@ export function PoiDrawer({ isOpen, onClose, poi, categories, subcategories, bus
                 className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none bg-green-50/30 ${fieldErrors.has('phone') ? 'border-red-500 bg-red-50/30 focus:border-red-500' : 'border-green-200 focus:border-green-500'}`}
                 placeholder="03-000-0000"
               />
-              {fieldErrors.has('phone') && <p className="text-red-500 text-xs mt-1">שדה חובה</p>}
+              {fieldErrors.has('phone') && <p className="text-red-500 text-xs mt-1">מספר טלפון לא תקין</p>}
             </div>
 
             {/* WhatsApp */}
