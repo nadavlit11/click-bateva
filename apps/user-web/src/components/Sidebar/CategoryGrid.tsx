@@ -28,12 +28,9 @@ export function CategoryGrid({ categories, subcategories, selectedCategories, on
                   boxShadow: isSelected ? `0 0 0 2px ${cat.color}` : "none",
                 }}
               >
-                <span
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-lg shrink-0"
-                  style={{ backgroundColor: cat.color }}
-                >
+                <span className="w-6 h-6 flex items-center justify-center text-lg shrink-0">
                   {cat.iconUrl ? (
-                    <img src={cat.iconUrl} alt={cat.name} className="w-5 h-5" />
+                    <img src={cat.iconUrl} alt={cat.name} className="w-6 h-6" />
                   ) : (
                     <CategoryEmoji id={cat.id} />
                   )}
