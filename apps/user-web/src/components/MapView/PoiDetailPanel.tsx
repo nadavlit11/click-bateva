@@ -446,8 +446,8 @@ function ActionIcon({ href, icon, label, color, external, asButton, onClick }: {
 }) {
   const inner = (
     <>
-      <span className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: color }}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-5 h-5">
+      <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: color }}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4">
           <path d={icon} />
         </svg>
       </span>
