@@ -142,7 +142,7 @@ export default function App() {
         )}
 
         {/* Floating search — on mobile stretches full width; on desktop fixed-width on physical left (end in RTL) */}
-        <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`}>
+        <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`} onFocusCapture={() => setSelectedPoi(null)}>
           <FloatingSearch
             pois={pois}
             categories={sortedCategories}

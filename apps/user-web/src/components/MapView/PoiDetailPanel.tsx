@@ -337,11 +337,11 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
           <div className="mb-2">
             <div className="flex items-start gap-2">
               <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">💰</span>
-              <span className={`text-sm text-gray-700 whitespace-pre-wrap ${priceExpanded ? '' : 'line-clamp-2'}`}>
+              <span className={`text-sm text-gray-700 whitespace-pre-wrap ${priceExpanded ? '' : 'line-clamp-1'}`}>
                 {poi.price}
               </span>
             </div>
-            {poi.price.length > 60 && (
+            {poi.price.length > 30 && (
               <button
                 onClick={() => setPriceExpanded(v => !v)}
                 className="text-xs font-medium mt-1 ms-9"
@@ -446,8 +446,8 @@ function ActionIcon({ href, icon, label, color, external, asButton, onClick }: {
 }) {
   const inner = (
     <>
-      <span className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: color }}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-5 h-5">
+      <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: color }}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4">
           <path d={icon} />
         </svg>
       </span>
