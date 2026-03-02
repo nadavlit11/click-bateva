@@ -32,6 +32,13 @@ All apps share: Vite, React, TypeScript, Tailwind CSS v4, Rubik font, Hebrew RTL
 | `businesses` | Business records, `associatedUserIds` for POI edit authorization |
 | `clicks` | Analytics events (top-level collection, NOT subcollection) |
 
+### Key Relationships
+
+- **icons → categories, subcategories, points_of_interest**: All three collections have `iconId` (references `icons` doc ID) and `iconUrl` (cached download URL, resolved at save time). When deleting icons, null out both fields in all three collections.
+- **categories → subcategories → points_of_interest**: POIs reference `categoryId` and `subcategoryIds[]`. Subcategories reference `categoryId`.
+- **businesses → points_of_interest**: POIs reference `businessId`. Business docs have `associatedUserIds` for edit authorization.
+- **categories → points_of_interest**: POIs reference `categoryId` directly.
+
 ## Sub-Pages
 
 | Area | File | When to read |
