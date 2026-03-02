@@ -224,7 +224,7 @@ export function PoiDetailPanel({ poi, category, onClose }: PoiDetailPanelProps) 
         <h2 className="text-xl font-bold text-gray-800 mt-2">{poi.name}</h2>
 
         {/* Quick-action icon row */}
-        <div className="flex justify-center gap-3 mt-3">
+        <div className="flex justify-evenly mt-3">
           {poi.phone && (
             isDesktop
               ? <ActionIcon href={`tel:${poi.phone}`} icon={ICON_PHONE} label="שיחה" color={color} asButton onClick={() => setShowPhoneModal(true)} />

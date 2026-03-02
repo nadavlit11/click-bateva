@@ -4,6 +4,7 @@ import { db } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import type { Category, Icon } from '../types/index.ts'
 import { CategoryModal } from '../components/CategoryModal.tsx'
+import { ConfirmDialog } from '../components/ConfirmDialog.tsx'
 import { useUserRole } from '../hooks/useUserRole.ts'
 
 export function CategoriesPage() {
@@ -12,6 +13,7 @@ export function CategoriesPage() {
   const [icons, setIcons] = useState<Icon[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null)
 
   useEffect(() => {
     const unsub1 = onSnapshot(collection(db, 'categories'), snap => {
@@ -23,9 +25,10 @@ export function CategoriesPage() {
     return () => { unsub1(); unsub2() }
   }, [])
 
-  async function handleDelete(id: string) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק קטגוריה זו?')) return
-    await deleteDoc(doc(db, 'categories', id))
+  async function handleDelete() {
+    if (!deletingCategoryId) return
+    await deleteDoc(doc(db, 'categories', deletingCategoryId))
+    setDeletingCategoryId(null)
   }
 
   function openAdd() {
@@ -98,7 +101,7 @@ export function CategoriesPage() {
                     </button>
                     {role === 'admin' && (
                       <button
-                        onClick={() => handleDelete(cat.id).catch(err => reportError(err, { source: 'CategoriesPage.delete' }))}
+                        onClick={() => setDeletingCategoryId(cat.id)}
                         className="text-red-500 hover:text-red-700 text-xs font-medium"
                       >
                         מחיקה
@@ -118,6 +121,14 @@ export function CategoriesPage() {
         category={editingCategory}
         onSaved={handleClose}
         icons={icons}
+      />
+
+      <ConfirmDialog
+        isOpen={!!deletingCategoryId}
+        onClose={() => setDeletingCategoryId(null)}
+        onConfirm={() => handleDelete().catch(err => reportError(err, { source: 'CategoriesPage.delete' }))}
+        title="מחיקת קטגוריה"
+        message="האם אתה בטוח שברצונך למחוק קטגוריה זו? פעולה זו אינה ניתנת לביטול."
       />
     </div>
   )
