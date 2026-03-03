@@ -184,6 +184,84 @@ describe("clicks collection", () => {
         })
       );
     });
+
+    // ── Role-based click suppression ──
+
+    it("denies admin from creating a click", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertFails(addDoc(collection(db, "clicks"), VALID_CLICK));
+    });
+
+    it("denies content_manager from creating a click", async () => {
+      const cm = env.authenticatedContext("cm-uid", { role: "content_manager" });
+      const db = cm.firestore();
+      await assertFails(addDoc(collection(db, "clicks"), VALID_CLICK));
+    });
+
+    it("denies business_user from creating a click on their own POI", async () => {
+      // Seed a POI that belongs to the business user (businessId = user uid)
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "points_of_interest", "biz-poi"), {
+          name: "Business POI",
+          active: true,
+          businessId: "biz-user-uid",
+          description: "Owned by biz-user-uid",
+          maps: { agents: { price: null, active: true }, groups: { price: null, active: true } },
+        });
+      });
+
+      const bizUser = env.authenticatedContext("biz-user-uid", {
+        role: "business_user",
+        businessRef: businessRefPath("biz-user-uid"),
+      });
+      const db = bizUser.firestore();
+      await assertFails(
+        addDoc(collection(db, "clicks"), {
+          poiId: "biz-poi",
+          categoryId: "c1",
+          timestamp: serverTimestamp(),
+        })
+      );
+    });
+
+    it("allows business_user to create a click on a different POI", async () => {
+      // Seed a POI that belongs to someone else
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "points_of_interest", "other-poi"), {
+          name: "Other POI",
+          active: true,
+          businessId: "other-biz-uid",
+          description: "Not owned by biz-user-uid",
+          maps: { agents: { price: null, active: true }, groups: { price: null, active: true } },
+        });
+      });
+
+      const bizUser = env.authenticatedContext("biz-user-uid", {
+        role: "business_user",
+        businessRef: businessRefPath("biz-user-uid"),
+      });
+      const db = bizUser.firestore();
+      await assertSucceeds(
+        addDoc(collection(db, "clicks"), {
+          poiId: "other-poi",
+          categoryId: "c1",
+          timestamp: serverTimestamp(),
+        })
+      );
+    });
+
+    it("allows travel_agent to create a click", async () => {
+      const agent = env.authenticatedContext("agent-uid", { role: "travel_agent" });
+      const db = agent.firestore();
+      await assertSucceeds(addDoc(collection(db, "clicks"), VALID_CLICK));
+    });
+
+    it("allows standard_user to create a click", async () => {
+      const user = env.authenticatedContext("user-uid", { role: "standard_user" });
+      const db = user.firestore();
+      await assertSucceeds(addDoc(collection(db, "clicks"), VALID_CLICK));
+    });
   });
 
   describe("READ", () => {
