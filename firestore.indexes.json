@@ -26,6 +26,22 @@
       ]
     },
     {
+      "collectionGroup": "points_of_interest",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "active", "order": "ASCENDING" },
+        { "fieldPath": "maps.agents.active", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "points_of_interest",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "active", "order": "ASCENDING" },
+        { "fieldPath": "maps.groups.active", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "clicks",
       "queryScope": "COLLECTION",
       "fields": [
