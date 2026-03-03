@@ -16,6 +16,9 @@ interface BottomSheetProps {
   onCategoryToggle: (id: string) => void;
   onSubcategoryFilter: (categoryId: string) => void;
   onClearAll: () => void;
+  isLoggedIn: boolean;
+  onLoginClick: () => void;
+  onLogout: () => void;
   className?: string;
 }
 
@@ -30,6 +33,9 @@ export function BottomSheet({
   onCategoryToggle,
   onSubcategoryFilter,
   onClearAll,
+  isLoggedIn,
+  onLoginClick,
+  onLogout,
   className,
 }: BottomSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -151,9 +157,26 @@ export function BottomSheet({
               })}
             </div>
 
-            {/* Result count */}
-            <div className="px-4 pt-1 text-sm text-gray-400 text-right">
-              {filteredCount} מקומות
+            {/* Result count + auth button */}
+            <div className="flex items-center justify-between px-4 pt-1">
+              <span className="text-sm text-gray-400">
+                {filteredCount} מקומות
+              </span>
+              {isLoggedIn ? (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onLogout(); }}
+                  className="text-xs text-gray-400 hover:text-gray-600"
+                >
+                  התנתקות
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onLoginClick(); }}
+                  className="text-xs text-green-600 hover:text-green-800 font-medium"
+                >
+                  כניסת סוכנים
+                </button>
+              )}
             </div>
           </div>
         )}

@@ -7,10 +7,13 @@ import { MapView } from "./components/MapView/MapView";
 import { BottomSheet } from "./components/BottomSheet/BottomSheet";
 import { SubcategoryModal } from "./components/SubcategoryModal";
 import { FloatingSearch } from "./components/FloatingSearch";
+import { LoginModal } from "./components/LoginModal";
 import { usePois, useCategories, useSubcategories } from "./hooks/useFirestoreData";
+import { useAuth } from "./hooks/useAuth";
 import { useMapSettings } from "./hooks/useMapSettings";
 import { filterPois } from "./lib/filterPois";
 import type { Poi } from "./types";
+import type { MapKey } from "./hooks/useFirestoreData";
 
 const PoiDetailPanel = lazy(() => import("./components/MapView/PoiDetailPanel").then(m => ({ default: m.PoiDetailPanel })));
 
@@ -18,7 +21,10 @@ const recentClicks = new Map<string, number>();
 const CLICK_DEBOUNCE_MS = 3000;
 
 export default function App() {
-  const { pois, loading: poisLoading } = usePois();
+  const { user, role, login, logout } = useAuth();
+  const mapKey: MapKey = role === "travel_agent" ? "agents" : "groups";
+  const { pois, loading: poisLoading } = usePois(mapKey);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const categories = useCategories();
   const subcategories = useSubcategories();
   const pinSize = useMapSettings();
@@ -112,6 +118,9 @@ export default function App() {
           onSubcategoryFilter={setSubcategoryModalCategoryId}
           onClearAll={handleClearAll}
           onClose={() => setSidebarOpen(false)}
+          isLoggedIn={!!user}
+          onLoginClick={() => setLoginModalOpen(true)}
+          onLogout={logout}
         />
       )}
       <main className="flex-1 h-full relative">
@@ -165,6 +174,9 @@ export default function App() {
           onCategoryToggle={handleCategoryToggle}
           onSubcategoryFilter={setSubcategoryModalCategoryId}
           onClearAll={handleClearAll}
+          isLoggedIn={!!user}
+          onLoginClick={() => setLoginModalOpen(true)}
+          onLogout={logout}
         />
         {poisLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
@@ -192,6 +204,13 @@ export default function App() {
           selectedSubcategories={selectedSubcategories}
           onToggle={handleSubcategoryToggle}
           onClose={() => setSubcategoryModalCategoryId(null)}
+        />
+      )}
+
+      {loginModalOpen && (
+        <LoginModal
+          onLogin={login}
+          onClose={() => setLoginModalOpen(false)}
         />
       )}
     </div>

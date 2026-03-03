@@ -48,12 +48,13 @@ apps/admin/
     ├── pages/
     │   ├── LoginPage.tsx           signInWithEmailAndPassword; Hebrew error messages
     │   ├── DashboardPage.tsx       stats overview (POIs, categories, subcategories, businesses)
-    │   ├── PoisPage.tsx            list POIs + open PoiDrawer
+    │   ├── PoisPage.tsx            list POIs; clicking navigates to /pois/:id
+    │   ├── PoiEditPage.tsx        full-page POI editor (replaces PoiDrawer); per-map price/active fields
     │   ├── CategoriesPage.tsx      list + CategoryModal
     │   ├── SubcategoriesPage.tsx   list grouped by category + SubcategoryModal
     │   ├── IconsPage.tsx           upload + list + delete icons
     │   ├── BusinessesPage.tsx      list + edit button + BusinessModal (create + edit modes)
-    │   ├── UsersPage.tsx           content manager management (list, delete, block); admin-only
+    │   ├── UsersPage.tsx           tabbed: content_manager + travel_agent management; admin-only
     │   └── AnalyticsPage.tsx       click totals per POI + per category
     ├── hooks/
     │   └── useUserRole.ts          custom hook: extracts role from getIdTokenResult() claims
@@ -66,7 +67,7 @@ apps/admin/
         ├── CategoryModal.tsx       create/edit category; icon picker; color picker; order field
         ├── SubcategoryModal.tsx    create/edit subcategory; category select + group input + icon picker
         ├── MapPicker.tsx           Leaflet map + Nominatim search; click/drag/search to set lat/lng
-        ├── PoiDrawer.tsx           slide-in panel; POI CRUD + validation + bold toolbar + icon picker; delete hidden for CM
+        ├── (PoiDrawer.tsx deleted — replaced by PoiEditPage)
         ├── BusinessModal.tsx       create (via callable) + edit (via Firestore) modes; password strength indicator
         ├── ChangePasswordModal.tsx change password (reauthenticate + updatePassword); strength indicator
         └── Layout/
@@ -82,6 +83,8 @@ apps/admin/
 /login            → LoginPage (public)
 / (index)         → DashboardPage (auth-gated)
 /pois             → PoisPage (auth-gated)
+/pois/new         → PoiEditPage (create mode, auth-gated)
+/pois/:id         → PoiEditPage (edit mode, auth-gated)
 /categories       → CategoriesPage (auth-gated)
 /subcategories    → SubcategoriesPage (auth-gated)
 /icons            → IconsPage (auth-gated)
@@ -135,6 +138,7 @@ export interface Poi {
   iconUrl: string           // resolved icon URL for override
   businessId: string | null
   active: boolean
+  maps: MapOverrides          // per-map visibility & pricing
   openingHours: Record<string, DayHours | null> | 'by_appointment' | null
   price: string | null
   createdAt: unknown        // Firestore serverTimestamp
@@ -159,6 +163,11 @@ export interface Subcategory {
   group: string | null    // free-text group name (AND-across, OR-within); null = ungrouped
   createdAt: unknown
   updatedAt: unknown
+}
+
+export interface MapOverrides {
+  agents: { price: string; active: boolean }
+  groups: { price: string; active: boolean }
 }
 
 export interface Icon {

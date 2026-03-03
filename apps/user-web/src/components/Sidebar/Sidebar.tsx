@@ -12,6 +12,9 @@ interface SidebarProps {
   onSubcategoryFilter: (categoryId: string) => void;
   onClearAll: () => void;
   onClose: () => void;
+  isLoggedIn: boolean;
+  onLoginClick: () => void;
+  onLogout: () => void;
   className?: string;
 }
 
@@ -24,6 +27,9 @@ export function Sidebar({
   onSubcategoryFilter,
   onClearAll,
   onClose,
+  isLoggedIn,
+  onLoginClick,
+  onLogout,
   className,
 }: SidebarProps) {
   return (
@@ -53,6 +59,23 @@ export function Sidebar({
         />
       </div>
       <SidebarFooter count={filteredCount} onClearAll={onClearAll} />
+      <div className="px-4 py-3 border-t border-gray-100">
+        {isLoggedIn ? (
+          <button
+            onClick={onLogout}
+            className="w-full text-sm text-gray-500 hover:text-gray-700 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            התנתקות
+          </button>
+        ) : (
+          <button
+            onClick={onLoginClick}
+            className="w-full text-sm text-green-600 hover:text-green-800 font-medium py-1.5 rounded-lg hover:bg-green-50 transition-colors"
+          >
+            כניסת סוכנים
+          </button>
+        )}
+      </div>
     </aside>
   );
 }

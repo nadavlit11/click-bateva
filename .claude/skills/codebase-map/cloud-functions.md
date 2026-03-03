@@ -5,6 +5,7 @@
 - `functions/src/index.ts` — exports all functions; Sentry init; `setGlobalOptions({ maxInstances: 10 })`
 - `functions/src/auth.ts` — `onUserCreated` (v1 auth trigger) + `setUserRole` (v2 callable)
 - `functions/src/business.ts` — `createBusinessUser` + `deleteBusinessUser` (v2 callables)
+- `functions/src/agent.ts` — `createTravelAgent` + `deleteTravelAgent` (v2 callables, admin-only)
 - `functions/src/users.ts` — `deleteContentManager` + `blockContentManager` (v2 callables, admin-only)
 - `functions/src/__tests__/auth.unit.test.ts` — unit tests for auth functions (no emulator)
 - `functions/src/__tests__/users.unit.test.ts` — unit tests for user management functions
@@ -21,6 +22,8 @@
 | `deleteBusinessUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `deleteContentManager` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `blockContentManager` | v2 `onCall({ cors: true })` | Admin callable | admin only |
+| `createTravelAgent` | v2 `onCall({ cors: true })` | Admin callable | admin only |
+| `deleteTravelAgent` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 
 ## Data Flow
 
@@ -54,6 +57,17 @@ blockContentManager (v2 callable)
   ├─ Validates caller is admin + target has content_manager role
   ├─ Sets auth user disabled: true (tolerates already-disabled)
   └─ Updates users/ doc with blocked: true
+
+createTravelAgent (v2 callable)
+  ├─ Validates caller is admin
+  ├─ Creates Firebase Auth user
+  ├─ Sets claims: { role: "travel_agent" }
+  └─ Creates users/ doc
+
+deleteTravelAgent (v2 callable)
+  ├─ Validates caller is admin + target has travel_agent role
+  ├─ Deletes Firebase Auth user (tolerates auth/user-not-found)
+  └─ Deletes users/ doc
 ```
 
 ## Patterns & Conventions
@@ -62,7 +76,7 @@ blockContentManager (v2 callable)
 - v1 used only for `onUserCreated` (auth triggers not available in v2 at time of writing)
 - All callables validate: (1) authenticated, (2) admin role, (3) input types
 - Sentry error reporting on unexpected errors via `Sentry.captureException`
-- Valid roles: `admin`, `content_manager`, `business_user`, `standard_user`
+- Valid roles: `admin`, `content_manager`, `business_user`, `travel_agent`, `standard_user`
 
 ## Gotchas
 

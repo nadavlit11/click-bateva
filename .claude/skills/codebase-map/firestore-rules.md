@@ -11,10 +11,10 @@
 ## Rules Structure
 
 ```
-Helper functions: isSignedIn, userRole, isAdmin, isContentManager, isAdminOrContentManager, isBusinessUser
+Helper functions: isSignedIn, userRole, isAdmin, isContentManager, isAdminOrContentManager, isBusinessUser, isTravelAgent
 
 points_of_interest/{poiId}
-  read:   active == true OR admin/cm OR (business_user && businessId == uid)
+  read:   admin/cm OR (travel_agent && maps.agents.active == true) OR (business_user && businessId == uid) OR maps.groups.active == true
   create: admin/cm
   delete: admin ONLY (content managers CANNOT delete)
   update: admin/cm OR (business_user && in associatedUserIds && affectedKeys allowlist)
@@ -48,6 +48,8 @@ users/{userId}
 ## Gotchas
 
 - Custom claims are STRINGS — comparing to a path literal is always false. Use string concatenation: `'/databases/' + database + '/documents/businesses/' + businessId`
+- POIs now have a `maps` nested field: `{ agents: { price, active }, groups: { price, active } }`. The read rule uses per-map active checks instead of a single top-level `active` field.
+- `isTravelAgent()` helper checks `request.auth.token.role == 'travel_agent'`
 - After adding a new field to `PoiEditableFields`, the `affectedKeys().hasOnly(...)` allowlist MUST also be updated
 - After modifying rules, MUST deploy: `firebase deploy --only firestore:rules`
 - A rule written in the file but not deployed silently blocks all reads/writes

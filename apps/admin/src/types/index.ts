@@ -3,6 +3,11 @@ export interface DayHours {
   close: string  // "17:00"
 }
 
+export interface MapOverrides {
+  price: string | null
+  active: boolean
+}
+
 export interface Poi {
   id: string
   name: string
@@ -24,7 +29,11 @@ export interface Poi {
   businessName: string | null
   active: boolean
   openingHours: Record<string, DayHours | null> | 'by_appointment' | null
-  price: string | null
+  price: string | null // DEPRECATED — use maps.*.price instead
+  maps: {
+    agents: MapOverrides
+    groups: MapOverrides
+  }
   kashrutCertUrl: string
   menuUrl: string
   facebook: string

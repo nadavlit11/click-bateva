@@ -17,6 +17,7 @@ The user-facing web app is being built before the admin/business dashboards to g
 | Styling | Tailwind CSS v4 (`@tailwindcss/vite` plugin) |
 | Map | `@vis.gl/react-google-maps` |
 | Database | Firebase Firestore (via Firebase SDK v12+) |
+| Auth | Firebase Auth (Email/Password) — for travel agent login |
 | Font | Rubik (Google Fonts — supports Hebrew) |
 | Language | Hebrew (RTL first) |
 
@@ -39,13 +40,14 @@ apps/user-web/
     ├── types/
     │   └── index.ts            Poi, Category, Subcategory interfaces
     ├── lib/
-    │   ├── firebase.ts         initializeApp, getFirestore, emulator gated on VITE_USE_EMULATOR
+    │   ├── firebase.ts         initializeApp, getFirestore, getAuth; emulator gated on VITE_USE_EMULATOR
     │   ├── filterPois.ts       filterPois() + PoiFilter interface
     │   ├── openingStatus.ts    getOpeningStatusText(), DAY_KEYS, DAY_NAMES_HE
     │   ├── colorUtils.ts       lighten(), lightenBorder()
     │   └── renderBoldText.tsx  **bold** markdown parser (handles unmatched delimiters)
     ├── hooks/
-    │   └── useFirestoreData.ts  usePois, useCategories, useSubcategories (onSnapshot hooks)
+    │   ├── useFirestoreData.ts  usePois(mapKey), useCategories, useSubcategories (onSnapshot hooks)
+    │   └── useAuth.ts           useAuth() → { user, role, loading } from Firebase Auth custom claims
     └── components/
         ├── Sidebar/
         │   ├── Sidebar.tsx         flex-col container (w-80, shadow); collapsible (hidden when sidebarOpen=false)
@@ -57,7 +59,8 @@ apps/user-web/
         │   ├── PoiMarker.tsx   AdvancedMarker with teardrop div (28px) + name pill (zoom >= 14 only)
         │   └── PoiDetailPanel.tsx  slide-up detail panel; carousel (contain); whatsapp via poi.whatsapp; bold text; click-outside-close
         ├── BottomSheet/
-        │   └── BottomSheet.tsx   mobile filter panel; collapses to chip row peek; scroll fade indicator
+        │   └── BottomSheet.tsx   mobile filter panel; collapses to chip row peek; scroll fade indicator; login/logout buttons
+        ├── LoginModal.tsx          email/password login modal for travel agent auth
         └── SubcategoryModal.tsx    per-category subcategory toggle modal (all selected by default)
 ```
 
@@ -117,7 +120,9 @@ All filter state lives in `App.tsx` (lifted state — no Redux/Zustand needed fo
 
 ```
 App.tsx
-  ├── pois: Poi[]                           ← from usePois()
+  ├── { user, role, loading }: AuthState    ← from useAuth()
+  ├── mapKey: 'agents' | 'groups'           ← derived: travel_agent role → 'agents', else → 'groups'
+  ├── pois: Poi[]                           ← from usePois(mapKey) — filters by maps.<mapKey>.active
   ├── categories: Category[]                ← useCategories()
   ├── subcategories: Subcategory[]          ← useSubcategories()
   ├── selectedCategories: Set<string>       ← filter: category IDs (required — no POIs shown when empty)
@@ -234,11 +239,13 @@ Renders inside `<AdvancedMarker position={poi.location}>`. Custom div: CSS-only 
 ```typescript
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const db = getFirestore(app);
+export const auth = getAuth(app);
 
 // Emulator only when VITE_USE_EMULATOR=true — NOT import.meta.env.DEV,
 // which would connect every local dev server to the emulator even against prod data.
 if (import.meta.env.VITE_USE_EMULATOR === 'true') {
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectAuthEmulator(auth, "http://127.0.0.1:9099");
 }
 ```
 
@@ -247,8 +254,10 @@ if (import.meta.env.VITE_USE_EMULATOR === 'true') {
 All Firestore data hooks are co-located in a single file:
 
 ```typescript
-export function usePois(): Poi[] {
-  // onSnapshot("points_of_interest", where("active", "==", true))
+export type MapKey = 'agents' | 'groups';
+
+export function usePois(mapKey: MapKey): Poi[] {
+  // onSnapshot("points_of_interest", where(`maps.${mapKey}.active`, "==", true))
   // doc.data().location is a Firestore GeoPoint → convert to { lat, lng }
   // maps subcategoryIds: doc.data().subcategoryIds ?? []
 }
