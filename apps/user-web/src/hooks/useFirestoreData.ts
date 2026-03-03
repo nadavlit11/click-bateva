@@ -5,9 +5,12 @@ import { db } from "../lib/firebase";
 import { reportError } from "../lib/errorReporting";
 import type { Category, Poi, Subcategory } from "../types";
 
-function snapshotToPois(snap: QuerySnapshot<DocumentData>): Poi[] {
+export type MapKey = "agents" | "groups";
+
+function snapshotToPois(snap: QuerySnapshot<DocumentData>, mapKey: MapKey): Poi[] {
   return snap.docs.map(doc => {
     const d = doc.data();
+    const maps = d.maps as Record<string, { price?: string | null; active?: boolean }> | undefined;
     return {
       id: doc.id,
       name: d.name,
@@ -21,7 +24,7 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>): Poi[] {
       email: d.email || null,
       website: d.website || null,
       openingHours: d.openingHours ?? null,
-      price: d.price ?? null,
+      price: maps?.[mapKey]?.price ?? d.price ?? null,
       kashrutCertUrl: d.kashrutCertUrl || null,
       menuUrl: d.menuUrl || null,
       facebook: d.facebook || null,
@@ -32,21 +35,26 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>): Poi[] {
   });
 }
 
-export function usePois() {
+export function usePois(mapKey: MapKey = "groups") {
   const [pois, setPois] = useState<Poi[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, "points_of_interest"), where("active", "==", true));
+    setLoading(true);
+    const q = query(
+      collection(db, "points_of_interest"),
+      where("active", "==", true),
+      where(`maps.${mapKey}.active`, "==", true),
+    );
     const unsub = onSnapshot(q, snap => {
-      setPois(snapshotToPois(snap));
+      setPois(snapshotToPois(snap, mapKey));
       setLoading(false);
     }, err => {
       reportError(err, { source: 'usePois' });
       setLoading(false);
     });
     return unsub;
-  }, []);
+  }, [mapKey]);
 
   return { pois, loading };
 }

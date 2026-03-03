@@ -20,6 +20,7 @@ const BusinessesPage = lazy(() => import('./pages/BusinessesPage.tsx').then(m =>
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage.tsx').then(m => ({ default: m.AnalyticsPage })))
 const SubcategoriesPage = lazy(() => import('./pages/SubcategoriesPage.tsx').then(m => ({ default: m.SubcategoriesPage })))
 const UsersPage = lazy(() => import('./pages/UsersPage.tsx').then(m => ({ default: m.UsersPage })))
+const PoiEditPage = lazy(() => import('./pages/PoiEditPage.tsx').then(m => ({ default: m.PoiEditPage })))
 
 const Loading = () => <div className="text-center py-10 text-gray-400">טוען...</div>
 
@@ -33,6 +34,8 @@ export default function App() {
             <Route element={<AppLayout />}>
               <Route index element={<DashboardPage />} />
               <Route path="/pois" element={<PoisPage />} />
+              <Route path="/pois/new" element={<PoiEditPage />} />
+              <Route path="/pois/:id" element={<PoiEditPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/icons" element={<IconsPage />} />
               <Route path="/businesses" element={<BusinessesPage />} />

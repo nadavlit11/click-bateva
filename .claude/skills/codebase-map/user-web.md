@@ -11,7 +11,10 @@
 - `apps/user-web/src/components/Sidebar/CategoryGrid.tsx` — category buttons with filter icon badge; clicking badge opens SubcategoryModal
 - `apps/user-web/src/components/SubcategoryModal.tsx` — modal showing subcategories for a specific category, all checked by default, toggle individual subs
 - `apps/user-web/src/components/BottomSheet/BottomSheet.tsx` — mobile filter panel; collapsed peek (120px, category chips + count) / expanded (~70vh, category grid with subcategory modal triggers)
-- `apps/user-web/src/hooks/useFirestoreData.ts` — `usePois()`, `useCategories()`, `useSubcategories()` — onSnapshot hooks
+- `apps/user-web/src/hooks/useFirestoreData.ts` — `usePois(mapKey)`, `useCategories()`, `useSubcategories()` — onSnapshot hooks; `usePois` accepts a `MapKey` ('agents' | 'groups') to filter by `maps.<mapKey>.active == true`
+- `apps/user-web/src/hooks/useAuth.ts` — `useAuth()` hook: listens to `onAuthStateChanged`, extracts role from custom claims, returns `{ user, role, loading }`
+- `apps/user-web/src/components/LoginModal.tsx` — modal dialog for email/password login; used by Sidebar and BottomSheet
+- `apps/user-web/src/lib/firebase.ts` — initializeApp, getFirestore, getAuth; emulator gated on `VITE_USE_EMULATOR`; exports `auth` for login/logout
 - `apps/user-web/src/lib/filterPois.ts` — pure filtering logic (category, subcategory AND/OR); **search removed** — no longer filters by text; unit tested + mutation tested
 - `apps/user-web/src/lib/openingStatus.ts` — opening hours display logic; unit tested + mutation tested
 - `apps/user-web/src/lib/renderBoldText.tsx` — simple `**bold**` parser; handles unmatched delimiters gracefully
@@ -21,21 +24,24 @@
 
 ```
 App.tsx (owns state: selectedCategories, selectedSubcategories, focusLocation, selectedPoi, sidebarOpen)
+  ├─ useAuth() → { user, role, loading } — determines map key (travel_agent → 'agents', else → 'groups')
+  ├─ usePois(mapKey) — filters POIs by maps.<mapKey>.active == true
   ├─ FloatingSearch (always visible, absolute positioned over map, top-right)
   │    └─ dropdown: POI name matches (local) + Geocoding API location results
   │    └─ POI click → handlePoiClick; location click → setFocusLocation → MapView pans
-  ├─ Sidebar (desktop md+, collapsible; hidden when sidebarOpen=false)
-  │    └─ AppHeader, CategoryGrid (with subcategory modal triggers), SidebarFooter
+  ├─ Sidebar (desktop md+, collapsible; hidden when sidebarOpen=false; receives auth props for login/logout buttons)
+  │    └─ AppHeader, CategoryGrid (with subcategory modal triggers), LoginModal trigger, SidebarFooter
   ├─ MapView (accepts focusLocation prop → ClusteredPoiMarkers → map.moveCamera())
   │    └─ APIProvider > Map > MarkerClusterer > PoiMarker[] (clustered at low zoom, individual at high zoom)
   │    └─ PoiMarker shows name pill at zoom >= 8 (always for unclustered markers)
   │    └─ Icon resolution: poi.iconUrl → subcategory.iconUrl → category.iconUrl (first non-null wins)
-  ├─ BottomSheet (mobile only, < md)
-  │    └─ collapsed: ChipRow + count | expanded: category grid with subcategory modal triggers
+  ├─ BottomSheet (mobile only, < md; receives auth props for login/logout buttons)
+  │    └─ collapsed: ChipRow + count | expanded: category grid with subcategory modal triggers + LoginModal trigger
   ├─ SubcategoryModal (opened per-category from CategoryGrid badge click)
   └─ PoiDetailPanel (when selectedPoi != null; click outside closes)
 
-Data: Firestore onSnapshot → usePois/useCategories/useSubcategories → filterPois() → filteredPois
+Data: Firestore onSnapshot → usePois(mapKey)/useCategories/useSubcategories → filterPois() → filteredPois
+Map switching: travel_agent role → 'agents' map, everyone else → 'groups' map. usePois queries where maps.<mapKey>.active == true.
 filterPois: category + subcategory filters ONLY — no text search
 Categories sorted by `order` field before rendering.
 When category toggled ON: all its subcategories auto-selected.
@@ -49,7 +55,8 @@ Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes t
 - All marker styling is **inline CSS** in PoiMarker.tsx — no external CSS classes
 - `useMap()` hook must be called inside a child of `<Map>`, not a sibling
 - Emulator connection gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`)
-- POI query filters `where("active", "==", true)` — inactive POIs never reach frontend
+- POI query filters `where("maps.<mapKey>.active", "==", true)` — inactive POIs for the current map never reach frontend
+- Auth: `useAuth()` hook provides `{ user, role, loading }`. `firebase.ts` exports `auth` (Firebase Auth instance). LoginModal handles email/password sign-in. Map key derived from role: `travel_agent` → `'agents'`, all others → `'groups'`.
 - Mobile uses `100dvh` (not `100vh`) for full-screen layouts
 - RTL: first flex child renders on RIGHT; collapsed indicators point LEFT (◂)
 

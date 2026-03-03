@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   collection,
   onSnapshot,
@@ -10,20 +11,17 @@ import {
 } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
-import type { Poi, Category, Subcategory, Icon } from '../types/index.ts'
-import { PoiDrawer } from '../components/PoiDrawer.tsx'
+import type { Poi, Category } from '../types/index.ts'
 import { useUserRole } from '../hooks/useUserRole.ts'
 
 export function PoisPage() {
   const role = useUserRole()
+  const navigate = useNavigate()
   const [pois, setPois] = useState<Poi[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([])
-  const [icons, setIcons] = useState<Icon[]>([])
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [editingPoi, setEditingPoi] = useState<Poi | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategoryId, setFilterCategoryId] = useState('')
+  const [deleteModalId, setDeleteModalId] = useState<string | null>(null)
 
   // Live POI list
   useEffect(() => {
@@ -34,18 +32,10 @@ export function PoisPage() {
     })
   }, [])
 
-  // Fetch categories, subcategories, and icons once on mount
+  // Fetch categories once on mount
   useEffect(() => {
     getDocs(collection(db, 'categories')).then(snap => {
       setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
-    }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
-
-    getDocs(collection(db, 'subcategories')).then(snap => {
-      setSubcategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Subcategory))
-    }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
-
-    getDocs(collection(db, 'icons')).then(snap => {
-      setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
     }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
   }, [])
 
@@ -58,8 +48,8 @@ export function PoisPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק נקודה זו?')) return
     await deleteDoc(doc(db, 'points_of_interest', id))
+    setDeleteModalId(null)
   }
 
   async function toggleActive(poi: Poi) {
@@ -67,21 +57,6 @@ export function PoisPage() {
       active: !poi.active,
       updatedAt: serverTimestamp(),
     })
-  }
-
-  function openAdd() {
-    setEditingPoi(null)
-    setDrawerOpen(true)
-  }
-
-  function openEdit(poi: Poi) {
-    setEditingPoi(poi)
-    setDrawerOpen(true)
-  }
-
-  function handleClose() {
-    setDrawerOpen(false)
-    setEditingPoi(null)
   }
 
   const filteredPois = pois.filter(poi => {
@@ -98,7 +73,7 @@ export function PoisPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-900">נקודות עניין</h1>
         <button
-          onClick={openAdd}
+          onClick={() => navigate('/pois/new')}
           className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
         >
           + הוסף נקודת עניין
@@ -168,14 +143,14 @@ export function PoisPage() {
                 <td className="px-4 py-3">
                   <div className="flex gap-2 justify-end">
                     <button
-                      onClick={() => openEdit(poi)}
+                      onClick={() => navigate(`/pois/${poi.id}`)}
                       className="text-blue-600 hover:text-blue-800 text-xs font-medium"
                     >
                       עריכה
                     </button>
                     {role !== 'content_manager' && (
                       <button
-                        onClick={() => handleDelete(poi.id).catch(err => reportError(err, { source: 'PoisPage.delete' }))}
+                        onClick={() => setDeleteModalId(poi.id)}
                         className="text-red-500 hover:text-red-700 text-xs font-medium"
                       >
                         מחיקה
@@ -189,15 +164,30 @@ export function PoisPage() {
         </table>
       </div>
 
-      <PoiDrawer
-        isOpen={drawerOpen}
-        onClose={handleClose}
-        poi={editingPoi}
-        categories={categories}
-        subcategories={subcategories}
-        icons={icons}
-        onSaved={handleClose}
-      />
+      {/* Delete confirmation modal */}
+      {deleteModalId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDeleteModalId(null)} />
+          <div className="relative bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">מחיקת נקודת עניין</h3>
+            <p className="text-sm text-gray-600 mb-4">האם אתה בטוח שברצונך למחוק נקודה זו?</p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setDeleteModalId(null)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={() => handleDelete(deleteModalId).catch(err => reportError(err, { source: 'PoisPage.delete' }))}
+                className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700"
+              >
+                מחיקה
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

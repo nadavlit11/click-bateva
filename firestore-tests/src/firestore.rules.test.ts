@@ -264,6 +264,7 @@ describe("points_of_interest collection", () => {
     active: true,
     businessId: "biz-1",
     description: "A test point of interest",
+    maps: { agents: { price: null, active: true }, groups: { price: null, active: true } },
   };
 
   const INACTIVE_POI = {
@@ -271,6 +272,23 @@ describe("points_of_interest collection", () => {
     active: false,
     businessId: "biz-1",
     description: "An inactive POI",
+    maps: { agents: { price: null, active: true }, groups: { price: null, active: true } },
+  };
+
+  const AGENTS_ONLY_POI = {
+    name: "Agents Only POI",
+    active: true,
+    businessId: null,
+    description: "Only visible on agents map",
+    maps: { agents: { price: "100", active: true }, groups: { price: null, active: false } },
+  };
+
+  const GROUPS_ONLY_POI = {
+    name: "Groups Only POI",
+    active: true,
+    businessId: null,
+    description: "Only visible on groups map",
+    maps: { agents: { price: null, active: false }, groups: { price: "200", active: true } },
   };
 
   describe("READ", () => {
@@ -328,6 +346,119 @@ describe("points_of_interest collection", () => {
       const db = cm.firestore();
       await assertSucceeds(
         getDoc(doc(db, "points_of_interest", "poi-inactive"))
+      );
+    });
+
+    // ── Map-based read access ──
+
+    it("denies unauthenticated user from reading an agents-only POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-agents"),
+          AGENTS_ONLY_POI
+        );
+      });
+
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(
+        getDoc(doc(db, "points_of_interest", "poi-agents"))
+      );
+    });
+
+    it("allows unauthenticated user to read a groups-only POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-groups"),
+          GROUPS_ONLY_POI
+        );
+      });
+
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertSucceeds(
+        getDoc(doc(db, "points_of_interest", "poi-groups"))
+      );
+    });
+
+    it("allows travel_agent to read an agents-only POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-agents"),
+          AGENTS_ONLY_POI
+        );
+      });
+
+      const agent = env.authenticatedContext("agent-uid", {
+        role: "travel_agent",
+      });
+      const db = agent.firestore();
+      await assertSucceeds(
+        getDoc(doc(db, "points_of_interest", "poi-agents"))
+      );
+    });
+
+    it("allows travel_agent to read a groups-only POI (groups POIs are public)", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-groups"),
+          GROUPS_ONLY_POI
+        );
+      });
+
+      const agent = env.authenticatedContext("agent-uid", {
+        role: "travel_agent",
+      });
+      const db = agent.firestore();
+      await assertSucceeds(
+        getDoc(doc(db, "points_of_interest", "poi-groups"))
+      );
+    });
+
+    it("denies travel_agent from reading a globally inactive agents POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-global-off"),
+          { ...AGENTS_ONLY_POI, active: false }
+        );
+      });
+
+      const agent = env.authenticatedContext("agent-uid", {
+        role: "travel_agent",
+      });
+      const db = agent.firestore();
+      await assertFails(
+        getDoc(doc(db, "points_of_interest", "poi-global-off"))
+      );
+    });
+
+    it("allows admin to read agents-only POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-agents"),
+          AGENTS_ONLY_POI
+        );
+      });
+
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertSucceeds(
+        getDoc(doc(db, "points_of_interest", "poi-agents"))
+      );
+    });
+
+    it("allows admin to read groups-only POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-groups"),
+          GROUPS_ONLY_POI
+        );
+      });
+
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertSucceeds(
+        getDoc(doc(db, "points_of_interest", "poi-groups"))
       );
     });
   });
@@ -604,7 +735,8 @@ describe("businesses collection", () => {
     });
 
     it("allows business_user to read their own business document", async () => {
-      const bizUser = env.authenticatedContext("biz-user-uid", {
+      // Rule: request.auth.uid == businessId — so uid must equal the doc ID
+      const bizUser = env.authenticatedContext("biz-1", {
         role: "business_user",
         businessRef: businessRefPath("biz-1"),
       });

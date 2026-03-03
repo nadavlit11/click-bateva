@@ -29,14 +29,21 @@ service cloud.firestore {
       return isSignedIn() && userRole() == 'business_user';
     }
 
+    function isTravelAgent() {
+      return isSignedIn() && userRole() == 'travel_agent';
+    }
+
     // ─── points_of_interest ─────────────────────────────────────────────────
 
     match /points_of_interest/{poiId} {
-      // Anyone can read active POIs; admin/content_manager can read all;
-      // business users can read POIs associated with their own business (including inactive)
-      allow read: if resource.data.active == true ||
-                     isAdminOrContentManager() ||
-                     (isBusinessUser() && resource.data.businessId == request.auth.uid);
+      // Admin/content_manager can read all POIs.
+      // Business users can read their own POIs (including inactive).
+      // Travel agents can read active POIs visible on the agents map.
+      // Everyone else (anonymous, standard_user) can read active POIs visible on the groups map.
+      allow read: if isAdminOrContentManager() ||
+                     (isBusinessUser() && resource.data.businessId == request.auth.uid) ||
+                     (isTravelAgent() && resource.data.active == true && resource.data.maps.agents.active == true) ||
+                     (resource.data.active == true && resource.data.maps.groups.active == true);
 
       // Admin and content managers can create; only admin can delete
       allow create: if isAdminOrContentManager();
