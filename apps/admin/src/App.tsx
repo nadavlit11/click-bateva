@@ -16,7 +16,6 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage.tsx').then(m => (
 const PoisPage = lazy(() => import('./pages/PoisPage.tsx').then(m => ({ default: m.PoisPage })))
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage.tsx').then(m => ({ default: m.CategoriesPage })))
 const IconsPage = lazy(() => import('./pages/IconsPage.tsx').then(m => ({ default: m.IconsPage })))
-const BusinessesPage = lazy(() => import('./pages/BusinessesPage.tsx').then(m => ({ default: m.BusinessesPage })))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage.tsx').then(m => ({ default: m.AnalyticsPage })))
 const SubcategoriesPage = lazy(() => import('./pages/SubcategoriesPage.tsx').then(m => ({ default: m.SubcategoriesPage })))
 const UsersPage = lazy(() => import('./pages/UsersPage.tsx').then(m => ({ default: m.UsersPage })))
@@ -38,7 +37,6 @@ export default function App() {
               <Route path="/pois/:id" element={<PoiEditPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/icons" element={<IconsPage />} />
-              <Route path="/businesses" element={<BusinessesPage />} />
               <Route path="/subcategories" element={<SubcategoriesPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route element={<AdminOnlyRoute />}>

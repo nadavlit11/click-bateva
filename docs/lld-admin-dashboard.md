@@ -53,8 +53,7 @@ apps/admin/
     │   ├── CategoriesPage.tsx      list + CategoryModal
     │   ├── SubcategoriesPage.tsx   list grouped by category + SubcategoryModal
     │   ├── IconsPage.tsx           upload + list + delete icons
-    │   ├── BusinessesPage.tsx      list + edit button + BusinessModal (create + edit modes)
-    │   ├── UsersPage.tsx           tabbed: content_manager + travel_agent management; admin-only
+    │   ├── UsersPage.tsx           tabbed: content_manager + travel_agent + business management; admin-only
     │   └── AnalyticsPage.tsx       click totals per POI + per category
     ├── hooks/
     │   └── useUserRole.ts          custom hook: extracts role from getIdTokenResult() claims
@@ -88,8 +87,7 @@ apps/admin/
 /categories       → CategoriesPage (auth-gated)
 /subcategories    → SubcategoriesPage (auth-gated)
 /icons            → IconsPage (auth-gated)
-/businesses       → BusinessesPage (auth-gated, admin-only nav)
-/users            → UsersPage (auth-gated, admin-only nav)
+/users            → UsersPage (auth-gated, admin-only nav; tabs: content managers, travel agents, businesses)
 /analytics        → AnalyticsPage (auth-gated)
 ```
 
