@@ -4,6 +4,7 @@ import { db } from "./lib/firebase";
 import { reportError } from "./lib/errorReporting";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
+import { EmptyMapOverlay } from "./components/MapView/EmptyMapOverlay";
 import { BottomSheet } from "./components/BottomSheet/BottomSheet";
 import { SubcategoryModal } from "./components/SubcategoryModal";
 import { FloatingSearch } from "./components/FloatingSearch";
@@ -194,6 +195,7 @@ export default function App() {
           onLoginClick={() => setLoginModalOpen(true)}
           onLogout={logout}
         />
+        {!poisLoading && selectedCategories.size === 0 && <EmptyMapOverlay />}
         {poisLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
             <div className="bg-white/80 rounded-xl px-5 py-3 shadow text-gray-500 text-sm font-medium">
