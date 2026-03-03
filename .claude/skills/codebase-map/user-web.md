@@ -45,7 +45,7 @@ Map switching: travel_agent role → 'agents' map, everyone else → 'groups' ma
 filterPois: category + subcategory filters ONLY — no text search
 Categories sorted by `order` field before rendering.
 When category toggled ON: all its subcategories auto-selected.
-Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes to clicks collection
+Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes to clicks collection (suppressed for admin/cm, and for business_user on own POI)
 ```
 
 ## Patterns & Conventions
@@ -56,7 +56,7 @@ Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes t
 - `useMap()` hook must be called inside a child of `<Map>`, not a sibling
 - Emulator connection gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`)
 - POI query filters `where("maps.<mapKey>.active", "==", true)` — inactive POIs for the current map never reach frontend
-- Auth: `useAuth()` hook provides `{ user, role, loading }`. `firebase.ts` exports `auth` (Firebase Auth instance). LoginModal handles email/password sign-in. Map key derived from role: `travel_agent` → `'agents'`, all others → `'groups'`.
+- Auth: `useAuth()` hook provides `{ user, role, loading }`. `firebase.ts` exports `auth` (Firebase Auth instance). LoginModal handles general email/password sign-in (all roles). Map key derived from role: `travel_agent` → `'agents'`, all others → `'groups'`. Click analytics suppressed for admin/content_manager (all clicks) and business_user (own POI only) — enforced both client-side (`App.tsx`) and server-side (`firestore.rules`).
 - Mobile uses `100dvh` (not `100vh`) for full-screen layouts
 - RTL: first flex child renders on RIGHT; collapsed indicators point LEFT (◂)
 

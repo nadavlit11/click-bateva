@@ -31,6 +31,7 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>, mapKey: MapKey): Poi[
       categoryId: d.categoryId,
       subcategoryIds: d.subcategoryIds ?? [],
       iconUrl: d.iconUrl || null,
+      businessId: d.businessId || null,
     };
   });
 }

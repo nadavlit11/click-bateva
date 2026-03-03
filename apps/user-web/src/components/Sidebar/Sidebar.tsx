@@ -72,7 +72,7 @@ export function Sidebar({
             onClick={onLoginClick}
             className="w-full text-sm text-green-600 hover:text-green-800 font-medium py-1.5 rounded-lg hover:bg-green-50 transition-colors"
           >
-            כניסת סוכנים
+            כניסה
           </button>
         )}
       </div>

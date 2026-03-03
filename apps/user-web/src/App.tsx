@@ -107,11 +107,20 @@ export default function App() {
     const lastClick = recentClicks.get(poi.id);
     if (!lastClick || now - lastClick > CLICK_DEBOUNCE_MS) {
       recentClicks.set(poi.id, now);
-      addDoc(collection(db, "clicks"), {
-        poiId: poi.id,
-        categoryId: poi.categoryId,
-        timestamp: serverTimestamp(),
-      }).catch((err) => reportError(err, { source: 'App.handlePoiClick' }));
+
+      // Also enforced server-side in firestore.rules (clicks collection)
+      const suppressClick =
+        role === "admin" ||
+        role === "content_manager" ||
+        (role === "business_user" && poi.businessId === user?.uid);
+
+      if (!suppressClick) {
+        addDoc(collection(db, "clicks"), {
+          poiId: poi.id,
+          categoryId: poi.categoryId,
+          timestamp: serverTimestamp(),
+        }).catch((err) => reportError(err, { source: 'App.handlePoiClick' }));
+      }
     }
     setSelectedPoi(poi);
   }

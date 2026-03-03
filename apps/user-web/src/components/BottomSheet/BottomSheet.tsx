@@ -174,7 +174,7 @@ export function BottomSheet({
                   onClick={(e) => { e.stopPropagation(); onLoginClick(); }}
                   className="text-xs text-green-600 hover:text-green-800 font-medium"
                 >
-                  כניסת סוכנים
+                  כניסה
                 </button>
               )}
             </div>

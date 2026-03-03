@@ -20,6 +20,7 @@ const mkPoi = (overrides: Partial<Poi> & Pick<Poi, "id" | "categoryId">): Poi =>
   facebook: null,
   subcategoryIds: [],
   iconUrl: null,
+  businessId: null,
   ...overrides,
 });
 

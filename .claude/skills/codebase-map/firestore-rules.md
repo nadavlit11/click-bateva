@@ -20,7 +20,7 @@ points_of_interest/{poiId}
   update: admin/cm OR (business_user && in associatedUserIds && affectedKeys allowlist)
 
 clicks/{clickId}
-  create: anyone (validated: poiId, categoryId, timestamp — exact keys, string types, size limits)
+  create: anyone EXCEPT admin/content_manager (blocked) and business_user on own POI (get() check on poi.businessId == auth.uid). Validated: poiId, categoryId, timestamp — exact keys, string types, size limits
   read:   admin only
   delete: admin only
 
