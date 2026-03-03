@@ -1,3 +1,4 @@
+// Cloud Functions entry point
 import {setGlobalOptions} from "firebase-functions";
 import * as Sentry from "@sentry/node";
 
