@@ -1,4 +1,4 @@
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { reportError } from "./lib/errorReporting";
@@ -36,6 +36,21 @@ export default function App() {
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [subcategoryModalCategoryId, setSubcategoryModalCategoryId] = useState<string | null>(null);
+
+  // Reset UI state on login/logout (skip initial mount)
+  const prevUid = useRef(user?.uid);
+  useEffect(() => {
+    if (prevUid.current === user?.uid) return;
+    prevUid.current = user?.uid;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on auth change (no cascading render)
+    setSelectedCategories(new Set());
+    setSelectedSubcategories(new Set());
+    setSelectedPoi(null);
+    setSubcategoryModalCategoryId(null);
+    setFocusLocation(null);
+    setLoginModalOpen(false);
+    setSheetExpanded(false);
+  }, [user?.uid]);
 
   const filteredPois = useMemo(
     () => filterPois(pois, {
@@ -153,6 +168,7 @@ export default function App() {
         {/* Floating search — on mobile stretches full width; on desktop fixed-width on physical left (end in RTL) */}
         <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`} onFocusCapture={() => setSelectedPoi(null)}>
           <FloatingSearch
+            key={user?.uid ?? "anon"}
             pois={pois}
             categories={sortedCategories}
             subcategories={subcategories}
