@@ -57,5 +57,5 @@ Sidebar: nav links filtered by useUserRole() — /users is adminOnly ("משתמ�
 - POIs sorted by name ascending (client-side). Search is by name only (not description).
 - Required fields: name, phone, whatsapp, description, image (at least 1). Required labels have red asterisk.
 - Bold text: `**bold**` in description. Small toolbar button wraps selection in `**...**`.
-- Content managers: cannot delete POIs (delete button hidden via useUserRole check), cannot see Businesses or Users pages
+- Content managers: cannot delete POIs (delete button hidden via useUserRole check), cannot see Users page (admin-only)
 - Password quality: min 8 chars, 1 letter + 1 number. Shared via `lib/passwordStrength.ts`.
