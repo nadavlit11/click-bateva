@@ -14,6 +14,7 @@ interface SidebarProps {
   onClose: () => void;
   isLoggedIn: boolean;
   onLoginClick: () => void;
+  onRegisterClick: () => void;
   onLogout: () => void;
   className?: string;
 }
@@ -29,6 +30,7 @@ export function Sidebar({
   onClose,
   isLoggedIn,
   onLoginClick,
+  onRegisterClick,
   onLogout,
   className,
 }: SidebarProps) {
@@ -68,12 +70,20 @@ export function Sidebar({
             התנתקות
           </button>
         ) : (
-          <button
-            onClick={onLoginClick}
-            className="w-full text-sm text-green-600 hover:text-green-800 font-medium py-1.5 rounded-lg hover:bg-green-50 transition-colors"
-          >
-            כניסה
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onLoginClick}
+              className="flex-1 text-sm text-green-600 hover:text-green-800 font-medium py-1.5 rounded-lg hover:bg-green-50 transition-colors"
+            >
+              כניסה
+            </button>
+            <button
+              onClick={onRegisterClick}
+              className="flex-1 text-sm text-gray-600 hover:text-gray-800 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            >
+              הרשמה
+            </button>
+          </div>
         )}
       </div>
     </aside>

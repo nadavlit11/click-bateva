@@ -13,3 +13,4 @@ export {onUserCreated, setUserRole} from "./auth.js";
 export {createBusinessUser, deleteBusinessUser} from "./business.js";
 export {deleteContentManager, blockContentManager, createContentManager} from "./users.js";
 export {createTravelAgent, deleteTravelAgent} from "./agent.js";
+export {sendRegistrationRequest} from "./registration.js";

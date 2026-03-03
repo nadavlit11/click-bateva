@@ -18,6 +18,7 @@ interface BottomSheetProps {
   onClearAll: () => void;
   isLoggedIn: boolean;
   onLoginClick: () => void;
+  onRegisterClick: () => void;
   onLogout: () => void;
   className?: string;
 }
@@ -35,6 +36,7 @@ export function BottomSheet({
   onClearAll,
   isLoggedIn,
   onLoginClick,
+  onRegisterClick,
   onLogout,
   className,
 }: BottomSheetProps) {
@@ -170,12 +172,20 @@ export function BottomSheet({
                   התנתקות
                 </button>
               ) : (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onLoginClick(); }}
-                  className="text-xs text-green-600 hover:text-green-800 font-medium"
-                >
-                  כניסה
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onLoginClick(); }}
+                    className="text-xs text-green-600 hover:text-green-800 font-medium"
+                  >
+                    כניסה
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onRegisterClick(); }}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    הרשמה
+                  </button>
+                </div>
               )}
             </div>
           </div>

@@ -9,6 +9,7 @@ import { BottomSheet } from "./components/BottomSheet/BottomSheet";
 import { SubcategoryModal } from "./components/SubcategoryModal";
 import { FloatingSearch } from "./components/FloatingSearch";
 import { LoginModal } from "./components/LoginModal";
+import { RegisterModal } from "./components/RegisterModal";
 import { usePois, useCategories, useSubcategories } from "./hooks/useFirestoreData";
 import { useAuth } from "./hooks/useAuth";
 import { useMapSettings } from "./hooks/useMapSettings";
@@ -26,6 +27,7 @@ export default function App() {
   const mapKey: MapKey = role === "travel_agent" ? "agents" : "groups";
   const { pois, loading: poisLoading } = usePois(mapKey);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const categories = useCategories();
   const subcategories = useSubcategories();
   const pinSize = useMapSettings();
@@ -50,6 +52,7 @@ export default function App() {
     setSubcategoryModalCategoryId(null);
     setFocusLocation(null);
     setLoginModalOpen(false);
+    setRegisterModalOpen(false);
     setSheetExpanded(false);
   }, [user?.uid]);
 
@@ -145,6 +148,7 @@ export default function App() {
           onClose={() => setSidebarOpen(false)}
           isLoggedIn={!!user}
           onLoginClick={() => setLoginModalOpen(true)}
+          onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
         />
       )}
@@ -202,6 +206,7 @@ export default function App() {
           onClearAll={handleClearAll}
           isLoggedIn={!!user}
           onLoginClick={() => setLoginModalOpen(true)}
+          onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
         />
         {!poisLoading && selectedCategories.size === 0 && <EmptyMapOverlay />}
@@ -239,6 +244,10 @@ export default function App() {
           onLogin={login}
           onClose={() => setLoginModalOpen(false)}
         />
+      )}
+
+      {registerModalOpen && (
+        <RegisterModal onClose={() => setRegisterModalOpen(false)} />
       )}
     </div>
   );
