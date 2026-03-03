@@ -62,39 +62,62 @@ afterEach(() => jest.clearAllMocks());
 
 describe("sendRegistrationRequest — validation", () => {
   it("throws invalid-argument for missing companyName", async () => {
+    const data = {
+      companyName: "", contactName: "a",
+      phone: "0501234567", type: "business",
+    };
     await expect(
-      sendRegistrationRequest.run(makeRequest({data: {companyName: "", contactName: "a", phone: "0501234567", type: "business"}}))
+      sendRegistrationRequest.run(makeRequest({data}))
     ).rejects.toMatchObject({code: "invalid-argument"});
   });
 
   it("throws invalid-argument for non-string companyName", async () => {
+    const data = {
+      companyName: 123, contactName: "a",
+      phone: "0501234567", type: "business",
+    };
     await expect(
-      sendRegistrationRequest.run(makeRequest({data: {companyName: 123, contactName: "a", phone: "0501234567", type: "business"}}))
+      sendRegistrationRequest.run(makeRequest({data}))
     ).rejects.toMatchObject({code: "invalid-argument"});
   });
 
   it("throws invalid-argument for missing contactName", async () => {
+    const data = {
+      companyName: "a", contactName: "",
+      phone: "0501234567", type: "business",
+    };
     await expect(
-      sendRegistrationRequest.run(makeRequest({data: {companyName: "a", contactName: "", phone: "0501234567", type: "business"}}))
+      sendRegistrationRequest.run(makeRequest({data}))
     ).rejects.toMatchObject({code: "invalid-argument"});
   });
 
   it("throws invalid-argument for missing phone", async () => {
+    const data = {
+      companyName: "a", contactName: "b",
+      phone: "", type: "business",
+    };
     await expect(
-      sendRegistrationRequest.run(makeRequest({data: {companyName: "a", contactName: "b", phone: "", type: "business"}}))
+      sendRegistrationRequest.run(makeRequest({data}))
     ).rejects.toMatchObject({code: "invalid-argument"});
   });
 
   it("throws invalid-argument for invalid type", async () => {
+    const data = {
+      companyName: "a", contactName: "b",
+      phone: "0501234567", type: "invalid",
+    };
     await expect(
-      sendRegistrationRequest.run(makeRequest({data: {companyName: "a", contactName: "b", phone: "0501234567", type: "invalid"}}))
+      sendRegistrationRequest.run(makeRequest({data}))
     ).rejects.toMatchObject({code: "invalid-argument"});
   });
 
   it("throws invalid-argument for field exceeding max length", async () => {
-    const longString = "a".repeat(201);
+    const data = {
+      companyName: "a".repeat(201), contactName: "b",
+      phone: "0501234567", type: "business",
+    };
     await expect(
-      sendRegistrationRequest.run(makeRequest({data: {companyName: longString, contactName: "b", phone: "0501234567", type: "business"}}))
+      sendRegistrationRequest.run(makeRequest({data}))
     ).rejects.toMatchObject({code: "invalid-argument"});
   });
 });
@@ -134,7 +157,7 @@ describe("sendRegistrationRequest — failure path", () => {
 
 describe("escapeHtml", () => {
   it("escapes all HTML special characters", () => {
-    expect(escapeHtml('<script>alert("xss")</script>')).toBe(
+    expect(escapeHtml("<script>alert(\"xss\")</script>")).toBe(
       "&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;"
     );
   });
