@@ -1,9 +1,10 @@
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { reportError } from "./lib/errorReporting";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
+import { EmptyMapOverlay } from "./components/MapView/EmptyMapOverlay";
 import { BottomSheet } from "./components/BottomSheet/BottomSheet";
 import { SubcategoryModal } from "./components/SubcategoryModal";
 import { FloatingSearch } from "./components/FloatingSearch";
@@ -36,6 +37,21 @@ export default function App() {
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [subcategoryModalCategoryId, setSubcategoryModalCategoryId] = useState<string | null>(null);
+
+  // Reset UI state on login/logout (skip initial mount)
+  const prevUid = useRef(user?.uid);
+  useEffect(() => {
+    if (prevUid.current === user?.uid) return;
+    prevUid.current = user?.uid;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on auth change (no cascading render)
+    setSelectedCategories(new Set());
+    setSelectedSubcategories(new Set());
+    setSelectedPoi(null);
+    setSubcategoryModalCategoryId(null);
+    setFocusLocation(null);
+    setLoginModalOpen(false);
+    setSheetExpanded(false);
+  }, [user?.uid]);
 
   const filteredPois = useMemo(
     () => filterPois(pois, {
@@ -153,6 +169,7 @@ export default function App() {
         {/* Floating search — on mobile stretches full width; on desktop fixed-width on physical left (end in RTL) */}
         <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`} onFocusCapture={() => setSelectedPoi(null)}>
           <FloatingSearch
+            key={user?.uid ?? "anon"}
             pois={pois}
             categories={sortedCategories}
             subcategories={subcategories}
@@ -178,6 +195,7 @@ export default function App() {
           onLoginClick={() => setLoginModalOpen(true)}
           onLogout={logout}
         />
+        {!poisLoading && selectedCategories.size === 0 && <EmptyMapOverlay />}
         {poisLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
             <div className="bg-white/80 rounded-xl px-5 py-3 shadow text-gray-500 text-sm font-medium">
