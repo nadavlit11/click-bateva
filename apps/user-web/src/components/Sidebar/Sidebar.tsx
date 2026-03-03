@@ -79,7 +79,7 @@ export function Sidebar({
             </button>
             <button
               onClick={onRegisterClick}
-              className="flex-1 text-sm text-gray-600 hover:text-gray-800 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+              className="flex-1 text-sm text-gray-600 hover:text-gray-800 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
             >
               הרשמה
             </button>
