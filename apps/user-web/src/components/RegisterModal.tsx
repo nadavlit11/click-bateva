@@ -1,3 +1,4 @@
+// Registration modal — sends request email via Cloud Function
 import { useState } from "react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../lib/firebase";
