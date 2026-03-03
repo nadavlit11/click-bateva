@@ -40,6 +40,7 @@ export function usePois(mapKey: MapKey = "groups") {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset loading when mapKey changes (no cascading render)
     setLoading(true);
     const q = query(
       collection(db, "points_of_interest"),

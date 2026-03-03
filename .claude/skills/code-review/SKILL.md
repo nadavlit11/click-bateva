@@ -47,7 +47,7 @@ Prompt:
 > - `clicks` is a TOP-LEVEL collection (never a subcollection)
 > - `icons` documents have `path` field (NOT `url`, NOT `storagePath`)
 > - `categories` documents have `color`, `iconId`, `iconUrl` fields
-> - Roles: `admin`, `content_manager`, `business_user`, `standard_user` (no other values)
+> - Roles: `admin`, `content_manager`, `business_user`, `standard_user`, `travel_agent` (no other values)
 > - Storage rules use `request.auth.token.role` (custom claims) — NEVER `firestore.get()`
 > - Firestore rules use `get(/databases/$(database)/documents/users/$(request.auth.uid))` for role checks
 > - Denormalize fields (e.g. `iconUrl` on categories) rather than doing extra reads at query time
@@ -114,6 +114,9 @@ Prompt:
 > - **State-reset effect completeness:** When a component has an existing `useEffect` that resets local state on entity change (e.g., `useEffect(() => { setX(0); setY(false); }, [poi.id])`), any new UI state variable (modal visibility, expanded flags, etc.) MUST also be reset in that same effect. Omitting it leaves stale UI state — e.g. a phone modal stays open when the user navigates to a different POI.
 > - **Silent `catch` blocks on external API calls:** Every `fetch` to an external API (Google Places, geocoding, etc.) must check `res.ok` and log/report non-2xx responses — do NOT silently swallow errors with an empty `catch` or by ignoring the status code. Silent failures make bugs invisible (e.g., a 400 from an invalid parameter looks identical to "no results found").
 > - **External API parameter validation before commit:** When adding a new external API integration (`fetch` to Google, Stripe, etc.), verify the exact request parameters work by testing with `curl` or browser dev tools BEFORE committing. API constraints (max radius, required fields, rate limits) are not always obvious from docs and silently break when violated.
+> - **Dead form state fields:** When porting a form from one component to another (e.g., drawer → full page), check for fields in `FormState` that are loaded from the data source but never rendered in the JSX and hardcoded to a default on save. These are dead state — remove them to avoid confusion.
+> - **Firestore rule public fallback vs per-role restriction:** When a Firestore read rule has a final unguarded condition (e.g., `resource.data.active == true && resource.data.maps.groups.active == true` with no auth check), it applies to ALL users including authenticated ones with other roles. This is intentional for public data but tests must not assert denial for authenticated users against that public path.
+> - **Cloud Function callable pattern consistency:** New callable functions (e.g., `createTravelAgent`) must follow the same pattern as existing ones (`createContentManager`, `createBusinessUser`): admin-only guard, input validation with `HttpsError`, `{ cors: true }` option, custom claims + Firestore user doc write.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >
