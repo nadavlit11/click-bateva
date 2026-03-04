@@ -33,8 +33,6 @@ export default function App() {
   const subcategories = useSubcategories();
   const pinSize = useMapSettings();
 
-  const isTravelAgent = role === "travel_agent";
-
   // ── Trip share (client read-only view) ───────────────────────────────────
   const tripShareId = useMemo(() => {
     const match = window.location.pathname.match(/^\/trip\/([^/]+)$/);
@@ -50,10 +48,10 @@ export default function App() {
         const d = snap.data();
         setSharedTrip({
           id: snap.id,
-          agentId: d.agentId,
+          ownerId: d.ownerId,
           clientName: d.clientName ?? "",
           pois: d.pois ?? [],
-          numDays: d.numDays ?? 2,
+          numDays: d.numDays ?? 1,
           isShared: d.isShared ?? false,
           createdAt: d.createdAt ?? 0,
           updatedAt: d.updatedAt ?? 0,
@@ -67,9 +65,9 @@ export default function App() {
     });
   }, [tripShareId]);
 
-  // ── Trip (agent editing) ─────────────────────────────────────────────────
-  const { trip, addPoi, removePoi, movePoi, addDay, setClientName, clearTrip, shareTrip, newTrip } = useTrip(
-    isTravelAgent ? (user?.uid ?? null) : null
+  // ── Trip (all users — Firestore for logged-in, localStorage for anonymous) ─
+  const { trip, addPoi, removePoi, movePoi, reorderPoi, addDay, setClientName, clearTrip, shareTrip, newTrip } = useTrip(
+    user?.uid ?? null
   );
 
   // Which day new POIs are added to (1-indexed). Defaults to 1, switches to
@@ -108,6 +106,15 @@ export default function App() {
   );
   const tripPoiIdSet = useMemo(() => new Set(orderedTripPoiIds), [orderedTripPoiIds]);
 
+  // POI IDs for the active day only (for route rendering)
+  const activeDayPoiIds = useMemo(() => {
+    const dayPois = (activeTrip?.pois ?? [])
+      .filter(p => (p.dayNumber ?? 1) === clampedActiveDay)
+      .sort((a, b) => a.addedAt - b.addedAt)
+      .map(p => p.poiId);
+    return dayPois;
+  }, [activeTrip, clampedActiveDay]);
+
   // ── Filter state ─────────────────────────────────────────────────────────
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
@@ -141,6 +148,14 @@ export default function App() {
     }),
     [pois, selectedCategories, selectedSubcategories, subcategories]
   );
+
+  // Always show trip POIs on the map, even when their category isn't selected
+  const displayPois = useMemo(() => {
+    if (tripPoiIdSet.size === 0) return filteredPois;
+    const filteredIds = new Set(filteredPois.map(p => p.id));
+    const missingTripPois = pois.filter(p => tripPoiIdSet.has(p.id) && !filteredIds.has(p.id));
+    return missingTripPois.length > 0 ? [...filteredPois, ...missingTripPois] : filteredPois;
+  }, [filteredPois, pois, tripPoiIdSet]);
 
   const sortedCategories = useMemo(
     () => [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
@@ -322,14 +337,13 @@ export default function App() {
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
-          isTravelAgent={isTravelAgent}
           trip={trip}
           allPois={pois}
           orderedTripPoiIds={orderedTripPoiIds}
           activeDayNumber={clampedActiveDay}
           onSetActiveDayNumber={setActiveDayNumber}
           onRemovePoi={removePoi}
-          onMovePoi={movePoi}
+          onReorderPoi={reorderPoi}
           onAddDay={handleAddDay}
           onSetClientName={setClientName}
           onClearTrip={handleClearTrip}
@@ -340,7 +354,7 @@ export default function App() {
       )}
       <main className="flex-1 h-full relative">
         <MapView
-          pois={filteredPois}
+          pois={displayPois}
           categories={sortedCategories}
           subcategories={subcategories}
           selectedPoiId={selectedPoi?.id ?? null}
@@ -351,6 +365,7 @@ export default function App() {
           pinSize={pinSize}
           highlightPoi={selectedPoi}
           orderedTripPoiIds={orderedTripPoiIds}
+          activeDayPoiIds={activeDayPoiIds}
         />
 
         {/* Floating sidebar toggle (desktop, when sidebar is closed) */}
@@ -395,8 +410,21 @@ export default function App() {
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
+          trip={trip}
+          allPois={pois}
+          orderedTripPoiIds={orderedTripPoiIds}
+          activeDayNumber={clampedActiveDay}
+          onSetActiveDayNumber={setActiveDayNumber}
+          onRemovePoi={removePoi}
+          onReorderPoi={reorderPoi}
+          onAddDay={handleAddDay}
+          onSetClientName={setClientName}
+          onClearTrip={handleClearTrip}
+          onShareTrip={shareTrip}
+          onNewTrip={handleNewTrip}
+          onPoiSelect={handlePoiSelectFromTrip}
         />
-        {!poisLoading && selectedCategories.size === 0 && <EmptyMapOverlay />}
+        {!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && <EmptyMapOverlay />}
         {poisLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
             <div className="bg-white/80 rounded-xl px-5 py-3 shadow text-gray-500 text-sm font-medium">
@@ -410,9 +438,9 @@ export default function App() {
               poi={selectedPoi}
               category={sortedCategories.find(c => c.id === selectedPoi.categoryId)}
               onClose={() => setSelectedPoi(null)}
-              tripPoiIds={isTravelAgent ? tripPoiIdSet : undefined}
-              onAddToTrip={isTravelAgent ? (id) => addPoi(id, clampedActiveDay) : undefined}
-              onRemoveFromTrip={isTravelAgent ? removePoi : undefined}
+              tripPoiIds={tripPoiIdSet}
+              onAddToTrip={(id) => addPoi(id, clampedActiveDay)}
+              onRemoveFromTrip={removePoi}
             />
           </Suspense>
         )}

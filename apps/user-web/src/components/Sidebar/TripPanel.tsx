@@ -1,4 +1,16 @@
 import { useState, useMemo } from "react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from "@dnd-kit/core";
+import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { TripDoc, Poi, Category } from "../../types";
 import { reportError } from "../../lib/errorReporting";
 
@@ -12,14 +24,124 @@ interface TripPanelProps {
   activeDayNumber: number;
   onSetActiveDayNumber: (n: number) => void;
   onRemovePoi: (poiId: string) => void;
-  onMovePoi: (poiId: string, newDay: number) => void;
+  onReorderPoi: (poiId: string, newDay: number, newIndex: number) => void;
   onAddDay: () => void;
   onSetClientName: (name: string) => void;
   onClearTrip: () => void;
   onShareTrip: () => Promise<string>;
   onNewTrip: () => void;
   onPoiSelect: (poiId: string) => void;
+  isLoggedIn: boolean;
+  onLoginClick: () => void;
 }
+
+// ── Sortable POI row ────────────────────────────────────────────────────────
+
+interface SortablePoiRowProps {
+  poi: Poi;
+  cat: Category | undefined;
+  tripNum: number;
+  onPoiSelect: (poiId: string) => void;
+  onRemovePoi: (poiId: string) => void;
+}
+
+function SortablePoiRow({ poi, cat, tripNum, onPoiSelect, onRemovePoi }: SortablePoiRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: poi.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-gray-50 cursor-pointer group"
+      onClick={() => onPoiSelect(poi.id)}
+    >
+      {/* Drag handle */}
+      <button
+        {...attributes}
+        {...listeners}
+        className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0 touch-none"
+        onClick={e => e.stopPropagation()}
+        title="גרור לשינוי סדר"
+      >
+        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+          <circle cx="5" cy="3" r="1.5" />
+          <circle cx="11" cy="3" r="1.5" />
+          <circle cx="5" cy="8" r="1.5" />
+          <circle cx="11" cy="8" r="1.5" />
+          <circle cx="5" cy="13" r="1.5" />
+          <circle cx="11" cy="13" r="1.5" />
+        </svg>
+      </button>
+
+      <span
+        className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-white text-xs"
+        style={{ backgroundColor: cat?.color ?? "#6b7280" }}
+      >
+        {cat?.iconUrl ? (
+          <img src={cat.iconUrl} alt="" className="w-4 h-4" />
+        ) : (
+          "📍"
+        )}
+      </span>
+
+      <span className="flex-1 text-sm text-gray-700 font-medium truncate">
+        {poi.name}
+      </span>
+
+      <span className="w-5 h-5 rounded-full bg-amber-400 text-white text-xs flex items-center justify-center font-bold shrink-0">
+        {tripNum}
+      </span>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemovePoi(poi.id);
+        }}
+        className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-base leading-none shrink-0"
+        title="הסר מהטיול"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+// ── Static row for drag overlay ─────────────────────────────────────────────
+
+function PoiRowOverlay({ poi, cat, tripNum }: { poi: Poi; cat: Category | undefined; tripNum: number }) {
+  return (
+    <div className="flex items-center gap-2 px-2 py-2 rounded-xl bg-white shadow-lg border border-gray-200">
+      <span className="text-gray-400 shrink-0">
+        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+          <circle cx="5" cy="3" r="1.5" />
+          <circle cx="11" cy="3" r="1.5" />
+          <circle cx="5" cy="8" r="1.5" />
+          <circle cx="11" cy="8" r="1.5" />
+          <circle cx="5" cy="13" r="1.5" />
+          <circle cx="11" cy="13" r="1.5" />
+        </svg>
+      </span>
+      <span
+        className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-white text-xs"
+        style={{ backgroundColor: cat?.color ?? "#6b7280" }}
+      >
+        {cat?.iconUrl ? <img src={cat.iconUrl} alt="" className="w-4 h-4" /> : "📍"}
+      </span>
+      <span className="flex-1 text-sm text-gray-700 font-medium truncate">{poi.name}</span>
+      <span className="w-5 h-5 rounded-full bg-amber-400 text-white text-xs flex items-center justify-center font-bold shrink-0">
+        {tripNum}
+      </span>
+    </div>
+  );
+}
+
+// ── Main TripPanel ──────────────────────────────────────────────────────────
 
 export function TripPanel({
   trip,
@@ -29,22 +151,38 @@ export function TripPanel({
   activeDayNumber,
   onSetActiveDayNumber,
   onRemovePoi,
-  onMovePoi,
+  onReorderPoi,
   onAddDay,
   onSetClientName,
   onClearTrip,
   onShareTrip,
   onNewTrip,
   onPoiSelect,
+  isLoggedIn,
+  onLoginClick,
 }: TripPanelProps) {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [showLoginHint, setShowLoginHint] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const poiMap = useMemo(() => new Map(allPois.map(p => [p.id, p])), [allPois]);
   const catMap = useMemo(() => new Map(categories.map(c => [c.id, c])), [categories]);
-  const tripNumbers = useMemo(() => new Map(orderedTripPoiIds.map((id, i) => [id, i + 1])), [orderedTripPoiIds]);
+  const tripNumbers = useMemo(
+    () => new Map(orderedTripPoiIds.map((id, i) => [id, i + 1])),
+    [orderedTripPoiIds]
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
 
   async function handleShare() {
+    if (!isLoggedIn) {
+      setShowLoginHint(true);
+      return;
+    }
     setSharing(true);
     try {
       const tripId = await onShareTrip();
@@ -85,6 +223,37 @@ export function TripPanel({
     dayPois.sort((a, b) => (poiToEntry.get(a.id)?.addedAt ?? 0) - (poiToEntry.get(b.id)?.addedAt ?? 0));
   }
 
+  // Find which day a POI belongs to
+  function findPoiDay(poiId: string): number {
+    for (let d = 0; d < byDay.length; d++) {
+      if (byDay[d].some(p => p.id === poiId)) return d + 1;
+    }
+    return 1;
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setActiveId(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activePoiId = active.id as string;
+    const overPoiId = over.id as string;
+
+    // Determine destination day and index
+    const overDay = findPoiDay(overPoiId);
+    const dayPois = byDay[overDay - 1];
+    const overIndex = dayPois.findIndex(p => p.id === overPoiId);
+
+    onReorderPoi(activePoiId, overDay, overIndex);
+  }
+
+  const activePoi = activeId ? poiMap.get(activeId) : null;
+  const activeCat = activePoi ? catMap.get(activePoi.categoryId) : undefined;
+
   return (
     <div className="flex flex-col h-full">
       {/* Client name */}
@@ -100,102 +269,60 @@ export function TripPanel({
 
       {/* Active day indicator */}
       <div className="px-4 pb-2">
-        <p className="text-xs text-gray-400">מוסיף ל<span className="font-semibold text-teal-600">יום {activeDayNumber}</span> — לחץ על יום אחר לשינוי</p>
+        <p className="text-xs text-gray-400">
+          מוסיף ל<span className="font-semibold text-teal-600">יום {activeDayNumber}</span> — לחץ על יום אחר לשינוי
+        </p>
       </div>
 
       {/* Trip plan — scrollable */}
       <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
-        {byDay.map((dayPois, dayIdx) => {
-          const dayNumber = dayIdx + 1;
-          const isActive = dayNumber === activeDayNumber;
-          return (
-            <div key={dayIdx}>
-              {/* Day header — clickable to set active day */}
-              <button
-                className="w-full rounded-xl px-3 py-2 mb-2 flex items-center gap-2 text-start transition-opacity"
-                style={{
-                  background: isActive
-                    ? "linear-gradient(135deg, #0d9488, #0891b2)"
-                    : "linear-gradient(135deg, #5eead4, #67e8f9)",
-                  opacity: isActive ? 1 : 0.7,
-                }}
-                onClick={() => onSetActiveDayNumber(dayNumber)}
-                title={`הוסף לטיול ליום ${dayNumber}`}
-              >
-                <span className="text-base">{DAY_EMOJIS[dayIdx] ?? "📍"}</span>
-                <span className="text-sm font-semibold text-white">יום {dayNumber}</span>
-                {isActive && (
-                  <span className="ms-auto text-xs bg-white/30 text-white rounded-full px-2 py-0.5 font-medium">
-                    פעיל
-                  </span>
-                )}
-              </button>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          {byDay.map((dayPois, dayIdx) => {
+            const dayNumber = dayIdx + 1;
+            const isActive = dayNumber === activeDayNumber;
+            return (
+              <div key={dayIdx}>
+                {/* Day header — clickable to set active day */}
+                <button
+                  className="w-full rounded-xl px-3 py-2 mb-2 flex items-center gap-2 text-start transition-opacity"
+                  style={{
+                    background: isActive
+                      ? "linear-gradient(135deg, #0d9488, #0891b2)"
+                      : "linear-gradient(135deg, #5eead4, #67e8f9)",
+                    opacity: isActive ? 1 : 0.7,
+                  }}
+                  onClick={() => onSetActiveDayNumber(dayNumber)}
+                  title={`הוסף לטיול ליום ${dayNumber}`}
+                >
+                  <span className="text-base">{DAY_EMOJIS[dayIdx] ?? "📍"}</span>
+                  <span className="text-sm font-semibold text-white">יום {dayNumber}</span>
+                  {isActive && (
+                    <span className="ms-auto text-xs bg-white/30 text-white rounded-full px-2 py-0.5 font-medium">
+                      פעיל
+                    </span>
+                  )}
+                </button>
 
-              {/* POI rows */}
-              <div className="space-y-1">
-                {dayPois.map((poi) => {
-                  const cat = catMap.get(poi.categoryId);
-                  const tripNum = tripNumbers.get(poi.id) ?? 0;
-                  return (
-                    <div
-                      key={poi.id}
-                      className="flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-gray-50 cursor-pointer group"
-                      onClick={() => onPoiSelect(poi.id)}
-                    >
-                      <span
-                        className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-white text-xs"
-                        style={{ backgroundColor: cat?.color ?? "#6b7280" }}
-                      >
-                        {cat?.iconUrl ? (
-                          <img src={cat.iconUrl} alt="" className="w-4 h-4" />
-                        ) : (
-                          "📍"
-                        )}
-                      </span>
-
-                      <span className="flex-1 text-sm text-gray-700 font-medium truncate">
-                        {poi.name}
-                      </span>
-
-                      <span className="w-5 h-5 rounded-full bg-amber-400 text-white text-xs flex items-center justify-center font-bold shrink-0">
-                        {tripNum}
-                      </span>
-
-                      {/* Move up/down arrows */}
-                      <div className="opacity-0 group-hover:opacity-100 flex flex-col gap-0.5 shrink-0 transition-opacity" onClick={e => e.stopPropagation()}>
-                        {dayIdx > 0 && (
-                          <button
-                            onClick={() => onMovePoi(poi.id, dayNumber - 1)}
-                            className="text-gray-400 hover:text-teal-600 text-xs leading-none px-0.5"
-                            title={`הזז ליום ${dayNumber - 1}`}
-                          >
-                            ▲
-                          </button>
-                        )}
-                        {dayIdx < numDays - 1 && (
-                          <button
-                            onClick={() => onMovePoi(poi.id, dayNumber + 1)}
-                            className="text-gray-400 hover:text-teal-600 text-xs leading-none px-0.5"
-                            title={`הזז ליום ${dayNumber + 1}`}
-                          >
-                            ▼
-                          </button>
-                        )}
-                      </div>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemovePoi(poi.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-base leading-none shrink-0"
-                        title="הסר מהטיול"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  );
-                })}
+                {/* Sortable POI rows */}
+                <SortableContext items={dayPois.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-1">
+                    {dayPois.map((poi) => (
+                      <SortablePoiRow
+                        key={poi.id}
+                        poi={poi}
+                        cat={catMap.get(poi.categoryId)}
+                        tripNum={tripNumbers.get(poi.id) ?? 0}
+                        onPoiSelect={onPoiSelect}
+                        onRemovePoi={onRemovePoi}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
 
                 {/* Add Day button — only after the last day */}
                 {dayIdx === numDays - 1 && (
@@ -207,10 +334,33 @@ export function TripPanel({
                   </button>
                 )}
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+
+          <DragOverlay>
+            {activePoi && (
+              <PoiRowOverlay
+                poi={activePoi}
+                cat={activeCat}
+                tripNum={tripNumbers.get(activePoi.id) ?? 0}
+              />
+            )}
+          </DragOverlay>
+        </DndContext>
       </div>
+
+      {/* Login hint for anonymous users */}
+      {showLoginHint && !isLoggedIn && (
+        <div className="mx-4 mb-2 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+          <p className="text-xs text-amber-700">יש להתחבר כדי לשתף את הטיול</p>
+          <button
+            onClick={onLoginClick}
+            className="text-xs text-amber-700 font-semibold underline shrink-0 ms-2"
+          >
+            התחבר
+          </button>
+        </div>
+      )}
 
       {/* Share URL (shown after sharing) */}
       {shareUrl && (

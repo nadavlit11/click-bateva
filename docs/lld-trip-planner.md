@@ -1,6 +1,6 @@
 # LLD: "תכנן טיול" — Trip Planner Tab (Manual + AI)
 
-> **Status**: Phase 1 implemented (2026-02-27) — travel_agent role, manual trip planning, share link
+> **Status**: Phase 1 implemented (2026-02-27), opened to all users (2026-03-04) — manual trip planning, share link
 > **Started**: 2026-02-27
 > **Prototype**: `/tmp/prototype-ai-trip-planner.html`
 
@@ -8,30 +8,32 @@
 
 ## Context
 
-The trip planner is gated behind a new `travel_agent` role. Travel agents log into the user-web app, get a second "תכנן טיול" tab in the sidebar, build itineraries by adding POIs from the map, and share trips with clients via a read-only link (`/trip/:tripId`). Anonymous visitors browse the map without any account.
+The trip planner is available to **all users** — anonymous and logged-in (any role). Anonymous users get localStorage-backed trips; logged-in users get Firestore-backed trips. When an anonymous user logs in, their localStorage trip is automatically migrated to Firestore. Sharing requires login (Firestore doc with `isShared: true`).
 
-- **Phase 1 — Manual planning** (implemented): Agent adds POIs → trip panel shows day distribution → share with client via URL.
+- **Phase 1 — Manual planning** (implemented): User adds POIs → trip panel shows day distribution → share with client via URL.
+- **Phase 1.1 — Open access** (implemented): Removed travel_agent gate. Dual storage (localStorage for anon, Firestore for logged-in). Mobile BottomSheet trip tab.
 - **Phase 2 — AI planning** (planned): Natural-language chat to build/modify itinerary (Gemini + function calling).
 
 ---
 
 ## Firestore Data Model
 
-**Collection**: `trips/{tripId}` (auto-ID — one agent can have multiple trips; `tripId` doubles as the share token)
+**Collection**: `trips/{tripId}` (auto-ID — one user can have multiple trips; `tripId` doubles as the share token)
 
 ```typescript
 interface TripPoiEntry {
   poiId: string;
-  addedAt: number; // ms timestamp for ordering
+  addedAt: number;   // ms timestamp for ordering within a day
+  dayNumber: number;  // 1-indexed day this POI belongs to
 }
 
 interface TripDoc {
   id: string;          // Firestore document ID (= share token)
-  agentId: string;     // travel agent's uid
+  ownerId: string;     // user's uid (renamed from agentId)
   clientName: string;  // label e.g. "משפחת לוי"
   pois: TripPoiEntry[];
-  numDays: number;     // 1–5 (UI), default: 2
-  isShared: boolean;   // false until agent clicks "שתף"
+  numDays: number;     // starts at 1, add-day button
+  isShared: boolean;   // false until user clicks "שתף"
   createdAt: number;   // ms timestamp
   updatedAt: number;
 }
@@ -39,16 +41,14 @@ interface TripDoc {
 
 **Security rules** (implemented in `firestore.rules`):
 ```
-function isTravelAgent() {
-  return isSignedIn() && userRole() == 'travel_agent';
-}
-
 match /trips/{tripId} {
-  allow read, update, delete: if isTravelAgent() && resource.data.agentId == request.auth.uid;
-  allow create: if isTravelAgent() && request.resource.data.agentId == request.auth.uid;
-  allow read: if resource.data.isShared == true;  // public share link
+  allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+  allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+  allow get: if resource.data.isShared == true;  // public share link
 }
 ```
+
+**Dual storage**: Anonymous users use localStorage (key: `click-bateva-trip`). Logged-in users use Firestore. `useTrip(uid)` hook switches automatically.
 
 Client writes directly — no Cloud Function needed for trip CRUD.
 

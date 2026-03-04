@@ -20,15 +20,14 @@ interface SidebarProps {
   onLoginClick: () => void;
   onRegisterClick: () => void;
   onLogout: () => void;
-  // trip (only used when isTravelAgent)
-  isTravelAgent: boolean;
+  // trip
   trip: TripDoc | null;
   allPois: Poi[];
   orderedTripPoiIds: string[];
   activeDayNumber: number;
   onSetActiveDayNumber: (n: number) => void;
   onRemovePoi: (poiId: string) => void;
-  onMovePoi: (poiId: string, newDay: number) => void;
+  onReorderPoi: (poiId: string, newDay: number, newIndex: number) => void;
   onAddDay: () => void;
   onSetClientName: (name: string) => void;
   onClearTrip: () => void;
@@ -53,14 +52,13 @@ export function Sidebar({
   onLoginClick,
   onRegisterClick,
   onLogout,
-  isTravelAgent,
   trip,
   allPois,
   orderedTripPoiIds,
   activeDayNumber,
   onSetActiveDayNumber,
   onRemovePoi,
-  onMovePoi,
+  onReorderPoi,
   onAddDay,
   onSetClientName,
   onClearTrip,
@@ -90,34 +88,32 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* Tab row — only for travel agents */}
-      {isTravelAgent && (
-        <div className="flex border-b border-gray-100 shrink-0">
-          <button
-            onClick={() => setActiveTab("filter")}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === "filter"
-                ? "text-green-700 border-b-2 border-green-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            🗂️ מסנן
-          </button>
-          <button
-            onClick={() => setActiveTab("trip")}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === "trip"
-                ? "text-teal-700 border-b-2 border-teal-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            ✈️ תכנן טיול{tripCount > 0 ? ` · ${tripCount}` : ""}
-          </button>
-        </div>
-      )}
+      {/* Tab row */}
+      <div className="flex border-b border-gray-100 shrink-0">
+        <button
+          onClick={() => setActiveTab("filter")}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+            activeTab === "filter"
+              ? "text-green-700 border-b-2 border-green-600"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          🗂️ מסנן
+        </button>
+        <button
+          onClick={() => setActiveTab("trip")}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+            activeTab === "trip"
+              ? "text-teal-700 border-b-2 border-teal-600"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          ✈️ תכנן טיול{tripCount > 0 ? ` · ${tripCount}` : ""}
+        </button>
+      </div>
 
       {/* Tab content */}
-      {activeTab === "filter" || !isTravelAgent ? (
+      {activeTab === "filter" ? (
         <>
           <div className="flex-1 overflow-y-auto">
             <CategoryGrid
@@ -139,13 +135,15 @@ export function Sidebar({
           activeDayNumber={activeDayNumber}
           onSetActiveDayNumber={onSetActiveDayNumber}
           onRemovePoi={onRemovePoi}
-          onMovePoi={onMovePoi}
+          onReorderPoi={onReorderPoi}
           onAddDay={onAddDay}
           onSetClientName={onSetClientName}
           onClearTrip={onClearTrip}
           onShareTrip={onShareTrip}
           onNewTrip={onNewTrip}
           onPoiSelect={onPoiSelect}
+          isLoggedIn={isLoggedIn}
+          onLoginClick={onLoginClick}
         />
       )}
       <div className="px-4 py-3 border-t border-gray-100">

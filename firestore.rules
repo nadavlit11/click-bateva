@@ -111,8 +111,8 @@ service cloud.firestore {
     // ─── trips ──────────────────────────────────────────────────────────────
 
     match /trips/{tripId} {
-      allow read, update, delete: if isTravelAgent() && resource.data.agentId == request.auth.uid;
-      allow create: if isTravelAgent() && request.resource.data.agentId == request.auth.uid;
+      allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       allow get: if resource.data.isShared == true;
     }
 

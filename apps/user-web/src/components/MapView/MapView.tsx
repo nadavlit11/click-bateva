@@ -18,6 +18,7 @@ interface MapViewProps {
   pinSize?: number;
   highlightPoi?: Poi | null;
   orderedTripPoiIds?: string[];
+  activeDayPoiIds?: string[];
 }
 
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
@@ -25,7 +26,7 @@ const MAP_ID = "DEMO_MAP_ID";
 const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
 const LABEL_ZOOM_THRESHOLD = 11;
 
-export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed, pinSize = 24, highlightPoi, orderedTripPoiIds = [] }: MapViewProps) {
+export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed, pinSize = 24, highlightPoi, orderedTripPoiIds = [], activeDayPoiIds = [] }: MapViewProps) {
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} language="he" region="IL">
       <GoogleMap
@@ -51,6 +52,7 @@ export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiC
           pinSize={pinSize}
           highlightPoi={highlightPoi}
           orderedTripPoiIds={orderedTripPoiIds}
+          activeDayPoiIds={activeDayPoiIds}
         />
       </GoogleMap>
     </APIProvider>
@@ -68,9 +70,10 @@ interface ClusteredPoiMarkersProps {
   pinSize: number;
   highlightPoi?: Poi | null;
   orderedTripPoiIds: string[];
+  activeDayPoiIds: string[];
 }
 
-function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed, pinSize, highlightPoi, orderedTripPoiIds }: ClusteredPoiMarkersProps) {
+function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed, pinSize, highlightPoi, orderedTripPoiIds, activeDayPoiIds }: ClusteredPoiMarkersProps) {
   const map = useMap();
   const [zoom, setZoom] = useState(8);
   const clusterer = useRef<MarkerClusterer | null>(null);
@@ -98,11 +101,11 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
   );
   const hasTripPois = orderedTripPoiIds.length > 0;
 
-  // Ordered Poi objects for route overlay
+  // Poi lookup + active day route
   const poiMap = useMemo(() => new Map(pois.map(p => [p.id, p])), [pois]);
-  const orderedTripPois = useMemo(
-    () => orderedTripPoiIds.map(id => poiMap.get(id)).filter(Boolean) as Poi[],
-    [orderedTripPoiIds, poiMap]
+  const activeDayPois = useMemo(
+    () => activeDayPoiIds.map(id => poiMap.get(id)).filter(Boolean) as Poi[],
+    [activeDayPoiIds, poiMap]
   );
 
   // Initialize clusterer when map is ready
@@ -206,7 +209,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
         );
         const resolvedIconUrl = poi.iconUrl ?? subcategoryIcon ?? iconUrlMap[poi.categoryId] ?? null;
         const tripNumber = tripNumberMap.get(poi.id);
-        const isDimmed = hasTripPois && tripNumber === undefined;
+        const isDimmed = false;
         return (
           <PoiMarker
             key={poi.id}
@@ -223,8 +226,8 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
           />
         );
       })}
-      {orderedTripPois.length >= 2 && (
-        <TripRouteOverlay orderedPois={orderedTripPois} />
+      {activeDayPois.length >= 2 && (
+        <TripRouteOverlay orderedPois={activeDayPois} />
       )}
     </>
   );

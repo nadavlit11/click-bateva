@@ -13,6 +13,9 @@
     "test:mutate": "stryker run"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@googlemaps/markerclusterer": "^2.6.2",
     "@sentry/react": "^10.39.0",
     "@vis.gl/react-google-maps": "^1.7.1",

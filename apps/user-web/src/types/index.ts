@@ -27,7 +27,7 @@ export interface TripPoiEntry {
 
 export interface TripDoc {
   id: string;          // Firestore document ID
-  agentId: string;
+  ownerId: string;
   clientName: string;
   pois: TripPoiEntry[];
   numDays: number;

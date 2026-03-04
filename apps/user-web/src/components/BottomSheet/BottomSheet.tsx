@@ -1,9 +1,12 @@
 import { useRef, useState, useEffect } from "react";
-import type { Category, Subcategory } from "../../types";
+import type { Category, Subcategory, Poi, TripDoc } from "../../types";
 import { CATEGORY_EMOJI } from "../../data/defaults";
 import { lighten, lightenBorder } from "../../lib/colorUtils";
 import { CategoryGrid } from "../Sidebar/CategoryGrid";
 import { SidebarFooter } from "../Sidebar/SidebarFooter";
+import { TripPanel } from "../Sidebar/TripPanel";
+
+type ActiveTab = "filter" | "trip";
 
 interface BottomSheetProps {
   categories: Category[];
@@ -21,6 +24,20 @@ interface BottomSheetProps {
   onRegisterClick: () => void;
   onLogout: () => void;
   className?: string;
+  // trip
+  trip: TripDoc | null;
+  allPois: Poi[];
+  orderedTripPoiIds: string[];
+  activeDayNumber: number;
+  onSetActiveDayNumber: (n: number) => void;
+  onRemovePoi: (poiId: string) => void;
+  onReorderPoi: (poiId: string, newDay: number, newIndex: number) => void;
+  onAddDay: () => void;
+  onSetClientName: (name: string) => void;
+  onClearTrip: () => void;
+  onShareTrip: () => Promise<string>;
+  onNewTrip: () => void;
+  onPoiSelect: (poiId: string) => void;
 }
 
 export function BottomSheet({
@@ -39,9 +56,25 @@ export function BottomSheet({
   onRegisterClick,
   onLogout,
   className,
+  trip,
+  allPois,
+  orderedTripPoiIds,
+  activeDayNumber,
+  onSetActiveDayNumber,
+  onRemovePoi,
+  onReorderPoi,
+  onAddDay,
+  onSetClientName,
+  onClearTrip,
+  onShareTrip,
+  onNewTrip,
+  onPoiSelect,
 }: BottomSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollDown, setCanScrollDown] = useState(false);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("filter");
+
+  const tripCount = orderedTripPoiIds.length;
 
   function checkScroll() {
     const el = scrollRef.current;
@@ -52,7 +85,6 @@ export function BottomSheet({
   // Re-check whenever the sheet opens or content changes
   useEffect(() => {
     if (expanded) {
-      // Wait one frame for layout to settle
       const id = requestAnimationFrame(checkScroll);
       return () => cancelAnimationFrame(id);
     } else {
@@ -96,27 +128,74 @@ export function BottomSheet({
         {expanded ? (
           /* ── Expanded state ── */
           <div className="flex flex-col flex-1 overflow-hidden">
-            <div className="relative flex-1 overflow-hidden">
-              <div
-                ref={scrollRef}
-                className="h-full overflow-y-auto"
-                onScroll={checkScroll}
+            {/* Tab row */}
+            <div className="flex border-b border-gray-100 shrink-0">
+              <button
+                onClick={() => setActiveTab("filter")}
+                className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                  activeTab === "filter"
+                    ? "text-green-700 border-b-2 border-green-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
               >
-              <CategoryGrid
-                categories={categories}
-                subcategories={subcategories}
-                selectedCategories={selectedCategories}
-                onToggle={onCategoryToggle}
-                onSubcategoryFilter={onSubcategoryFilter}
-              />
-              </div>
-              {canScrollDown && (
-                <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none flex items-end justify-center pb-1">
-                  <span className="text-gray-400 text-3xl leading-none">⌄</span>
-                </div>
-              )}
+                🗂️ מסנן
+              </button>
+              <button
+                onClick={() => setActiveTab("trip")}
+                className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                  activeTab === "trip"
+                    ? "text-teal-700 border-b-2 border-teal-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                ✈️ תכנן טיול{tripCount > 0 ? ` · ${tripCount}` : ""}
+              </button>
             </div>
-            <SidebarFooter count={filteredCount} onClearAll={onClearAll} />
+
+            {activeTab === "filter" ? (
+              <>
+                <div className="relative flex-1 overflow-hidden">
+                  <div
+                    ref={scrollRef}
+                    className="h-full overflow-y-auto"
+                    onScroll={checkScroll}
+                  >
+                    <CategoryGrid
+                      categories={categories}
+                      subcategories={subcategories}
+                      selectedCategories={selectedCategories}
+                      onToggle={onCategoryToggle}
+                      onSubcategoryFilter={onSubcategoryFilter}
+                    />
+                  </div>
+                  {canScrollDown && (
+                    <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none flex items-end justify-center pb-1">
+                      <span className="text-gray-400 text-3xl leading-none">⌄</span>
+                    </div>
+                  )}
+                </div>
+                <SidebarFooter count={filteredCount} onClearAll={onClearAll} />
+              </>
+            ) : (
+              <TripPanel
+                trip={trip}
+                allPois={allPois}
+                categories={categories}
+                orderedTripPoiIds={orderedTripPoiIds}
+                activeDayNumber={activeDayNumber}
+                onSetActiveDayNumber={onSetActiveDayNumber}
+                onRemovePoi={onRemovePoi}
+                onReorderPoi={onReorderPoi}
+                onAddDay={onAddDay}
+                onSetClientName={onSetClientName}
+                onClearTrip={onClearTrip}
+                onShareTrip={onShareTrip}
+                onNewTrip={onNewTrip}
+                onPoiSelect={onPoiSelect}
+                isLoggedIn={isLoggedIn}
+                onLoginClick={onLoginClick}
+              />
+            )}
           </div>
         ) : (
           /* ── Collapsed (peek) state ── */
@@ -157,6 +236,21 @@ export function BottomSheet({
                   </button>
                 );
               })}
+
+              {/* Trip badge chip */}
+              {tripCount > 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveTab("trip");
+                    onExpandedChange(true);
+                  }}
+                  className="flex items-center gap-1.5 py-1.5 px-3 rounded-full border-2 border-teal-300 bg-teal-50 transition-all shrink-0 text-sm"
+                >
+                  <span className="text-xs">✈️</span>
+                  <span className="text-teal-700 font-medium whitespace-nowrap">טיול · {tripCount}</span>
+                </button>
+              )}
             </div>
 
             {/* Result count + auth button */}
