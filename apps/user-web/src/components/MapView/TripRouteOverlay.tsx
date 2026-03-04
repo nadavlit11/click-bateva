@@ -104,6 +104,7 @@ export function TripRouteOverlay({ orderedPois }: TripRouteOverlayProps) {
       rendererRef.current?.setMap(null);
       fallbackRef.current?.setMap(null);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- coordsKey is a stable serialization of orderedPois coords
   }, [map, coordsKey]);
 
   return null;
