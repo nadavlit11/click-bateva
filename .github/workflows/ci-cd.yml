@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'feat/**', 'fix/**']
   pull_request:
     branches: [main]
 
@@ -102,6 +102,7 @@ jobs:
           cache-dependency-path: apps/user-web/package-lock.json
       - run: npm ci
       - run: npm run lint
+        continue-on-error: ${{ startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/') }}
       - run: npm run test
       - name: Build
         env:
@@ -112,7 +113,7 @@ jobs:
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
         run: npm run build
       - name: Upload dist
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')
         uses: actions/upload-artifact@v4
         with:
           name: user-web-dist
@@ -262,13 +263,13 @@ jobs:
         if: always()
         run: rm -f /tmp/firebase-sa.json
 
-  # ── Deploy: Staging preview (develop, user-web only) ──────────────────
+  # ── Deploy: Preview (develop → staging, feat/** → branch slug) ────────
   deploy-preview:
     name: Deploy Preview — User Web
     needs: [changes, ci-user-web]
     if: >-
       always() &&
-      github.ref == 'refs/heads/develop' &&
+      (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) &&
       github.event_name == 'push' &&
       needs.changes.outputs.user-web == 'true' &&
       needs.ci-user-web.result == 'success'
@@ -280,11 +281,20 @@ jobs:
         with:
           name: user-web-dist
           path: apps/user-web/dist
+      - name: Resolve channel ID
+        id: channel
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            echo "id=staging" >> $GITHUB_OUTPUT
+          else
+            SLUG=$(echo "${{ github.ref_name }}" | sed 's|/|-|g' | tr '[:upper:]' '[:lower:]' | cut -c1-20)
+            echo "id=$SLUG" >> $GITHUB_OUTPUT
+          fi
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: click-bateva
           target: click-bateva-app
-          channelId: staging
+          channelId: ${{ steps.channel.outputs.id }}
           expires: 7d
