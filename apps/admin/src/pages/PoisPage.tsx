@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import {
   collection,
   onSnapshot,
@@ -17,12 +17,22 @@ import { useUserRole } from '../hooks/useUserRole.ts'
 export function PoisPage() {
   const role = useUserRole()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const [pois, setPois] = useState<Poi[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const searchQuery = searchParams.get('search') ?? ''
   const filterCategoryId = searchParams.get('category') ?? ''
   const [deleteModalId, setDeleteModalId] = useState<string | null>(null)
+
+  // Restore scroll position after POIs load
+  const savedScrollTop = (location.state as { poisScrollTop?: number })?.poisScrollTop
+  useEffect(() => {
+    if (savedScrollTop && pois.length > 0) {
+      const main = document.querySelector('main')
+      if (main) main.scrollTop = savedScrollTop
+    }
+  }, [pois.length > 0]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live POI list
   useEffect(() => {
@@ -60,6 +70,14 @@ export function PoisPage() {
     })
   }
 
+  function navState() {
+    const main = document.querySelector('main')
+    return {
+      poisSearch: searchParams.toString(),
+      poisScrollTop: main?.scrollTop ?? 0,
+    }
+  }
+
   const filteredPois = pois.filter(poi => {
     if (filterCategoryId && poi.categoryId !== filterCategoryId) return false
     if (searchQuery) {
@@ -74,7 +92,7 @@ export function PoisPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-900">נקודות עניין</h1>
         <button
-          onClick={() => navigate('/pois/new', { state: { poisSearch: searchParams.toString() } })}
+          onClick={() => navigate('/pois/new', { state: navState() })}
           className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
         >
           + הוסף נקודת עניין
@@ -154,7 +172,7 @@ export function PoisPage() {
                 <td className="px-4 py-3">
                   <div className="flex gap-2 justify-end">
                     <button
-                      onClick={() => navigate(`/pois/${poi.id}`, { state: { poisSearch: searchParams.toString() } })}
+                      onClick={() => navigate(`/pois/${poi.id}`, { state: navState() })}
                       className="text-blue-600 hover:text-blue-800 text-xs font-medium"
                     >
                       עריכה

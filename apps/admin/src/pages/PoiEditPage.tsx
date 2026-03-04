@@ -76,8 +76,10 @@ export function PoiEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const poisSearch = (location.state as { poisSearch?: string })?.poisSearch
-  const poisListUrl = poisSearch ? `/pois?${poisSearch}` : '/pois'
+  const locState = location.state as { poisSearch?: string; poisScrollTop?: number } | null
+  const poisSearch = locState?.poisSearch
+  const poisScrollTop = locState?.poisScrollTop
+  const poisListPath = poisSearch ? `/pois?${poisSearch}` : '/pois'
   const isNew = !id
 
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
@@ -287,7 +289,7 @@ export function PoiEditPage() {
           createdAt: serverTimestamp(),
         })
       }
-      navigate(poisListUrl)
+      navigate(poisListPath, { state: { poisScrollTop } })
     } catch (err) {
       setError('שגיאה בשמירה. נסה שוב.')
       reportError(err, { source: 'PoiEditPage.save' })
@@ -305,7 +307,7 @@ export function PoiEditPage() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
-          onClick={() => navigate(poisListUrl)}
+          onClick={() => navigate(poisListPath, { state: { poisScrollTop } })}
           className="text-gray-400 hover:text-gray-600 text-lg"
         >
           →
@@ -816,7 +818,7 @@ export function PoiEditPage() {
             </button>
             <button
               type="button"
-              onClick={() => navigate(poisListUrl)}
+              onClick={() => navigate(poisListPath, { state: { poisScrollTop } })}
               className="px-5 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
               ביטול
