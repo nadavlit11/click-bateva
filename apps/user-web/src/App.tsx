@@ -322,7 +322,6 @@ export default function App() {
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
-          userEmail={user?.email}
           isTravelAgent={isTravelAgent}
           trip={trip}
           allPois={pois}

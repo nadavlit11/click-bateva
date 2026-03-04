@@ -20,7 +20,6 @@ interface SidebarProps {
   onLoginClick: () => void;
   onRegisterClick: () => void;
   onLogout: () => void;
-  userEmail?: string | null;
   // trip (only used when isTravelAgent)
   isTravelAgent: boolean;
   trip: TripDoc | null;
@@ -54,7 +53,6 @@ export function Sidebar({
   onLoginClick,
   onRegisterClick,
   onLogout,
-  userEmail,
   isTravelAgent,
   trip,
   allPois,
@@ -80,13 +78,7 @@ export function Sidebar({
       style={{ boxShadow: "4px 0 20px rgba(0,0,0,0.08)" }}
     >
       <div className="relative">
-        <AppHeader
-          isLoggedIn={isLoggedIn}
-          userEmail={userEmail}
-          onLoginClick={onLoginClick}
-          onRegisterClick={onRegisterClick}
-          onLogout={onLogout}
-        />
+        <AppHeader />
         <button
           onClick={onClose}
           className="absolute top-4 end-4 w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
@@ -156,6 +148,31 @@ export function Sidebar({
           onPoiSelect={onPoiSelect}
         />
       )}
+      <div className="px-4 py-3 border-t border-gray-100">
+        {isLoggedIn ? (
+          <button
+            onClick={onLogout}
+            className="w-full text-sm text-gray-500 hover:text-gray-700 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            התנתקות
+          </button>
+        ) : (
+          <div className="flex gap-2">
+            <button
+              onClick={onLoginClick}
+              className="flex-1 text-sm text-green-600 hover:text-green-800 font-medium py-1.5 rounded-lg hover:bg-green-50 transition-colors"
+            >
+              כניסה
+            </button>
+            <button
+              onClick={onRegisterClick}
+              className="flex-1 text-sm text-gray-600 hover:text-gray-800 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              הרשמה
+            </button>
+          </div>
+        )}
+      </div>
     </aside>
   );
 }
