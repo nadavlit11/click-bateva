@@ -36,21 +36,14 @@ service cloud.firestore {
     // ─── points_of_interest ─────────────────────────────────────────────────
 
     match /points_of_interest/{poiId} {
-      // Admin/content_manager can read all POIs.
-      // Business users can read their own POIs (including inactive).
-      // Travel agents can read active POIs visible on the agents map.
-      // Everyone else (anonymous, standard_user) can read active POIs visible on the groups map.
       allow read: if isAdminOrContentManager() ||
                      (isBusinessUser() && resource.data.businessId == request.auth.uid) ||
                      (isTravelAgent() && resource.data.active == true && resource.data.maps.agents.active == true) ||
                      (resource.data.active == true && resource.data.maps.groups.active == true);
 
-      // Admin and content managers can create; only admin can delete
       allow create: if isAdminOrContentManager();
       allow delete: if isAdmin();
 
-      // Admin and content managers can update anything;
-      // Business users can only update their own POIs and only allowed fields
       allow update: if isAdminOrContentManager() ||
         (isBusinessUser() &&
          resource.data.businessId != null &&
@@ -64,7 +57,6 @@ service cloud.firestore {
     // ─── clicks ─────────────────────────────────────────────────────────────
 
     match /clicks/{clickId} {
-      // Suppress clicks from admin/content_manager, and from business_user on their own POI
       allow create: if
         !(isSignedIn() && (userRole() == 'admin' || userRole() == 'content_manager')) &&
         !(isSignedIn() && userRole() == 'business_user' &&
@@ -76,7 +68,6 @@ service cloud.firestore {
         request.resource.data.poiId.size() < 100 &&
         request.resource.data.categoryId.size() < 100;
 
-      // Only admin can read or delete clicks
       allow read, delete: if isAdmin();
     }
 
@@ -104,11 +95,8 @@ service cloud.firestore {
     // ─── businesses ─────────────────────────────────────────────────────────
 
     match /businesses/{businessId} {
-      // Only admin can create, update, delete businesses
       allow write: if isAdmin();
 
-      // Admin can read all; business users can read their own business document.
-      // Business documents are keyed by the owner's UID, so uid == businessId is sufficient.
       allow read: if isAdmin() ||
         (isBusinessUser() && request.auth.uid == businessId);
     }
@@ -120,16 +108,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ─── trips ──────────────────────────────────────────────────────────────
+
+    match /trips/{tripId} {
+      allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow get: if resource.data.isShared == true;
+    }
+
     // ─── users ──────────────────────────────────────────────────────────────
 
     match /users/{userId} {
-      // Admin can read and write all user documents
       allow read, write: if isAdmin();
-
-      // Users can read their own document
       allow read: if isSignedIn() && request.auth.uid == userId;
-
-      // Users can update their own document but cannot change role or businessRef
       allow update: if isSignedIn() &&
         request.auth.uid == userId &&
         !request.resource.data.diff(resource.data).affectedKeys()

@@ -19,6 +19,23 @@ export interface DayHours {
   close: string;  // "17:00"
 }
 
+export interface TripPoiEntry {
+  poiId: string;
+  addedAt: number;   // ms timestamp for ordering within a day
+  dayNumber: number; // 1-indexed day this POI belongs to
+}
+
+export interface TripDoc {
+  id: string;          // Firestore document ID
+  ownerId: string;
+  clientName: string;
+  pois: TripPoiEntry[];
+  numDays: number;
+  isShared: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Poi {
   id: string;
   name: string;

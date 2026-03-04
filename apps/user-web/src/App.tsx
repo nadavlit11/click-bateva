@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
+import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { reportError } from "./lib/errorReporting";
 import { Sidebar } from "./components/Sidebar/Sidebar";
@@ -13,8 +13,9 @@ import { RegisterModal } from "./components/RegisterModal";
 import { usePois, useCategories, useSubcategories } from "./hooks/useFirestoreData";
 import { useAuth } from "./hooks/useAuth";
 import { useMapSettings } from "./hooks/useMapSettings";
+import { useTrip } from "./hooks/useTrip";
 import { filterPois } from "./lib/filterPois";
-import type { Poi } from "./types";
+import type { Poi, TripDoc } from "./types";
 import type { MapKey } from "./hooks/useFirestoreData";
 
 const PoiDetailPanel = lazy(() => import("./components/MapView/PoiDetailPanel").then(m => ({ default: m.PoiDetailPanel })));
@@ -32,6 +33,89 @@ export default function App() {
   const subcategories = useSubcategories();
   const pinSize = useMapSettings();
 
+  // ── Trip share (client read-only view) ───────────────────────────────────
+  const tripShareId = useMemo(() => {
+    const match = window.location.pathname.match(/^\/trip\/([^/]+)$/);
+    return match?.[1] ?? null;
+  }, []);
+
+  const [sharedTrip, setSharedTrip] = useState<TripDoc | null>(null);
+  const [sharedTripNotFound, setSharedTripNotFound] = useState(false);
+  useEffect(() => {
+    if (!tripShareId) return;
+    getDoc(doc(db, "trips", tripShareId)).then(snap => {
+      if (snap.exists() && snap.data().isShared === true) {
+        const d = snap.data();
+        setSharedTrip({
+          id: snap.id,
+          ownerId: d.ownerId,
+          clientName: d.clientName ?? "",
+          pois: d.pois ?? [],
+          numDays: d.numDays ?? 1,
+          isShared: d.isShared ?? false,
+          createdAt: d.createdAt ?? 0,
+          updatedAt: d.updatedAt ?? 0,
+        });
+      } else {
+        setSharedTripNotFound(true);
+      }
+    }).catch(err => {
+      reportError(err, { source: "App.sharedTrip" });
+      setSharedTripNotFound(true);
+    });
+  }, [tripShareId]);
+
+  // ── Trip (all users — Firestore for logged-in, localStorage for anonymous) ─
+  const { trip, addPoi, removePoi, movePoi, reorderPoi, addDay, setClientName, clearTrip, shareTrip, newTrip } = useTrip(
+    user?.uid ?? null
+  );
+
+  // Which day new POIs are added to (1-indexed). Defaults to 1, switches to
+  // the new day when the agent adds a day or clicks a day header.
+  const [activeDayNumber, setActiveDayNumber] = useState(1);
+
+  // Keep activeDayNumber in bounds whenever numDays changes
+  const tripNumDays = trip?.numDays ?? 1;
+  const clampedActiveDay = Math.min(activeDayNumber, tripNumDays);
+
+  const handleAddDay = useCallback(async () => {
+    await addDay();
+    setActiveDayNumber(n => n + 1);
+  }, [addDay]);
+
+  const handleNewTrip = useCallback(async () => {
+    await newTrip();
+    setActiveDayNumber(1);
+  }, [newTrip]);
+
+  const handleClearTrip = useCallback(async () => {
+    await clearTrip();
+    setActiveDayNumber(1);
+  }, [clearTrip]);
+
+  const activeTrip = tripShareId ? sharedTrip : trip;
+
+  const orderedTripPoiIds = useMemo(
+    () => [...(activeTrip?.pois ?? [])]
+      .sort((a, b) => {
+        const dayDiff = (a.dayNumber ?? 1) - (b.dayNumber ?? 1);
+        return dayDiff !== 0 ? dayDiff : a.addedAt - b.addedAt;
+      })
+      .map(p => p.poiId),
+    [activeTrip]
+  );
+  const tripPoiIdSet = useMemo(() => new Set(orderedTripPoiIds), [orderedTripPoiIds]);
+
+  // POI IDs for the active day only (for route rendering)
+  const activeDayPoiIds = useMemo(() => {
+    const dayPois = (activeTrip?.pois ?? [])
+      .filter(p => (p.dayNumber ?? 1) === clampedActiveDay)
+      .sort((a, b) => a.addedAt - b.addedAt)
+      .map(p => p.poiId);
+    return dayPois;
+  }, [activeTrip, clampedActiveDay]);
+
+  // ── Filter state ─────────────────────────────────────────────────────────
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
@@ -65,6 +149,14 @@ export default function App() {
     [pois, selectedCategories, selectedSubcategories, subcategories]
   );
 
+  // Always show trip POIs on the map, even when their category isn't selected
+  const displayPois = useMemo(() => {
+    if (tripPoiIdSet.size === 0) return filteredPois;
+    const filteredIds = new Set(filteredPois.map(p => p.id));
+    const missingTripPois = pois.filter(p => tripPoiIdSet.has(p.id) && !filteredIds.has(p.id));
+    return missingTripPois.length > 0 ? [...filteredPois, ...missingTripPois] : filteredPois;
+  }, [filteredPois, pois, tripPoiIdSet]);
+
   const sortedCategories = useMemo(
     () => [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [categories]
@@ -78,11 +170,17 @@ export default function App() {
       return next;
     });
     if (isCurrentlySelected) {
-      // Clear subcategories of this category when deselecting
       const catSubIds = subcategories.filter(s => s.categoryId === id).map(s => s.id);
       setSelectedSubcategories(prev => {
         const next = new Set(prev);
         catSubIds.forEach(sid => next.delete(sid));
+        return next;
+      });
+    } else {
+      const catSubIds = subcategories.filter(s => s.categoryId === id).map(s => s.id);
+      setSelectedSubcategories(prev => {
+        const next = new Set(prev);
+        catSubIds.forEach(sid => next.add(sid));
         return next;
       });
     }
@@ -133,6 +231,95 @@ export default function App() {
     setFocusLocation({ lat: poi.location.lat, lng: poi.location.lng });
   }
 
+  function handlePoiSelectFromTrip(poiId: string) {
+    const poi = pois.find(p => p.id === poiId);
+    if (poi) setSelectedPoi(poi);
+  }
+
+  // ── Client read-only view ─────────────────────────────────────────────────
+  if (tripShareId) {
+    if (sharedTripNotFound) {
+      return (
+        <div className="h-dvh w-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="text-3xl mb-3">🔍</div>
+            <p className="text-gray-600 text-sm font-medium">הטיול לא נמצא</p>
+            <p className="text-gray-400 text-xs mt-1">הקישור אינו תקין או שהטיול אינו משותף</p>
+          </div>
+        </div>
+      );
+    }
+    if (!sharedTrip) {
+      return (
+        <div className="h-dvh w-screen flex items-center justify-center bg-gray-50">
+          <div className="text-gray-400 text-sm">טוען טיול...</div>
+        </div>
+      );
+    }
+    return (
+      <div className="h-dvh w-screen flex overflow-hidden">
+        <aside
+          className="w-80 h-full bg-white flex flex-col z-10 overflow-hidden shrink-0 hidden md:flex"
+          style={{ boxShadow: "4px 0 20px rgba(0,0,0,0.08)" }}
+        >
+          <div className="p-5 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <img src="/icon-192.png" alt="קליק בטבע" className="w-10 h-10 rounded-xl object-contain shrink-0" />
+              <div>
+                <h1 className="text-lg font-bold text-gray-800">קליק בטבע</h1>
+                <p className="text-xs text-gray-500">טיול מתוכנן עבורך ✈️</p>
+              </div>
+            </div>
+            {sharedTrip.clientName && (
+              <p className="mt-2 text-sm font-medium text-gray-700">{sharedTrip.clientName}</p>
+            )}
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <p className="text-xs text-gray-400 mb-3">{orderedTripPoiIds.length} מקומות בטיול</p>
+            {orderedTripPoiIds.map((id, i) => {
+              const poi = pois.find(p => p.id === id);
+              const cat = sortedCategories.find(c => c.id === poi?.categoryId);
+              if (!poi) return null;
+              return (
+                <div
+                  key={id}
+                  className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handlePoiSelectFromTrip(id)}
+                >
+                  <span className="w-5 h-5 rounded-full bg-amber-400 text-white text-xs flex items-center justify-center font-bold shrink-0">
+                    {i + 1}
+                  </span>
+                  <span className="text-sm text-gray-700 font-medium truncate">{poi.name}</span>
+                  {cat && <span className="text-xs text-gray-400 shrink-0">{cat.name}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+        <main className="flex-1 h-full relative">
+          <MapView
+            pois={pois}
+            categories={sortedCategories}
+            subcategories={subcategories}
+            selectedPoiId={selectedPoi?.id ?? null}
+            onPoiClick={handlePoiClick}
+            onMapClick={handleMapClick}
+            orderedTripPoiIds={orderedTripPoiIds}
+          />
+          {selectedPoi && (
+            <Suspense fallback={null}>
+              <PoiDetailPanel
+                poi={selectedPoi}
+                category={sortedCategories.find(c => c.id === selectedPoi.categoryId)}
+                onClose={() => setSelectedPoi(null)}
+              />
+            </Suspense>
+          )}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="h-dvh w-screen flex overflow-hidden">
       {sidebarOpen && (
@@ -150,11 +337,24 @@ export default function App() {
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
+          trip={trip}
+          allPois={pois}
+          orderedTripPoiIds={orderedTripPoiIds}
+          activeDayNumber={clampedActiveDay}
+          onSetActiveDayNumber={setActiveDayNumber}
+          onRemovePoi={removePoi}
+          onReorderPoi={reorderPoi}
+          onAddDay={handleAddDay}
+          onSetClientName={setClientName}
+          onClearTrip={handleClearTrip}
+          onShareTrip={shareTrip}
+          onNewTrip={handleNewTrip}
+          onPoiSelect={handlePoiSelectFromTrip}
         />
       )}
       <main className="flex-1 h-full relative">
         <MapView
-          pois={filteredPois}
+          pois={displayPois}
           categories={sortedCategories}
           subcategories={subcategories}
           selectedPoiId={selectedPoi?.id ?? null}
@@ -164,6 +364,8 @@ export default function App() {
           onFocusConsumed={() => setFocusLocation(null)}
           pinSize={pinSize}
           highlightPoi={selectedPoi}
+          orderedTripPoiIds={orderedTripPoiIds}
+          activeDayPoiIds={activeDayPoiIds}
         />
 
         {/* Floating sidebar toggle (desktop, when sidebar is closed) */}
@@ -208,8 +410,21 @@ export default function App() {
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
+          trip={trip}
+          allPois={pois}
+          orderedTripPoiIds={orderedTripPoiIds}
+          activeDayNumber={clampedActiveDay}
+          onSetActiveDayNumber={setActiveDayNumber}
+          onRemovePoi={removePoi}
+          onReorderPoi={reorderPoi}
+          onAddDay={handleAddDay}
+          onSetClientName={setClientName}
+          onClearTrip={handleClearTrip}
+          onShareTrip={shareTrip}
+          onNewTrip={handleNewTrip}
+          onPoiSelect={handlePoiSelectFromTrip}
         />
-        {!poisLoading && selectedCategories.size === 0 && <EmptyMapOverlay />}
+        {!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && <EmptyMapOverlay />}
         {poisLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
             <div className="bg-white/80 rounded-xl px-5 py-3 shadow text-gray-500 text-sm font-medium">
@@ -223,6 +438,9 @@ export default function App() {
               poi={selectedPoi}
               category={sortedCategories.find(c => c.id === selectedPoi.categoryId)}
               onClose={() => setSelectedPoi(null)}
+              tripPoiIds={tripPoiIdSet}
+              onAddToTrip={(id) => addPoi(id, clampedActiveDay)}
+              onRemoveFromTrip={removePoi}
             />
           </Suspense>
         )}
