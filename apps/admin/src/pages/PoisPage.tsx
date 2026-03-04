@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import {
   collection,
@@ -25,14 +25,15 @@ export function PoisPage() {
   const filterCategoryId = searchParams.get('category') ?? ''
   const [deleteModalId, setDeleteModalId] = useState<string | null>(null)
 
-  // Restore scroll position after POIs load
+  // Restore scroll position once after POIs first load
   const savedScrollTop = (location.state as { poisScrollTop?: number })?.poisScrollTop
+  const scrollRestoredRef = useRef(false)
   useEffect(() => {
-    if (savedScrollTop && pois.length > 0) {
-      const main = document.querySelector('main')
-      if (main) main.scrollTop = savedScrollTop
-    }
-  }, [pois.length > 0]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (scrollRestoredRef.current || !savedScrollTop || pois.length === 0) return
+    scrollRestoredRef.current = true
+    const main = document.querySelector('main')
+    if (main) main.scrollTop = savedScrollTop
+  }, [savedScrollTop, pois.length])
 
   // Live POI list
   useEffect(() => {
