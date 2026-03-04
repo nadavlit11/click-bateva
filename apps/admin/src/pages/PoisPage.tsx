@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   collection,
   onSnapshot,
@@ -17,10 +17,11 @@ import { useUserRole } from '../hooks/useUserRole.ts'
 export function PoisPage() {
   const role = useUserRole()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [pois, setPois] = useState<Poi[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterCategoryId, setFilterCategoryId] = useState('')
+  const searchQuery = searchParams.get('search') ?? ''
+  const filterCategoryId = searchParams.get('category') ?? ''
   const [deleteModalId, setDeleteModalId] = useState<string | null>(null)
 
   // Live POI list
@@ -73,7 +74,7 @@ export function PoisPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-900">נקודות עניין</h1>
         <button
-          onClick={() => navigate('/pois/new')}
+          onClick={() => navigate('/pois/new', { state: { poisSearch: searchParams.toString() } })}
           className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
         >
           + הוסף נקודת עניין
@@ -84,13 +85,23 @@ export function PoisPage() {
         <input
           type="text"
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={e => setSearchParams(prev => {
+            const next = new URLSearchParams(prev)
+            if (e.target.value) next.set('search', e.target.value)
+            else next.delete('search')
+            return next
+          })}
           placeholder="חיפוש לפי שם..."
           className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
         <select
           value={filterCategoryId}
-          onChange={e => setFilterCategoryId(e.target.value)}
+          onChange={e => setSearchParams(prev => {
+            const next = new URLSearchParams(prev)
+            if (e.target.value) next.set('category', e.target.value)
+            else next.delete('category')
+            return next
+          })}
           className="px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
         >
           <option value="">כל הקטגוריות</option>
@@ -143,7 +154,7 @@ export function PoisPage() {
                 <td className="px-4 py-3">
                   <div className="flex gap-2 justify-end">
                     <button
-                      onClick={() => navigate(`/pois/${poi.id}`)}
+                      onClick={() => navigate(`/pois/${poi.id}`, { state: { poisSearch: searchParams.toString() } })}
                       className="text-blue-600 hover:text-blue-800 text-xs font-medium"
                     >
                       עריכה
