@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { MapPicker } from '../components/MapPicker.tsx'
 import {
   collection,
@@ -75,6 +75,9 @@ const INITIAL_FORM: FormState = {
 export function PoiEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const poisSearch = (location.state as { poisSearch?: string })?.poisSearch
+  const poisListUrl = poisSearch ? `/pois?${poisSearch}` : '/pois'
   const isNew = !id
 
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
@@ -284,7 +287,7 @@ export function PoiEditPage() {
           createdAt: serverTimestamp(),
         })
       }
-      navigate('/pois')
+      navigate(poisListUrl)
     } catch (err) {
       setError('שגיאה בשמירה. נסה שוב.')
       reportError(err, { source: 'PoiEditPage.save' })
@@ -302,7 +305,7 @@ export function PoiEditPage() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
-          onClick={() => navigate('/pois')}
+          onClick={() => navigate(poisListUrl)}
           className="text-gray-400 hover:text-gray-600 text-lg"
         >
           →
@@ -813,7 +816,7 @@ export function PoiEditPage() {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/pois')}
+              onClick={() => navigate(poisListUrl)}
               className="px-5 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
               ביטול
