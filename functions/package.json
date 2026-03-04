@@ -1,5 +1,6 @@
 {
   "name": "functions",
+  "description": "Cloud Functions for click-bateva",
   "scripts": {
     "lint": "eslint --ext .js,.ts .",
     "build": "tsc",

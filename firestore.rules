@@ -1,5 +1,5 @@
 rules_version = '2';
-// Firestore Security Rules — dual-map system (agents & groups)
+// Firestore Security Rules — dual-map system (agents & groups), trips open to all signed-in users
 service cloud.firestore {
   match /databases/{database}/documents {
 
