@@ -66,7 +66,7 @@ export default function App() {
   }, [tripShareId]);
 
   // ── Trip (all users — Firestore for logged-in, localStorage for anonymous) ─
-  const { trip, addPoi, removePoi, movePoi, reorderPoi, addDay, setClientName, clearTrip, shareTrip, newTrip } = useTrip(
+  const { trip, addPoi, removePoi, reorderPoi, addDay, setClientName, clearTrip, shareTrip, newTrip } = useTrip(
     user?.uid ?? null
   );
 

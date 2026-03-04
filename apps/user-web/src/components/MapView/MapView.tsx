@@ -99,7 +99,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     () => new Map(orderedTripPoiIds.map((id, i) => [id, i + 1])),
     [orderedTripPoiIds]
   );
-  const hasTripPois = orderedTripPoiIds.length > 0;
+
 
   // Poi lookup + active day route
   const poiMap = useMemo(() => new Map(pois.map(p => [p.id, p])), [pois]);
