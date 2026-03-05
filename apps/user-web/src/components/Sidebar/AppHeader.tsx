@@ -35,7 +35,9 @@ export function AppHeader({ mapKey, isAgent, onMapKeyChange }: AppHeaderProps) {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500">גלה את ישראל</p>
+            <p className="text-sm text-gray-500">
+              מפת {MAP_LABELS[mapKey]}
+            </p>
           )}
         </div>
       </div>
