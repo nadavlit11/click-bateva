@@ -74,7 +74,6 @@ export interface Business {
   id: string
   name: string
   email: string
-  username: string
   ownerUid: string
   associatedUserIds: string[]   // UIDs allowed to edit this business's POIs
   createdAt: unknown

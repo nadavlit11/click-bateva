@@ -62,7 +62,7 @@ const testEnv = firebaseFunctionsTest();
 function makeCreateRequest(overrides: object) {
   return {
     auth: {uid: "admin-uid", token: {role: "admin"}},
-    data: {name: "Test Business", username: "testuser", password: "Pass1234"},
+    data: {name: "Test Business", email: "test@example.com", password: "Pass1234"},
     rawRequest: {},
     ...overrides,
   } as any;
@@ -110,50 +110,51 @@ describe("createBusinessUser — auth checks", () => {
 
 describe("createBusinessUser — input validation", () => {
   it("throws invalid-argument for empty name", async () => {
+    const data = {name: "", email: "a@b.com", password: "Pass1234"};
     await expect(
-      createBusinessUser.run(makeCreateRequest({data: {name: "", username: "user", password: "Pass1234"}}))
+      createBusinessUser.run(makeCreateRequest({data}))
     ).rejects.toMatchObject({code: "invalid-argument", message: "name must be a non-empty string."});
   });
 
   it("throws invalid-argument for non-string name", async () => {
+    const data = {name: 123, email: "a@b.com", password: "Pass1234"};
     await expect(
-      createBusinessUser.run(makeCreateRequest({data: {name: 123, username: "user", password: "Pass1234"}}))
+      createBusinessUser.run(makeCreateRequest({data}))
     ).rejects.toMatchObject({code: "invalid-argument", message: "name must be a non-empty string."});
   });
 
-  it("throws invalid-argument for empty username", async () => {
+  it("throws invalid-argument for empty email", async () => {
+    const data = {name: "Biz", email: "", password: "Pass1234"};
     await expect(
-      createBusinessUser.run(makeCreateRequest({data: {name: "Biz", username: "", password: "Pass1234"}}))
-    ).rejects.toMatchObject({code: "invalid-argument", message: "username must be a non-empty string."});
+      createBusinessUser.run(makeCreateRequest({data}))
+    ).rejects.toMatchObject({code: "invalid-argument", message: "email must be a non-empty string."});
   });
 
-  it("throws invalid-argument for username shorter than 3 chars", async () => {
+  it("throws invalid-argument for invalid email format", async () => {
+    const data = {name: "Biz", email: "notanemail", password: "Pass1234"};
     await expect(
-      createBusinessUser.run(makeCreateRequest({data: {name: "Biz", username: "ab", password: "Pass1234"}}))
-    ).rejects.toMatchObject({code: "invalid-argument", message: "username must be at least 3 characters."});
+      createBusinessUser.run(makeCreateRequest({data}))
+    ).rejects.toMatchObject({code: "invalid-argument", message: "email must be a valid email address."});
   });
 
-  it("throws invalid-argument for username with invalid characters", async () => {
+  it("throws invalid-argument for email without domain", async () => {
+    const data = {name: "Biz", email: "user@", password: "Pass1234"};
     await expect(
-      createBusinessUser.run(makeCreateRequest({data: {name: "Biz", username: "user@name", password: "Pass1234"}}))
-    ).rejects.toMatchObject({code: "invalid-argument", message: expect.stringContaining("letters, numbers")});
-  });
-
-  it("throws invalid-argument for username with spaces", async () => {
-    await expect(
-      createBusinessUser.run(makeCreateRequest({data: {name: "Biz", username: "user name", password: "Pass1234"}}))
-    ).rejects.toMatchObject({code: "invalid-argument"});
+      createBusinessUser.run(makeCreateRequest({data}))
+    ).rejects.toMatchObject({code: "invalid-argument", message: "email must be a valid email address."});
   });
 
   it("throws invalid-argument for short password", async () => {
+    const data = {name: "Biz", email: "a@b.com", password: "12345"};
     await expect(
-      createBusinessUser.run(makeCreateRequest({data: {name: "Biz", username: "user", password: "12345"}}))
+      createBusinessUser.run(makeCreateRequest({data}))
     ).rejects.toMatchObject({code: "invalid-argument", message: "password must be at least 6 characters."});
   });
 
   it("throws invalid-argument for non-string password", async () => {
+    const data = {name: "Biz", email: "a@b.com", password: 123456};
     await expect(
-      createBusinessUser.run(makeCreateRequest({data: {name: "Biz", username: "user", password: 123456}}))
+      createBusinessUser.run(makeCreateRequest({data}))
     ).rejects.toMatchObject({code: "invalid-argument"});
   });
 });
@@ -163,23 +164,22 @@ describe("createBusinessUser — success path", () => {
     mockCreateUser.mockResolvedValue({uid: "new-uid"});
   });
 
-  it("creates Auth user with generated email and returns uid", async () => {
+  it("creates Auth user with the provided email and returns uid", async () => {
     const result = await createBusinessUser.run(makeCreateRequest({}));
 
     expect(result).toEqual({uid: "new-uid"});
     expect(mockCreateUser).toHaveBeenCalledWith({
-      email: "testuser@click-bateva.app",
+      email: "test@example.com",
       password: "Pass1234",
     });
   });
 
-  it("lowercases and trims the username for email generation", async () => {
-    await createBusinessUser.run(
-      makeCreateRequest({data: {name: "Biz", username: "  TestUser  ", password: "Pass1234"}})
-    );
+  it("lowercases and trims the email", async () => {
+    const data = {name: "Biz", email: "  Test@Example.COM  ", password: "Pass1234"};
+    await createBusinessUser.run(makeCreateRequest({data}));
 
     expect(mockCreateUser).toHaveBeenCalledWith({
-      email: "testuser@click-bateva.app",
+      email: "test@example.com",
       password: "Pass1234",
     });
   });
@@ -200,19 +200,9 @@ describe("createBusinessUser — success path", () => {
     expect(mockBatchSet).toHaveBeenCalledTimes(2);
     expect(mockBatchCommit).toHaveBeenCalled();
   });
-
-  it("accepts username with dots, hyphens, underscores", async () => {
-    mockCreateUser.mockResolvedValue({uid: "uid-2"});
-
-    await expect(
-      createBusinessUser.run(
-        makeCreateRequest({data: {name: "Biz", username: "user.name-test_1", password: "Pass1234"}})
-      )
-    ).resolves.toEqual({uid: "uid-2"});
-  });
 });
 
-describe("createBusinessUser — duplicate username", () => {
+describe("createBusinessUser — duplicate email", () => {
   it("throws already-exists when Firebase Auth email already exists", async () => {
     mockCreateUser.mockRejectedValue({code: "auth/email-already-exists"});
 
