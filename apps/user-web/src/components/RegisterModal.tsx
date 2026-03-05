@@ -18,11 +18,18 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
   const [type, setType] = useState<RequestType>("business");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!companyName.trim() || !contactName.trim() || !phone.trim()) return;
+    const digits = phone.replace(/[-\s]/g, "");
+    if (!/^0\d{8,9}$/.test(digits)) {
+      setPhoneError("מספר טלפון לא תקין");
+      return;
+    }
+    setPhoneError("");
     setLoading(true);
     setError("");
     try {
@@ -69,7 +76,7 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                       : "bg-white text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  בית עסק
+                  מפרסם
                 </button>
                 <button
                   type="button"
@@ -80,7 +87,7 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                       : "bg-white text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  סוכן נסיעות
+                  מפיק
                 </button>
               </div>
 
@@ -114,6 +121,9 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
                   dir="ltr"
                 />
+                {phoneError && (
+                  <p className="text-xs text-red-600 mt-1">{phoneError}</p>
+                )}
               </div>
 
               {error && <p className="text-sm text-red-600 text-center">{error}</p>}
