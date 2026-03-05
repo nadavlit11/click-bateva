@@ -40,7 +40,8 @@ setUserRole (v2 callable)
 
 createBusinessUser (v2 callable)
   ├─ Validates caller is admin
-  ├─ Creates Firebase Auth user
+  ├─ Accepts email (real email, validated format) + password + business name
+  ├─ Creates Firebase Auth user with the provided email
   ├─ Sets claims: { role: "business_user", businessRef: "/databases/(default)/documents/businesses/${uid}" }
   └─ Batch writes: users/ doc + businesses/ doc (with associatedUserIds: [uid])
 
@@ -87,4 +88,4 @@ deleteTravelAgent (v2 callable)
 - Mutation testing score is 69% (infra/logger lines are expected survivors)
 - **MUST run `npm run build` before deploying new functions** — `firebase deploy` reads compiled JS, not TS. New exports in `index.ts` are silently skipped if JS is stale.
 - `deleteContentManager`/`blockContentManager` validate target user has `content_manager` role before acting
-- All 22 function unit tests must pass before deploy: `cd functions && npm test`
+- All function unit tests (84 total) must pass before deploy: `cd functions && npm test`

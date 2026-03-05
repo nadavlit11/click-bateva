@@ -145,6 +145,75 @@ describe("sendRegistrationRequest — success path", () => {
   });
 });
 
+describe("sendRegistrationRequest — optional email", () => {
+  it("includes email in HTML when provided", async () => {
+    const data = {
+      companyName: "חברה", contactName: "דן",
+      phone: "0501234567", type: "business",
+      email: "test@example.com",
+    };
+    await sendRegistrationRequest.run(makeRequest({data}));
+
+    const html = mockSendMail.mock.calls[0][0].html;
+    expect(html).toContain("test@example.com");
+    expect(html).toContain("אימייל");
+  });
+
+  it("omits email from HTML when not provided", async () => {
+    await sendRegistrationRequest.run(makeRequest({}));
+
+    const html = mockSendMail.mock.calls[0][0].html;
+    expect(html).not.toContain("אימייל");
+  });
+
+  it("omits email from HTML when empty string", async () => {
+    const data = {
+      companyName: "חברה", contactName: "דן",
+      phone: "0501234567", type: "business",
+      email: "   ",
+    };
+    await sendRegistrationRequest.run(makeRequest({data}));
+
+    const html = mockSendMail.mock.calls[0][0].html;
+    expect(html).not.toContain("אימייל");
+  });
+
+  it("throws invalid-argument for email exceeding max length", async () => {
+    const data = {
+      companyName: "חברה", contactName: "דן",
+      phone: "0501234567", type: "business",
+      email: "a".repeat(195) + "@b.com",
+    };
+    await expect(
+      sendRegistrationRequest.run(makeRequest({data}))
+    ).rejects.toMatchObject({code: "invalid-argument"});
+  });
+
+  it("throws invalid-argument for invalid email format", async () => {
+    const data = {
+      companyName: "חברה", contactName: "דן",
+      phone: "0501234567", type: "business",
+      email: "notanemail",
+    };
+    await expect(
+      sendRegistrationRequest.run(makeRequest({data}))
+    ).rejects.toMatchObject({code: "invalid-argument"});
+  });
+
+  it("escapes HTML in email value", async () => {
+    const data = {
+      companyName: "חברה", contactName: "דן",
+      phone: "0501234567", type: "business",
+      email: "test+<b>bold</b>@example.com",
+    };
+    await sendRegistrationRequest.run(makeRequest({data}));
+
+    const html = mockSendMail.mock.calls[0][0].html;
+    expect(html).toContain("&lt;b&gt;bold&lt;/b&gt;");
+    expect(html).not.toContain("<b>bold</b>");
+  });
+});
+
 describe("sendRegistrationRequest — failure path", () => {
   it("throws internal error when sendMail fails", async () => {
     mockSendMail.mockRejectedValueOnce(new Error("SMTP error"));

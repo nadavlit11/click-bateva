@@ -15,6 +15,7 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
   const [companyName, setCompanyName] = useState("");
   const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [type, setType] = useState<RequestType>("business");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -33,7 +34,13 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
     setLoading(true);
     setError("");
     try {
-      await sendRegistrationRequest({ companyName: companyName.trim(), contactName: contactName.trim(), phone: phone.trim(), type });
+      await sendRegistrationRequest({
+        companyName: companyName.trim(),
+        contactName: contactName.trim(),
+        phone: phone.trim(),
+        type,
+        ...(email.trim() && { email: email.trim() }),
+      });
       setSuccess(true);
     } catch {
       setError("שליחת הבקשה נכשלה, נסו שוב מאוחר יותר");
@@ -130,6 +137,19 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                 {phoneError && (
                   <p className="text-xs text-red-600 mt-1">{phoneError}</p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  אימייל <span className="text-gray-400 font-normal">(לא חובה)</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  dir="ltr"
+                />
               </div>
 
               {error && <p className="text-sm text-red-600 text-center">{error}</p>}

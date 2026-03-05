@@ -52,17 +52,41 @@ function getTransporter(): nodemailer.Transporter {
 export const sendRegistrationRequest = onCall(
   {cors: true, secrets: [gmailUser, gmailAppPassword]},
   async (request) => {
-    const {companyName: rawCompany, contactName: rawContact, phone: rawPhone, type} =
-      request.data as {
+    const {
+      companyName: rawCompany, contactName: rawContact,
+      phone: rawPhone, type, email: rawEmail,
+    } = request.data as {
         companyName: unknown;
         contactName: unknown;
         phone: unknown;
         type: unknown;
+        email?: unknown;
       };
 
-    const companyName = validateStringField(rawCompany, MAX_FIELD_LENGTH, "שם חברה נדרש");
-    const contactName = validateStringField(rawContact, MAX_FIELD_LENGTH, "שם איש קשר נדרש");
-    const phone = validateStringField(rawPhone, MAX_FIELD_LENGTH, "מספר טלפון נדרש");
+    const companyName = validateStringField(
+      rawCompany, MAX_FIELD_LENGTH, "שם חברה נדרש"
+    );
+    const contactName = validateStringField(
+      rawContact, MAX_FIELD_LENGTH, "שם איש קשר נדרש"
+    );
+    const phone = validateStringField(
+      rawPhone, MAX_FIELD_LENGTH, "מספר טלפון נדרש"
+    );
+
+    // Email is optional — validate format and length only if provided
+    let emailValue: string | null = null;
+    if (rawEmail && typeof rawEmail === "string" && rawEmail.trim()) {
+      if (rawEmail.trim().length > MAX_FIELD_LENGTH) {
+        throw new HttpsError(
+          "invalid-argument",
+          `אימייל (מקסימום ${MAX_FIELD_LENGTH} תווים)`
+        );
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail.trim())) {
+        throw new HttpsError("invalid-argument", "כתובת אימייל לא תקינה");
+      }
+      emailValue = rawEmail.trim();
+    }
 
     if (type !== "business" && type !== "agent") {
       throw new HttpsError("invalid-argument", "סוג חייב להיות business או agent");
@@ -80,7 +104,9 @@ export const sendRegistrationRequest = onCall(
           <p><strong>סוג:</strong> ${escapeHtml(typeLabel)}</p>
           <p><strong>שם חברה:</strong> ${escapeHtml(companyName)}</p>
           <p><strong>שם איש קשר:</strong> ${escapeHtml(contactName)}</p>
-          <p><strong>טלפון:</strong> ${escapeHtml(phone)}</p>
+          <p><strong>טלפון:</strong> ${escapeHtml(phone)}</p>${emailValue ?
+  `\n          <p><strong>אימייל:</strong> ${escapeHtml(emailValue)}</p>` :
+  ""}
         </div>
       `,
     };

@@ -16,7 +16,7 @@ interface Props {
 
 interface CreateBusinessUserData {
   name: string
-  username: string
+  email: string
   password: string
 }
 
@@ -27,7 +27,7 @@ interface CreateBusinessUserResult {
 function mapError(code: string): string {
   switch (code) {
     case 'auth/email-already-in-use':
-      return 'שם המשתמש כבר בשימוש'
+      return 'כתובת האימייל כבר בשימוש'
     case 'auth/weak-password':
       return PASSWORD_ERROR
     default:
@@ -37,7 +37,7 @@ function mapError(code: string): string {
 
 export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
   const [name, setName] = useState('')
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -47,7 +47,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
   useEffect(() => {
     if (isOpen) {
       setName(business?.name ?? '')
-      setUsername(business?.username ?? '')
+      setEmail(business?.email ?? '')
       setPassword('')
       setError('')
     }
@@ -58,9 +58,8 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
 
     if (!name.trim()) { setError('שם העסק הוא שדה חובה'); return }
     if (!isEdit) {
-      if (!username.trim()) { setError('שם המשתמש הוא שדה חובה'); return }
-      if (username.trim().length < 3) { setError('שם משתמש חייב להכיל לפחות 3 תווים'); return }
-      if (!/^[a-zA-Z0-9_.-]+$/.test(username.trim())) { setError('שם משתמש יכול להכיל אותיות באנגלית, מספרים, נקודה, מקף וקו תחתון'); return }
+      if (!email.trim()) { setError('אימייל הוא שדה חובה'); return }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('כתובת אימייל לא תקינה'); return }
       if (!isPasswordValid(password)) { setError(PASSWORD_ERROR); return }
     }
 
@@ -80,7 +79,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
           functions,
           'createBusinessUser'
         )
-        await createBusinessUser({ name: name.trim(), username: username.trim(), password })
+        await createBusinessUser({ name: name.trim(), email: email.trim(), password })
         alert('העסק נוצר בהצלחה')
         onSaved()
       }
@@ -135,18 +134,18 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">שם משתמש *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">אימייל *</label>
             <input
-              type="text"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 disabled:bg-gray-100 disabled:text-gray-500"
-              placeholder="username"
+              placeholder="email@example.com"
               dir="ltr"
               disabled={isEdit}
             />
             {isEdit && (
-              <p className="text-xs text-gray-400 mt-1">לא ניתן לשנות שם משתמש לאחר יצירה</p>
+              <p className="text-xs text-gray-400 mt-1">לא ניתן לשנות אימייל לאחר יצירה</p>
             )}
           </div>
 
