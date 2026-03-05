@@ -1,15 +1,11 @@
 import type { MapKey } from "../hooks/useFirestoreData";
+import { MAP_LABELS } from "../lib/constants";
 
 interface MapIndicatorProps {
   mapKey: MapKey;
   isAgent: boolean;
   onMapKeyChange?: (key: MapKey) => void;
 }
-
-const MAP_LABELS: Record<MapKey, string> = {
-  groups: "קבוצות",
-  agents: "סוכנים",
-};
 
 export function MapIndicator({ mapKey, isAgent, onMapKeyChange }: MapIndicatorProps) {
   if (!isAgent) {

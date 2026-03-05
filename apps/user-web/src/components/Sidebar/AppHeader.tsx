@@ -1,9 +1,5 @@
 import type { MapKey } from "../../hooks/useFirestoreData";
-
-const MAP_LABELS: Record<MapKey, string> = {
-  groups: "קבוצות",
-  agents: "סוכנים",
-};
+import { MAP_LABELS } from "../../lib/constants";
 
 interface AppHeaderProps {
   mapKey: MapKey;
