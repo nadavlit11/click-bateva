@@ -31,16 +31,16 @@ const TAB_CONFIG: Record<UserTab, { label: string; addLabel: string; addTitle: s
     emptyLabel: 'אין מנהלי תוכן עדיין',
   },
   travel_agent: {
-    label: 'סוכני נסיעות',
-    addLabel: '+ הוסף סוכן נסיעות',
-    addTitle: 'הוסף סוכן נסיעות',
-    emptyLabel: 'אין סוכני נסיעות עדיין',
+    label: 'מפיקים',
+    addLabel: '+ הוסף מפיק',
+    addTitle: 'הוסף מפיק',
+    emptyLabel: 'אין מפיקים עדיין',
   },
   business_user: {
-    label: 'עסקים',
-    addLabel: '+ הוסף עסק',
-    addTitle: 'הוסף עסק',
-    emptyLabel: 'אין עסקים עדיין',
+    label: 'מפרסמים',
+    addLabel: '+ הוסף מפרסם',
+    addTitle: 'הוסף מפרסם',
+    emptyLabel: 'אין מפרסמים עדיין',
   },
 }
 
@@ -104,7 +104,7 @@ export function UsersPage() {
         setBizLoading(false)
       },
       () => {
-        setBizLoadError('שגיאה בטעינת העסקים')
+        setBizLoadError('שגיאה בטעינת המפרסמים')
         setBizLoading(false)
       }
     )
@@ -232,7 +232,7 @@ export function UsersPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">שם העסק</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">שם המפרסם</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">אימייל</th>
                   <th className="px-4 py-3" />
                 </tr>
@@ -368,9 +368,9 @@ export function UsersPage() {
       {bizConfirmDelete && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setBizConfirmDelete(null)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">מחיקת עסק</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">מחיקת מפרסם</h2>
             <p className="text-sm text-gray-600 mb-4">
-              {`למחוק את העסק "${bizConfirmDelete.name}"? פעולה זו אינה הפיכה.`}
+              {`למחוק את המפרסם "${bizConfirmDelete.name}"? פעולה זו אינה הפיכה.`}
             </p>
             <div className="flex gap-3 justify-end">
               <button onClick={() => setBizConfirmDelete(null)} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">

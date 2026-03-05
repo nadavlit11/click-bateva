@@ -31,7 +31,7 @@ function mapError(code: string): string {
     case 'auth/weak-password':
       return PASSWORD_ERROR
     default:
-      return 'שגיאה ביצירת העסק. נסה שנית.'
+      return 'שגיאה ביצירת המפרסם. נסה שנית.'
   }
 }
 
@@ -56,7 +56,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    if (!name.trim()) { setError('שם העסק הוא שדה חובה'); return }
+    if (!name.trim()) { setError('שם המפרסם הוא שדה חובה'); return }
     if (!isEdit) {
       if (!email.trim()) { setError('אימייל הוא שדה חובה'); return }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('כתובת אימייל לא תקינה'); return }
@@ -72,7 +72,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
           name: name.trim(),
           updatedAt: serverTimestamp(),
         })
-        alert('העסק עודכן בהצלחה')
+        alert('המפרסם עודכן בהצלחה')
         onSaved()
       } else {
         const createBusinessUser = httpsCallable<CreateBusinessUserData, CreateBusinessUserResult>(
@@ -80,12 +80,12 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
           'createBusinessUser'
         )
         await createBusinessUser({ name: name.trim(), email: email.trim(), password })
-        alert('העסק נוצר בהצלחה')
+        alert('המפרסם נוצר בהצלחה')
         onSaved()
       }
     } catch (err: unknown) {
       if (isEdit) {
-        setError('שגיאה בעדכון העסק. נסה שנית.')
+        setError('שגיאה בעדכון המפרסם. נסה שנית.')
         reportError(err, { source: 'BusinessModal.edit' })
       } else {
         const firebaseError = err as { code?: string; message?: string }
@@ -114,7 +114,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
 
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-gray-900">{isEdit ? 'עריכת עסק' : 'הוספת עסק'}</h2>
+          <h2 className="text-base font-semibold text-gray-900">{isEdit ? 'עריכת מפרסם' : 'הוספת מפרסם'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">
             ✕
           </button>
@@ -122,13 +122,13 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
 
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">שם העסק *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">שם המפרסם *</label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-              placeholder="שם העסק"
+              placeholder="שם המפרסם"
               autoFocus
             />
           </div>

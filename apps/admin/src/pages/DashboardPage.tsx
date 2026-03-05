@@ -8,6 +8,8 @@ const MIN_PIN = 12
 const MAX_PIN = 60
 const DEFAULT_PIN = 24
 
+interface ContactInfo { phone: string; email: string }
+
 interface CountState {
   pois: number
   categories: number
@@ -30,9 +32,27 @@ export function DashboardPage() {
   const [pinSize, setPinSize] = useState(DEFAULT_PIN)
   const [pinSaving, setPinSaving] = useState(false)
   const [pinSaved, setPinSaved] = useState(false)
+  const [contact, setContact] = useState<ContactInfo>({ phone: '', email: '' })
+  const [contactSaving, setContactSaving] = useState(false)
+  const [contactSaved, setContactSaved] = useState(false)
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const contactTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function clamp(v: number) { return Math.max(MIN_PIN, Math.min(MAX_PIN, v)) }
+
+  async function handleContactSave() {
+    setContactSaving(true)
+    try {
+      await setDoc(doc(db, 'settings', 'contact'), contact)
+      setContactSaved(true)
+      if (contactTimerRef.current) clearTimeout(contactTimerRef.current)
+      contactTimerRef.current = setTimeout(() => setContactSaved(false), 2000)
+    } catch (err) {
+      reportError(err, { source: 'DashboardPage.saveContact' })
+    } finally {
+      setContactSaving(false)
+    }
+  }
 
   async function handlePinSave() {
     setPinSaving(true)
@@ -52,7 +72,18 @@ export function DashboardPage() {
     getDoc(doc(db, 'settings', 'map'))
       .then(snap => { if (snap.exists()) setPinSize(snap.data().pinSize ?? DEFAULT_PIN) })
       .catch(err => reportError(err, { source: 'DashboardPage.loadPinSize' }))
-    return () => { if (savedTimerRef.current) clearTimeout(savedTimerRef.current) }
+    getDoc(doc(db, 'settings', 'contact'))
+      .then(snap => {
+        if (snap.exists()) {
+          const d = snap.data()
+          setContact({ phone: d.phone ?? '', email: d.email ?? '' })
+        }
+      })
+      .catch(err => reportError(err, { source: 'DashboardPage.loadContact' }))
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+      if (contactTimerRef.current) clearTimeout(contactTimerRef.current)
+    }
   }, [])
 
   useEffect(() => {
@@ -100,7 +131,7 @@ export function DashboardPage() {
             { label: 'נקודות עניין', value: counts.pois,       href: '/pois' },
             { label: 'קטגוריות',    value: counts.categories,  href: '/categories' },
             { label: 'תת-קטגוריות', value: counts.subcategories, href: '/subcategories' },
-            { label: 'עסקים',       value: counts.businesses,  href: '/businesses' },
+            { label: 'מפרסמים',     value: counts.businesses,  href: '/businesses' },
             { label: 'קליקים',      value: counts.clicks,      href: '/analytics' },
           ].map(s => (
             <Link
@@ -123,7 +154,7 @@ export function DashboardPage() {
             { label: '+ נקודת עניין חדשה', href: '/pois' },
             { label: '+ קטגוריה חדשה',    href: '/categories' },
             { label: '+ תת-קטגוריה חדשה', href: '/subcategories' },
-            { label: '+ עסק חדש',         href: '/businesses' },
+            { label: '+ מפרסם חדש',       href: '/businesses' },
           ].map(a => (
             <Link
               key={a.href}
@@ -166,6 +197,42 @@ export function DashboardPage() {
             className="ms-2 px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
           >
             {pinSaving ? 'שומר...' : pinSaved ? '✓ נשמר' : 'שמור'}
+          </button>
+        </div>
+      </div>
+
+      {/* Contact info */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <h2 className="text-sm font-semibold text-gray-700 mb-3">פרטי יצירת קשר (מוצגים למשתמשים)</h2>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-gray-500 w-16 shrink-0">טלפון</label>
+            <input
+              type="tel"
+              value={contact.phone}
+              onChange={e => setContact(c => ({ ...c, phone: e.target.value }))}
+              placeholder="05X-XXXXXXX"
+              className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+              dir="ltr"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-gray-500 w-16 shrink-0">אימייל</label>
+            <input
+              type="email"
+              value={contact.email}
+              onChange={e => setContact(c => ({ ...c, email: e.target.value }))}
+              placeholder="email@example.com"
+              className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+              dir="ltr"
+            />
+          </div>
+          <button
+            onClick={handleContactSave}
+            disabled={contactSaving}
+            className="self-start px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            {contactSaving ? 'שומר...' : contactSaved ? '✓ נשמר' : 'שמור'}
           </button>
         </div>
       </div>

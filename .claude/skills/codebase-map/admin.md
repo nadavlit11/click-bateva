@@ -10,8 +10,8 @@
 - `apps/admin/src/pages/CategoriesPage.tsx` + `CategoryModal.tsx` — category CRUD with icon picker + color picker
 - `apps/admin/src/pages/SubcategoriesPage.tsx` + `SubcategoryModal.tsx` — subcategory CRUD with group datalist autocomplete
 - `apps/admin/src/pages/IconsPage.tsx` — upload/list/delete icons (Cloud Storage `icons/` prefix)
-- `apps/admin/src/pages/UsersPage.tsx` — tabbed user management: content_manager, travel_agent, and business_user tabs; role tabs have list/add/delete/block via callables; business tab queries `businesses` collection with add/edit via `BusinessModal` and delete via `deleteBusinessUser` callable
-- `apps/admin/src/components/BusinessModal.tsx` — business create (via `createBusinessUser` callable) + edit (via direct Firestore update) modes; password strength indicator
+- `apps/admin/src/pages/UsersPage.tsx` — tabbed user management: מנהלי תוכן (content_manager), מפיקים (travel_agent), and מפרסמים (business_user) tabs; role tabs have list/add/delete/block via callables; business tab queries `businesses` collection with add/edit via `BusinessModal` and delete via `deleteBusinessUser` callable
+- `apps/admin/src/components/BusinessModal.tsx` — מפרסם (business) create (via `createBusinessUser` callable) + edit (via direct Firestore update) modes; password strength indicator
 - `apps/admin/src/pages/AnalyticsPage.tsx` — click totals per POI + per category
 - `apps/admin/src/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
 - `apps/admin/src/components/Layout/AppLayout.tsx` + `Sidebar.tsx` — flex layout with nav links (admin-only gating via `useUserRole`)
@@ -31,7 +31,7 @@ App.tsx (BrowserRouter)
           ├─ CategoriesPage → CategoryModal (+ order field)
           ├─ SubcategoriesPage → SubcategoryModal (+ icon picker)
           ├─ IconsPage (direct upload/delete)
-          ├─ UsersPage (admin-only; tabs: content_manager + travel_agent + business management)
+          ├─ UsersPage (admin-only; tabs: מנהלי תוכן + מפיקים + מפרסמים)
           └─ AnalyticsPage (reads clicks collection)
 
 Sidebar: nav links filtered by useUserRole() — /users is adminOnly ("משתמשים")
