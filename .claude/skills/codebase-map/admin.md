@@ -25,7 +25,7 @@
 App.tsx (BrowserRouter)
   └─ AuthGuard (gates on admin | content_manager role via custom claims)
       └─ AppLayout (Sidebar nav + Outlet)
-          ├─ DashboardPage (stats overview)
+          ├─ DashboardPage (stats overview + settings: pin size, contact info, terms upload)
           ├─ PoisPage → navigates to /pois/:id
           ├─ PoiEditPage (full-page POI editor; per-map price/active; delete hidden for CM role)
           ├─ CategoriesPage → CategoryModal (+ order field)

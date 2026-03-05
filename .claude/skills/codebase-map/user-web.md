@@ -15,6 +15,10 @@
 - `apps/user-web/src/hooks/useTrip.ts` — `useTrip(uid)` hook: dual storage — Firestore for logged-in users, localStorage for anonymous. Auto-migrates localStorage trip to Firestore on login. Returns `{ trip, addPoi, removePoi, movePoi, addDay, setClientName, clearTrip, shareTrip, newTrip }`
 - `apps/user-web/src/hooks/useAuth.ts` — `useAuth()` hook: listens to `onAuthStateChanged`, extracts role from custom claims, returns `{ user, role, loading }`
 - `apps/user-web/src/components/LoginModal.tsx` — modal dialog for email/password login; used by Sidebar and BottomSheet
+- `apps/user-web/src/components/ChangePasswordModal.tsx` — modal for logged-in users to change password; reauthenticates with current password then calls `updatePassword`; includes password strength meter; auto-closes after 2s on success
+- `apps/user-web/src/lib/passwordStrength.ts` — password validation (`isPasswordValid`: 8+ chars, letter, number) + strength meter utilities (weak/medium/strong labels, colors, widths); copy of admin's version
+- `apps/user-web/src/components/ContactUsModal.tsx` — "Contact Us" modal with WhatsApp, Call (desktop: show number, mobile: tel:), Email actions; contact info fetched from `settings/contact`
+- `apps/user-web/src/hooks/useContactInfo.ts` — `useContactInfo()` hook: one-time fetch of `settings/contact` doc, returns `{ phone, email }` or null
 - `apps/user-web/src/lib/firebase.ts` — initializeApp, getFirestore, getAuth; emulator gated on `VITE_USE_EMULATOR`; exports `auth` for login/logout
 - `apps/user-web/src/lib/filterPois.ts` — pure filtering logic (category, subcategory AND/OR); **search removed** — no longer filters by text; unit tested + mutation tested
 - `apps/user-web/src/lib/openingStatus.ts` — opening hours display logic; unit tested + mutation tested
@@ -62,7 +66,7 @@ Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes t
 - `useMap()` hook must be called inside a child of `<Map>`, not a sibling
 - Emulator connection gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`)
 - POI query filters `where("maps.<mapKey>.active", "==", true)` — inactive POIs for the current map never reach frontend
-- Auth: `useAuth()` hook provides `{ user, role, loading }`. `firebase.ts` exports `auth` (Firebase Auth instance). LoginModal handles general email/password sign-in (all roles). Map key derived from role: `travel_agent` → `'agents'`, all others → `'groups'`. Click analytics suppressed for admin/content_manager (all clicks) and business_user (own POI only) — enforced both client-side (`App.tsx`) and server-side (`firestore.rules`).
+- Auth: `useAuth()` hook provides `{ user, role, loading }`. `firebase.ts` exports `auth` (Firebase Auth instance). LoginModal handles general email/password sign-in (all roles). ChangePasswordModal handles password change for logged-in users (reauthenticate + updatePassword). Map key derived from role: `travel_agent` → `'agents'`, all others → `'groups'`. Click analytics suppressed for admin/content_manager (all clicks) and business_user (own POI only) — enforced both client-side (`App.tsx`) and server-side (`firestore.rules`).
 - Mobile uses `100dvh` (not `100vh`) for full-screen layouts
 - RTL: first flex child renders on RIGHT; collapsed indicators point LEFT (◂)
 

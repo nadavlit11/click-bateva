@@ -31,6 +31,14 @@ service firebase.storage {
       allow write: if isAdminOrContentManager();
     }
 
+    // ─── terms/ ───────────────────────────────────────────────────────────
+    // Only admin can upload T&C PDFs; anyone can read/download
+
+    match /terms/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ─── poi-media/ ─────────────────────────────────────────────────────────
     // Admin and content managers can upload/delete any POI media
     // Business users can upload images for their assigned POIs

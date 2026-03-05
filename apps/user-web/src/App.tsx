@@ -10,8 +10,11 @@ import { SubcategoryModal } from "./components/SubcategoryModal";
 import { FloatingSearch } from "./components/FloatingSearch";
 import { LoginModal } from "./components/LoginModal";
 import { RegisterModal } from "./components/RegisterModal";
+import { ChangePasswordModal } from "./components/ChangePasswordModal";
 import { MapIndicator } from "./components/MapIndicator";
+import { ContactUsModal } from "./components/ContactUsModal";
 import { usePois, useCategories, useSubcategories } from "./hooks/useFirestoreData";
+import { useContactInfo } from "./hooks/useContactInfo";
 import { useAuth } from "./hooks/useAuth";
 import { useMapSettings } from "./hooks/useMapSettings";
 import { useTrip } from "./hooks/useTrip";
@@ -31,9 +34,21 @@ export default function App() {
   const { pois, loading: poisLoading } = usePois(mapKey);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const contactInfo = useContactInfo();
+  const [termsUrl, setTermsUrl] = useState("");
   const categories = useCategories();
   const subcategories = useSubcategories();
   const pinSize = useMapSettings();
+
+  useEffect(() => {
+    getDoc(doc(db, "settings", "terms"))
+      .then(snap => {
+        if (snap.exists()) setTermsUrl(snap.data().userTermsUrl ?? "");
+      })
+      .catch(err => reportError(err, { source: "App.loadTerms" }));
+  }, []);
 
   // ── Trip share (client read-only view) ───────────────────────────────────
   const tripShareId = useMemo(() => {
@@ -159,6 +174,8 @@ export default function App() {
     setFocusLocation(null);
     setLoginModalOpen(false);
     setRegisterModalOpen(false);
+    setChangePasswordModalOpen(false);
+    setContactModalOpen(false);
     setSheetExpanded(false);
   }, [user?.uid, role]);
 
@@ -373,6 +390,9 @@ export default function App() {
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
+          onChangePasswordClick={() => setChangePasswordModalOpen(true)}
+          onContactClick={contactInfo ? () => setContactModalOpen(true) : undefined}
+          termsUrl={termsUrl || undefined}
           trip={trip}
           allPois={pois}
           orderedTripPoiIds={orderedTripPoiIds}
@@ -446,6 +466,9 @@ export default function App() {
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
+          onChangePasswordClick={() => setChangePasswordModalOpen(true)}
+          onContactClick={contactInfo ? () => setContactModalOpen(true) : undefined}
+          termsUrl={termsUrl || undefined}
           trip={trip}
           allPois={pois}
           orderedTripPoiIds={orderedTripPoiIds}
@@ -507,6 +530,14 @@ export default function App() {
 
       {registerModalOpen && (
         <RegisterModal onClose={() => setRegisterModalOpen(false)} />
+      )}
+
+      {changePasswordModalOpen && (
+        <ChangePasswordModal onClose={() => setChangePasswordModalOpen(false)} />
+      )}
+
+      {contactModalOpen && contactInfo && (
+        <ContactUsModal contact={contactInfo} onClose={() => setContactModalOpen(false)} />
       )}
     </div>
   );

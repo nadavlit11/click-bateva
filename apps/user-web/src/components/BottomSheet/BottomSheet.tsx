@@ -23,6 +23,9 @@ interface BottomSheetProps {
   onLoginClick: () => void;
   onRegisterClick: () => void;
   onLogout: () => void;
+  onChangePasswordClick: () => void;
+  onContactClick?: () => void;
+  termsUrl?: string;
   className?: string;
   // trip
   trip: TripDoc | null;
@@ -55,6 +58,9 @@ export function BottomSheet({
   onLoginClick,
   onRegisterClick,
   onLogout,
+  onChangePasswordClick,
+  onContactClick,
+  termsUrl,
   className,
   trip,
   allPois,
@@ -253,34 +259,63 @@ export function BottomSheet({
               )}
             </div>
 
-            {/* Result count + auth button */}
+            {/* Result count + contact + auth button */}
             <div className="flex items-center justify-between px-4 pt-1">
               <span className="text-sm text-gray-400">
                 {filteredCount} מקומות
               </span>
-              {isLoggedIn ? (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onLogout(); }}
-                  className="text-xs text-gray-400 hover:text-gray-600"
-                >
-                  התנתקות
-                </button>
-              ) : (
-                <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                {onContactClick && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); onLoginClick(); }}
+                    onClick={(e) => { e.stopPropagation(); onContactClick(); }}
                     className="text-xs text-green-600 hover:text-green-800 font-medium"
                   >
-                    כניסה
+                    צור קשר
                   </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onRegisterClick(); }}
-                    className="text-xs text-gray-500 hover:text-gray-700"
+                )}
+                {termsUrl && (
+                  <a
+                    href={termsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs text-gray-400 hover:text-gray-600"
                   >
-                    הרשמה
-                  </button>
-                </div>
-              )}
+                    תנאי שימוש
+                  </a>
+                )}
+                {isLoggedIn ? (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onChangePasswordClick(); }}
+                      className="text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      שינוי סיסמה
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onLogout(); }}
+                      className="text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      התנתקות
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onLoginClick(); }}
+                      className="text-xs text-green-600 hover:text-green-800 font-medium"
+                    >
+                      כניסה
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onRegisterClick(); }}
+                      className="text-xs text-gray-500 hover:text-gray-700"
+                    >
+                      הרשמה
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}

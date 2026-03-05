@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { collection, getDocs, query, orderBy, limit, doc, getDoc, setDoc } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { Link } from 'react-router-dom'
-import { db } from '../lib/firebase.ts'
+import { db, storage } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
 
 const MIN_PIN = 12
@@ -37,8 +38,42 @@ export function DashboardPage() {
   const [contactSaved, setContactSaved] = useState(false)
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const contactTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [userTermsUrl, setUserTermsUrl] = useState('')
+  const [bizTermsUrl, setBizTermsUrl] = useState('')
+  const [termsUploading, setTermsUploading] = useState<'user' | 'biz' | null>(null)
+  const userTermsRef = useRef<HTMLInputElement>(null)
+  const bizTermsRef = useRef<HTMLInputElement>(null)
 
   function clamp(v: number) { return Math.max(MIN_PIN, Math.min(MAX_PIN, v)) }
+
+  async function handleTermsUpload(
+    type: 'user' | 'biz',
+    file: File,
+  ) {
+    setTermsUploading(type)
+    try {
+      const path = type === 'user'
+        ? 'terms/user-terms.pdf'
+        : 'terms/business-terms.pdf'
+      const storageRef = ref(storage, path)
+      await uploadBytes(storageRef, file)
+      const url = await getDownloadURL(storageRef)
+      const field = type === 'user'
+        ? 'userTermsUrl'
+        : 'businessTermsUrl'
+      await setDoc(
+        doc(db, 'settings', 'terms'),
+        { [field]: url },
+        { merge: true },
+      )
+      if (type === 'user') setUserTermsUrl(url)
+      else setBizTermsUrl(url)
+    } catch (err) {
+      reportError(err, { source: 'DashboardPage.uploadTerms' })
+    } finally {
+      setTermsUploading(null)
+    }
+  }
 
   async function handleContactSave() {
     setContactSaving(true)
@@ -80,6 +115,15 @@ export function DashboardPage() {
         }
       })
       .catch(err => reportError(err, { source: 'DashboardPage.loadContact' }))
+    getDoc(doc(db, 'settings', 'terms'))
+      .then(snap => {
+        if (snap.exists()) {
+          const d = snap.data()
+          setUserTermsUrl(d.userTermsUrl ?? '')
+          setBizTermsUrl(d.businessTermsUrl ?? '')
+        }
+      })
+      .catch(err => reportError(err, { source: 'DashboardPage.loadTerms' }))
     return () => {
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
       if (contactTimerRef.current) clearTimeout(contactTimerRef.current)
@@ -234,6 +278,87 @@ export function DashboardPage() {
           >
             {contactSaving ? 'שומר...' : contactSaved ? '✓ נשמר' : 'שמור'}
           </button>
+        </div>
+      </div>
+
+      {/* Terms & Conditions */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <h2 className="text-sm font-semibold text-gray-700 mb-3">
+          תנאי שימוש (PDF)
+        </h2>
+        <div className="flex flex-col gap-4">
+          {/* User T&C */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500 w-24 shrink-0">
+              משתמשים
+            </span>
+            {userTermsUrl ? (
+              <a
+                href={userTermsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-green-600 hover:underline"
+              >
+                צפייה בקובץ
+              </a>
+            ) : (
+              <span className="text-sm text-gray-400">לא הועלה</span>
+            )}
+            <input
+              ref={userTermsRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={e => {
+                const f = e.target.files?.[0]
+                if (f) handleTermsUpload('user', f)
+                e.target.value = ''
+              }}
+            />
+            <button
+              onClick={() => userTermsRef.current?.click()}
+              disabled={termsUploading === 'user'}
+              className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              {termsUploading === 'user' ? 'מעלה...' : 'העלאת קובץ'}
+            </button>
+          </div>
+          {/* Business T&C */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500 w-24 shrink-0">
+              עסקים
+            </span>
+            {bizTermsUrl ? (
+              <a
+                href={bizTermsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-green-600 hover:underline"
+              >
+                צפייה בקובץ
+              </a>
+            ) : (
+              <span className="text-sm text-gray-400">לא הועלה</span>
+            )}
+            <input
+              ref={bizTermsRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={e => {
+                const f = e.target.files?.[0]
+                if (f) handleTermsUpload('biz', f)
+                e.target.value = ''
+              }}
+            />
+            <button
+              onClick={() => bizTermsRef.current?.click()}
+              disabled={termsUploading === 'biz'}
+              className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              {termsUploading === 'biz' ? 'מעלה...' : 'העלאת קובץ'}
+            </button>
+          </div>
         </div>
       </div>
 
