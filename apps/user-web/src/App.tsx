@@ -343,6 +343,9 @@ export default function App() {
           onSubcategoryFilter={setSubcategoryModalCategoryId}
           onClearAll={handleClearAll}
           onClose={() => setSidebarOpen(false)}
+          mapKey={mapKey}
+          isAgent={isAgent}
+          onMapKeyChange={isAgent ? handleMapKeyChange : undefined}
           isLoggedIn={!!user}
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
