@@ -25,6 +25,11 @@ interface SidebarProps {
   onLoginClick: () => void;
   onRegisterClick: () => void;
   onLogout: () => void;
+  onChangePasswordClick: () => void;
+  // contact
+  onContactClick?: () => void;
+  // terms
+  termsUrl?: string;
   // trip
   trip: TripDoc | null;
   allPois: Poi[];
@@ -60,6 +65,9 @@ export function Sidebar({
   onLoginClick,
   onRegisterClick,
   onLogout,
+  onChangePasswordClick,
+  onContactClick,
+  termsUrl,
   trip,
   allPois,
   orderedTripPoiIds,
@@ -154,14 +162,42 @@ export function Sidebar({
           onLoginClick={onLoginClick}
         />
       )}
-      <div className="px-4 py-3 border-t border-gray-100">
+      <div className="px-4 py-3 border-t border-gray-100 space-y-2">
+        <div className="flex gap-2">
+          {onContactClick && (
+            <button
+              onClick={onContactClick}
+              className="flex-1 text-sm text-green-600 hover:text-green-800 font-medium py-1.5 rounded-lg hover:bg-green-50 transition-colors"
+            >
+              צור קשר
+            </button>
+          )}
+          {termsUrl && (
+            <a
+              href={termsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 text-sm text-gray-500 hover:text-gray-700 py-1.5 rounded-lg hover:bg-gray-50 transition-colors text-center"
+            >
+              תנאי שימוש
+            </a>
+          )}
+        </div>
         {isLoggedIn ? (
-          <button
-            onClick={onLogout}
-            className="w-full text-sm text-gray-500 hover:text-gray-700 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            התנתקות
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onChangePasswordClick}
+              className="flex-1 text-sm text-gray-500 hover:text-gray-700 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              שינוי סיסמה
+            </button>
+            <button
+              onClick={onLogout}
+              className="flex-1 text-sm text-gray-500 hover:text-gray-700 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              התנתקות
+            </button>
+          </div>
         ) : (
           <div className="flex gap-2">
             <button
