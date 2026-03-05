@@ -117,14 +117,33 @@ export default function App() {
     return dayPois;
   }, [activeTrip, clampedActiveDay]);
 
-  // ── Filter state ─────────────────────────────────────────────────────────
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
-  const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
+  // ── Filter state (persisted in localStorage) ────────────────────────────
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("click-bateva:selectedCategories");
+      return saved ? new Set(JSON.parse(saved) as string[]) : new Set();
+    } catch { return new Set(); }
+  });
+  const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("click-bateva:selectedSubcategories");
+      return saved ? new Set(JSON.parse(saved) as string[]) : new Set();
+    } catch { return new Set(); }
+  });
+  const [hasVisited, setHasVisited] = useState(
+    () => localStorage.getItem("click-bateva:hasVisited") === "1"
+  );
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [focusLocation, setFocusLocation] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [subcategoryModalCategoryId, setSubcategoryModalCategoryId] = useState<string | null>(null);
+
+  // Persist filter selections to localStorage
+  useEffect(() => {
+    localStorage.setItem("click-bateva:selectedCategories", JSON.stringify([...selectedCategories]));
+    localStorage.setItem("click-bateva:selectedSubcategories", JSON.stringify([...selectedSubcategories]));
+  }, [selectedCategories, selectedSubcategories]);
 
   // Reset UI state on login/logout (skip initial mount)
   const prevUid = useRef(user?.uid);
@@ -167,6 +186,10 @@ export default function App() {
 
   function handleCategoryToggle(id: string) {
     const isCurrentlySelected = selectedCategories.has(id);
+    if (!isCurrentlySelected && !hasVisited) {
+      localStorage.setItem("click-bateva:hasVisited", "1");
+      setHasVisited(true);
+    }
     setSelectedCategories(prev => {
       const next = new Set(prev);
       if (next.has(id)) { next.delete(id); } else { next.add(id); }
@@ -442,7 +465,7 @@ export default function App() {
           isAgent={isAgent}
           onMapKeyChange={isAgent ? handleMapKeyChange : undefined}
         />
-        {!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && <EmptyMapOverlay />}
+        {!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && !hasVisited && <EmptyMapOverlay />}
         {poisLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
             <div className="bg-white/80 rounded-xl px-5 py-3 shadow text-gray-500 text-sm font-medium">
