@@ -10,6 +10,7 @@ import { SubcategoryModal } from "./components/SubcategoryModal";
 import { FloatingSearch } from "./components/FloatingSearch";
 import { LoginModal } from "./components/LoginModal";
 import { RegisterModal } from "./components/RegisterModal";
+import { MapIndicator } from "./components/MapIndicator";
 import { usePois, useCategories, useSubcategories } from "./hooks/useFirestoreData";
 import { useAuth } from "./hooks/useAuth";
 import { useMapSettings } from "./hooks/useMapSettings";
@@ -25,7 +26,8 @@ const CLICK_DEBOUNCE_MS = 3000;
 
 export default function App() {
   const { user, role, login, logout } = useAuth();
-  const mapKey: MapKey = role === "travel_agent" ? "agents" : "groups";
+  const isAgent = role === "travel_agent";
+  const [mapKey, setMapKey] = useState<MapKey>(isAgent ? "agents" : "groups");
   const { pois, loading: poisLoading } = usePois(mapKey);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
@@ -115,14 +117,33 @@ export default function App() {
     return dayPois;
   }, [activeTrip, clampedActiveDay]);
 
-  // ── Filter state ─────────────────────────────────────────────────────────
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
-  const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
+  // ── Filter state (persisted in localStorage) ────────────────────────────
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("click-bateva:selectedCategories");
+      return saved ? new Set(JSON.parse(saved) as string[]) : new Set();
+    } catch { return new Set(); }
+  });
+  const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("click-bateva:selectedSubcategories");
+      return saved ? new Set(JSON.parse(saved) as string[]) : new Set();
+    } catch { return new Set(); }
+  });
+  const [hasVisited, setHasVisited] = useState(
+    () => localStorage.getItem("click-bateva:hasVisited") === "1"
+  );
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [focusLocation, setFocusLocation] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [subcategoryModalCategoryId, setSubcategoryModalCategoryId] = useState<string | null>(null);
+
+  // Persist filter selections to localStorage
+  useEffect(() => {
+    localStorage.setItem("click-bateva:selectedCategories", JSON.stringify([...selectedCategories]));
+    localStorage.setItem("click-bateva:selectedSubcategories", JSON.stringify([...selectedSubcategories]));
+  }, [selectedCategories, selectedSubcategories]);
 
   // Reset UI state on login/logout (skip initial mount)
   const prevUid = useRef(user?.uid);
@@ -130,6 +151,7 @@ export default function App() {
     if (prevUid.current === user?.uid) return;
     prevUid.current = user?.uid;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on auth change (no cascading render)
+    setMapKey(role === "travel_agent" ? "agents" : "groups");
     setSelectedCategories(new Set());
     setSelectedSubcategories(new Set());
     setSelectedPoi(null);
@@ -138,7 +160,7 @@ export default function App() {
     setLoginModalOpen(false);
     setRegisterModalOpen(false);
     setSheetExpanded(false);
-  }, [user?.uid]);
+  }, [user?.uid, role]);
 
   const filteredPois = useMemo(
     () => filterPois(pois, {
@@ -164,6 +186,10 @@ export default function App() {
 
   function handleCategoryToggle(id: string) {
     const isCurrentlySelected = selectedCategories.has(id);
+    if (!isCurrentlySelected && !hasVisited) {
+      localStorage.setItem("click-bateva:hasVisited", "1");
+      setHasVisited(true);
+    }
     setSelectedCategories(prev => {
       const next = new Set(prev);
       if (next.has(id)) { next.delete(id); } else { next.add(id); }
@@ -197,6 +223,13 @@ export default function App() {
   function handleClearAll() {
     setSelectedCategories(new Set());
     setSelectedSubcategories(new Set());
+  }
+
+  function handleMapKeyChange(key: MapKey) {
+    setMapKey(key);
+    setSelectedCategories(new Set());
+    setSelectedSubcategories(new Set());
+    setSelectedPoi(null);
   }
 
   function handleMapClick() {
@@ -333,6 +366,9 @@ export default function App() {
           onSubcategoryFilter={setSubcategoryModalCategoryId}
           onClearAll={handleClearAll}
           onClose={() => setSidebarOpen(false)}
+          mapKey={mapKey}
+          isAgent={isAgent}
+          onMapKeyChange={isAgent ? handleMapKeyChange : undefined}
           isLoggedIn={!!user}
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
@@ -382,7 +418,7 @@ export default function App() {
         )}
 
         {/* Floating search — on mobile stretches full width; on desktop fixed-width on physical left (end in RTL) */}
-        <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`} onFocusCapture={() => setSelectedPoi(null)}>
+        <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`} onFocusCapture={() => setSelectedPoi(null)} onInputCapture={() => { if (!hasVisited) { localStorage.setItem("click-bateva:hasVisited", "1"); setHasVisited(true); } }}>
           <FloatingSearch
             key={user?.uid ?? "anon"}
             pois={pois}
@@ -424,7 +460,12 @@ export default function App() {
           onNewTrip={handleNewTrip}
           onPoiSelect={handlePoiSelectFromTrip}
         />
-        {!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && <EmptyMapOverlay />}
+        <MapIndicator
+          mapKey={mapKey}
+          isAgent={isAgent}
+          onMapKeyChange={isAgent ? handleMapKeyChange : undefined}
+        />
+        {!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && !hasVisited && <EmptyMapOverlay />}
         {poisLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
             <div className="bg-white/80 rounded-xl px-5 py-3 shadow text-gray-500 text-sm font-medium">

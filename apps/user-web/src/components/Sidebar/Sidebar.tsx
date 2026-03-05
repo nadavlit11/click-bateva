@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Category, Subcategory, Poi, TripDoc } from "../../types";
+import type { MapKey } from "../../hooks/useFirestoreData";
 import { AppHeader } from "./AppHeader";
 import { CategoryGrid } from "./CategoryGrid";
 import { SidebarFooter } from "./SidebarFooter";
@@ -15,6 +16,10 @@ interface SidebarProps {
   onClearAll: () => void;
   onClose: () => void;
   className?: string;
+  // map
+  mapKey: MapKey;
+  isAgent: boolean;
+  onMapKeyChange?: (key: MapKey) => void;
   // auth
   isLoggedIn: boolean;
   onLoginClick: () => void;
@@ -48,6 +53,9 @@ export function Sidebar({
   onClearAll,
   onClose,
   className,
+  mapKey,
+  isAgent,
+  onMapKeyChange,
   isLoggedIn,
   onLoginClick,
   onRegisterClick,
@@ -76,7 +84,7 @@ export function Sidebar({
       style={{ boxShadow: "4px 0 20px rgba(0,0,0,0.08)" }}
     >
       <div className="relative">
-        <AppHeader />
+        <AppHeader mapKey={mapKey} isAgent={isAgent} onMapKeyChange={onMapKeyChange} />
         <button
           onClick={onClose}
           className="absolute top-4 end-4 w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
