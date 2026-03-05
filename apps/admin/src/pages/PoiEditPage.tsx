@@ -13,7 +13,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
-import type { Poi, Category, Subcategory, DayHours, Icon } from '../types/index.ts'
+import type { Poi, Category, Subcategory, DayHours, Icon, Business } from '../types/index.ts'
 import { IconPicker } from '../components/IconPicker.tsx'
 
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
@@ -37,6 +37,7 @@ interface FormState {
   categoryId: string
   selectedSubcategoryIds: string[]
   iconId: string
+  businessId: string
   active: boolean
   openingHours: Record<string, DayHours | null> | 'by_appointment'
   agentsPrice: string
@@ -61,6 +62,7 @@ const INITIAL_FORM: FormState = {
   categoryId: '',
   selectedSubcategoryIds: [],
   iconId: '',
+  businessId: '',
   active: true,
   openingHours: { ...EMPTY_HOURS },
   agentsPrice: '',
@@ -96,6 +98,8 @@ export function PoiEditPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [icons, setIcons] = useState<Icon[]>([])
+  const [businesses, setBusinesses] = useState<Business[]>([])
+  const [businessSearch, setBusinessSearch] = useState('')
 
   // Fetch categories, subcategories, and icons once on mount
   useEffect(() => {
@@ -109,6 +113,10 @@ export function PoiEditPage() {
 
     getDocs(collection(db, 'icons')).then(snap => {
       setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
+    }).catch(err => reportError(err, { source: 'PoiEditPage.fetch' }))
+
+    getDocs(collection(db, 'businesses')).then(snap => {
+      setBusinesses(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Business))
     }).catch(err => reportError(err, { source: 'PoiEditPage.fetch' }))
   }, [])
 
@@ -136,6 +144,7 @@ export function PoiEditPage() {
         categoryId: poi.categoryId,
         selectedSubcategoryIds: [...(poi.subcategoryIds ?? [])],
         iconId: poi.iconId ?? '',
+        businessId: poi.businessId ?? '',
         active: poi.active,
         openingHours: poi.openingHours === 'by_appointment'
           ? 'by_appointment'
@@ -267,6 +276,7 @@ export function PoiEditPage() {
         subcategoryIds: form.selectedSubcategoryIds,
         iconId: resolvedIconId,
         iconUrl: resolvedIconUrl,
+        businessId: form.businessId || null,
         active: form.active,
         openingHours: form.openingHours === 'by_appointment'
           ? 'by_appointment'
@@ -353,6 +363,46 @@ export function PoiEditPage() {
             </select>
             {fieldErrors.has('categoryId') && <p className="text-red-500 text-xs mt-1">יש לבחור קטגוריה</p>}
           </div>
+
+          {/* Business */}
+          {businesses.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">עסק משויך</label>
+              <input
+                type="text"
+                value={businessSearch}
+                onChange={e => setBusinessSearch(e.target.value)}
+                placeholder="חיפוש עסק..."
+                className="w-full border border-gray-300 rounded-t-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 border-b-0"
+              />
+              <select
+                value={form.businessId}
+                onChange={e => set('businessId', e.target.value)}
+                size={4}
+                className="w-full border border-gray-300 rounded-b-lg px-3 py-1 text-sm focus:outline-none focus:border-green-500 bg-white"
+              >
+                <option value="">— ללא עסק —</option>
+                {businesses
+                  .filter(b => {
+                    const q = businessSearch.toLowerCase()
+                    return !q || b.name.toLowerCase().includes(q) || b.email.toLowerCase().includes(q)
+                  })
+                  .map(b => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))
+                }
+              </select>
+              {form.businessId && (
+                <button
+                  type="button"
+                  onClick={() => set('businessId', '')}
+                  className="mt-1 text-xs text-red-500 hover:text-red-700"
+                >
+                  נקה שיוך
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Description */}
           <div data-field="description">
