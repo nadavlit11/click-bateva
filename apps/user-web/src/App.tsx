@@ -10,6 +10,7 @@ import { SubcategoryModal } from "./components/SubcategoryModal";
 import { FloatingSearch } from "./components/FloatingSearch";
 import { LoginModal } from "./components/LoginModal";
 import { RegisterModal } from "./components/RegisterModal";
+import { MapIndicator } from "./components/MapIndicator";
 import { usePois, useCategories, useSubcategories } from "./hooks/useFirestoreData";
 import { useAuth } from "./hooks/useAuth";
 import { useMapSettings } from "./hooks/useMapSettings";
@@ -25,7 +26,8 @@ const CLICK_DEBOUNCE_MS = 3000;
 
 export default function App() {
   const { user, role, login, logout } = useAuth();
-  const mapKey: MapKey = role === "travel_agent" ? "agents" : "groups";
+  const isAgent = role === "travel_agent";
+  const [mapKey, setMapKey] = useState<MapKey>(isAgent ? "agents" : "groups");
   const { pois, loading: poisLoading } = usePois(mapKey);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
@@ -130,6 +132,7 @@ export default function App() {
     if (prevUid.current === user?.uid) return;
     prevUid.current = user?.uid;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on auth change (no cascading render)
+    setMapKey(role === "travel_agent" ? "agents" : "groups");
     setSelectedCategories(new Set());
     setSelectedSubcategories(new Set());
     setSelectedPoi(null);
@@ -138,7 +141,7 @@ export default function App() {
     setLoginModalOpen(false);
     setRegisterModalOpen(false);
     setSheetExpanded(false);
-  }, [user?.uid]);
+  }, [user?.uid, role]);
 
   const filteredPois = useMemo(
     () => filterPois(pois, {
@@ -197,6 +200,13 @@ export default function App() {
   function handleClearAll() {
     setSelectedCategories(new Set());
     setSelectedSubcategories(new Set());
+  }
+
+  function handleMapKeyChange(key: MapKey) {
+    setMapKey(key);
+    setSelectedCategories(new Set());
+    setSelectedSubcategories(new Set());
+    setSelectedPoi(null);
   }
 
   function handleMapClick() {
@@ -423,6 +433,11 @@ export default function App() {
           onShareTrip={shareTrip}
           onNewTrip={handleNewTrip}
           onPoiSelect={handlePoiSelectFromTrip}
+        />
+        <MapIndicator
+          mapKey={mapKey}
+          isAgent={isAgent}
+          onMapKeyChange={isAgent ? handleMapKeyChange : undefined}
         />
         {!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && <EmptyMapOverlay />}
         {poisLoading && (
