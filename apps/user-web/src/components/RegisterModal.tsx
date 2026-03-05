@@ -121,7 +121,7 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(e.target.value.replace(/[^\d-]/g, ""))}
                   className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${
                     submitted && (!phone.trim() || phoneError) ? "border-red-500" : "border-gray-300"
                   }`}
