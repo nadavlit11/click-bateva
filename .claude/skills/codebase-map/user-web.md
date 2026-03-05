@@ -2,7 +2,7 @@
 
 ## Key Files
 
-- `apps/user-web/src/App.tsx` — root component, owns ALL state (filters, selected POI, sheet expand, sidebarOpen), renders Sidebar + MapView + BottomSheet + PoiDetailPanel + FloatingSearch + SubcategoryModal
+- `apps/user-web/src/App.tsx` — root component, owns ALL state (filters, selected POI, sheet expand, sidebarOpen, hasVisited, mapKey), renders Sidebar + MapView + BottomSheet + PoiDetailPanel + FloatingSearch + SubcategoryModal + MapIndicator + EmptyMapOverlay
 - `apps/user-web/src/components/MapView/MapView.tsx` — APIProvider + Map wrapper, renders PoiMarker via MarkerClusterer; builds subcategory icon lookup; sorts categories by `order`; tracks zoom level for name pill visibility
 - `apps/user-web/src/components/MapView/PoiMarker.tsx` — AdvancedMarker with **white circle bubble** (36px, icon inside 22px); name label pill visible at zoom >= 8; inline styles only; accepts resolved `iconUrl` (poi → subcategory → category fallback chain); fallback = 📍 emoji in white circle
 - `apps/user-web/src/components/MapView/PoiDetailPanel.tsx` — slide-up detail panel; **infinite-looping image carousel** (tripled array + silent jump on wrap, direction:ltr on track); quick-action row (call, navigate, whatsapp, website, facebook); **phone icon on desktop opens modal** (not tel: link — detected via `!('ontouchstart' in window)`); restaurant buttons; renders `**bold**` in description via `renderBoldText`; sticky close button; click-outside-to-close
@@ -19,14 +19,19 @@
 - `apps/user-web/src/lib/filterPois.ts` — pure filtering logic (category, subcategory AND/OR); **search removed** — no longer filters by text; unit tested + mutation tested
 - `apps/user-web/src/lib/openingStatus.ts` — opening hours display logic; unit tested + mutation tested
 - `apps/user-web/src/lib/renderBoldText.tsx` — simple `**bold**` parser; handles unmatched delimiters gracefully
+- `apps/user-web/src/lib/constants.ts` — shared constants: `MAP_LABELS` (Hebrew labels for map keys)
+- `apps/user-web/src/components/MapIndicator.tsx` — mobile-only map label (non-agent) or map switcher (agent); positioned bottom-left above bottom sheet
+- `apps/user-web/src/components/MapView/EmptyMapOverlay.tsx` — first-visit onboarding overlay with animated arrows pointing to category selection (right on desktop, down on mobile); only shown when `!hasVisited && selectedCategories.size === 0`
 - `apps/user-web/src/types/index.ts` — Poi (+ whatsapp, iconUrl), Category (+ order), Subcategory (+ iconUrl) interfaces
 
 ## Component / Data Flow
 
 ```
-App.tsx (owns state: selectedCategories, selectedSubcategories, focusLocation, selectedPoi, sidebarOpen)
-  ├─ useAuth() → { user, role, loading } — determines map key (travel_agent → 'agents', else → 'groups')
+App.tsx (owns state: selectedCategories, selectedSubcategories, focusLocation, selectedPoi, sidebarOpen, hasVisited, mapKey)
+  ├─ useAuth() → { user, role, loading } — determines initial map key (travel_agent → 'agents', else → 'groups')
   ├─ usePois(mapKey) — filters POIs by maps.<mapKey>.active == true
+  ├─ Filter persistence: selectedCategories/selectedSubcategories saved to localStorage on change, restored on mount
+  ├─ First-visit: hasVisited flag (localStorage). EmptyMapOverlay shown only when !hasVisited && no categories selected
   ├─ FloatingSearch (always visible, absolute positioned over map, top-right)
   │    └─ dropdown: POI name matches (local) + Geocoding API location results
   │    └─ POI click → handlePoiClick; location click → setFocusLocation → MapView pans
@@ -76,3 +81,5 @@ Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes t
 - FloatingSearch uses Google Geocoding REST API (`maps.googleapis.com/maps/api/geocode/json`) with `VITE_GOOGLE_MAPS_API_KEY` — no extra SDK setup needed
 - `focusLocation` prop on MapView → inner ClusteredPoiMarkers uses `map.moveCamera({ center, zoom })` (NOT `panTo+setZoom` — those race)
 - `renderBoldText` handles unmatched `**` delimiters by returning raw text
+- **RTL + `flex-row-reverse` double-flip:** In an RTL document, flex already reverses item order. Adding `flex-row-reverse` reverses it back to LTR physical order. To force specific physical ordering in RTL, use `style={{ direction: "ltr" }}` on the flex container and `style={{ direction: "rtl" }}` on text children.
+- **Filter persistence:** `selectedCategories` and `selectedSubcategories` are persisted to localStorage (`click-bateva:selectedCategories`, `click-bateva:selectedSubcategories`). On auth change (login/logout), filters are reset to empty. `hasVisited` flag (`click-bateva:hasVisited`) controls first-visit overlay — set in `handleCategoryToggle` and search `onInputCapture`, NOT in a useEffect (lint rule blocks setState in effects).
