@@ -18,11 +18,18 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
   const [type, setType] = useState<RequestType>("business");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!companyName.trim() || !contactName.trim() || !phone.trim()) return;
+    setSubmitted(true);
+    const missingFields = !companyName.trim() || !contactName.trim() || !phone.trim();
+    const digits = phone.replace(/[-\s]/g, "");
+    const phoneValid = phone.trim() && /^0\d{8,9}$/.test(digits);
+    setPhoneError(phone.trim() && !phoneValid ? "מספר טלפון לא תקין" : "");
+    if (missingFields || !phoneValid) return;
     setLoading(true);
     setError("");
     try {
@@ -69,7 +76,7 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                       : "bg-white text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  בית עסק
+                  מפרסם
                 </button>
                 <button
                   type="button"
@@ -80,7 +87,7 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                       : "bg-white text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  סוכן נסיעות
+                  מפיק
                 </button>
               </div>
 
@@ -90,7 +97,9 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${
+                    submitted && !companyName.trim() ? "border-red-500" : "border-gray-300"
+                  }`}
                   autoFocus
                 />
               </div>
@@ -101,7 +110,9 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                   type="text"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${
+                    submitted && !contactName.trim() ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
               </div>
 
@@ -110,10 +121,15 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  onChange={(e) => setPhone(e.target.value.replace(/[^\d-]/g, ""))}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${
+                    submitted && (!phone.trim() || phoneError) ? "border-red-500" : "border-gray-300"
+                  }`}
                   dir="ltr"
                 />
+                {phoneError && (
+                  <p className="text-xs text-red-600 mt-1">{phoneError}</p>
+                )}
               </div>
 
               {error && <p className="text-sm text-red-600 text-center">{error}</p>}
