@@ -418,7 +418,7 @@ export default function App() {
         )}
 
         {/* Floating search — on mobile stretches full width; on desktop fixed-width on physical left (end in RTL) */}
-        <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`} onFocusCapture={() => setSelectedPoi(null)}>
+        <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`} onFocusCapture={() => setSelectedPoi(null)} onInputCapture={() => { if (!hasVisited) { localStorage.setItem("click-bateva:hasVisited", "1"); setHasVisited(true); } }}>
           <FloatingSearch
             key={user?.uid ?? "anon"}
             pois={pois}
