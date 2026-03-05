@@ -1,9 +1,9 @@
 export function EmptyMapOverlay() {
   return (
     <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-      {/* Desktop: card + arrow side by side (arrow on the right in RTL, pointing toward sidebar) */}
-      <div className="hidden md:flex items-center gap-4">
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-8 py-6 shadow-lg text-center max-w-xs">
+      {/* Desktop: card then arrow on physical right (toward sidebar) */}
+      <div className="hidden md:flex items-center gap-6" style={{ direction: "ltr" }}>
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-8 py-6 shadow-lg text-center max-w-xs" style={{ direction: "rtl" }}>
           <svg
             className="w-12 h-12 mx-auto mb-3 text-green-600"
             fill="none"
@@ -25,15 +25,16 @@ export function EmptyMapOverlay() {
           </p>
         </div>
         <svg
-          className="w-14 h-14 text-green-500 animate-bounce-x drop-shadow-lg"
+          className="w-20 h-20 text-green-500 animate-bounce-x"
           fill="currentColor"
           viewBox="0 0 24 24"
+          style={{ filter: "drop-shadow(0 4px 12px rgba(34,197,94,0.4))" }}
         >
           <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
         </svg>
       </div>
 
-      {/* Mobile: card + arrow below (pointing down toward bottom sheet) */}
+      {/* Mobile: card + large arrow below (pointing down toward bottom sheet) */}
       <div className="md:hidden flex flex-col items-center">
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-8 py-6 shadow-lg text-center max-w-xs">
           <svg
@@ -57,9 +58,10 @@ export function EmptyMapOverlay() {
           </p>
         </div>
         <svg
-          className="w-14 h-14 text-green-500 animate-bounce mt-3 drop-shadow-lg"
+          className="w-20 h-20 text-green-500 animate-bounce mt-3"
           fill="currentColor"
           viewBox="0 0 24 24"
+          style={{ filter: "drop-shadow(0 4px 12px rgba(34,197,94,0.4))" }}
         >
           <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
         </svg>
@@ -68,7 +70,7 @@ export function EmptyMapOverlay() {
       <style>{`
         @keyframes bounce-x {
           0%, 100% { transform: translateX(0); }
-          50% { transform: translateX(12px); }
+          50% { transform: translateX(16px); }
         }
         .animate-bounce-x {
           animation: bounce-x 0.8s ease-in-out infinite;
