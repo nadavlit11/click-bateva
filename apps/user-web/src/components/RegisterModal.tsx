@@ -19,17 +19,17 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!companyName.trim() || !contactName.trim() || !phone.trim()) return;
+    setSubmitted(true);
+    const missingFields = !companyName.trim() || !contactName.trim() || !phone.trim();
     const digits = phone.replace(/[-\s]/g, "");
-    if (!/^0\d{8,9}$/.test(digits)) {
-      setPhoneError("מספר טלפון לא תקין");
-      return;
-    }
-    setPhoneError("");
+    const phoneValid = phone.trim() && /^0\d{8,9}$/.test(digits);
+    setPhoneError(phone.trim() && !phoneValid ? "מספר טלפון לא תקין" : "");
+    if (missingFields || !phoneValid) return;
     setLoading(true);
     setError("");
     try {
@@ -97,7 +97,9 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${
+                    submitted && !companyName.trim() ? "border-red-500" : "border-gray-300"
+                  }`}
                   autoFocus
                 />
               </div>
@@ -108,7 +110,9 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                   type="text"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${
+                    submitted && !contactName.trim() ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
               </div>
 
@@ -118,7 +122,9 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${
+                    submitted && (!phone.trim() || phoneError) ? "border-red-500" : "border-gray-300"
+                  }`}
                   dir="ltr"
                 />
                 {phoneError && (
