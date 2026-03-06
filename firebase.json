@@ -33,42 +33,6 @@
         }
       ],
       "rewrites": [{ "source": "**", "destination": "/index.html" }]
-    },
-    {
-      "site": "click-bateva-app",
-      "public": "app/dist",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "headers": [
-        {
-          "source": "**",
-          "headers": [
-            { "key": "X-Frame-Options", "value": "DENY" },
-            { "key": "X-Content-Type-Options", "value": "nosniff" },
-            { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-            { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-            { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
-          ]
-        }
-      ],
-      "redirects": [{ "source": "/**", "destination": "https://click-bateva.web.app", "type": 301 }]
-    },
-    {
-      "site": "click-bateva-biz",
-      "public": "app/dist",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "headers": [
-        {
-          "source": "**",
-          "headers": [
-            { "key": "X-Frame-Options", "value": "DENY" },
-            { "key": "X-Content-Type-Options", "value": "nosniff" },
-            { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-            { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-            { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
-          ]
-        }
-      ],
-      "redirects": [{ "source": "/**", "destination": "https://click-bateva.web.app/business", "type": 301 }]
     }
   ],
   "functions": [
