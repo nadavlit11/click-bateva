@@ -14,13 +14,13 @@
 - `app/src/user-web/components/BottomSheet/BottomSheet.tsx` — mobile panel (filters + trip + auth); **fully hidden when collapsed** (`translateY(100%)`); opened via hamburger button next to search bar; expanded = ~70vh with category grid + trip tab + auth buttons
 - `app/src/user-web/hooks/useFirestoreData.ts` — `usePois(mapKey)`, `useCategories()`, `useSubcategories()`, `useIcons()` — onSnapshot hooks; `usePois` accepts a `MapKey` ('agents' | 'groups') to filter by `maps.<mapKey>.active == true`. `useIcons()` returns `IconMeta[]` (`{ id, size, flicker }`) from the `icons` collection.
 - `app/src/user-web/hooks/useTrip.ts` — `useTrip(uid)` hook: dual storage — Firestore for logged-in users, localStorage for anonymous. Auto-migrates localStorage trip to Firestore on login. Returns `{ trip, addPoi, removePoi, movePoi, addDay, setClientName, clearTrip, shareTrip, newTrip }`
-- `app/src/user-web/hooks/useAuth.ts` — `useAuth()` hook: listens to `onAuthStateChanged`, extracts role from custom claims, returns `{ user, role, loading }`
+- `app/src/hooks/useAuth.tsx` — **context-based** auth hook (shared by all 3 sections); `AuthProvider` at App.tsx root runs one `onAuthStateChanged` listener; returns `{ user, role, loading, login, logout }`. Re-exported via `app/src/hooks/useAuth.ts` barrel.
 - `app/src/user-web/components/LoginModal.tsx` — modal dialog for email/password login; used by Sidebar and BottomSheet
 - `app/src/user-web/components/ChangePasswordModal.tsx` — modal for logged-in users to change password; reauthenticates with current password then calls `updatePassword`; includes password strength meter; auto-closes after 2s on success
 - `app/src/user-web/lib/passwordStrength.ts` — password validation (`isPasswordValid`: 8+ chars, letter, number) + strength meter utilities (weak/medium/strong labels, colors, widths); copy of admin's version
 - `app/src/user-web/components/ContactUsModal.tsx` — "Contact Us" modal with WhatsApp, Call (desktop: show number, mobile: tel:), Email actions; contact info fetched from `settings/contact`
 - `app/src/user-web/hooks/useContactInfo.ts` — `useContactInfo()` hook: one-time fetch of `settings/contact` doc, returns `{ phone, email }` or null
-- `app/src/user-web/lib/firebase.ts` — initializeApp, getFirestore, getAuth; emulator gated on `VITE_USE_EMULATOR`; exports `auth` for login/logout
+- `app/src/lib/firebase.ts` — shared Firebase init (all 3 sections); emulator gated on `VITE_USE_EMULATOR === 'true'`; exports `auth`, `db`
 - `app/src/user-web/lib/filterPois.ts` — pure filtering logic (category, subcategory AND/OR); **search removed** — no longer filters by text; unit tested + mutation tested
 - `app/src/user-web/lib/openingStatus.ts` — opening hours display logic; exports `getOpeningStatusText()` (string) and `isCurrentlyOpen()` (boolean predicate); unit tested (52 tests) + mutation tested
 - `app/src/user-web/lib/renderBoldText.tsx` — simple `**bold**` parser; handles unmatched delimiters gracefully
@@ -67,7 +67,7 @@ Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes t
 - `useMap()` hook must be called inside a child of `<Map>`, not a sibling
 - Emulator connection gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`)
 - POI query filters `where("maps.<mapKey>.active", "==", true)` — inactive POIs for the current map never reach frontend
-- Auth: `useAuth()` hook provides `{ user, role, loading }`. `firebase.ts` exports `auth` (Firebase Auth instance). LoginModal handles general email/password sign-in (all roles). ChangePasswordModal handles password change for logged-in users (reauthenticate + updatePassword). Map key derived from role: `travel_agent` → `'agents'`, all others → `'groups'`. Click analytics suppressed for admin/content_manager (all clicks) and business_user (own POI only) — enforced both client-side (`App.tsx`) and server-side (`firestore.rules`).
+- Auth: `useAuth()` context hook (AuthProvider at App.tsx root) provides `{ user, role, loading }`. **Single `onAuthStateChanged` listener for the whole app** — do NOT add new listeners in components. `firebase.ts` exports `auth` (Firebase Auth instance). LoginModal handles general email/password sign-in (all roles). ChangePasswordModal (`app/src/components/ChangePasswordModal.tsx`) handles password change for logged-in users (reauthenticate + updatePassword); user-web imports via `app/src/user-web/components/ChangePasswordModal.tsx` re-export. Map key derived from role: `travel_agent` → `'agents'`, all others → `'groups'`. Click analytics suppressed for admin/content_manager (all clicks) and business_user (own POI only) — enforced both client-side (`App.tsx`) and server-side (`firestore.rules`).
 - Mobile uses `100dvh` (not `100vh`) for full-screen layouts
 - RTL: first flex child renders on RIGHT; collapsed indicators point LEFT (◂)
 

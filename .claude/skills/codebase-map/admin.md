@@ -3,7 +3,7 @@
 ## Key Files
 
 - `app/src/admin/AdminSection.tsx` — lazy-loaded route definitions (mounted under `/admin/*` in root App.tsx); imports `leaflet/dist/leaflet.css`
-- `app/src/admin/components/AuthGuard.tsx` — onAuthStateChanged + custom claims gate (admin | content_manager); unauthenticated redirects to `/` (map)
+- `app/src/admin/components/AuthGuard.tsx` — reads `user`, `role`, `loading` from `useAuth()` context; gates on admin | content_manager; unauthenticated redirects to `/` (map)
 - `app/src/admin/pages/PoisPage.tsx` — POI list; clicking a POI navigates to `/pois/:id`
 - `app/src/admin/pages/PoiEditPage.tsx` — full-page POI editor (replaces old PoiDrawer); CRUD + image upload + MapPicker + subcategory checkboxes + per-map price/active fields (agents & groups)
 - `app/src/admin/components/MapPicker.tsx` — Leaflet + Nominatim geocoding; click/drag/search to set lat/lng
@@ -15,7 +15,7 @@
 - `app/src/admin/pages/AnalyticsPage.tsx` — click totals per POI + per category
 - `app/src/admin/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
 - `app/src/admin/components/Layout/AppLayout.tsx` + `Sidebar.tsx` — flex layout with nav links (admin-only gating via `useAuth`); includes "← המפה" link back to map (`to="/"`)
-- `app/src/hooks/useAuth.ts` — shared hook used by all three sections: listens to `onAuthStateChanged`, extracts `role` from `getIdTokenResult()` claims, returns `{ user, role, loading }`
+- `app/src/hooks/useAuth.tsx` — **context-based** auth hook; `AuthProvider` wraps the entire app at `App.tsx` root, runs ONE `onAuthStateChanged` listener for the whole app; `useAuth()` returns `{ user, role, loading, login, logout }` from context (zero extra listeners). `useAuth.ts` is a thin re-export barrel.
 - `app/src/admin/lib/passwordStrength.ts` — shared password validation: `getStrength()`, `isPasswordValid()`, `PASSWORD_ERROR`, strength indicator maps
 - `app/src/admin/types/index.ts` — Poi (+ whatsapp, iconId, iconUrl, maps: MapOverrides, contactName, capacity), MapOverrides interface, Category (+ order), Subcategory (+ iconId, iconUrl), Icon (+ size, flicker) types
 
