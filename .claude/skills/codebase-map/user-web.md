@@ -3,15 +3,16 @@
 ## Key Files
 
 - `apps/user-web/src/App.tsx` — root component, owns ALL state (filters, selected POI, sheet expand, sidebarOpen, hasVisited, mapKey), renders Sidebar + MapView + BottomSheet + PoiDetailPanel + FloatingSearch + SubcategoryModal + MapIndicator + EmptyMapOverlay
-- `apps/user-web/src/components/MapView/MapView.tsx` — APIProvider + Map wrapper, renders PoiMarker via MarkerClusterer; builds subcategory icon lookup; sorts categories by `order`; tracks zoom level for name pill visibility
-- `apps/user-web/src/components/MapView/PoiMarker.tsx` — AdvancedMarker with **white circle bubble** (36px, icon inside 22px); name label pill visible at zoom >= 8; inline styles only; accepts resolved `iconUrl` (poi → subcategory → category fallback chain); fallback = 📍 emoji in white circle
+- `apps/user-web/src/components/MapView/MapView.tsx` — APIProvider + Map wrapper, renders PoiMarker via MarkerClusterer; builds subcategory icon lookup; sorts categories by `order`; tracks zoom level for name pill visibility. **`useIcons()` called here (at MapView level), NOT inside ClusteredPoiMarkers** — `iconMetaMap` passed as prop to avoid listener churn.
+- `apps/user-web/src/components/MapView/PoiMarker.tsx` — AdvancedMarker with **white circle bubble** (36px, icon inside 22px); name label pill visible at zoom >= 8; inline styles only; accepts resolved `iconUrl` (poi → subcategory → category fallback chain); fallback = 📍 emoji in white circle. Props: `iconFlicker` (adds `animate-pulse`), `iconSize` (overrides pinSize for img), `isDimmed` (reserved for future trip dimming, never passed currently).
+- `apps/user-web/src/components/WhatsAppShareButton.tsx` — shared WhatsApp share `<a>` with inline SVG + site URL. Props: `showLabel` (bool, default true), `className`.
 - `apps/user-web/src/components/MapView/PoiDetailPanel.tsx` — slide-up detail panel; **infinite-looping image carousel** (tripled array + silent jump on wrap, direction:ltr on track); quick-action row (call, navigate, whatsapp, website, facebook); **phone icon on desktop opens modal** (not tel: link — detected via `!('ontouchstart' in window)`); restaurant buttons; renders `**bold**` in description via `renderBoldText`; sticky close button; click-outside-to-close
 - `apps/user-web/src/components/FloatingSearch.tsx` — **search dropdown** (NEW): debounced input, dropdown shows POI name matches (local) + location results (Google Geocoding REST API); clicking a POI opens detail panel; clicking a location calls `onLocationSelect` to pan map; map is NEVER filtered by text
 - `apps/user-web/src/components/Sidebar/Sidebar.tsx` — desktop filter panel (collapsible, hidden when `sidebarOpen === false`); children: AppHeader, CategoryGrid, SidebarFooter. Search moved to FloatingSearch.
 - `apps/user-web/src/components/Sidebar/CategoryGrid.tsx` — category buttons with filter icon badge; clicking badge opens SubcategoryModal
 - `apps/user-web/src/components/SubcategoryModal.tsx` — modal showing subcategories for a specific category, all checked by default, toggle individual subs
 - `apps/user-web/src/components/BottomSheet/BottomSheet.tsx` — mobile filter panel; collapsed peek (120px, category chips + count) / expanded (~70vh, category grid with subcategory modal triggers)
-- `apps/user-web/src/hooks/useFirestoreData.ts` — `usePois(mapKey)`, `useCategories()`, `useSubcategories()` — onSnapshot hooks; `usePois` accepts a `MapKey` ('agents' | 'groups') to filter by `maps.<mapKey>.active == true`
+- `apps/user-web/src/hooks/useFirestoreData.ts` — `usePois(mapKey)`, `useCategories()`, `useSubcategories()`, `useIcons()` — onSnapshot hooks; `usePois` accepts a `MapKey` ('agents' | 'groups') to filter by `maps.<mapKey>.active == true`. `useIcons()` returns `IconMeta[]` (`{ id, size, flicker }`) from the `icons` collection.
 - `apps/user-web/src/hooks/useTrip.ts` — `useTrip(uid)` hook: dual storage — Firestore for logged-in users, localStorage for anonymous. Auto-migrates localStorage trip to Firestore on login. Returns `{ trip, addPoi, removePoi, movePoi, addDay, setClientName, clearTrip, shareTrip, newTrip }`
 - `apps/user-web/src/hooks/useAuth.ts` — `useAuth()` hook: listens to `onAuthStateChanged`, extracts role from custom claims, returns `{ user, role, loading }`
 - `apps/user-web/src/components/LoginModal.tsx` — modal dialog for email/password login; used by Sidebar and BottomSheet
@@ -21,12 +22,12 @@
 - `apps/user-web/src/hooks/useContactInfo.ts` — `useContactInfo()` hook: one-time fetch of `settings/contact` doc, returns `{ phone, email }` or null
 - `apps/user-web/src/lib/firebase.ts` — initializeApp, getFirestore, getAuth; emulator gated on `VITE_USE_EMULATOR`; exports `auth` for login/logout
 - `apps/user-web/src/lib/filterPois.ts` — pure filtering logic (category, subcategory AND/OR); **search removed** — no longer filters by text; unit tested + mutation tested
-- `apps/user-web/src/lib/openingStatus.ts` — opening hours display logic; unit tested + mutation tested
+- `apps/user-web/src/lib/openingStatus.ts` — opening hours display logic; exports `getOpeningStatusText()` (string) and `isCurrentlyOpen()` (boolean predicate); unit tested (52 tests) + mutation tested
 - `apps/user-web/src/lib/renderBoldText.tsx` — simple `**bold**` parser; handles unmatched delimiters gracefully
 - `apps/user-web/src/lib/constants.ts` — shared constants: `MAP_LABELS` (Hebrew labels for map keys)
 - `apps/user-web/src/components/MapIndicator.tsx` — mobile-only map label (non-agent) or map switcher (agent); positioned bottom-left above bottom sheet
 - `apps/user-web/src/components/MapView/EmptyMapOverlay.tsx` — first-visit onboarding overlay with animated arrows pointing to category selection (right on desktop, down on mobile); only shown when `!hasVisited && selectedCategories.size === 0`
-- `apps/user-web/src/types/index.ts` — Poi (+ whatsapp, iconUrl), Category (+ order), Subcategory (+ iconUrl) interfaces
+- `apps/user-web/src/types/index.ts` — Poi (+ whatsapp, iconUrl, iconId, capacity), Category (+ order), Subcategory (+ iconUrl) interfaces
 
 ## Component / Data Flow
 

@@ -102,7 +102,7 @@ export function BottomSheet({
   }, [expanded, selectedCategories, selectedSubcategories]);
 
   const sheetStyle: React.CSSProperties = {
-    transform: expanded ? "translateY(0)" : "translateY(calc(100% - 120px))",
+    transform: expanded ? "translateY(0)" : "translateY(100%)",
     transition: "transform 300ms ease",
     height: "70vh",
   };
@@ -268,17 +268,20 @@ export function BottomSheet({
               <div className="flex gap-2 items-center">
                 {isLoggedIn ? (
                   <>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onChangePasswordClick(); }}
-                      className="text-xs text-gray-400 hover:text-gray-600"
-                    >
-                      שינוי סיסמה
-                    </button>
+                    <span onClick={(e) => e.stopPropagation()}>
+                      <WhatsAppShareButton showLabel={true} className="text-xs font-medium" />
+                    </span>
                     <button
                       onClick={(e) => { e.stopPropagation(); onLogout(); }}
                       className="text-xs text-red-500 hover:text-red-700 font-medium"
                     >
                       התנתקות
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onChangePasswordClick(); }}
+                      className="text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      שינוי סיסמה
                     </button>
                   </>
                 ) : (
@@ -316,9 +319,11 @@ export function BottomSheet({
                     תנאי שימוש
                   </a>
                 )}
-                <span onClick={(e) => e.stopPropagation()}>
-                  <WhatsAppShareButton showLabel={false} />
-                </span>
+                {!isLoggedIn && (
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <WhatsAppShareButton showLabel={false} />
+                  </span>
+                )}
               </div>
             </div>
           </div>
