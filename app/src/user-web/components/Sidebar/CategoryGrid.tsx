@@ -1,0 +1,66 @@
+import { CATEGORY_EMOJI } from "../../data/defaults";
+import type { Category, Subcategory } from "../../../types";
+import { lighten, lightenBorder } from "../../../lib/colorUtils";
+
+interface CategoryGridProps {
+  categories: Category[];
+  subcategories: Subcategory[];
+  selectedCategories: Set<string>;
+  onToggle: (id: string) => void;
+  onSubcategoryFilter?: (categoryId: string) => void;
+}
+
+export function CategoryGrid({ categories, subcategories, selectedCategories, onToggle, onSubcategoryFilter }: CategoryGridProps) {
+  return (
+    <div className="px-4 pb-4">
+      <h2 className="text-lg font-semibold text-gray-700 mb-3">קטגוריות</h2>
+      <div className="grid grid-cols-2 gap-3">
+        {categories.map((cat) => {
+          const isSelected = selectedCategories.has(cat.id);
+          return (
+            <div key={cat.id} className="relative">
+              <button
+                onClick={() => onToggle(cat.id)}
+                className="flex items-center gap-2 py-3 px-4 rounded-2xl border-2 transition-all hover:-translate-y-0.5 hover:shadow-md text-start w-full"
+                style={{
+                  backgroundColor: lighten(cat.color),
+                  borderColor: isSelected ? cat.color : lightenBorder(cat.color),
+                  boxShadow: isSelected ? `0 0 0 2px ${cat.color}` : "none",
+                }}
+              >
+                <span className="w-6 h-6 flex items-center justify-center text-lg shrink-0">
+                  {cat.iconUrl ? (
+                    <img src={cat.iconUrl} alt={cat.name} className="w-6 h-6" />
+                  ) : (
+                    <CategoryEmoji id={cat.id} />
+                  )}
+                </span>
+                <span className="text-sm font-medium text-gray-700">{cat.name}</span>
+              </button>
+              {isSelected && onSubcategoryFilter && subcategories.some(s => s.categoryId === cat.id) && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSubcategoryFilter(cat.id);
+                  }}
+                  className="absolute -top-2 -end-2 w-8 h-8 rounded-full shadow-md flex items-center justify-center transition-opacity hover:opacity-80"
+                  style={{ backgroundColor: cat.color }}
+                  title="סנן תתי-קטגוריות"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" style={{ color: "white" }}>
+                    <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Fallback emojis for categories that have no iconUrl
+function CategoryEmoji({ id }: { id: string }) {
+  return <span>{CATEGORY_EMOJI[id] ?? "📍"}</span>;
+}
