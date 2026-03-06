@@ -47,6 +47,8 @@ interface FormState {
   kashrutCertUrl: string
   menuUrl: string
   facebook: string
+  contactName: string
+  capacity: string
 }
 
 const INITIAL_FORM: FormState = {
@@ -72,6 +74,8 @@ const INITIAL_FORM: FormState = {
   kashrutCertUrl: '',
   menuUrl: '',
   facebook: '',
+  contactName: '',
+  capacity: '',
 }
 
 export function PoiEditPage() {
@@ -158,6 +162,8 @@ export function PoiEditPage() {
         kashrutCertUrl: poi.kashrutCertUrl ?? '',
         menuUrl: poi.menuUrl ?? '',
         facebook: poi.facebook ?? '',
+        contactName: poi.contactName ?? '',
+        capacity: poi.capacity ?? '',
       })
       setLoading(false)
     }).catch(err => {
@@ -288,6 +294,8 @@ export function PoiEditPage() {
         kashrutCertUrl: form.kashrutCertUrl.trim() || null,
         menuUrl: form.menuUrl.trim() || null,
         facebook: form.facebook.trim() || null,
+        contactName: form.contactName.trim() || null,
+        capacity: form.capacity.trim() || null,
         updatedAt: serverTimestamp(),
       }
 
@@ -753,6 +761,21 @@ export function PoiEditPage() {
             {fieldErrors.has('whatsapp') && <p className="text-red-500 text-xs mt-1">מספר וואטסאפ לא תקין</p>}
           </div>
 
+          {/* Contact name — internal only, not shown in user map */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              שם איש קשר{" "}
+              <span className="text-xs text-gray-400 font-normal">(לשימוש פנימי בלבד — לא מוצג למשתמשים)</span>
+            </label>
+            <input
+              type="text"
+              value={form.contactName}
+              onChange={e => set("contactName", e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              placeholder="למשל: ישראל ישראלי"
+            />
+          </div>
+
           {/* Website */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">אתר</label>
@@ -774,6 +797,18 @@ export function PoiEditPage() {
               onChange={e => set('facebook', e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="https://facebook.com/businesspage"
+            />
+          </div>
+
+          {/* Capacity */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">כמות אנשים מקסימלית</label>
+            <input
+              type="text"
+              value={form.capacity}
+              onChange={e => set("capacity", e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              placeholder="למשל: עד 200 אנשים"
             />
           </div>
 

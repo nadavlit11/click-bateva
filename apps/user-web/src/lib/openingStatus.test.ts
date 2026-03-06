@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getOpeningStatusText } from "./openingStatus";
+import { getOpeningStatusText, isCurrentlyOpen } from "./openingStatus";
 import type { DayHours } from "../types";
 
 function mkHours(overrides: Partial<Record<string, DayHours | null>> = {}): Record<string, DayHours | null> {
@@ -20,6 +20,46 @@ function dateAt(dayIndex: number, time: string): Date {
   base.setHours(h, m, 0, 0);
   return base;
 }
+
+describe("isCurrentlyOpen", () => {
+  it("returns true when currently within opening hours", () => {
+    const hours = mkHours({ sunday: { open: "09:00", close: "17:00" } });
+    expect(isCurrentlyOpen(hours, dateAt(0, "12:00"))).toBe(true);
+  });
+
+  it("returns true at exactly opening time", () => {
+    const hours = mkHours({ sunday: { open: "09:00", close: "17:00" } });
+    expect(isCurrentlyOpen(hours, dateAt(0, "09:00"))).toBe(true);
+  });
+
+  it("returns false at exactly closing time", () => {
+    const hours = mkHours({ sunday: { open: "09:00", close: "17:00" } });
+    expect(isCurrentlyOpen(hours, dateAt(0, "17:00"))).toBe(false);
+  });
+
+  it("returns false before opening time", () => {
+    const hours = mkHours({ sunday: { open: "10:00", close: "18:00" } });
+    expect(isCurrentlyOpen(hours, dateAt(0, "08:00"))).toBe(false);
+  });
+
+  it("returns false after closing time", () => {
+    const hours = mkHours({ sunday: { open: "09:00", close: "17:00" } });
+    expect(isCurrentlyOpen(hours, dateAt(0, "18:00"))).toBe(false);
+  });
+
+  it("returns false when today has null hours (closed day)", () => {
+    const hours = mkHours({ monday: { open: "09:00", close: "17:00" } });
+    expect(isCurrentlyOpen(hours, dateAt(0, "12:00"))).toBe(false); // Sunday = null
+  });
+
+  it("returns false for null input", () => {
+    expect(isCurrentlyOpen(null, dateAt(0, "12:00"))).toBe(false);
+  });
+
+  it("returns false for legacy string input", () => {
+    expect(isCurrentlyOpen("פתוח כל היום", dateAt(0, "12:00"))).toBe(false);
+  });
+});
 
 describe("getOpeningStatusText", () => {
   it("returns first line of legacy string", () => {

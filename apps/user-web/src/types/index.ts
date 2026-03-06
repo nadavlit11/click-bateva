@@ -56,5 +56,7 @@ export interface Poi {
   categoryId: string;
   subcategoryIds: string[]; // category-scoped refinement IDs
   iconUrl: string | null;
+  iconId: string | null;
   businessId: string | null;
+  capacity: string | null;
 }

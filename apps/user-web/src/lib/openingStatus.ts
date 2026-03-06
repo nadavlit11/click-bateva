@@ -8,6 +8,18 @@ const DAY_NAMES_HE: Record<string, string> = {
 
 export { DAY_KEYS, DAY_NAMES_HE };
 
+export function isCurrentlyOpen(
+  openingHours: Record<string, DayHours | null> | string | null,
+  now: Date = new Date(),
+): boolean {
+  if (!openingHours || typeof openingHours === "string") return false;
+  const todayKey = DAY_KEYS[now.getDay()];
+  const todayHours = openingHours[todayKey];
+  if (!todayHours) return false;
+  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  return currentTime >= todayHours.open && currentTime < todayHours.close;
+}
+
 export function getOpeningStatusText(
   openingHours: Record<string, DayHours | null> | string,
   now: Date = new Date(),

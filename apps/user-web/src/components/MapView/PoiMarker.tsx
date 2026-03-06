@@ -12,12 +12,14 @@ interface PoiMarkerProps {
   onClick: () => void;
   setMarkerRef: (marker: google.maps.marker.AdvancedMarkerElement | null, key: string) => void;
   tripNumber?: number;
-  isDimmed?: boolean;
+  isDimmed?: boolean; // reserved for future trip-planner dimming
+  iconFlicker?: boolean;
+  iconSize?: number;
 }
 
 const AMBER = "#F59E0B";
 
-export function PoiMarker({ poi, color, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef, tripNumber, isDimmed }: PoiMarkerProps) {
+export function PoiMarker({ poi, color, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef, tripNumber, isDimmed, iconFlicker, iconSize }: PoiMarkerProps) {
   const [hovered, setHovered] = useState(false);
   const ref = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement | null) => setMarkerRef(marker, poi.id),
@@ -56,9 +58,10 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, pinSize, o
             <img
               src={iconUrl}
               alt=""
+              className={iconFlicker ? "animate-pulse" : undefined}
               style={{
-                width: pinSize,
-                height: pinSize,
+                width: iconSize ?? pinSize,
+                height: iconSize ?? pinSize,
                 objectFit: "contain",
                 display: "block",
                 filter: dropShadow,

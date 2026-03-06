@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Category, Subcategory, Poi, TripDoc } from "../../types";
 import type { MapKey } from "../../hooks/useFirestoreData";
 import { AppHeader } from "./AppHeader";
+import { WhatsAppShareButton } from "../WhatsAppShareButton";
 import { CategoryGrid } from "./CategoryGrid";
 import { SidebarFooter } from "./SidebarFooter";
 import { TripPanel } from "./TripPanel";
@@ -163,26 +164,6 @@ export function Sidebar({
         />
       )}
       <div className="px-4 py-3 border-t border-gray-100 space-y-2">
-        <div className="flex gap-2">
-          {onContactClick && (
-            <button
-              onClick={onContactClick}
-              className="flex-1 text-sm text-green-600 hover:text-green-800 font-medium py-1.5 rounded-lg hover:bg-green-50 transition-colors"
-            >
-              צור קשר
-            </button>
-          )}
-          {termsUrl && (
-            <a
-              href={termsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 text-sm text-gray-500 hover:text-gray-700 py-1.5 rounded-lg hover:bg-gray-50 transition-colors text-center"
-            >
-              תנאי שימוש
-            </a>
-          )}
-        </div>
         {isLoggedIn ? (
           <div className="flex gap-2">
             <button
@@ -193,7 +174,7 @@ export function Sidebar({
             </button>
             <button
               onClick={onLogout}
-              className="flex-1 text-sm text-gray-500 hover:text-gray-700 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 text-sm text-red-500 hover:text-red-700 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
             >
               התנתקות
             </button>
@@ -214,6 +195,27 @@ export function Sidebar({
             </button>
           </div>
         )}
+        <div className="flex items-center gap-3">
+          {onContactClick && (
+            <button
+              onClick={onContactClick}
+              className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            >
+              צור קשר
+            </button>
+          )}
+          {termsUrl && (
+            <a
+              href={termsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              תנאי שימוש
+            </a>
+          )}
+          <WhatsAppShareButton />
+        </div>
       </div>
     </aside>
   );

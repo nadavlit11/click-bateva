@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import type { CSSProperties } from "react";
 import type { Poi, Category, DayHours } from "../../types";
 import { lighten } from "../../lib/colorUtils";
-import { DAY_KEYS, DAY_NAMES_HE, getOpeningStatusText } from "../../lib/openingStatus";
+import { DAY_KEYS, DAY_NAMES_HE, getOpeningStatusText, isCurrentlyOpen } from "../../lib/openingStatus";
 import { renderBoldText } from "../../lib/renderBoldText";
 
 interface PoiDetailPanelProps {
@@ -313,9 +313,17 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
                   className="flex items-center gap-2 w-full text-start"
                 >
                   <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">🕐</span>
-                  <span className="text-sm text-gray-700 flex-1">
-                    {getOpeningStatusText(poi.openingHours)}
-                  </span>
+                  {(() => {
+                    const statusText = getOpeningStatusText(
+                      poi.openingHours as Record<string, DayHours | null> | string
+                    );
+                    const isOpen = isCurrentlyOpen(poi.openingHours as Record<string, DayHours | null> | string);
+                    return (
+                      <span className={`text-sm flex-1 ${isOpen ? "text-green-600" : "text-red-500"}`}>
+                        {statusText}
+                      </span>
+                    );
+                  })()}
                   <span className="text-xs text-gray-400">{hoursExpanded ? "▲" : "▼"}</span>
                 </button>
                 {hoursExpanded && (
@@ -330,7 +338,9 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
                             return (
                               <div key={day} className={`flex justify-between ${isToday ? "font-bold text-gray-900" : ""}`}>
                                 <span>{DAY_NAMES_HE[day]}</span>
-                                <span dir="ltr">{hours ? `${hours.open}–${hours.close}` : "סגור"}</span>
+                                <span dir="ltr" className={!hours ? "text-red-500" : ""}>
+                                  {hours ? `${hours.open}–${hours.close}` : "סגור"}
+                                </span>
                               </div>
                             );
                           })}
@@ -346,21 +356,30 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
 
         {poi.price && (
           <div className="mb-2">
-            <div className="flex items-start gap-2">
-              <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">💰</span>
-              <span className={`text-sm text-gray-700 whitespace-pre-wrap ${priceExpanded ? '' : 'line-clamp-1'}`}>
-                {poi.price}
-              </span>
-            </div>
-            {poi.price.length > 30 && (
+            {poi.price.length > 40 ? (
               <button
                 onClick={() => setPriceExpanded(v => !v)}
-                className="text-xs font-medium mt-1 ms-9"
-                style={{ color }}
+                className="flex items-center gap-2 w-full text-start"
               >
-                {priceExpanded ? 'הצג פחות' : 'קרא עוד'}
+                <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">💰</span>
+                <span className={`text-sm text-gray-700 whitespace-pre-wrap flex-1 ${priceExpanded ? "" : "line-clamp-1"}`}>
+                  {poi.price}
+                </span>
+                <span className="text-xs text-gray-400 shrink-0">{priceExpanded ? "▲" : "▼"}</span>
               </button>
+            ) : (
+              <div className="flex items-start gap-2">
+                <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">💰</span>
+                <span className="text-sm text-gray-700 whitespace-pre-wrap">{poi.price}</span>
+              </div>
             )}
+          </div>
+        )}
+
+        {poi.capacity && (
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">👥</span>
+            <span className="text-sm text-gray-700">{poi.capacity}</span>
           </div>
         )}
 

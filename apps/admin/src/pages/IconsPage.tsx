@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
+import {
+  collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp,
+} from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../lib/firebase.ts'
 import { reportError } from '../lib/errorReporting.ts'
@@ -27,6 +29,10 @@ export function IconsPage() {
   const [bulkItems, setBulkItems] = useState<BulkItem[]>([])
   const [bulkUploading, setBulkUploading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<{ name: string; size: string; flicker: boolean }>({
+    name: '', size: '', flicker: false,
+  })
 
   useEffect(() => {
     return onSnapshot(collection(db, 'icons'), snap => {
@@ -93,6 +99,30 @@ export function IconsPage() {
     }))
     setBulkUploading(false)
     e.target.value = ''
+  }
+
+  function startEdit(icon: Icon) {
+    setEditingId(icon.id)
+    setEditForm({ name: icon.name, size: icon.size ? String(icon.size) : '', flicker: icon.flicker ?? false })
+  }
+
+  async function handleSaveEdit(id: string) {
+    if (!editForm.name.trim()) {
+      setError('יש להזין שם לאייקון')
+      return
+    }
+    try {
+      const sizeNum = parseInt(editForm.size, 10)
+      await updateDoc(doc(db, 'icons', id), {
+        name: editForm.name.trim(),
+        size: editForm.size.trim() && !isNaN(sizeNum) ? sizeNum : null,
+        flicker: editForm.flicker,
+      })
+      setEditingId(null)
+    } catch (err) {
+      setError('שגיאה בשמירה. נסה שוב.')
+      reportError(err, { source: 'IconsPage.edit' })
+    }
   }
 
   async function handleDelete(id: string) {
@@ -206,13 +236,15 @@ export function IconsPage() {
             <tr className="border-b border-gray-200 bg-gray-50">
               <th className="text-right px-4 py-3 font-medium text-gray-600">תמונה</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">שם</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">גודל (px)</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">מהבהב</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {sortedIcons.length === 0 && (
               <tr>
-                <td colSpan={3} className="text-center py-10 text-gray-400">
+                <td colSpan={5} className="text-center py-10 text-gray-400">
                   {icons.length > 0 ? 'לא נמצאו אייקונים' : 'אין אייקונים עדיין'}
                 </td>
               </tr>
@@ -232,17 +264,79 @@ export function IconsPage() {
                     <div className="w-10 h-10 rounded border border-gray-200 bg-gray-100 animate-pulse" />
                   )}
                 </td>
-                <td className="px-4 py-3 font-medium text-gray-900">{icon.name}</td>
-                <td className="px-4 py-3">
-                  {role === 'admin' && (
-                    <button
-                      onClick={() => { handleDelete(icon.id) }}
-                      className="text-red-500 hover:text-red-700 text-xs font-medium"
-                    >
-                      מחיקה
-                    </button>
-                  )}
-                </td>
+                {editingId === icon.id ? (
+                  <>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                        className="border border-gray-300 rounded px-2 py-1 text-sm w-full focus:outline-none focus:border-green-500"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        value={editForm.size}
+                        onChange={e => setEditForm(f => ({ ...f, size: e.target.value }))}
+                        className="border border-gray-300 rounded px-2 py-1 text-sm w-20 focus:outline-none focus:border-green-500"
+                        placeholder="ברירת מחדל"
+                        min={8}
+                        max={200}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={editForm.flicker}
+                        onChange={e => setEditForm(f => ({ ...f, flicker: e.target.checked }))}
+                        className="w-4 h-4 accent-green-600"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { handleSaveEdit(icon.id) }}
+                          className="text-green-600 hover:text-green-800 text-xs font-medium"
+                        >
+                          שמור
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="text-gray-400 hover:text-gray-600 text-xs"
+                        >
+                          ביטול
+                        </button>
+                      </div>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="px-4 py-3 font-medium text-gray-900">{icon.name}</td>
+                    <td className="px-4 py-3 text-gray-500">{icon.size ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      {icon.flicker ? <span className="text-green-600 font-medium">✓</span> : <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => startEdit(icon)}
+                          className="text-blue-500 hover:text-blue-700 text-xs font-medium"
+                        >
+                          ערוך
+                        </button>
+                        {role === 'admin' && (
+                          <button
+                            onClick={() => { handleDelete(icon.id) }}
+                            className="text-red-500 hover:text-red-700 text-xs font-medium"
+                          >
+                            מחיקה
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
