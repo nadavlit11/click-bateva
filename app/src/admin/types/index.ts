@@ -1,4 +1,5 @@
-export type { DayHours } from '../../types/index'
+import type { DayHours } from '../../types/index'
+export type { DayHours }
 
 export interface MapOverrides {
   price: string | null

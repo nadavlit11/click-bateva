@@ -1,4 +1,5 @@
-export type { DayHours } from '../../types/index'
+import type { DayHours } from '../../types/index'
+export type { DayHours }
 
 // Full POI shape as stored in Firestore
 export interface Poi {
