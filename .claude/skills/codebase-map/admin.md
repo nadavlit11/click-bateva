@@ -9,7 +9,7 @@
 - `apps/admin/src/components/MapPicker.tsx` — Leaflet + Nominatim geocoding; click/drag/search to set lat/lng
 - `apps/admin/src/pages/CategoriesPage.tsx` + `CategoryModal.tsx` — category CRUD with icon picker + color picker
 - `apps/admin/src/pages/SubcategoriesPage.tsx` + `SubcategoryModal.tsx` — subcategory CRUD with group datalist autocomplete
-- `apps/admin/src/pages/IconsPage.tsx` — upload/list/delete icons (Cloud Storage `icons/` prefix)
+- `apps/admin/src/pages/IconsPage.tsx` — upload/list/delete icons (Cloud Storage `icons/` prefix); **inline edit per row**: name (guarded against empty), size (px, null = default), flicker (animate-pulse toggle)
 - `apps/admin/src/pages/UsersPage.tsx` — tabbed user management: מנהלי תוכן (content_manager), מפיקים (travel_agent), and מפרסמים (business_user) tabs; role tabs have list/add/delete/block via callables; business tab queries `businesses` collection with add/edit via `BusinessModal` and delete via `deleteBusinessUser` callable
 - `apps/admin/src/components/BusinessModal.tsx` — מפרסם (business) create (via `createBusinessUser` callable) + edit (via direct Firestore update) modes; password strength indicator
 - `apps/admin/src/pages/AnalyticsPage.tsx` — click totals per POI + per category
@@ -17,7 +17,7 @@
 - `apps/admin/src/components/Layout/AppLayout.tsx` + `Sidebar.tsx` — flex layout with nav links (admin-only gating via `useUserRole`)
 - `apps/admin/src/hooks/useUserRole.ts` — custom hook: listens to `onAuthStateChanged`, extracts `role` from `getIdTokenResult()` claims
 - `apps/admin/src/lib/passwordStrength.ts` — shared password validation: `getStrength()`, `isPasswordValid()`, `PASSWORD_ERROR`, strength indicator maps
-- `apps/admin/src/types/index.ts` — Poi (+ whatsapp, iconId, iconUrl, maps: MapOverrides), MapOverrides interface, Category (+ order), Subcategory (+ iconId, iconUrl), Icon types
+- `apps/admin/src/types/index.ts` — Poi (+ whatsapp, iconId, iconUrl, maps: MapOverrides, contactName, capacity), MapOverrides interface, Category (+ order), Subcategory (+ iconId, iconUrl), Icon (+ size, flicker) types
 
 ## Component / Data Flow
 

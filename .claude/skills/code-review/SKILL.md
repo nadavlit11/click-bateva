@@ -91,6 +91,8 @@ Prompt:
 > - React patterns that should be used but weren't: custom hooks for reusable stateful logic, component decomposition for reused UI, context for app-wide state
 > - Firebase SDK patterns skipped in favor of raw fetch or manual workarounds
 > - TypeScript types missing where they'd prevent bugs (any used where a proper type exists or is obvious)
+> - **Inline SVG icons copy-pasted across 2+ components**: identical SVG markup (especially icon paths + companion URLs/strings) should be extracted into a shared component immediately. If you see the same `<svg>` appearing in multiple files, flag it.
+> - **Firestore hooks placed in frequently-mounted child components**: `onSnapshot` listeners opened in components that mount/unmount often (e.g., inner components inside Google Maps `<Map>`) cause listener churn. Firestore data hooks should be called at the highest reasonable component level and passed down as props — consistent with how `pois`, `categories`, and `subcategories` are fetched in the parent and passed in.
 >
 > **Missing error handling:**
 > - Unhandled promise rejections
@@ -147,6 +149,7 @@ Prompt:
 > - These files are under Stryker mutation testing: `apps/user-web/src/lib/filterPois.ts`, `apps/user-web/src/lib/openingStatus.ts`, `functions/src/auth.ts`
 > - When logic in these files changes, flag that `npm run test:mutate` should be run to verify the mutation score hasn't regressed
 > - When new pure-logic utility files are added with tests, suggest adding them to the relevant `stryker.config.json` `mutate` array
+> - **New exports from mutation-tested files need their own direct tests**: if a new function is exported from a file under Stryker mutation testing (e.g., `openingStatus.ts`), its mutations will NOT be killed by tests that only exercise the existing functions — even if both functions share similar logic. Every new exported function in a mutated file needs at least one test that directly imports and calls it, covering key branches (open/closed, null/string inputs, boundary times).
 >
 > For each piece of logic that requires a test, check if a corresponding test file exists in the diff (or already exists in the repo if you can verify). Output PASS if all required tests are present or if nothing testable was added. Output FAIL with a specific list of missing tests otherwise.
 >
