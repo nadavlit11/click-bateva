@@ -1,9 +1,6 @@
-export interface DayHours {
-  open: string   // "09:00"
-  close: string  // "17:00"
-}
+export type { DayHours } from '../../types/index'
 
-// Full POI shape as stored in Firestore (mirrors apps/admin types)
+// Full POI shape as stored in Firestore
 export interface Poi {
   id: string
   name: string

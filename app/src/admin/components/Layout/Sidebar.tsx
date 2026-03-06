@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
-import { signOut, onAuthStateChanged } from 'firebase/auth'
+import { signOut } from 'firebase/auth'
 import { auth } from '../../../lib/firebase.ts'
 import { reportError } from '../../../lib/errorReporting.ts'
 import { useAuth } from '../../../hooks/useAuth.ts'
@@ -17,13 +17,9 @@ const NAV = [
 ]
 
 export function Sidebar() {
-  const { role } = useAuth()
+  const { role, user } = useAuth()
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
-  const [email, setEmail] = useState<string | null>(null)
-
-  useEffect(() => {
-    return onAuthStateChanged(auth, user => setEmail(user?.email ?? null))
-  }, [])
+  const email = user?.email ?? null
 
   return (
     <aside className="w-64 bg-white border-s border-gray-200 flex flex-col h-full shrink-0">

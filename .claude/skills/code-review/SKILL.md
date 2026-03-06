@@ -148,7 +148,7 @@ Prompt:
 > - Routing and layout scaffolding
 >
 > **Mutation testing coverage:**
-> - These files are under Stryker mutation testing: `apps/user-web/src/lib/filterPois.ts`, `apps/user-web/src/lib/openingStatus.ts`, `functions/src/auth.ts`
+> - These files are under Stryker mutation testing: `app/src/lib/filterPois.ts`, `app/src/lib/openingStatus.ts`, `app/src/lib/tripUtils.ts`, `functions/src/auth.ts`
 > - When logic in these files changes, flag that `npm run test:mutate` should be run to verify the mutation score hasn't regressed
 > - When new pure-logic utility files are added with tests, suggest adding them to the relevant `stryker.config.json` `mutate` array
 > - **New exports from mutation-tested files need their own direct tests**: if a new function is exported from a file under Stryker mutation testing (e.g., `openingStatus.ts`), its mutations will NOT be killed by tests that only exercise the existing functions — even if both functions share similar logic. Every new exported function in a mutated file needs at least one test that directly imports and calls it, covering key branches (open/closed, null/string inputs, boundary times).
@@ -189,7 +189,7 @@ cd functions && npm test
 cd firestore-tests && npm test   # requires: firebase emulators:start --only firestore
 
 # User-web logic changes (filterPois etc.):
-cd apps/user-web && npm test
+cd app && npm test
 ```
 
 All tests must pass. If any fail, fix them before proceeding.

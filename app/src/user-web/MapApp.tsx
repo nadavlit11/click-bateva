@@ -573,9 +573,10 @@ export default function MapApp() {
         <RegisterModal onClose={() => setRegisterModalOpen(false)} />
       )}
 
-      {changePasswordModalOpen && (
-        <ChangePasswordModal onClose={() => setChangePasswordModalOpen(false)} />
-      )}
+      <ChangePasswordModal
+        isOpen={changePasswordModalOpen}
+        onClose={() => setChangePasswordModalOpen(false)}
+      />
 
       {contactModalOpen && contactInfo && (
         <ContactUsModal contact={contactInfo} onClose={() => setContactModalOpen(false)} />
