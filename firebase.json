@@ -12,40 +12,6 @@
             { "key": "X-Content-Type-Options", "value": "nosniff" },
             { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
             { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-            { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-            {
-              "key": "Content-Security-Policy-Report-Only",
-              "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://unpkg.com https://click-bateva.firebasestorage.app; connect-src 'self' https://firestore.googleapis.com https://cloudfunctions.googleapis.com https://us-central1-click-bateva.cloudfunctions.net https://firebaseinstallations.googleapis.com https://www.googleapis.com https://click-bateva.firebaseapp.com https://click-bateva.firebasestorage.app https://nominatim.openstreetmap.org https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-src 'none'; object-src 'none'; base-uri 'self'"
-            }
-          ]
-        },
-        {
-          "source": "/assets/**",
-          "headers": [
-            { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-          ]
-        },
-        {
-          "source": "**/*.html",
-          "headers": [
-            { "key": "Cache-Control", "value": "no-cache" }
-          ]
-        }
-      ],
-      "redirects": [{ "source": "/**", "destination": "https://click-bateva-app.web.app/admin", "type": 301 }]
-    },
-    {
-      "site": "click-bateva-app",
-      "public": "app/dist",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "headers": [
-        {
-          "source": "**",
-          "headers": [
-            { "key": "X-Frame-Options", "value": "DENY" },
-            { "key": "X-Content-Type-Options", "value": "nosniff" },
-            { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-            { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
             { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(self)" },
             {
               "key": "Content-Security-Policy-Report-Only",
@@ -69,6 +35,24 @@
       "rewrites": [{ "source": "**", "destination": "/index.html" }]
     },
     {
+      "site": "click-bateva-app",
+      "public": "app/dist",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            { "key": "X-Frame-Options", "value": "DENY" },
+            { "key": "X-Content-Type-Options", "value": "nosniff" },
+            { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+            { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+            { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+          ]
+        }
+      ],
+      "redirects": [{ "source": "/**", "destination": "https://click-bateva.web.app", "type": 301 }]
+    },
+    {
       "site": "click-bateva-biz",
       "public": "app/dist",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
@@ -80,27 +64,11 @@
             { "key": "X-Content-Type-Options", "value": "nosniff" },
             { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
             { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-            { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-            {
-              "key": "Content-Security-Policy-Report-Only",
-              "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://click-bateva.firebasestorage.app; connect-src 'self' https://firestore.googleapis.com https://firebaseinstallations.googleapis.com https://www.googleapis.com https://click-bateva.firebaseapp.com https://click-bateva.firebasestorage.app https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-src 'none'; object-src 'none'; base-uri 'self'"
-            }
-          ]
-        },
-        {
-          "source": "/assets/**",
-          "headers": [
-            { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-          ]
-        },
-        {
-          "source": "**/*.html",
-          "headers": [
-            { "key": "Cache-Control", "value": "no-cache" }
+            { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
           ]
         }
       ],
-      "redirects": [{ "source": "/**", "destination": "https://click-bateva-app.web.app/business", "type": 301 }]
+      "redirects": [{ "source": "/**", "destination": "https://click-bateva.web.app/business", "type": 301 }]
     }
   ],
   "functions": [

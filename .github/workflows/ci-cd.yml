@@ -137,7 +137,7 @@ jobs:
       # Deploy hosting
       - name: Deploy app hosting
         if: needs.changes.outputs.app == 'true'
-        run: firebase deploy --only hosting:click-bateva-app --project click-bateva
+        run: firebase deploy --only hosting:click-bateva --project click-bateva
 
       # Deploy functions
       - name: Install functions dependencies
@@ -198,6 +198,6 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: click-bateva
-          target: click-bateva-app
+          target: click-bateva
           channelId: ${{ steps.channel.outputs.id }}
           expires: 7d
