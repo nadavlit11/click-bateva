@@ -37,6 +37,8 @@ export interface Poi {
   kashrutCertUrl: string
   menuUrl: string
   facebook: string
+  contactName: string
+  capacity: string
   createdAt: unknown
   updatedAt: unknown
 }
@@ -67,6 +69,8 @@ export interface Icon {
   id: string
   name: string
   path: string   // Storage path, e.g. 'icons/{uuid}.png'
+  size: number | null
+  flicker: boolean
   createdAt: unknown
 }
 

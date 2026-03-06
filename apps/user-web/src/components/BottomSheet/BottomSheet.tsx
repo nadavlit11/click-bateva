@@ -3,6 +3,7 @@ import type { Category, Subcategory, Poi, TripDoc } from "../../types";
 import { CATEGORY_EMOJI } from "../../data/defaults";
 import { lighten, lightenBorder } from "../../lib/colorUtils";
 import { CategoryGrid } from "../Sidebar/CategoryGrid";
+import { WhatsAppShareButton } from "../WhatsAppShareButton";
 import { SidebarFooter } from "../Sidebar/SidebarFooter";
 import { TripPanel } from "../Sidebar/TripPanel";
 
@@ -259,31 +260,12 @@ export function BottomSheet({
               )}
             </div>
 
-            {/* Result count + contact + auth button */}
+            {/* Result count + auth + contact buttons */}
             <div className="flex items-center justify-between px-4 pt-1">
               <span className="text-sm text-gray-400">
                 {filteredCount} מקומות
               </span>
               <div className="flex gap-2 items-center">
-                {onContactClick && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onContactClick(); }}
-                    className="text-xs text-green-600 hover:text-green-800 font-medium"
-                  >
-                    צור קשר
-                  </button>
-                )}
-                {termsUrl && (
-                  <a
-                    href={termsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-xs text-gray-400 hover:text-gray-600"
-                  >
-                    תנאי שימוש
-                  </a>
-                )}
                 {isLoggedIn ? (
                   <>
                     <button
@@ -294,7 +276,7 @@ export function BottomSheet({
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); onLogout(); }}
-                      className="text-xs text-gray-400 hover:text-gray-600"
+                      className="text-xs text-red-500 hover:text-red-700 font-medium"
                     >
                       התנתקות
                     </button>
@@ -315,6 +297,28 @@ export function BottomSheet({
                     </button>
                   </>
                 )}
+                {onContactClick && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onContactClick(); }}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    צור קשר
+                  </button>
+                )}
+                {termsUrl && (
+                  <a
+                    href={termsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs text-gray-400 hover:text-gray-600"
+                  >
+                    תנאי שימוש
+                  </a>
+                )}
+                <span onClick={(e) => e.stopPropagation()}>
+                  <WhatsAppShareButton showLabel={false} />
+                </span>
               </div>
             </div>
           </div>
