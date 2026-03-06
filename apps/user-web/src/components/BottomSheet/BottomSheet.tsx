@@ -102,7 +102,7 @@ export function BottomSheet({
   }, [expanded, selectedCategories, selectedSubcategories]);
 
   const sheetStyle: React.CSSProperties = {
-    transform: expanded ? "translateY(0)" : "translateY(calc(100% - 120px))",
+    transform: expanded ? "translateY(0)" : "translateY(100%)",
     transition: "transform 300ms ease",
     height: "70vh",
   };

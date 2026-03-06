@@ -437,17 +437,41 @@ export default function App() {
           </button>
         )}
 
-        {/* Floating search — on mobile stretches full width; on desktop fixed-width on physical left (end in RTL) */}
-        <div className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto md:w-80`} onFocusCapture={() => setSelectedPoi(null)} onInputCapture={() => { if (!hasVisited) { localStorage.setItem("click-bateva:hasVisited", "1"); setHasVisited(true); } }}>
-          <FloatingSearch
-            key={user?.uid ?? "anon"}
-            pois={pois}
-            categories={sortedCategories}
-            subcategories={subcategories}
-            mapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-            onPoiSelect={handleSearchPoiSelect}
-            onLocationSelect={setFocusLocation}
-          />
+        {/* Floating search + filter button (mobile only) */}
+        <div
+          className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto`}
+          onFocusCapture={() => setSelectedPoi(null)}
+          onInputCapture={() => { if (!hasVisited) { localStorage.setItem("click-bateva:hasVisited", "1"); setHasVisited(true); } }}
+        >
+          <div className="flex gap-2 items-start md:w-80">
+            {/* Sheet open button — mobile only, renders first (physical right in RTL) */}
+            <button
+              onClick={() => setSheetExpanded(true)}
+              className="md:hidden shrink-0 w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors relative"
+              title="פתח סינון"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              {selectedCategories.size > 0 && (
+                <span className="absolute -top-1 -end-1 w-4 h-4 bg-green-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {selectedCategories.size}
+                </span>
+              )}
+            </button>
+            {/* Search fills remaining width */}
+            <div className="flex-1">
+              <FloatingSearch
+                key={user?.uid ?? "anon"}
+                pois={pois}
+                categories={sortedCategories}
+                subcategories={subcategories}
+                mapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                onPoiSelect={handleSearchPoiSelect}
+                onLocationSelect={setFocusLocation}
+              />
+            </div>
+          </div>
         </div>
 
         <BottomSheet
