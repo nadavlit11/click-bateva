@@ -2,28 +2,31 @@
 
 ## Key Files
 
-- `apps/business/src/App.tsx` — BrowserRouter + routes + BusinessProvider
-- `apps/business/src/components/AuthGuard.tsx` — gates on `business_user` role; extracts businessId from `businessRef` custom claim; loads business doc; provides BusinessContext
-- `apps/business/src/context/BusinessContext.tsx` — createContext/Provider/useBusinessContext for `{ businessId, businessName }`
-- `apps/business/src/pages/PoisListPage.tsx` — grid of PoiCards for business's assigned POIs
-- `apps/business/src/pages/PoiEditPage.tsx` — edit form for PoiEditableFields + ImageUploader; VAT reminder above price; bold toolbar for description
-- `apps/business/src/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
-- `apps/business/src/components/ImageUploader.tsx` — upload to `poi-media/`, preview list, delete
-- `apps/business/src/components/Layout/TopBar.tsx` — header with business name + "שנה סיסמה" + "התנתקות" buttons
-- `apps/business/src/lib/passwordStrength.ts` — shared password validation (same as admin, per-app copy)
-- `apps/business/src/types/index.ts` — Poi (+ whatsapp), PoiEditableFields (+ whatsapp), Business, BusinessContextValue
+- `app/src/business/BusinessSection.tsx` — lazy-loaded route definitions (mounted under `/business/*` in root App.tsx)
+- `app/src/business/components/AuthGuard.tsx` — gates on `business_user` role; extracts businessId from `businessRef` custom claim; loads business doc; provides BusinessContext
+- `app/src/business/context/BusinessContext.tsx` — createContext/Provider/useBusinessContext for `{ businessId, businessName }`
+- `app/src/business/pages/PoisListPage.tsx` — grid of PoiCards for business's assigned POIs
+- `app/src/business/pages/PoiEditPage.tsx` — edit form for PoiEditableFields + ImageUploader; VAT reminder above price; bold toolbar for description
+- `app/src/business/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
+- `app/src/business/components/ImageUploader.tsx` — upload to `poi-media/`, preview list, delete
+- `app/src/business/components/Layout/TopBar.tsx` — header with business name + "שנה סיסמה" + "התנתקות" buttons
+- `app/src/business/lib/passwordStrength.ts` — shared password validation (same as admin, per-app copy)
+- `app/src/business/types/index.ts` — Poi (+ whatsapp), PoiEditableFields (+ whatsapp), Business, BusinessContextValue
 
 ## Component / Data Flow
 
 ```
-App.tsx (BrowserRouter)
-  └─ AuthGuard
-      ├─ Extracts businessId from claims.businessRef (last path segment)
-      ├─ Reads business doc from Firestore
-      └─ BusinessProvider({ businessId, businessName })
-          └─ AppLayout (TopBar + Outlet)
-              ├─ PoisListPage — query: where("businessId", "==", businessId)
-              └─ PoiEditPage — reads single POI, saves PoiEditableFields
+App.tsx (BrowserRouter, root)
+  └─ BusinessSection (lazy, mounted at /business/*)
+      └─ AuthGuard (gates on business_user; unauthenticated → redirect to /)
+          ├─ Extracts businessId from claims.businessRef (last path segment)
+          ├─ Reads business doc from Firestore
+          └─ BusinessProvider({ businessId, businessName })
+              └─ AppLayout (TopBar + Outlet)
+                  ├─ PoisListPage — query: where("businessId", "==", businessId)
+                  └─ PoiEditPage — reads single POI, saves PoiEditableFields
+
+TopBar: "← המפה" link back to map (to="/")
 ```
 
 ## Patterns & Conventions

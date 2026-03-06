@@ -2,29 +2,25 @@
 
 ## Key Files
 
-- `firebase.json` — hosting targets (3 sites), functions source, Firestore/Storage rules, emulator ports
+- `firebase.json` — hosting target (1 active site), functions source, Firestore/Storage rules, emulator ports
 - `.firebaserc` — project aliases
 - `firestore.rules` — Firestore Security Rules
 - `storage.rules` — Cloud Storage Security Rules
 - `firestore.indexes.json` — composite index definitions
-- `.github/workflows/` — CI/CD (mutation testing)
+- `.github/workflows/ci-cd.yml` — CI/CD pipeline
 - `package.json` (root) — test scripts, dev deps, workspace-level commands
 
-## Hosting Targets
+## Hosting Target
 
-| Site ID | App | URL | Build output |
-|---|---|---|---|
-| `click-bateva` | Admin dashboard | https://click-bateva.web.app | `apps/admin/dist` |
-| `click-bateva-app` | User web app | https://click-bateva-app.web.app | `apps/user-web/dist` |
-| `click-bateva-biz` | Business dashboard | https://click-bateva-biz.web.app | `apps/business/dist` |
+Single active site: `click-bateva` → https://click-bateva.web.app — serves map (`/`), admin (`/admin/*`), business (`/business/*`).
+
+(`click-bateva-app` and `click-bateva-biz` Firebase Hosting sites still exist in the Firebase console but are not in `firebase.json` and are not deployed by CI.)
 
 ## Deploy Commands
 
 ```bash
-# Apps (build first, then deploy):
-firebase deploy --only hosting:click-bateva       # admin
-firebase deploy --only hosting:click-bateva-app   # user web
-firebase deploy --only hosting:click-bateva-biz   # business
+# Build app first, then deploy:
+firebase deploy --only hosting:click-bateva   # unified app
 
 # Cloud Functions:
 firebase deploy --only functions
@@ -33,6 +29,13 @@ firebase deploy --only functions
 firebase deploy --only firestore:rules
 firebase deploy --only storage
 ```
+
+## CI/CD Pipeline (`.github/workflows/ci-cd.yml`)
+
+- `ci-app`: runs in `app/` — npm ci → lint (continue-on-error for feat/fix branches) → test → build → upload `app-dist` artifact
+- `ci-functions`: runs in `functions/` — lint → test → build
+- `deploy-production` (main branch only): downloads `app-dist` → deploys `hosting:click-bateva`
+- `deploy-preview` (develop/feat/fix branches): deploys preview channel to `click-bateva`
 
 ## Emulators
 
@@ -50,8 +53,8 @@ Firestore only: `firebase emulators:start --only firestore`
 ## Test Commands
 
 ```bash
-# User-web (Vitest):
-cd apps/user-web && npm test
+# App (Vitest):
+cd app && npm test
 
 # Cloud Functions (Jest, no emulator):
 cd functions && npm test
@@ -67,10 +70,11 @@ npm run test:mutate:functions    # functions only
 
 ## Patterns & Conventions
 
-- All hosting targets include security headers (X-Frame-Options, CSP-Report-Only, HSTS, etc.)
-- SPA rewrites: all routes → `/index.html`
+- CSP is `Content-Security-Policy-Report-Only` (not enforcement) — violations logged but don't block
+- CSP covers: Google Maps, Leaflet tiles (`*.tile.openstreetmap.org`), Nominatim geocoding, Cloud Functions endpoint, Firebase SDKs, Sentry, Google Analytics, YouTube iframe
+- SPA rewrite: all routes → `/index.html`
 - Asset caching: `/assets/**` gets `max-age=31536000, immutable`; HTML gets `no-cache`
-- Sentry error reporting on both frontend (user-web) and backend (functions)
+- `Permissions-Policy: geolocation=(self)` — map uses browser geolocation
 
 ## Gotchas
 
@@ -78,3 +82,4 @@ npm run test:mutate:functions    # functions only
 - After changing Firestore rules, you MUST deploy them — undeployed rules silently block access
 - Cloud Functions use `setGlobalOptions({ maxInstances: 10 })` to limit scaling
 - `serviceAccount.json` is gitignored — needed for scripts like `set-admin.mjs`
+- Build env var `VITE_GOOGLE_MAPS_API_KEY` is required (admin MapPicker + user-web FloatingSearch)

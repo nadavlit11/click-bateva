@@ -9,16 +9,25 @@ After reading the relevant sub-page, go directly to the source files listed ther
 ## Monorepo Overview
 
 ```
-apps/admin/        Admin dashboard (React + Vite) — POI/category/subcategory/icon CRUD
-apps/user-web/     User-facing map app (React + Vite) — Google Maps + POI browsing
-apps/business/     Business dashboard (React + Vite) — business owners edit their POIs
+app/               Unified React + Vite app — all three sections in one
+  src/
+    user-web/      Map section (Google Maps + POI browsing, default route /)
+    admin/         Admin section (POI/category/subcategory/icon CRUD, route /admin/*)
+    business/      Business section (business owners edit their POIs, route /business/*)
+    lib/           Shared: firebase.ts, passwordStrength.ts, filterPois.ts, etc.
+    hooks/         Shared: useAuth.ts, useFirestoreData.ts, useTrip.ts, etc.
+    types/         Shared base types (Category, Subcategory, Poi variants)
+    App.tsx        Root BrowserRouter + lazy-loaded section routes
+    main.tsx       Entry point + Sentry init
 functions/         Firebase Cloud Functions (Node.js + TypeScript) — auth triggers + callables
 firestore-tests/   Standalone Firestore Security Rules tests (Jest + emulator)
 docs/              Design docs (LLDs, HLD, ATDD) — point-in-time, not live references
 scripts/           Utility scripts (data import, admin bootstrap)
+apps/              Legacy per-app directories (no longer built by CI; kept for reference)
 ```
 
-All apps share: Vite, React, TypeScript, Tailwind CSS v4, Rubik font, Hebrew RTL.
+All sections share: Vite, React, TypeScript, Tailwind CSS v4, Rubik font, Hebrew RTL.
+Single auth session at click-bateva.web.app — no re-login when switching sections.
 
 ## Firestore Collections
 

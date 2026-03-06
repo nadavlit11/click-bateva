@@ -2,39 +2,42 @@
 
 ## Key Files
 
-- `apps/admin/src/App.tsx` — BrowserRouter + route definitions
-- `apps/admin/src/components/AuthGuard.tsx` — onAuthStateChanged + custom claims gate (admin | content_manager)
-- `apps/admin/src/pages/PoisPage.tsx` — POI list; clicking a POI navigates to `/pois/:id`
-- `apps/admin/src/pages/PoiEditPage.tsx` — full-page POI editor (replaces old PoiDrawer); CRUD + image upload + MapPicker + subcategory checkboxes + per-map price/active fields (agents & groups)
-- `apps/admin/src/components/MapPicker.tsx` — Leaflet + Nominatim geocoding; click/drag/search to set lat/lng
-- `apps/admin/src/pages/CategoriesPage.tsx` + `CategoryModal.tsx` — category CRUD with icon picker + color picker
-- `apps/admin/src/pages/SubcategoriesPage.tsx` + `SubcategoryModal.tsx` — subcategory CRUD with group datalist autocomplete
-- `apps/admin/src/pages/IconsPage.tsx` — upload/list/delete icons (Cloud Storage `icons/` prefix); **inline edit per row**: name (guarded against empty), size (px, null = default), flicker (animate-pulse toggle)
-- `apps/admin/src/pages/UsersPage.tsx` — tabbed user management: מנהלי תוכן (content_manager), מפיקים (travel_agent), and מפרסמים (business_user) tabs; role tabs have list/add/delete/block via callables; business tab queries `businesses` collection with add/edit via `BusinessModal` and delete via `deleteBusinessUser` callable
-- `apps/admin/src/components/BusinessModal.tsx` — מפרסם (business) create (via `createBusinessUser` callable) + edit (via direct Firestore update) modes; password strength indicator
-- `apps/admin/src/pages/AnalyticsPage.tsx` — click totals per POI + per category
-- `apps/admin/src/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
-- `apps/admin/src/components/Layout/AppLayout.tsx` + `Sidebar.tsx` — flex layout with nav links (admin-only gating via `useUserRole`)
-- `apps/admin/src/hooks/useUserRole.ts` — custom hook: listens to `onAuthStateChanged`, extracts `role` from `getIdTokenResult()` claims
-- `apps/admin/src/lib/passwordStrength.ts` — shared password validation: `getStrength()`, `isPasswordValid()`, `PASSWORD_ERROR`, strength indicator maps
-- `apps/admin/src/types/index.ts` — Poi (+ whatsapp, iconId, iconUrl, maps: MapOverrides, contactName, capacity), MapOverrides interface, Category (+ order), Subcategory (+ iconId, iconUrl), Icon (+ size, flicker) types
+- `app/src/admin/AdminSection.tsx` — lazy-loaded route definitions (mounted under `/admin/*` in root App.tsx); imports `leaflet/dist/leaflet.css`
+- `app/src/admin/components/AuthGuard.tsx` — onAuthStateChanged + custom claims gate (admin | content_manager); unauthenticated redirects to `/` (map)
+- `app/src/admin/pages/PoisPage.tsx` — POI list; clicking a POI navigates to `/pois/:id`
+- `app/src/admin/pages/PoiEditPage.tsx` — full-page POI editor (replaces old PoiDrawer); CRUD + image upload + MapPicker + subcategory checkboxes + per-map price/active fields (agents & groups)
+- `app/src/admin/components/MapPicker.tsx` — Leaflet + Nominatim geocoding; click/drag/search to set lat/lng
+- `app/src/admin/pages/CategoriesPage.tsx` + `CategoryModal.tsx` — category CRUD with icon picker + color picker
+- `app/src/admin/pages/SubcategoriesPage.tsx` + `SubcategoryModal.tsx` — subcategory CRUD with group datalist autocomplete
+- `app/src/admin/pages/IconsPage.tsx` — upload/list/delete icons (Cloud Storage `icons/` prefix); **inline edit per row**: name (guarded against empty), size (px, null = default), flicker (animate-pulse toggle)
+- `app/src/admin/pages/UsersPage.tsx` — tabbed user management: מנהלי תוכן (content_manager), מפיקים (travel_agent), and מפרסמים (business_user) tabs; role tabs have list/add/delete/block via callables; business tab queries `businesses` collection with add/edit via `BusinessModal` and delete via `deleteBusinessUser` callable
+- `app/src/admin/components/BusinessModal.tsx` — מפרסם (business) create (via `createBusinessUser` callable) + edit (via direct Firestore update) modes; password strength indicator
+- `app/src/admin/pages/AnalyticsPage.tsx` — click totals per POI + per category
+- `app/src/admin/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
+- `app/src/admin/components/Layout/AppLayout.tsx` + `Sidebar.tsx` — flex layout with nav links (admin-only gating via `useAuth`); includes "← המפה" link back to map (`to="/"`)
+- `app/src/hooks/useAuth.ts` — shared hook used by all three sections: listens to `onAuthStateChanged`, extracts `role` from `getIdTokenResult()` claims, returns `{ user, role, loading }`
+- `app/src/admin/lib/passwordStrength.ts` — shared password validation: `getStrength()`, `isPasswordValid()`, `PASSWORD_ERROR`, strength indicator maps
+- `app/src/admin/types/index.ts` — Poi (+ whatsapp, iconId, iconUrl, maps: MapOverrides, contactName, capacity), MapOverrides interface, Category (+ order), Subcategory (+ iconId, iconUrl), Icon (+ size, flicker) types
 
 ## Component / Data Flow
 
 ```
-App.tsx (BrowserRouter)
-  └─ AuthGuard (gates on admin | content_manager role via custom claims)
-      └─ AppLayout (Sidebar nav + Outlet)
-          ├─ DashboardPage (stats overview + settings: pin size, contact info, terms upload)
-          ├─ PoisPage → navigates to /pois/:id
-          ├─ PoiEditPage (full-page POI editor; per-map price/active; delete hidden for CM role)
-          ├─ CategoriesPage → CategoryModal (+ order field)
-          ├─ SubcategoriesPage → SubcategoryModal (+ icon picker)
-          ├─ IconsPage (direct upload/delete)
-          ├─ UsersPage (admin-only; tabs: מנהלי תוכן + מפיקים + מפרסמים)
-          └─ AnalyticsPage (reads clicks collection)
+App.tsx (BrowserRouter, root)
+  └─ AdminSection (lazy, mounted at /admin/*)
+      └─ AuthGuard (gates on admin | content_manager; unauthenticated → redirect to /)
+          └─ AppLayout (Sidebar nav + Outlet)
+              ├─ DashboardPage (stats overview + settings: pin size, contact info, terms upload)
+              ├─ PoisPage → navigates to /admin/pois/:id
+              ├─ PoiEditPage (full-page POI editor; per-map price/active; delete hidden for CM role)
+              ├─ CategoriesPage → CategoryModal (+ order field)
+              ├─ SubcategoriesPage → SubcategoryModal (+ icon picker)
+              ├─ IconsPage (direct upload/delete)
+              ├─ MapSettingsPage
+              ├─ UsersPage (admin-only via AdminOnlyRoute)
+              └─ AnalyticsPage (admin-only via AdminOnlyRoute)
 
-Sidebar: nav links filtered by useUserRole() — /users is adminOnly ("משתמשים")
+Sidebar: nav links filtered by useAuth().role — /users is adminOnly ("משתמשים")
+         "← המפה" link back to map
          "שנה סיסמה" button opens ChangePasswordModal
 ```
 

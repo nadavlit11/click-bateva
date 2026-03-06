@@ -1,0 +1,62 @@
+export interface Category {
+  id: string;
+  name: string;     // Hebrew e.g. "מסעדות"
+  color: string;    // hex e.g. "#FF5733" — used for marker gradient
+  iconUrl: string | null;
+  order: number;
+}
+
+export interface Subcategory {
+  id: string;
+  categoryId: string;    // which category this refinement belongs to
+  group: string | null;  // e.g. "kashrut" | "price" | "audience" | null
+  name: string;          // Hebrew e.g. "כשר", "זול"
+  iconUrl: string | null;
+}
+
+export interface DayHours {
+  open: string;   // "09:00"
+  close: string;  // "17:00"
+}
+
+export interface TripPoiEntry {
+  poiId: string;
+  addedAt: number;   // ms timestamp for ordering within a day
+  dayNumber: number; // 1-indexed day this POI belongs to
+}
+
+export interface TripDoc {
+  id: string;          // Firestore document ID
+  ownerId: string;
+  clientName: string;
+  pois: TripPoiEntry[];
+  numDays: number;
+  isShared: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Poi {
+  id: string;
+  name: string;
+  description: string;
+  location: { lat: number; lng: number };
+  mainImage: string | null;
+  images: string[];       // ordered image URLs; empty = show placeholder
+  videos: string[];       // external video URLs (YouTube etc.)
+  phone: string | null;
+  whatsapp: string | null;
+  email: string | null;
+  website: string | null; // domain only e.g. "www.example.co.il"
+  openingHours: Record<string, DayHours | null> | string | null; // structured or legacy string
+  price: string | null;
+  kashrutCertUrl: string | null;
+  menuUrl: string | null;
+  facebook: string | null;
+  categoryId: string;
+  subcategoryIds: string[]; // category-scoped refinement IDs
+  iconUrl: string | null;
+  iconId: string | null;
+  businessId: string | null;
+  capacity: string | null;
+}
