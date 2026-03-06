@@ -388,6 +388,7 @@ export default function MapApp() {
           mapKey={mapKey}
           isAgent={isAgent}
           onMapKeyChange={isAgent ? handleMapKeyChange : undefined}
+          role={role}
           isLoggedIn={!!user}
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
@@ -501,6 +502,7 @@ export default function MapApp() {
           onCategoryToggle={handleCategoryToggle}
           onSubcategoryFilter={setSubcategoryModalCategoryId}
           onClearAll={handleClearAll}
+          role={role}
           isLoggedIn={!!user}
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}

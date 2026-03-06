@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import type { Category, Subcategory, Poi, TripDoc } from "../../../types";
 import type { MapKey } from "../../../hooks/useFirestoreData";
 import { AppHeader } from "./AppHeader";
@@ -22,6 +23,7 @@ interface SidebarProps {
   isAgent: boolean;
   onMapKeyChange?: (key: MapKey) => void;
   // auth
+  role?: string | null;
   isLoggedIn: boolean;
   onLoginClick: () => void;
   onRegisterClick: () => void;
@@ -62,6 +64,7 @@ export function Sidebar({
   mapKey,
   isAgent,
   onMapKeyChange,
+  role,
   isLoggedIn,
   onLoginClick,
   onRegisterClick,
@@ -164,6 +167,22 @@ export function Sidebar({
         />
       )}
       <div className="px-4 py-3 border-t border-gray-100 space-y-2">
+        {isLoggedIn && (role === "admin" || role === "content_manager") && (
+          <Link
+            to="/admin"
+            className="flex w-full justify-center py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors text-sm font-medium"
+          >
+            לוח ניהול ←
+          </Link>
+        )}
+        {isLoggedIn && role === "business_user" && (
+          <Link
+            to="/business"
+            className="flex w-full justify-center py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors text-sm font-medium"
+          >
+            פורטל עסקים ←
+          </Link>
+        )}
         {isLoggedIn ? (
           <div className="flex gap-2">
             <WhatsAppShareButton className="flex-1 justify-center py-1.5 rounded-lg hover:bg-green-50 transition-colors font-medium text-sm" />

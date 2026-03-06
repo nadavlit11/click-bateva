@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import type { Category, Subcategory, Poi, TripDoc } from "../../../types";
 import { CATEGORY_EMOJI } from "../../data/defaults";
 import { lighten, lightenBorder } from "../../../lib/colorUtils";
@@ -20,6 +21,7 @@ interface BottomSheetProps {
   onCategoryToggle: (id: string) => void;
   onSubcategoryFilter: (categoryId: string) => void;
   onClearAll: () => void;
+  role?: string | null;
   isLoggedIn: boolean;
   onLoginClick: () => void;
   onRegisterClick: () => void;
@@ -55,6 +57,7 @@ export function BottomSheet({
   onCategoryToggle,
   onSubcategoryFilter,
   onClearAll,
+  role,
   isLoggedIn,
   onLoginClick,
   onRegisterClick,
@@ -266,6 +269,24 @@ export function BottomSheet({
                 {filteredCount} מקומות
               </span>
               <div className="flex gap-2 items-center">
+                {isLoggedIn && (role === "admin" || role === "content_manager") && (
+                  <Link
+                    to="/admin"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs text-green-700 font-medium hover:text-green-900"
+                  >
+                    לוח ניהול ←
+                  </Link>
+                )}
+                {isLoggedIn && role === "business_user" && (
+                  <Link
+                    to="/business"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs text-green-700 font-medium hover:text-green-900"
+                  >
+                    פורטל עסקים ←
+                  </Link>
+                )}
                 {isLoggedIn ? (
                   <>
                     <span onClick={(e) => e.stopPropagation()}>
