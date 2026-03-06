@@ -11,7 +11,7 @@
 - `apps/user-web/src/components/Sidebar/Sidebar.tsx` — desktop filter panel (collapsible, hidden when `sidebarOpen === false`); children: AppHeader, CategoryGrid, SidebarFooter. Search moved to FloatingSearch.
 - `apps/user-web/src/components/Sidebar/CategoryGrid.tsx` — category buttons with filter icon badge; clicking badge opens SubcategoryModal
 - `apps/user-web/src/components/SubcategoryModal.tsx` — modal showing subcategories for a specific category, all checked by default, toggle individual subs
-- `apps/user-web/src/components/BottomSheet/BottomSheet.tsx` — mobile filter panel; collapsed peek (120px, category chips + count) / expanded (~70vh, category grid with subcategory modal triggers)
+- `apps/user-web/src/components/BottomSheet/BottomSheet.tsx` — mobile panel (filters + trip + auth); **fully hidden when collapsed** (`translateY(100%)`); opened via hamburger button next to search bar; expanded = ~70vh with category grid + trip tab + auth buttons
 - `apps/user-web/src/hooks/useFirestoreData.ts` — `usePois(mapKey)`, `useCategories()`, `useSubcategories()`, `useIcons()` — onSnapshot hooks; `usePois` accepts a `MapKey` ('agents' | 'groups') to filter by `maps.<mapKey>.active == true`. `useIcons()` returns `IconMeta[]` (`{ id, size, flicker }`) from the `icons` collection.
 - `apps/user-web/src/hooks/useTrip.ts` — `useTrip(uid)` hook: dual storage — Firestore for logged-in users, localStorage for anonymous. Auto-migrates localStorage trip to Firestore on login. Returns `{ trip, addPoi, removePoi, movePoi, addDay, setClientName, clearTrip, shareTrip, newTrip }`
 - `apps/user-web/src/hooks/useAuth.ts` — `useAuth()` hook: listens to `onAuthStateChanged`, extracts role from custom claims, returns `{ user, role, loading }`
@@ -26,7 +26,7 @@
 - `apps/user-web/src/lib/renderBoldText.tsx` — simple `**bold**` parser; handles unmatched delimiters gracefully
 - `apps/user-web/src/lib/constants.ts` — shared constants: `MAP_LABELS` (Hebrew labels for map keys)
 - `apps/user-web/src/components/MapIndicator.tsx` — mobile-only map label (non-agent) or map switcher (agent); positioned bottom-left above bottom sheet
-- `apps/user-web/src/components/MapView/EmptyMapOverlay.tsx` — first-visit onboarding overlay with animated arrows pointing to category selection (right on desktop, down on mobile); only shown when `!hasVisited && selectedCategories.size === 0`
+- `apps/user-web/src/components/MapView/EmptyMapOverlay.tsx` — first-visit onboarding overlay; shown via `showOnboarding` bool in App.tsx (`!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && !hasVisited`). Desktop: animated right-pointing arrow. Mobile: card only — arrow is rendered in App.tsx co-located with the menu button (flex-col child, bounces upward)
 - `apps/user-web/src/types/index.ts` — Poi (+ whatsapp, iconUrl, iconId, capacity), Category (+ order), Subcategory (+ iconUrl) interfaces
 
 ## Component / Data Flow
