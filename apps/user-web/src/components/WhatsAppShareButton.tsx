@@ -13,7 +13,7 @@ export function WhatsAppShareButton({ showLabel = true, className }: WhatsAppSha
       href={WA_SHARE_HREF}
       target="_blank"
       rel="noopener noreferrer"
-      className={`flex items-center gap-1 text-xs transition-colors ${className ?? ""}`}
+      className={`flex items-center gap-1 transition-colors ${className ?? "text-xs"}`}
       style={{ color: "#25D366" }}
       title="שתף בוואטסאפ"
     >
