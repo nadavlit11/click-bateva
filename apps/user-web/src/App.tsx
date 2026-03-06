@@ -196,6 +196,8 @@ export default function App() {
     return missingTripPois.length > 0 ? [...filteredPois, ...missingTripPois] : filteredPois;
   }, [filteredPois, pois, tripPoiIdSet]);
 
+  const showOnboarding = !poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && !hasVisited;
+
   const sortedCategories = useMemo(
     () => [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [categories]
@@ -445,20 +447,33 @@ export default function App() {
         >
           <div className="flex gap-2 items-start md:w-80">
             {/* Sheet open button — mobile only, renders first (physical right in RTL) */}
-            <button
-              onClick={() => setSheetExpanded(true)}
-              className="md:hidden shrink-0 w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors relative"
-              title="פתח סינון"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              {selectedCategories.size > 0 && (
-                <span className="absolute -top-1 -end-1 w-4 h-4 bg-green-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {selectedCategories.size}
-                </span>
+            <div className="md:hidden shrink-0 flex flex-col items-center">
+              <button
+                onClick={() => setSheetExpanded(true)}
+                className="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors relative"
+                title="פתח תפריט"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                {selectedCategories.size > 0 && (
+                  <span className="absolute -top-1 -end-1 w-4 h-4 bg-green-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {selectedCategories.size}
+                  </span>
+                )}
+              </button>
+              {/* Onboarding arrow — directly below the button, always aligned */}
+              {showOnboarding && (
+                <div className="animate-bounce mt-1">
+                  <svg className="w-14 h-14" fill="none" viewBox="0 0 24 24"
+                    style={{ filter: "drop-shadow(0 4px 12px rgba(34,197,94,0.4))", transform: "rotate(180deg)" }}
+                  >
+                    <path stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth={5} d="M12 4v12m0 0l-5-5m5 5l5-5" />
+                    <path stroke="#22c55e" strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v12m0 0l-5-5m5 5l5-5" />
+                  </svg>
+                </div>
               )}
-            </button>
+            </div>
             {/* Search fills remaining width */}
             <div className="flex-1">
               <FloatingSearch
@@ -512,7 +527,7 @@ export default function App() {
           isAgent={isAgent}
           onMapKeyChange={isAgent ? handleMapKeyChange : undefined}
         />
-        {!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && !hasVisited && <EmptyMapOverlay />}
+        {showOnboarding && <EmptyMapOverlay />}
         {poisLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
             <div className="bg-white/80 rounded-xl px-5 py-3 shadow text-gray-500 text-sm font-medium">
