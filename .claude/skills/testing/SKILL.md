@@ -33,14 +33,13 @@ tests/
     ├── setup.ts                   ← shared initializeTestEnvironment
     └── *.rules.test.ts            ← Firestore security rules tests
 
-apps/user-web/src/
-└── lib/
-    └── filterPois.test.ts         ← Vitest unit tests (co-located with source)
+app/src/
+└── **/*.test.ts                   ← Vitest unit tests (co-located with source)
 ```
 
 Integration tests that use the **Firebase client SDK** (`firebase/app`, `firebase/auth`, etc.) live at the **project root** `tests/integration/` — not inside `functions/` — because the client SDK is installed at root.
 
-**React app tests** use **Vitest** (co-located with source as `*.test.ts`). Run with `npm test` from `apps/user-web/`.
+**React app tests** use **Vitest** (co-located with source as `*.test.ts`). Run with `npm test` from `app/`.
 
 ---
 
@@ -50,7 +49,7 @@ Integration tests that use the **Firebase client SDK** (`firebase/app`, `firebas
 |---|---|---|
 | `cd functions && npm test` | Cloud Function unit tests | No |
 | `npm run test:integration` | Integration tests (functions + rules) | Yes |
-| `cd apps/user-web && npm test` | Vitest unit tests | No |
+| `cd app && npm test` | Vitest unit tests | No |
 
 Start emulators: `firebase emulators:start --only auth,functions,firestore`
 

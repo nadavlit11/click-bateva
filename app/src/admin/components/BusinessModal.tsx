@@ -4,7 +4,7 @@ import { updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { db, functions } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { getStrength, isPasswordValid, PASSWORD_ERROR, strengthLabel, strengthColor, strengthWidth } from '../../lib/passwordStrength.ts'
-import { PasswordInput } from './PasswordInput.tsx'
+import { PasswordInput } from '../../components/PasswordInput'
 import type { Business } from '../types/index.ts'
 
 interface Props {

@@ -1,7 +1,5 @@
-export interface DayHours {
-  open: string   // "09:00"
-  close: string  // "17:00"
-}
+import type { DayHours } from '../../types/index'
+export type { DayHours }
 
 export interface MapOverrides {
   price: string | null

@@ -1,10 +1,9 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "./user-web/components/ErrorBoundary";
+import { AuthProvider } from "./hooks/useAuth";
 
 const MapApp = lazy(() => import("./user-web/MapApp"));
-
-// Placeholders — replaced in later steps
 const AdminSection = lazy(() => import("./admin/AdminSection"));
 const BusinessSection = lazy(() => import("./business/BusinessSection"));
 
@@ -18,13 +17,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <ErrorBoundary>
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            <Route path="/admin/*" element={<AdminSection />} />
-            <Route path="/business/*" element={<BusinessSection />} />
-            <Route path="/*" element={<MapApp />} />
-          </Routes>
-        </Suspense>
+        <AuthProvider>
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route path="/admin/*" element={<AdminSection />} />
+              <Route path="/business/*" element={<BusinessSection />} />
+              <Route path="/*" element={<MapApp />} />
+            </Routes>
+          </Suspense>
+        </AuthProvider>
       </ErrorBoundary>
     </BrowserRouter>
   );

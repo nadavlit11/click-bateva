@@ -8,57 +8,33 @@ Cheatsheet for deploying this project's Firebase services.
 
 | Command | What it deploys |
 |---------|----------------|
-| `firebase deploy --only hosting:click-bateva` | Admin app (apps/admin/dist) |
-| `firebase deploy --only hosting:click-bateva-app` | User-web app (apps/user-web/dist) |
-| `firebase deploy --only hosting:click-bateva-biz` | Business app (apps/business/dist) |
-| `firebase deploy --only hosting` | All 3 hosting sites |
+| `firebase deploy --only hosting:click-bateva` | Unified app (app/dist) — map + admin + business |
 | `firebase deploy --only firestore:rules,firestore:indexes,storage` | Rules only |
 | `firebase deploy --only functions` | Cloud Functions only |
 | `firebase deploy` | Everything |
 
-**CRITICAL: Always build ALL apps before deploying hosting.** Deploying without building pushes stale artifacts.
+**CRITICAL: Build before deploying hosting.** Deploying without building pushes stale artifacts.
 ```bash
-cd apps/admin && npm run build && cd ../user-web && npm run build && cd ../business && npm run build
+cd app && npm run build
 ```
 Then deploy:
 ```bash
-firebase deploy --only hosting
+firebase deploy --only hosting:click-bateva
 ```
+
+**NOTE: All deployments normally go through CI/CD (GitHub Actions).** Only use manual deploys for emergencies.
 
 ---
 
-## Multi-site hosting setup
+## Single-site hosting setup
 
-This project has three Firebase Hosting sites:
+This project has one Firebase Hosting site:
 
-| Site ID | URL | App |
-|---------|-----|-----|
-| `click-bateva` | https://click-bateva.web.app | Admin dashboard |
-| `click-bateva-app` | https://click-bateva-app.web.app | User-facing map app |
-| `click-bateva-biz` | https://click-bateva-biz.web.app | Business dashboard |
+| Site ID | URL | Contents |
+|---------|-----|----------|
+| `click-bateva` | https://click-bateva.web.app | Unified app (map `/`, admin `/admin/*`, business `/business/*`) |
 
-**firebase.json structure** for multiple sites (use an array, not an object):
-```json
-"hosting": [
-  {
-    "site": "click-bateva",
-    "public": "apps/admin/dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "**", "destination": "/index.html" }]
-  },
-  {
-    "site": "click-bateva-app",
-    "public": "apps/user-web/dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "**", "destination": "/index.html" }]
-  }
-]
-```
-
-**To add a new site:**
-```bash
-firebase hosting:sites:create <site-id>
-```
+Source: `app/dist` (built by `cd app && npm run build`)
 
 ---
 
@@ -87,7 +63,5 @@ The user must sign out and back in for the token to refresh.
 
 ## Firebase Hosting URLs
 
-- Admin: https://click-bateva.web.app
-- User app: https://click-bateva-app.web.app
-- Business: https://click-bateva-biz.web.app
+- Unified app: https://click-bateva.web.app (map + admin + business)
 - Firebase Console: https://console.firebase.google.com/project/click-bateva

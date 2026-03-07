@@ -5,7 +5,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../../../lib/firebase.ts'
 import { reportError } from '../../../lib/errorReporting.ts'
 import { useBusinessContext } from '../../context/BusinessContext.tsx'
-import { ChangePasswordModal } from '../ChangePasswordModal.tsx'
+import { ChangePasswordModal } from '../../../components/ChangePasswordModal'
 
 export function TopBar() {
   const { businessName } = useBusinessContext()

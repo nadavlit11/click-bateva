@@ -93,6 +93,8 @@ Prompt:
 > - TypeScript types missing where they'd prevent bugs (any used where a proper type exists or is obvious)
 > - **Inline SVG icons copy-pasted across 2+ components**: identical SVG markup (especially icon paths + companion URLs/strings) should be extracted into a shared component immediately. If you see the same `<svg>` appearing in multiple files, flag it.
 > - **Firestore hooks placed in frequently-mounted child components**: `onSnapshot` listeners opened in components that mount/unmount often (e.g., inner components inside Google Maps `<Map>`) cause listener churn. Firestore data hooks should be called at the highest reasonable component level and passed down as props — consistent with how `pois`, `categories`, and `subcategories` are fetched in the parent and passed in.
+> - **Custom hooks that call Firebase listeners must be context-based when shared across multiple components**: every `useHook()` call that contains `onAuthStateChanged` or `onSnapshot` opens a NEW Firebase connection. If the hook is consumed in more than one component in the same React tree, the listener logic MUST live in a `Context` + `Provider` at the app root so a single listener is shared. A plain hook that calls `onAuthStateChanged` inside a `useEffect` will open N simultaneous connections when used in N components — this is a resource/performance bug. Check: does the hook appear in multiple component files? If yes, it must be context-based.
+> - **Converting a conditionally-rendered modal to an `isOpen` prop changes state-reset semantics**: `{open && <Modal />}` unmounts when `open=false`, clearing all internal state for free. `<Modal isOpen={open} />` with an early return (`if (!isOpen) return null`) keeps the component mounted — state persists while hidden. Any time a modal is converted to the `isOpen` prop pattern, verify it has `useEffect(() => { if (!isOpen) { /* reset all state */ } }, [isOpen])` to restore the implicit state-reset. Without this, stale passwords/errors/form values appear the next time the modal opens.
 >
 > **Missing error handling:**
 > - Unhandled promise rejections
@@ -148,7 +150,7 @@ Prompt:
 > - Routing and layout scaffolding
 >
 > **Mutation testing coverage:**
-> - These files are under Stryker mutation testing: `apps/user-web/src/lib/filterPois.ts`, `apps/user-web/src/lib/openingStatus.ts`, `functions/src/auth.ts`
+> - These files are under Stryker mutation testing: `app/src/lib/filterPois.ts`, `app/src/lib/openingStatus.ts`, `app/src/lib/tripUtils.ts`, `functions/src/auth.ts`
 > - When logic in these files changes, flag that `npm run test:mutate` should be run to verify the mutation score hasn't regressed
 > - When new pure-logic utility files are added with tests, suggest adding them to the relevant `stryker.config.json` `mutate` array
 > - **New exports from mutation-tested files need their own direct tests**: if a new function is exported from a file under Stryker mutation testing (e.g., `openingStatus.ts`), its mutations will NOT be killed by tests that only exercise the existing functions — even if both functions share similar logic. Every new exported function in a mutated file needs at least one test that directly imports and calls it, covering key branches (open/closed, null/string inputs, boundary times).
@@ -189,7 +191,7 @@ cd functions && npm test
 cd firestore-tests && npm test   # requires: firebase emulators:start --only firestore
 
 # User-web logic changes (filterPois etc.):
-cd apps/user-web && npm test
+cd app && npm test
 ```
 
 All tests must pass. If any fail, fix them before proceeding.

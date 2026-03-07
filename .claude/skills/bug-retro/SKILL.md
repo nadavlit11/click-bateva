@@ -80,7 +80,7 @@ cd functions && npm test
 cd firestore-tests && npm test   # requires: firebase emulators:start --only firestore
 
 # User-web logic changes:
-cd apps/user-web && npm test
+cd app && npm test
 ```
 
 Run whichever test suite covers the changed code. All tests must pass before committing.

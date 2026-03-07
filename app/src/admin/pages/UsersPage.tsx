@@ -4,7 +4,7 @@ import { httpsCallable } from 'firebase/functions'
 import { db, functions } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { getStrength, isPasswordValid, PASSWORD_ERROR, strengthLabel, strengthColor, strengthWidth } from '../../lib/passwordStrength.ts'
-import { PasswordInput } from '../components/PasswordInput.tsx'
+import { PasswordInput } from '../../components/PasswordInput'
 import { BusinessModal } from '../components/BusinessModal.tsx'
 import type { Business } from '../types/index.ts'
 
