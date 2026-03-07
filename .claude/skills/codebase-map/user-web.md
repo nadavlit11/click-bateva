@@ -3,8 +3,8 @@
 ## Key Files
 
 - `app/src/user-web/MapApp.tsx` — root map component (mounted at `/*` in root App.tsx); owns ALL state (filters, selected POI, sheet expand, sidebarOpen, hasVisited, mapKey), renders Sidebar + MapView + BottomSheet + PoiDetailPanel + FloatingSearch + SubcategoryModal + MapIndicator + EmptyMapOverlay
-- `app/src/user-web/components/MapView/MapView.tsx` — APIProvider + Map wrapper, renders PoiMarker via MarkerClusterer; builds subcategory icon lookup; sorts categories by `order`; tracks zoom level for name pill visibility. **`useIcons()` called here (at MapView level), NOT inside ClusteredPoiMarkers** — `iconMetaMap` passed as prop to avoid listener churn.
-- `app/src/user-web/components/MapView/PoiMarker.tsx` — AdvancedMarker with **white circle bubble** (36px, icon inside 22px); name label pill visible at zoom >= 8; inline styles only; accepts resolved `iconUrl` (poi → subcategory → category fallback chain); fallback = 📍 emoji in white circle. Props: `iconFlicker` (adds `animate-pulse`), `iconSize` (overrides pinSize for img), `isDimmed` (reserved for future trip dimming, never passed currently).
+- `app/src/user-web/components/MapView/MapView.tsx` — APIProvider + Map wrapper, renders PoiMarker via MarkerClusterer; builds consolidated `catMaps` and `subMaps` lookup objects (single-pass memoized); **cascade resolution** per POI: `poi > subcategory > category` for color, borderColor, markerSize, iconUrl. `useIcons()` called here (at MapView level), `iconMetaMap` passed as prop. Helper: `firstSubMatch(sids, map)` (module-level function).
+- `app/src/user-web/components/MapView/PoiMarker.tsx` — AdvancedMarker with icon image or 📍 emoji fallback; name label pill visible at zoom >= 8; inline styles only. Props: `color` (glow), `borderColor` (ring via `box-shadow: 0 0 0 2.5px`), `markerSize` (cascade-resolved), `iconFlicker` (adds `animate-pulse`), `iconSize` (icon-level override), `isDimmed`. Size priority: `iconSize > markerSize > pinSize (24)`.
 - `app/src/user-web/components/WhatsAppShareButton.tsx` — shared WhatsApp share `<a>` with inline SVG + site URL. Props: `showLabel` (bool, default true), `className`.
 - `app/src/user-web/components/MapView/PoiDetailPanel.tsx` — slide-up detail panel; **infinite-looping image carousel** (tripled array + silent jump on wrap, direction:ltr on track); quick-action row (call, navigate, whatsapp, website, facebook); **phone icon on desktop opens modal** (not tel: link — detected via `!('ontouchstart' in window)`); restaurant buttons; renders `**bold**` in description via `renderBoldText`; sticky close button; click-outside-to-close
 - `app/src/user-web/components/FloatingSearch.tsx` — **search dropdown** (NEW): debounced input, dropdown shows POI name matches (local) + location results (Google Geocoding REST API); clicking a POI opens detail panel; clicking a location calls `onLocationSelect` to pan map; map is NEVER filtered by text
@@ -46,7 +46,7 @@ App.tsx (owns state: selectedCategories, selectedSubcategories, focusLocation, s
   ├─ MapView (accepts focusLocation prop → ClusteredPoiMarkers → map.moveCamera())
   │    └─ APIProvider > Map > MarkerClusterer > PoiMarker[] (clustered at low zoom, individual at high zoom)
   │    └─ PoiMarker shows name pill at zoom >= 8 (always for unclustered markers)
-  │    └─ Icon resolution: poi.iconUrl → subcategory.iconUrl → category.iconUrl (first non-null wins)
+  │    └─ Cascade resolution (POI > subcategory > category): iconUrl, color, borderColor, markerSize
   ├─ BottomSheet (mobile only, < md; receives auth props for login/logout buttons)
   │    └─ collapsed: ChipRow + count | expanded: category grid with subcategory modal triggers + LoginModal trigger
   ├─ SubcategoryModal (opened per-category from CategoryGrid badge click)

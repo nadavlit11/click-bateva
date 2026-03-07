@@ -5,10 +5,11 @@
 - `app/src/admin/AdminSection.tsx` — lazy-loaded route definitions (mounted under `/admin/*` in root App.tsx); imports `leaflet/dist/leaflet.css`
 - `app/src/admin/components/AuthGuard.tsx` — reads `user`, `role`, `loading` from `useAuth()` context; gates on admin | content_manager; unauthenticated redirects to `/` (map)
 - `app/src/admin/pages/PoisPage.tsx` — POI list; clicking a POI navigates to `/pois/:id`
-- `app/src/admin/pages/PoiEditPage.tsx` — full-page POI editor (replaces old PoiDrawer); CRUD + image upload + MapPicker + subcategory checkboxes + per-map price/active fields (agents & groups)
+- `app/src/admin/pages/PoiEditPage.tsx` — full-page POI editor; CRUD + image upload + MapPicker + per-map price/active. Display overrides section: color, borderColor, markerSize, flicker (admin/CM only). Subcategory selector directly under category. Business selector: filtered dropdown (search shown when >10 businesses).
 - `app/src/admin/components/MapPicker.tsx` — Leaflet + Nominatim geocoding; click/drag/search to set lat/lng
-- `app/src/admin/pages/CategoriesPage.tsx` + `CategoryModal.tsx` — category CRUD with icon picker + color picker
-- `app/src/admin/pages/SubcategoriesPage.tsx` + `SubcategoryModal.tsx` — subcategory CRUD with group datalist autocomplete
+- `app/src/admin/components/ColorPickerField.tsx` — shared color picker (type=color + text input + clear button); used by CategoryModal, SubcategoryModal, PoiEditPage
+- `app/src/admin/pages/CategoriesPage.tsx` + `CategoryModal.tsx` — category CRUD with icon picker + color + borderColor + markerSize
+- `app/src/admin/pages/SubcategoriesPage.tsx` + `SubcategoryModal.tsx` — subcategory CRUD with group datalist; optional color/borderColor/markerSize overrides
 - `app/src/admin/pages/IconsPage.tsx` — upload/list/delete icons (Cloud Storage `icons/` prefix); **inline edit per row**: name (guarded against empty), size (px, null = default), flicker (animate-pulse toggle)
 - `app/src/admin/pages/UsersPage.tsx` — tabbed user management: מנהלי תוכן (content_manager), מפיקים (travel_agent), and מפרסמים (business_user) tabs; role tabs have list/add/delete/block via callables; business tab queries `businesses` collection with add/edit via `BusinessModal` and delete via `deleteBusinessUser` callable
 - `app/src/admin/components/BusinessModal.tsx` — מפרסם (business) create (via `createBusinessUser` callable) + edit (via direct Firestore update) modes; password strength indicator
@@ -17,7 +18,7 @@
 - `app/src/admin/components/Layout/AppLayout.tsx` + `Sidebar.tsx` — flex layout with nav links (admin-only gating via `useAuth`); includes "← המפה" link back to map (`to="/"`)
 - `app/src/hooks/useAuth.tsx` — **context-based** auth hook; `AuthProvider` wraps the entire app at `App.tsx` root, runs ONE `onAuthStateChanged` listener for the whole app; `useAuth()` returns `{ user, role, loading, login, logout }` from context (zero extra listeners). `useAuth.ts` is a thin re-export barrel.
 - `app/src/admin/lib/passwordStrength.ts` — shared password validation: `getStrength()`, `isPasswordValid()`, `PASSWORD_ERROR`, strength indicator maps
-- `app/src/admin/types/index.ts` — Poi (+ whatsapp, iconId, iconUrl, maps: MapOverrides, contactName, capacity), MapOverrides interface, Category (+ order), Subcategory (+ iconId, iconUrl), Icon (+ size, flicker) types
+- `app/src/admin/types/index.ts` — Poi (+ color, borderColor, markerSize, flicker, maps: MapOverrides, contactName, capacity), MapOverrides, Category (+ borderColor, markerSize), Subcategory (+ color, borderColor, markerSize, iconId, iconUrl), Icon (+ size, flicker) types
 
 ## Component / Data Flow
 

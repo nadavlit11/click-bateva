@@ -5,6 +5,7 @@ import type { Poi } from "../../../types";
 interface PoiMarkerProps {
   poi: Poi;
   color: string;
+  borderColor?: string | null;
   iconUrl: string | null;
   selected: boolean;
   showLabel: boolean;
@@ -12,20 +13,22 @@ interface PoiMarkerProps {
   onClick: () => void;
   setMarkerRef: (marker: google.maps.marker.AdvancedMarkerElement | null, key: string) => void;
   tripNumber?: number;
-  isDimmed?: boolean; // reserved for future trip-planner dimming
+  isDimmed?: boolean;
   iconFlicker?: boolean;
   iconSize?: number;
+  markerSize?: number;
 }
 
 const AMBER = "#F59E0B";
 
-export function PoiMarker({ poi, color, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef, tripNumber, isDimmed, iconFlicker, iconSize }: PoiMarkerProps) {
+export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef, tripNumber, isDimmed, iconFlicker, iconSize, markerSize }: PoiMarkerProps) {
   const [hovered, setHovered] = useState(false);
   const ref = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement | null) => setMarkerRef(marker, poi.id),
     [setMarkerRef, poi.id]
   );
 
+  const effectiveSize = iconSize ?? markerSize ?? pinSize;
   const markerColor = tripNumber ? AMBER : color;
   const dropShadow = selected
     ? `drop-shadow(0 0 5px ${markerColor}) drop-shadow(0 2px 4px rgba(0,0,0,0.3))`
@@ -53,15 +56,27 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, pinSize, o
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div style={{ position: "relative" }}>
+        <div
+          style={{
+            position: "relative",
+            ...(borderColor ? {
+              borderRadius: "50%",
+              boxShadow: `0 0 0 2.5px ${borderColor}`,
+              padding: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            } : {}),
+          }}
+        >
           {iconUrl ? (
             <img
               src={iconUrl}
               alt=""
               className={iconFlicker ? "animate-pulse" : undefined}
               style={{
-                width: iconSize ?? pinSize,
-                height: iconSize ?? pinSize,
+                width: effectiveSize,
+                height: effectiveSize,
                 objectFit: "contain",
                 display: "block",
                 filter: dropShadow,
@@ -72,7 +87,7 @@ export function PoiMarker({ poi, color, iconUrl, selected, showLabel, pinSize, o
           ) : (
             <span
               style={{
-                fontSize: pinSize,
+                fontSize: effectiveSize,
                 lineHeight: 1,
                 filter: dropShadow,
                 transform: hovered || selected ? "scale(1.2)" : "scale(1)",

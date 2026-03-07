@@ -16,6 +16,7 @@ import { reportError } from '../../lib/errorReporting.ts'
 import { FOOD_CATEGORY_ID } from '../../lib/constants.ts'
 import type { Poi, Category, Subcategory, DayHours, Icon, Business } from '../types/index.ts'
 import { IconPicker } from '../components/IconPicker.tsx'
+import { ColorPickerField } from '../components/ColorPickerField.tsx'
 
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
 const DAY_NAMES_HE: Record<string, string> = {
@@ -52,6 +53,10 @@ interface FormState {
   capacity: string
   mapType: 'default' | 'families'
   familiesPrice: string
+  color: string
+  borderColor: string
+  markerSize: string
+  flicker: boolean
 }
 
 const INITIAL_FORM: FormState = {
@@ -81,6 +86,10 @@ const INITIAL_FORM: FormState = {
   capacity: '',
   mapType: 'default',
   familiesPrice: '',
+  color: '',
+  borderColor: '',
+  markerSize: '',
+  flicker: false,
 }
 
 export function PoiEditPage() {
@@ -180,6 +189,10 @@ export function PoiEditPage() {
         capacity: poi.capacity ?? '',
         mapType: poi.mapType ?? 'default',
         familiesPrice: poi.mapType === 'families' ? (poi.price ?? '') : '',
+        color: poi.color ?? '',
+        borderColor: poi.borderColor ?? '',
+        markerSize: poi.markerSize?.toString() ?? '',
+        flicker: poi.flicker ?? false,
       })
       setLoading(false)
     }).catch(err => {
@@ -270,6 +283,10 @@ export function PoiEditPage() {
         facebook: source.facebook ?? null,
         contactName: source.contactName ?? null,
         capacity: source.capacity ?? null,
+        color: source.color ?? null,
+        borderColor: source.borderColor ?? null,
+        markerSize: source.markerSize ?? null,
+        flicker: source.flicker ?? null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }
@@ -376,6 +393,13 @@ export function PoiEditPage() {
         facebook: form.facebook.trim() || null,
         contactName: form.contactName.trim() || null,
         capacity: form.capacity.trim() || null,
+        color: form.color.trim() || null,
+        borderColor: form.borderColor.trim() || null,
+        markerSize: (() => {
+          const n = parseInt(form.markerSize, 10)
+          return form.markerSize && !isNaN(n) ? n : null
+        })(),
+        flicker: form.flicker ? true : null,
         updatedAt: serverTimestamp(),
       }
 
@@ -466,34 +490,74 @@ export function PoiEditPage() {
             {fieldErrors.has('categoryId') && <p className="text-red-500 text-xs mt-1">יש לבחור קטגוריה</p>}
           </div>
 
+          {/* Subcategory (scoped to selected category) */}
+          {form.categoryId && (() => {
+            const catSubs = subcategories.filter(s => s.categoryId === form.categoryId)
+            if (catSubs.length === 0) return null
+            const groupOrder: Array<string | null> = []
+            const seen = new Set<string | null>()
+            for (const s of catSubs) {
+              const g = s.group ?? null
+              if (!seen.has(g)) { seen.add(g); groupOrder.push(g) }
+            }
+            return (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">תת-קטגוריה</label>
+                <select
+                  value={form.selectedSubcategoryIds[0] ?? ''}
+                  onChange={e => selectSubcategory(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
+                >
+                  <option value="">— ללא תת-קטגוריה —</option>
+                  {groupOrder.map(group => {
+                    const groupSubs = catSubs.filter(s => (s.group ?? null) === group)
+                    if (group) {
+                      return (
+                        <optgroup key={group} label={group}>
+                          {groupSubs.map(sub => (
+                            <option key={sub.id} value={sub.id}>{sub.name}</option>
+                          ))}
+                        </optgroup>
+                      )
+                    }
+                    return groupSubs.map(sub => (
+                      <option key={sub.id} value={sub.id}>{sub.name}</option>
+                    ))
+                  })}
+                </select>
+              </div>
+            )
+          })()}
+
           {/* Business */}
           {businesses.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">עסק משויך</label>
-              <input
-                type="text"
-                value={businessSearch}
-                onChange={e => setBusinessSearch(e.target.value)}
-                placeholder="חיפוש עסק..."
-                className="w-full border border-gray-300 rounded-t-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 border-b-0"
-              />
               <select
                 value={form.businessId}
                 onChange={e => set('businessId', e.target.value)}
-                size={4}
-                className="w-full border border-gray-300 rounded-b-lg px-3 py-1 text-sm focus:outline-none focus:border-green-500 bg-white"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
               >
                 <option value="">— ללא עסק —</option>
-                {businesses
-                  .filter(b => {
-                    const q = businessSearch.toLowerCase()
-                    return !q || b.name.toLowerCase().includes(q) || b.email.toLowerCase().includes(q)
-                  })
-                  .map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))
-                }
+                {(() => {
+                  const showSearch = businesses.length > 10
+                  const q = showSearch ? businessSearch.toLowerCase() : ''
+                  return businesses
+                    .filter(b => !q || b.name.toLowerCase().includes(q) || b.email.toLowerCase().includes(q))
+                    .map(b => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))
+                })()}
               </select>
+              {businesses.length > 10 && (
+                <input
+                  type="text"
+                  value={businessSearch}
+                  onChange={e => setBusinessSearch(e.target.value)}
+                  placeholder="סינון עסקים..."
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 mt-1"
+                />
+              )}
               {form.businessId && (
                 <button
                   type="button"
@@ -925,49 +989,42 @@ export function PoiEditPage() {
             />
           </div>
 
-          {/* Subcategory (scoped to selected category) */}
-          {form.categoryId && (() => {
-            const catSubs = subcategories.filter(s => s.categoryId === form.categoryId)
-            if (catSubs.length === 0) return null
-            const groupOrder: Array<string | null> = []
-            const seen = new Set<string | null>()
-            for (const s of catSubs) {
-              const g = s.group ?? null
-              if (!seen.has(g)) { seen.add(g); groupOrder.push(g) }
-            }
-            return (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">תת-קטגוריה</label>
-                <select
-                  value={form.selectedSubcategoryIds[0] ?? ''}
-                  onChange={e => selectSubcategory(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 bg-white"
-                >
-                  <option value="">— ללא תת-קטגוריה —</option>
-                  {groupOrder.map(group => {
-                    const groupSubs = catSubs.filter(s => (s.group ?? null) === group)
-                    if (group) {
-                      return (
-                        <optgroup key={group} label={group}>
-                          {groupSubs.map(sub => (
-                            <option key={sub.id} value={sub.id}>{sub.name}</option>
-                          ))}
-                        </optgroup>
-                      )
-                    }
-                    return groupSubs.map(sub => (
-                      <option key={sub.id} value={sub.id}>{sub.name}</option>
-                    ))
-                  })}
-                </select>
-              </div>
-            )
-          })()}
-
           {/* Icon override */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">אייקון (דריסה)</label>
             <IconPicker icons={icons} value={form.iconId} onChange={v => set('iconId', v)} />
+          </div>
+
+          {/* Display overrides */}
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <label className="block text-sm font-semibold text-gray-800 mb-1">
+              עקיפות תצוגה (אופציונלי)
+            </label>
+            <ColorPickerField label="צבע" value={form.color} onChange={v => set('color', v)} />
+            <ColorPickerField label="צבע מסגרת" value={form.borderColor} onChange={v => set('borderColor', v)} />
+            <div className="flex items-center gap-3">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">גודל סמן</label>
+                <input
+                  type="number"
+                  value={form.markerSize}
+                  onChange={e => set('markerSize', e.target.value)}
+                  className="w-24 border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-green-500"
+                  placeholder="ברירת מחדל"
+                  min="8"
+                  max="128"
+                />
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer mt-4">
+                <input
+                  type="checkbox"
+                  checked={form.flicker}
+                  onChange={e => set('flicker', e.target.checked)}
+                  className="accent-green-600 w-4 h-4"
+                />
+                <span className="text-sm text-gray-700">הבהוב</span>
+              </label>
+            </div>
           </div>
 
           {/* Active toggles */}

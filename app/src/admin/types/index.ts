@@ -39,6 +39,10 @@ export interface Poi {
   facebook: string
   contactName: string
   capacity: string
+  color: string | null
+  borderColor: string | null
+  markerSize: number | null
+  flicker: boolean | null
   createdAt: unknown
   updatedAt: unknown
 }
@@ -47,6 +51,8 @@ export interface Category {
   id: string
   name: string
   color: string
+  borderColor: string | null
+  markerSize: number | null
   iconId: string | null
   iconUrl: string | null
   order: number
@@ -60,6 +66,9 @@ export interface Subcategory {
   categoryId: string
   group: string | null   // e.g. "kashrut" | "price" | "audience" | null
   name: string
+  color: string | null
+  borderColor: string | null
+  markerSize: number | null
   iconId: string | null
   iconUrl: string | null
   createdAt: unknown

@@ -5,6 +5,7 @@ import { db, storage } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import type { Category, Icon } from '../types/index.ts'
 import { IconPicker } from './IconPicker.tsx'
+import { ColorPickerField } from './ColorPickerField.tsx'
 
 interface Props {
   isOpen: boolean
@@ -17,11 +18,16 @@ interface Props {
 interface FormState {
   name: string
   color: string
+  borderColor: string
+  markerSize: string
   iconId: string
   order: number
 }
 
-const INITIAL_FORM: FormState = { name: '', color: '#16a34a', iconId: '', order: 0 }
+const INITIAL_FORM: FormState = {
+  name: '', color: '#16a34a', borderColor: '', markerSize: '',
+  iconId: '', order: 0,
+}
 
 export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
@@ -33,6 +39,8 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
       setForm({
         name: category.name,
         color: category.color,
+        borderColor: category.borderColor ?? '',
+        markerSize: category.markerSize?.toString() ?? '',
         iconId: category.iconId ?? '',
         order: category.order ?? 0,
       })
@@ -64,9 +72,12 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
         }
       }
 
+      const sizeNum = parseInt(form.markerSize, 10)
       const data = {
         name: form.name.trim(),
         color: form.color,
+        borderColor: form.borderColor.trim() || null,
+        markerSize: form.markerSize && !isNaN(sizeNum) ? sizeNum : null,
         iconId,
         iconUrl,
         order: form.order,
@@ -135,6 +146,21 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
                 placeholder="#16a34a"
               />
             </div>
+          </div>
+
+          <ColorPickerField label="צבע מסגרת" value={form.borderColor} onChange={v => set('borderColor', v)} />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">גודל סמן</label>
+            <input
+              type="number"
+              value={form.markerSize}
+              onChange={e => set('markerSize', e.target.value)}
+              className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              placeholder="24 (ברירת מחדל)"
+              min="8"
+              max="128"
+            />
           </div>
 
           <div>

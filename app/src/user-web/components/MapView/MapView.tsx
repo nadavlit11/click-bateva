@@ -22,6 +22,13 @@ interface MapViewProps {
   activeDayPoiIds?: string[];
 }
 
+function firstSubMatch<T>(sids: string[], map: Record<string, T>): T | undefined {
+  for (const sid of sids) {
+    if (map[sid] != null) return map[sid];
+  }
+  return undefined;
+}
+
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
 const MAP_ID = "DEMO_MAP_ID";
 const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
@@ -88,20 +95,33 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
   const clusterer = useRef<MarkerClusterer | null>(null);
   const [markers, setMarkers] = useState<Record<string, Marker>>({});
 
-  const colorMap = useMemo(
-    () => Object.fromEntries(categories.map((c) => [c.id, c.color])),
-    [categories]
-  );
-  const iconUrlMap = useMemo(
-    () => Object.fromEntries(categories.map((c) => [c.id, c.iconUrl])),
-    [categories]
-  );
-  const subcategoryIconMap = useMemo(
-    () => Object.fromEntries(
-      subcategories.filter((s) => s.iconUrl != null).map((s) => [s.id, s.iconUrl])
-    ),
-    [subcategories]
-  );
+  const catMaps = useMemo(() => {
+    const color: Record<string, string> = {};
+    const iconUrl: Record<string, string | null> = {};
+    const borderColor: Record<string, string> = {};
+    const markerSize: Record<string, number> = {};
+    for (const c of categories) {
+      color[c.id] = c.color;
+      iconUrl[c.id] = c.iconUrl;
+      if (c.borderColor) borderColor[c.id] = c.borderColor;
+      if (c.markerSize != null) markerSize[c.id] = c.markerSize;
+    }
+    return { color, iconUrl, borderColor, markerSize };
+  }, [categories]);
+
+  const subMaps = useMemo(() => {
+    const iconUrl: Record<string, string> = {};
+    const color: Record<string, string> = {};
+    const borderColor: Record<string, string> = {};
+    const markerSize: Record<string, number> = {};
+    for (const s of subcategories) {
+      if (s.iconUrl) iconUrl[s.id] = s.iconUrl;
+      if (s.color) color[s.id] = s.color;
+      if (s.borderColor) borderColor[s.id] = s.borderColor;
+      if (s.markerSize != null) markerSize[s.id] = s.markerSize;
+    }
+    return { iconUrl, color, borderColor, markerSize };
+  }, [subcategories]);
 
   // Trip number map: poiId → 1-indexed position
   const tripNumberMap = useMemo(
@@ -212,18 +232,31 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
   return (
     <>
       {effectivePois.map((poi) => {
-        const subcategoryIcon = poi.subcategoryIds.reduce<string | null>(
-          (found, sid) => found ?? (subcategoryIconMap[sid] ?? null),
-          null
-        );
-        const resolvedIconUrl = poi.iconUrl ?? subcategoryIcon ?? iconUrlMap[poi.categoryId] ?? null;
+        const sids = poi.subcategoryIds;
+        const resolvedIconUrl = poi.iconUrl
+          ?? firstSubMatch(sids, subMaps.iconUrl)
+          ?? catMaps.iconUrl[poi.categoryId]
+          ?? null;
+        const resolvedColor = poi.color
+          ?? firstSubMatch(sids, subMaps.color)
+          ?? catMaps.color[poi.categoryId]
+          ?? "#4caf50";
+        const resolvedBorderColor = poi.borderColor
+          ?? firstSubMatch(sids, subMaps.borderColor)
+          ?? catMaps.borderColor[poi.categoryId]
+          ?? null;
+        const resolvedMarkerSize = poi.markerSize
+          ?? firstSubMatch(sids, subMaps.markerSize)
+          ?? catMaps.markerSize[poi.categoryId]
+          ?? undefined;
         const tripNumber = tripNumberMap.get(poi.id);
         const iconMeta = poi.iconId ? iconMetaMap[poi.iconId] : undefined;
         return (
           <PoiMarker
             key={poi.id}
             poi={poi}
-            color={colorMap[poi.categoryId] ?? "#4caf50"}
+            color={resolvedColor}
+            borderColor={resolvedBorderColor}
             iconUrl={resolvedIconUrl}
             selected={poi.id === selectedPoiId}
             showLabel={showLabels}
@@ -231,8 +264,9 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
             onClick={() => onPoiClick(poi)}
             setMarkerRef={setMarkerRef}
             tripNumber={tripNumber}
-            iconFlicker={iconMeta?.flicker ?? false}
+            iconFlicker={poi.flicker ?? iconMeta?.flicker ?? false}
             iconSize={iconMeta?.size ?? undefined}
+            markerSize={resolvedMarkerSize}
           />
         );
       })}

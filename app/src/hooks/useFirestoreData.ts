@@ -38,6 +38,10 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>, mapKey: MapKey): Poi[
       iconId: d.iconId || null,
       businessId: d.businessId || null,
       capacity: d.capacity || null,
+      color: d.color || null,
+      borderColor: d.borderColor || null,
+      markerSize: d.markerSize ?? null,
+      flicker: d.flicker ?? null,
     };
   });
 }
