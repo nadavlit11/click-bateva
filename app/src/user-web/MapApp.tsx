@@ -29,7 +29,7 @@ const recentClicks = new Map<string, number>();
 const CLICK_DEBOUNCE_MS = 3000;
 const VALID_MAP_KEYS: MapKey[] = ["agents", "groups", "families"];
 
-function resolveMapKey(role: string | undefined): MapKey {
+function resolveMapKey(role: string | null | undefined): MapKey {
   const saved = localStorage.getItem("click-bateva:mapKey");
   const roleDefault: MapKey = role === "travel_agent" ? "agents" : "groups";
   const canSeeAgents = role === "travel_agent" || role === "admin" || role === "content_manager";
