@@ -4,28 +4,21 @@ import { MAP_LABELS } from "../../lib/constants";
 interface MapIndicatorProps {
   mapKey: MapKey;
   isAgent: boolean;
-  onMapKeyChange?: (key: MapKey) => void;
+  onMapKeyChange: (key: MapKey) => void;
 }
 
 export function MapIndicator({ mapKey, isAgent, onMapKeyChange }: MapIndicatorProps) {
-  if (!isAgent) {
-    return (
-      <div className="absolute bottom-[68px] start-14 z-10 md:hidden">
-        <span className="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-md text-xs font-medium text-gray-600">
-          <span className="w-2 h-2 rounded-full bg-green-500" />
-          מפת {MAP_LABELS[mapKey]}
-        </span>
-      </div>
-    );
-  }
+  const keys: MapKey[] = isAgent
+    ? ["groups", "agents", "families"]
+    : ["groups", "families"];
 
   return (
     <div className="absolute bottom-[68px] start-14 z-10 md:hidden">
       <div className="inline-flex bg-white/90 backdrop-blur-sm rounded-full shadow-md p-0.5 text-xs font-medium">
-        {(["groups", "agents"] as const).map((key) => (
+        {keys.map((key) => (
           <button
             key={key}
-            onClick={() => onMapKeyChange?.(key)}
+            onClick={() => onMapKeyChange(key)}
             className={`px-3 py-1.5 rounded-full transition-colors ${
               mapKey === key
                 ? "bg-green-600 text-white shadow-sm"

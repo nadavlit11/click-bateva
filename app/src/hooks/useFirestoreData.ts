@@ -7,7 +7,7 @@ import type { Category, Poi, Subcategory } from "../types";
 
 export interface IconMeta { id: string; size: number | null; flicker: boolean }
 
-export type MapKey = "agents" | "groups";
+export type MapKey = "agents" | "groups" | "families";
 
 function snapshotToPois(snap: QuerySnapshot<DocumentData>, mapKey: MapKey): Poi[] {
   return snap.docs.map(doc => {
@@ -26,7 +26,9 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>, mapKey: MapKey): Poi[
       email: d.email || null,
       website: d.website || null,
       openingHours: d.openingHours ?? null,
-      price: maps?.[mapKey]?.price ?? d.price ?? null,
+      price: mapKey === "families"
+        ? (d.price ?? null)
+        : (maps?.[mapKey]?.price ?? d.price ?? null),
       kashrutCertUrl: d.kashrutCertUrl || null,
       menuUrl: d.menuUrl || null,
       facebook: d.facebook || null,
@@ -47,11 +49,15 @@ export function usePois(mapKey: MapKey = "groups") {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset loading when mapKey changes (no cascading render)
     setLoading(true);
-    const q = query(
-      collection(db, "points_of_interest"),
-      where("active", "==", true),
-      where(`maps.${mapKey}.active`, "==", true),
-    );
+    const col = collection(db, "points_of_interest");
+    const q = mapKey === "families"
+      ? query(col, where("mapType", "==", "families"), where("active", "==", true))
+      : query(
+          col,
+          where("mapType", "==", "default"),
+          where("active", "==", true),
+          where(`maps.${mapKey}.active`, "==", true),
+        );
     const unsub = onSnapshot(q, snap => {
       setPois(snapshotToPois(snap, mapKey));
       setLoading(false);

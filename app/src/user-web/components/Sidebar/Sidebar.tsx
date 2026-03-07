@@ -21,7 +21,7 @@ interface SidebarProps {
   // map
   mapKey: MapKey;
   isAgent: boolean;
-  onMapKeyChange?: (key: MapKey) => void;
+  onMapKeyChange: (key: MapKey) => void;
   // auth
   role?: string | null;
   isLoggedIn: boolean;
