@@ -5,3 +5,10 @@ body {
   margin: 0;
   overflow: hidden;
 }
+
+/* Push TabNav accessibility icon above floating category chips on mobile */
+@media (max-width: 767px) {
+  #tabnav-widget {
+    bottom: 68px !important;
+  }
+}
