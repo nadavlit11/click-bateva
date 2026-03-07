@@ -53,7 +53,7 @@ App.tsx (owns state: selectedCategories, selectedSubcategories, focusLocation, s
   └─ PoiDetailPanel (when selectedPoi != null; click outside closes)
 
 Data: Firestore onSnapshot → usePois(mapKey)/useCategories/useSubcategories → mapPois (location !== null) → filterPois() → filteredPois
-Map switching: travel_agent/admin/content_manager can see agents map (tab order: agents | groups | families in RTL); travel_agent defaults to 'agents', others default to 'groups'. usePois queries where maps.<mapKey>.active == true.
+Map switching: travel_agent/admin/content_manager can see agents map (tab order: agents | groups | families in RTL); travel_agent defaults to 'agents', others default to 'groups'. **mapKey persisted to localStorage** (`click-bateva:mapKey`) — restored on refresh via `resolveMapKey(role)` helper (validates saved value + guards "agents" for non-privileged users). usePois queries where maps.<mapKey>.active == true.
 filterPois: category + subcategory filters ONLY — no text search
 Categories sorted by `order` field before rendering.
 When category toggled ON: all its subcategories auto-selected.
@@ -90,3 +90,4 @@ Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes t
 - `renderBoldText` handles unmatched `**` delimiters by returning raw text
 - **RTL + `flex-row-reverse` double-flip:** In an RTL document, flex already reverses item order. Adding `flex-row-reverse` reverses it back to LTR physical order. To force specific physical ordering in RTL, use `style={{ direction: "ltr" }}` on the flex container and `style={{ direction: "rtl" }}` on text children.
 - **Filter persistence:** `selectedCategories` and `selectedSubcategories` are persisted to localStorage (`click-bateva:selectedCategories`, `click-bateva:selectedSubcategories`). On auth change (login/logout), filters are reset to empty. `hasVisited` flag (`click-bateva:hasVisited`) controls first-visit overlay — set in `handleCategoryToggle` and search `onInputCapture`, NOT in a useEffect (lint rule blocks setState in effects).
+- **Map tab persistence:** `mapKey` persisted to `click-bateva:mapKey` in localStorage. Restored on mount and auth change via `resolveMapKey(role)` helper (module-level function in MapApp.tsx). Guards: rejects "agents" for users without `canSeeAgents`, validates against `VALID_MAP_KEYS` array, falls back to role-based default.
