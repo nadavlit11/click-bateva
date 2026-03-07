@@ -1,5 +1,5 @@
 const WA_SHARE_HREF = `https://wa.me/?text=${encodeURIComponent(
-  "קליק בטבע - גלה את ישראל בטבע! https://click-bateva-app.web.app"
+  "קליק בטבע - גלה את ישראל בטבע! https://click-bateva.web.app"
 )}`;
 
 interface WhatsAppShareButtonProps {

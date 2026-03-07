@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://click-bateva-app.web.app/sitemap.xml
+Sitemap: https://click-bateva.web.app/sitemap.xml
