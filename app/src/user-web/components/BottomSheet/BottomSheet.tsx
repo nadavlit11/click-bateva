@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import type { Category, Subcategory, Poi, TripDoc } from "../../../types";
 import { CATEGORY_EMOJI } from "../../data/defaults";
@@ -7,6 +7,8 @@ import { CategoryGrid } from "../Sidebar/CategoryGrid";
 import { WhatsAppShareButton } from "../WhatsAppShareButton";
 import { SidebarFooter } from "../Sidebar/SidebarFooter";
 import { TripPanel } from "../Sidebar/TripPanel";
+
+const SWIPE_THRESHOLD = 80;
 
 type ActiveTab = "filter" | "trip";
 
@@ -98,15 +100,41 @@ export function BottomSheet({
       const id = requestAnimationFrame(checkScroll);
       return () => cancelAnimationFrame(id);
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset to false when collapsed (no cascading render)
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on collapse, no cascade
       setCanScrollDown(false);
     }
   // Sets have new identity on every toggle (new Set(prev)), so this fires on each selection change — intended.
   }, [expanded, selectedCategories, selectedSubcategories]);
 
+  // ── Swipe-to-close ──
+  const touchStartY = useRef(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    setDragging(true);
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!dragging) return;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    if (dy > 0) setDragOffset(dy);
+  }, [dragging]);
+
+  const onTouchEnd = useCallback(() => {
+    setDragging(false);
+    if (dragOffset > SWIPE_THRESHOLD) {
+      onExpandedChange(false);
+    }
+    setDragOffset(0);
+  }, [dragOffset, onExpandedChange]);
+
   const sheetStyle: React.CSSProperties = {
-    transform: expanded ? "translateY(0)" : "translateY(100%)",
-    transition: "transform 300ms ease",
+    transform: expanded
+      ? `translateY(${dragOffset}px)`
+      : "translateY(100%)",
+    transition: dragging ? "none" : "transform 300ms ease",
     height: "70vh",
   };
 
@@ -125,14 +153,31 @@ export function BottomSheet({
         className={`bg-white rounded-t-2xl shadow-2xl flex flex-col z-20 ${className ?? ""}`}
         style={sheetStyle}
       >
-        {/* Drag handle */}
+        {/* Drag handle + close button */}
         <div
-          className="shrink-0 pt-3 pb-2 cursor-pointer"
+          className="shrink-0 pt-3 pb-2 cursor-pointer relative"
           onClick={() => onExpandedChange(!expanded)}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
           aria-label={expanded ? "כווץ" : "הרחב"}
           role="button"
         >
           <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto" />
+          {expanded && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onExpandedChange(false);
+              }}
+              className="absolute top-2 start-3 w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+              aria-label="סגור"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {expanded ? (
