@@ -104,7 +104,9 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
     return `https://wa.me/${normalized}?text=${encodeURIComponent("שלום, הגעתי אליכם דרך מפת קליק בטבע")}`;
   })();
 
-  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${poi.location.lat},${poi.location.lng}`;
+  const googleMapsUrl = poi.location
+    ? `https://www.google.com/maps/dir/?api=1&destination=${poi.location.lat},${poi.location.lng}`
+    : null;
 
   return (
     <div
@@ -234,7 +236,7 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
               ? <ActionIcon href={`tel:${poi.phone}`} icon={ICON_PHONE} label="שיחה" color={color} asButton onClick={() => setShowPhoneModal(true)} />
               : <ActionIcon href={`tel:${poi.phone}`} icon={ICON_PHONE} label="שיחה" color={color} />
           )}
-          <ActionIcon href={googleMapsUrl} icon={ICON_PIN} label="ניווט" color={color} external />
+          {googleMapsUrl && <ActionIcon href={googleMapsUrl} icon={ICON_PIN} label="ניווט" color={color} external />}
           {whatsappHref && <ActionIcon href={whatsappHref} icon={ICON_WHATSAPP} label="הודעה" color={color} external />}
           {safeWebsiteHref && <ActionIcon href={safeWebsiteHref} icon={ICON_GLOBE} label="אתר" color={color} external />}
           {safeFacebookHref && <ActionIcon href={safeFacebookHref} icon={ICON_FACEBOOK} label="פייסבוק" color={color} external />}

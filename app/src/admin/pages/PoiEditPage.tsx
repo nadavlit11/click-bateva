@@ -152,8 +152,8 @@ export function PoiEditPage() {
       setForm({
         name: poi.name ?? '',
         description: poi.description ?? '',
-        lat: poi.location.lat.toString(),
-        lng: poi.location.lng.toString(),
+        lat: poi.location?.lat?.toString() ?? '0',
+        lng: poi.location?.lng?.toString() ?? '0',
         images: [poi.mainImage, ...poi.images].filter(Boolean),
         videos: [...poi.videos],
         phone: poi.phone ?? '',
@@ -188,6 +188,8 @@ export function PoiEditPage() {
       setLoading(false)
     })
   }, [id])
+
+  const isLocationless = categories.find(c => c.id === form.categoryId)?.locationless === true
 
   function set(field: keyof FormState, value: FormState[typeof field]) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -341,7 +343,9 @@ export function PoiEditPage() {
       const data = {
         name: form.name.trim(),
         description: form.description.trim(),
-        location: { lat: parseFloat(form.lat) || 0, lng: parseFloat(form.lng) || 0 },
+        location: isLocationless
+          ? null
+          : { lat: parseFloat(form.lat) || 0, lng: parseFloat(form.lng) || 0 },
         mainImage: allImages[0] ?? '',
         images: allImages.slice(1),
         videos: form.videos.filter(Boolean),
@@ -543,14 +547,20 @@ export function PoiEditPage() {
           </div>
 
           {/* Location */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">מיקום</label>
-            <MapPicker
-              lat={form.lat}
-              lng={form.lng}
-              onChange={(lat, lng) => setForm(prev => ({ ...prev, lat, lng }))}
-            />
-          </div>
+          {isLocationless ? (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+              קטגוריה ללא מיקום קבוע — לא נדרש מיקום
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">מיקום</label>
+              <MapPicker
+                lat={form.lat}
+                lng={form.lng}
+                onChange={(lat, lng) => setForm(prev => ({ ...prev, lat, lng }))}
+              />
+            </div>
+          )}
 
           {/* Images */}
           <div data-field="images">

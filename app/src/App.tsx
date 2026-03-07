@@ -6,6 +6,7 @@ import { AuthProvider } from "./hooks/useAuth";
 const MapApp = lazy(() => import("./user-web/MapApp"));
 const AdminSection = lazy(() => import("./admin/AdminSection"));
 const BusinessSection = lazy(() => import("./business/BusinessSection"));
+const ServicesPage = lazy(() => import("./user-web/pages/ServicesPage"));
 
 const Loading = () => (
   <div className="flex items-center justify-center h-screen text-gray-400">
@@ -22,6 +23,7 @@ export default function App() {
             <Routes>
               <Route path="/admin/*" element={<AdminSection />} />
               <Route path="/business/*" element={<BusinessSection />} />
+              <Route path="/services" element={<ServicesPage />} />
               <Route path="/*" element={<MapApp />} />
             </Routes>
           </Suspense>

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { CATEGORY_EMOJI } from "../../data/defaults";
 import type { Category, Subcategory } from "../../../types";
 import { lighten, lightenBorder } from "../../../lib/colorUtils";
@@ -11,16 +12,19 @@ interface CategoryGridProps {
 }
 
 export function CategoryGrid({ categories, subcategories, selectedCategories, onToggle, onSubcategoryFilter }: CategoryGridProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="px-4 pb-4">
       <h2 className="text-lg font-semibold text-gray-700 mb-3">קטגוריות</h2>
       <div className="grid grid-cols-2 gap-3">
         {categories.map((cat) => {
-          const isSelected = selectedCategories.has(cat.id);
+          const isLocationless = cat.locationless === true;
+          const isSelected = !isLocationless && selectedCategories.has(cat.id);
           return (
             <div key={cat.id} className="relative">
               <button
-                onClick={() => onToggle(cat.id)}
+                onClick={() => isLocationless ? navigate("/services") : onToggle(cat.id)}
                 className="flex items-center gap-2 py-3 px-4 rounded-2xl border-2 transition-all hover:-translate-y-0.5 hover:shadow-md text-start w-full"
                 style={{
                   backgroundColor: lighten(cat.color),
@@ -36,6 +40,11 @@ export function CategoryGrid({ categories, subcategories, selectedCategories, on
                   )}
                 </span>
                 <span className="text-sm font-medium text-gray-700">{cat.name}</span>
+                {isLocationless && (
+                  <svg className="w-4 h-4 text-gray-400 ms-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                )}
               </button>
               {isSelected && onSubcategoryFilter && subcategories.some(s => s.categoryId === cat.id) && (
                 <button

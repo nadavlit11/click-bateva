@@ -4,6 +4,7 @@ export interface Category {
   color: string;    // hex e.g. "#FF5733" — used for marker gradient
   iconUrl: string | null;
   order: number;
+  locationless?: boolean;
 }
 
 export interface Subcategory {
@@ -40,7 +41,7 @@ export interface Poi {
   id: string;
   name: string;
   description: string;
-  location: { lat: number; lng: number };
+  location: { lat: number; lng: number } | null;
   mainImage: string | null;
   images: string[];       // ordered image URLs; empty = show placeholder
   videos: string[];       // external video URLs (YouTube etc.)

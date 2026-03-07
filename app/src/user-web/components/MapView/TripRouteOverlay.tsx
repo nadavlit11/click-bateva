@@ -13,16 +13,22 @@ export function TripRouteOverlay({ orderedPois }: TripRouteOverlayProps) {
   const serviceRef = useRef<google.maps.DirectionsService | null>(null);
   const fallbackRef = useRef<google.maps.Polyline | null>(null);
 
+  // Filter out POIs without location (locationless category)
+  const locatedPois = useMemo(
+    () => orderedPois.filter(p => p.location !== null),
+    [orderedPois]
+  );
+
   // Serialize coords to detect real changes and avoid unnecessary API calls
   const coordsKey = useMemo(
-    () => orderedPois.map(p => `${p.location.lat},${p.location.lng}`).join("|"),
-    [orderedPois]
+    () => locatedPois.map(p => `${p.location!.lat},${p.location!.lng}`).join("|"),
+    [locatedPois]
   );
 
   useEffect(() => {
     if (!map) return;
 
-    if (orderedPois.length < 2) {
+    if (locatedPois.length < 2) {
       rendererRef.current?.setMap(null);
       fallbackRef.current?.setMap(null);
       return;
@@ -43,10 +49,10 @@ export function TripRouteOverlay({ orderedPois }: TripRouteOverlayProps) {
       });
     }
 
-    const origin = orderedPois[0].location;
-    const dest = orderedPois[orderedPois.length - 1].location;
-    const waypoints = orderedPois.slice(1, -1).map(p => ({
-      location: { lat: p.location.lat, lng: p.location.lng },
+    const origin = locatedPois[0].location!;
+    const dest = locatedPois[locatedPois.length - 1].location!;
+    const waypoints = locatedPois.slice(1, -1).map(p => ({
+      location: { lat: p.location!.lat, lng: p.location!.lng },
       stopover: true,
     }));
 
@@ -69,9 +75,9 @@ export function TripRouteOverlay({ orderedPois }: TripRouteOverlayProps) {
           // Fallback to straight line if directions fail
           reportError(new Error(`Directions API failed: ${status}`), { source: "TripRouteOverlay" });
           rendererRef.current?.setMap(null);
-          const path = orderedPois.map(p => ({
-            lat: p.location.lat,
-            lng: p.location.lng,
+          const path = locatedPois.map(p => ({
+            lat: p.location!.lat,
+            lng: p.location!.lng,
           }));
           if (fallbackRef.current) {
             fallbackRef.current.setPath(path);
