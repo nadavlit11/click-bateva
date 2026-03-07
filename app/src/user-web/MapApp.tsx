@@ -30,8 +30,8 @@ const CLICK_DEBOUNCE_MS = 3000;
 
 export default function MapApp() {
   const { user, role, login, logout } = useAuth();
-  const isAgent = role === "travel_agent";
-  const [mapKey, setMapKey] = useState<MapKey>(isAgent ? "agents" : "groups");
+  const canSeeAgents = role === "travel_agent" || role === "admin" || role === "content_manager";
+  const [mapKey, setMapKey] = useState<MapKey>(role === "travel_agent" ? "agents" : "groups");
   const { pois, loading: poisLoading } = usePois(mapKey);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
@@ -400,7 +400,7 @@ export default function MapApp() {
           onClearAll={handleClearAll}
           onClose={() => setSidebarOpen(false)}
           mapKey={mapKey}
-          isAgent={isAgent}
+          canSeeAgents={canSeeAgents}
           onMapKeyChange={handleMapKeyChange}
           role={role}
           isLoggedIn={!!user}
@@ -551,7 +551,7 @@ export default function MapApp() {
         )}
         <MapIndicator
           mapKey={mapKey}
-          isAgent={isAgent}
+          canSeeAgents={canSeeAgents}
           onMapKeyChange={handleMapKeyChange}
         />
         {showOnboarding && <EmptyMapOverlay />}

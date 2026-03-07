@@ -3,13 +3,13 @@ import { MAP_LABELS } from "../../lib/constants";
 
 interface MapIndicatorProps {
   mapKey: MapKey;
-  isAgent: boolean;
+  canSeeAgents: boolean;
   onMapKeyChange: (key: MapKey) => void;
 }
 
-export function MapIndicator({ mapKey, isAgent, onMapKeyChange }: MapIndicatorProps) {
-  const keys: MapKey[] = isAgent
-    ? ["groups", "agents", "families"]
+export function MapIndicator({ mapKey, canSeeAgents, onMapKeyChange }: MapIndicatorProps) {
+  const keys: MapKey[] = canSeeAgents
+    ? ["agents", "groups", "families"]
     : ["groups", "families"];
 
   return (
