@@ -58,3 +58,4 @@ serviceAccount.json
 *service-account*.json
 *.tar.gz
 .claude/worktrees/
+.mcp.json

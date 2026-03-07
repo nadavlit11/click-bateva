@@ -20,15 +20,16 @@
     "@sentry/react": "^10.39.0",
     "@vis.gl/react-google-maps": "^1.7.1",
     "firebase": "^12.9.0",
+    "leaflet": "^1.9.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "leaflet": "^1.9.4",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.0.0",
     "recharts": "^3.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@sentry/vite-plugin": "^5.1.1",
     "@stryker-mutator/core": "^9.5.1",
     "@stryker-mutator/typescript-checker": "^9.5.1",
     "@stryker-mutator/vitest-runner": "^9.5.1",
