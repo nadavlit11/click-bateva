@@ -27,7 +27,8 @@
 - `app/src/user-web/lib/constants.ts` — shared constants: `MAP_LABELS` (Hebrew labels for map keys)
 - `app/src/user-web/components/MapIndicator.tsx` — mobile-only map label (non-agent) or map switcher (agent); positioned bottom-left above bottom sheet
 - `app/src/user-web/components/MapView/EmptyMapOverlay.tsx` — first-visit onboarding overlay; shown via `showOnboarding` bool in App.tsx (`!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && !hasVisited`). Desktop: animated right-pointing arrow. Mobile: card only — arrow is rendered in App.tsx co-located with the menu button (flex-col child, bounces upward)
-- `app/src/user-web/types/index.ts` — Poi (+ whatsapp, iconUrl, iconId, capacity), Category (+ order), Subcategory (+ iconUrl) interfaces
+- `app/src/user-web/types/index.ts` — Poi (+ whatsapp, iconUrl, iconId, capacity, location nullable), Category (+ order, locationless?), Subcategory (+ iconUrl) interfaces
+- `app/src/user-web/pages/ServicesPage.tsx` — **locationless POIs page** (route `/services`): card grid of POIs from `locationless: true` category; uses usePois/useCategories/useSubcategories; subcategory chip filtering; inline ServiceCard with contact actions. Lazy-loaded from App.tsx.
 
 ## Component / Data Flow
 
@@ -51,11 +52,12 @@ App.tsx (owns state: selectedCategories, selectedSubcategories, focusLocation, s
   ├─ SubcategoryModal (opened per-category from CategoryGrid badge click)
   └─ PoiDetailPanel (when selectedPoi != null; click outside closes)
 
-Data: Firestore onSnapshot → usePois(mapKey)/useCategories/useSubcategories → filterPois() → filteredPois
+Data: Firestore onSnapshot → usePois(mapKey)/useCategories/useSubcategories → mapPois (location !== null) → filterPois() → filteredPois
 Map switching: travel_agent role → 'agents' map, everyone else → 'groups' map. usePois queries where maps.<mapKey>.active == true.
 filterPois: category + subcategory filters ONLY — no text search
 Categories sorted by `order` field before rendering.
 When category toggled ON: all its subcategories auto-selected.
+Locationless category: `cat.locationless === true` → clicking navigates to `/services` instead of toggling map filter. POIs with `location: null` excluded from map/search via `mapPois` memo.
 Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes to clicks collection (suppressed for admin/cm, and for business_user on own POI)
 ```
 
