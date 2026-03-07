@@ -8,7 +8,7 @@ body {
 
 /* Push TabNav accessibility icon above floating category chips on mobile */
 @media (max-width: 767px) {
-  #tabnav-widget {
+  button-expand-panel-element {
     bottom: 68px !important;
   }
 }
