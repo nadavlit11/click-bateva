@@ -23,6 +23,7 @@ export function PoisPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const searchQuery = searchParams.get('search') ?? ''
   const filterCategoryId = searchParams.get('category') ?? ''
+  const mapTab = (searchParams.get('mapTab') ?? 'default') as 'default' | 'families'
   const [deleteModalId, setDeleteModalId] = useState<string | null>(null)
 
   // Restore scroll position once after POIs first load
@@ -76,10 +77,12 @@ export function PoisPage() {
     return {
       poisSearch: searchParams.toString(),
       poisScrollTop: main?.scrollTop ?? 0,
+      mapTab,
     }
   }
 
   const filteredPois = pois.filter(poi => {
+    if ((poi.mapType ?? 'default') !== mapTab) return false
     if (filterCategoryId && poi.categoryId !== filterCategoryId) return false
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
@@ -88,15 +91,49 @@ export function PoisPage() {
     return true
   })
 
+  function setMapTab(tab: 'default' | 'families') {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      next.set('mapTab', tab)
+      next.delete('search')
+      next.delete('category')
+      return next
+    })
+  }
+
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-gray-900">נקודות עניין</h1>
         <button
-          onClick={() => navigate('/admin/pois/new', { state: navState() })}
+          onClick={() => navigate('/admin/pois/new', { state: { ...navState(), mapTab } })}
           className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
         >
           + הוסף נקודת עניין
+        </button>
+      </div>
+
+      {/* Map type tabs */}
+      <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1 w-fit">
+        <button
+          onClick={() => setMapTab('default')}
+          className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+            mapTab === 'default'
+              ? 'bg-white shadow font-medium text-gray-900'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          סוכנים / קבוצות
+        </button>
+        <button
+          onClick={() => setMapTab('families')}
+          className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+            mapTab === 'families'
+              ? 'bg-white shadow font-medium text-gray-900'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          משפחות
         </button>
       </div>
 

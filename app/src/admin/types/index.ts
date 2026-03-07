@@ -27,7 +27,9 @@ export interface Poi {
   businessName: string | null
   active: boolean
   openingHours: Record<string, DayHours | null> | 'by_appointment' | null
-  price: string | null // DEPRECATED — use maps.*.price instead
+  price: string | null
+  mapType: 'default' | 'families'
+  linkedPoiId: string | null
   maps: {
     agents: MapOverrides
     groups: MapOverrides

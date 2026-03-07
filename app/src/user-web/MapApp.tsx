@@ -204,6 +204,16 @@ export default function MapApp() {
     [categories]
   );
 
+  // Hide categories that have no POIs on the current map
+  const activeCategoryIds = useMemo(
+    () => new Set(pois.map(p => p.categoryId)),
+    [pois]
+  );
+  const visibleCategories = useMemo(
+    () => sortedCategories.filter(c => activeCategoryIds.has(c.id)),
+    [sortedCategories, activeCategoryIds]
+  );
+
   function handleCategoryToggle(id: string) {
     const isCurrentlySelected = selectedCategories.has(id);
     if (!isCurrentlySelected && !hasVisited) {
@@ -371,7 +381,7 @@ export default function MapApp() {
       {sidebarOpen && (
         <Sidebar
           className="hidden md:flex"
-          categories={sortedCategories}
+          categories={visibleCategories}
           subcategories={subcategories}
           selectedCategories={selectedCategories}
           filteredCount={filteredPois.length}
@@ -381,7 +391,7 @@ export default function MapApp() {
           onClose={() => setSidebarOpen(false)}
           mapKey={mapKey}
           isAgent={isAgent}
-          onMapKeyChange={isAgent ? handleMapKeyChange : undefined}
+          onMapKeyChange={handleMapKeyChange}
           role={role}
           isLoggedIn={!!user}
           onLoginClick={() => setLoginModalOpen(true)}
@@ -488,7 +498,7 @@ export default function MapApp() {
           className="md:hidden absolute bottom-0 left-0 right-0 z-20"
           expanded={sheetExpanded}
           onExpandedChange={setSheetExpanded}
-          categories={sortedCategories}
+          categories={visibleCategories}
           subcategories={subcategories}
           selectedCategories={selectedCategories}
           selectedSubcategories={selectedSubcategories}
@@ -520,7 +530,7 @@ export default function MapApp() {
         />
         {!sheetExpanded && !selectedPoi && (
           <FloatingCategoryChips
-            categories={sortedCategories}
+            categories={visibleCategories}
             subcategories={subcategories}
             selectedCategories={selectedCategories}
             onCategoryToggle={handleCategoryToggle}
@@ -532,7 +542,7 @@ export default function MapApp() {
         <MapIndicator
           mapKey={mapKey}
           isAgent={isAgent}
-          onMapKeyChange={isAgent ? handleMapKeyChange : undefined}
+          onMapKeyChange={handleMapKeyChange}
         />
         {showOnboarding && <EmptyMapOverlay />}
         {poisLoading && (
@@ -559,7 +569,7 @@ export default function MapApp() {
       {subcategoryModalCategoryId && (
         <SubcategoryModal
           categoryId={subcategoryModalCategoryId}
-          categories={sortedCategories}
+          categories={visibleCategories}
           subcategories={subcategories}
           selectedSubcategories={selectedSubcategories}
           onToggle={handleSubcategoryToggle}

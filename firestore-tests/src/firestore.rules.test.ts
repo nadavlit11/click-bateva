@@ -207,6 +207,7 @@ describe("clicks collection", () => {
           active: true,
           businessId: "biz-user-uid",
           description: "Owned by biz-user-uid",
+          mapType: "default",
           maps: { agents: { price: null, active: true }, groups: { price: null, active: true } },
         });
       });
@@ -233,6 +234,7 @@ describe("clicks collection", () => {
           active: true,
           businessId: "other-biz-uid",
           description: "Not owned by biz-user-uid",
+          mapType: "default",
           maps: { agents: { price: null, active: true }, groups: { price: null, active: true } },
         });
       });
@@ -342,6 +344,7 @@ describe("points_of_interest collection", () => {
     active: true,
     businessId: "biz-1",
     description: "A test point of interest",
+    mapType: "default",
     maps: { agents: { price: null, active: true }, groups: { price: null, active: true } },
   };
 
@@ -350,6 +353,7 @@ describe("points_of_interest collection", () => {
     active: false,
     businessId: "biz-1",
     description: "An inactive POI",
+    mapType: "default",
     maps: { agents: { price: null, active: true }, groups: { price: null, active: true } },
   };
 
@@ -358,6 +362,7 @@ describe("points_of_interest collection", () => {
     active: true,
     businessId: null,
     description: "Only visible on agents map",
+    mapType: "default",
     maps: { agents: { price: "100", active: true }, groups: { price: null, active: false } },
   };
 
@@ -366,7 +371,26 @@ describe("points_of_interest collection", () => {
     active: true,
     businessId: null,
     description: "Only visible on groups map",
+    mapType: "default",
     maps: { agents: { price: null, active: false }, groups: { price: "200", active: true } },
+  };
+
+  const FAMILIES_POI = {
+    name: "Families POI",
+    active: true,
+    businessId: null,
+    description: "A families map POI",
+    mapType: "families",
+    price: "50",
+  };
+
+  const INACTIVE_FAMILIES_POI = {
+    name: "Inactive Families POI",
+    active: false,
+    businessId: null,
+    description: "An inactive families POI",
+    mapType: "families",
+    price: null,
   };
 
   describe("READ", () => {
@@ -539,6 +563,70 @@ describe("points_of_interest collection", () => {
         getDoc(doc(db, "points_of_interest", "poi-groups"))
       );
     });
+
+    // ── Families map read access ──
+
+    it("allows unauthenticated user to read an active families POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-fam"),
+          FAMILIES_POI
+        );
+      });
+
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertSucceeds(
+        getDoc(doc(db, "points_of_interest", "poi-fam"))
+      );
+    });
+
+    it("denies unauthenticated user from reading an inactive families POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-fam-off"),
+          INACTIVE_FAMILIES_POI
+        );
+      });
+
+      const unauthed = env.unauthenticatedContext();
+      const db = unauthed.firestore();
+      await assertFails(
+        getDoc(doc(db, "points_of_interest", "poi-fam-off"))
+      );
+    });
+
+    it("allows travel_agent to read an active families POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-fam"),
+          FAMILIES_POI
+        );
+      });
+
+      const agent = env.authenticatedContext("agent-uid", {
+        role: "travel_agent",
+      });
+      const db = agent.firestore();
+      await assertSucceeds(
+        getDoc(doc(db, "points_of_interest", "poi-fam"))
+      );
+    });
+
+    it("allows admin to read an inactive families POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-fam-off"),
+          INACTIVE_FAMILIES_POI
+        );
+      });
+
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertSucceeds(
+        getDoc(doc(db, "points_of_interest", "poi-fam-off"))
+      );
+    });
   });
 
   describe("CREATE", () => {
@@ -576,6 +664,25 @@ describe("points_of_interest collection", () => {
       const db = bizUser.firestore();
       await assertFails(
         setDoc(doc(db, "points_of_interest", "new-poi"), ACTIVE_POI)
+      );
+    });
+
+    it("allows admin to create a families POI", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertSucceeds(
+        setDoc(doc(db, "points_of_interest", "new-fam"), FAMILIES_POI)
+      );
+    });
+
+    it("denies admin from creating a POI with invalid mapType", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertFails(
+        setDoc(doc(db, "points_of_interest", "bad-type"), {
+          ...ACTIVE_POI,
+          mapType: "invalid",
+        })
       );
     });
   });

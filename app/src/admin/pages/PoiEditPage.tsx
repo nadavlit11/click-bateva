@@ -50,6 +50,8 @@ interface FormState {
   facebook: string
   contactName: string
   capacity: string
+  mapType: 'default' | 'families'
+  familiesPrice: string
 }
 
 const INITIAL_FORM: FormState = {
@@ -77,19 +79,28 @@ const INITIAL_FORM: FormState = {
   facebook: '',
   contactName: '',
   capacity: '',
+  mapType: 'default',
+  familiesPrice: '',
 }
 
 export function PoiEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const locState = location.state as { poisSearch?: string; poisScrollTop?: number } | null
+  const locState = location.state as {
+    poisSearch?: string
+    poisScrollTop?: number
+    mapTab?: 'default' | 'families'
+  } | null
   const poisSearch = locState?.poisSearch
   const poisScrollTop = locState?.poisScrollTop
   const poisListPath = poisSearch ? `/admin/pois?${poisSearch}` : '/admin/pois'
   const isNew = !id
 
-  const [form, setForm] = useState<FormState>(INITIAL_FORM)
+  const [form, setForm] = useState<FormState>(() => ({
+    ...INITIAL_FORM,
+    mapType: locState?.mapTab ?? 'default',
+  }))
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(!isNew)
   const [error, setError] = useState('')
@@ -97,6 +108,8 @@ export function PoiEditPage() {
   const [uploadingImages, setUploadingImages] = useState(false)
   const formScrollRef = useRef<HTMLFormElement>(null)
   const [videoInput, setVideoInput] = useState('')
+  const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
   const imagesRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
@@ -165,6 +178,8 @@ export function PoiEditPage() {
         facebook: poi.facebook ?? '',
         contactName: poi.contactName ?? '',
         capacity: poi.capacity ?? '',
+        mapType: poi.mapType ?? 'default',
+        familiesPrice: poi.mapType === 'families' ? (poi.price ?? '') : '',
       })
       setLoading(false)
     }).catch(err => {
@@ -217,6 +232,61 @@ export function PoiEditPage() {
 
   function removeVideo(index: number) {
     setForm(prev => ({ ...prev, videos: prev.videos.filter((_, i) => i !== index) }))
+  }
+
+  async function handleDuplicateToFamilies() {
+    if (!id) return
+    setDuplicating(true)
+    try {
+      const snap = await getDoc(doc(db, 'points_of_interest', id))
+      if (!snap.exists()) throw new Error('POI not found')
+      const source = snap.data()
+
+      const familiesDoc = {
+        name: source.name,
+        description: source.description ?? '',
+        location: source.location,
+        mainImage: source.mainImage ?? '',
+        images: source.images ?? [],
+        videos: source.videos ?? [],
+        phone: source.phone ?? null,
+        whatsapp: source.whatsapp ?? null,
+        email: source.email ?? null,
+        website: source.website ?? null,
+        categoryId: source.categoryId,
+        subcategoryIds: source.subcategoryIds ?? [],
+        iconId: source.iconId ?? null,
+        iconUrl: source.iconUrl ?? null,
+        businessId: source.businessId ?? null,
+        active: true,
+        openingHours: source.openingHours ?? null,
+        price: source.maps?.groups?.price ?? source.price ?? null,
+        mapType: 'families' as const,
+        linkedPoiId: id,
+        kashrutCertUrl: source.kashrutCertUrl ?? null,
+        menuUrl: source.menuUrl ?? null,
+        facebook: source.facebook ?? null,
+        contactName: source.contactName ?? null,
+        capacity: source.capacity ?? null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }
+
+      const newRef = await addDoc(
+        collection(db, 'points_of_interest'),
+        familiesDoc,
+      )
+      await updateDoc(doc(db, 'points_of_interest', id), {
+        linkedPoiId: newRef.id,
+      })
+      setShowDuplicateConfirm(false)
+      navigate(`/admin/pois/${newRef.id}`, { state: { poisScrollTop } })
+    } catch (err) {
+      setError('שגיאה בשכפול הנקודה')
+      reportError(err, { source: 'PoiEditPage.duplicate' })
+    } finally {
+      setDuplicating(false)
+    }
   }
 
   function selectSubcategory(subId: string) {
@@ -288,10 +358,15 @@ export function PoiEditPage() {
         openingHours: form.openingHours === 'by_appointment'
           ? 'by_appointment'
           : Object.values(form.openingHours).every(v => v === null) ? null : form.openingHours,
-        maps: {
-          agents: { price: form.agentsPrice.trim() || null, active: form.agentsActive },
-          groups: { price: form.groupsPrice.trim() || null, active: form.groupsActive },
-        },
+        mapType: form.mapType,
+        ...(form.mapType === 'default' ? {
+          maps: {
+            agents: { price: form.agentsPrice.trim() || null, active: form.agentsActive },
+            groups: { price: form.groupsPrice.trim() || null, active: form.groupsActive },
+          },
+        } : {
+          price: form.familiesPrice.trim() || null,
+        }),
         kashrutCertUrl: form.kashrutCertUrl.trim() || null,
         menuUrl: form.menuUrl.trim() || null,
         facebook: form.facebook.trim() || null,
@@ -331,9 +406,23 @@ export function PoiEditPage() {
         >
           →
         </button>
-        <h1 className="text-xl font-bold text-gray-900">
+        <h1 className="text-xl font-bold text-gray-900 flex-1">
           {isNew ? 'הוספת נקודת עניין' : 'עריכת נקודת עניין'}
+          {form.mapType === 'families' && (
+            <span className="mr-2 text-sm font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+              משפחות
+            </span>
+          )}
         </h1>
+        {!isNew && form.mapType === 'default' && (
+          <button
+            type="button"
+            onClick={() => setShowDuplicateConfirm(true)}
+            className="px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+          >
+            שכפל למפת משפחות
+          </button>
+        )}
       </div>
 
       {/* Form */}
@@ -647,32 +736,45 @@ export function PoiEditPage() {
             )}
           </div>
 
-          {/* Per-map prices */}
-          <div className="border border-blue-200 rounded-lg p-4 bg-blue-50/30">
-            <label className="block text-sm font-semibold text-blue-800 mb-3">מחירים לפי מפה</label>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">מחיר סוכנים</label>
-                <input
-                  type="text"
-                  value={form.agentsPrice}
-                  onChange={e => set('agentsPrice', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                  placeholder="₪30 למבוגר, חינם לילדים"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">מחיר קבוצות</label>
-                <input
-                  type="text"
-                  value={form.groupsPrice}
-                  onChange={e => set('groupsPrice', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                  placeholder="₪50 לאדם"
-                />
+          {/* Per-map prices (default) or single price (families) */}
+          {form.mapType === 'default' ? (
+            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50/30">
+              <label className="block text-sm font-semibold text-blue-800 mb-3">מחירים לפי מפה</label>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">מחיר סוכנים</label>
+                  <input
+                    type="text"
+                    value={form.agentsPrice}
+                    onChange={e => set('agentsPrice', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                    placeholder="₪30 למבוגר, חינם לילדים"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">מחיר קבוצות</label>
+                  <input
+                    type="text"
+                    value={form.groupsPrice}
+                    onChange={e => set('groupsPrice', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                    placeholder="₪50 לאדם"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">מחיר</label>
+              <input
+                type="text"
+                value={form.familiesPrice}
+                onChange={e => set('familiesPrice', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                placeholder="₪50 לאדם"
+              />
+            </div>
+          )}
 
           {/* Restaurant-specific: Kashrut Certificate & Menu */}
           {form.categoryId === FOOD_CATEGORY_ID && (
@@ -868,26 +970,30 @@ export function PoiEditPage() {
                 onChange={e => set('active', e.target.checked)}
                 className="accent-green-600 w-4 h-4"
               />
-              <span className="text-sm font-medium text-gray-700">נקודה פעילה (כללי)</span>
+              <span className="text-sm font-medium text-gray-700">נקודה פעילה</span>
             </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.agentsActive}
-                onChange={e => set('agentsActive', e.target.checked)}
-                className="accent-blue-600 w-4 h-4"
-              />
-              <span className="text-sm font-medium text-gray-700">פעיל במפת סוכנים</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.groupsActive}
-                onChange={e => set('groupsActive', e.target.checked)}
-                className="accent-purple-600 w-4 h-4"
-              />
-              <span className="text-sm font-medium text-gray-700">פעיל במפת קבוצות</span>
-            </label>
+            {form.mapType === 'default' && (
+              <>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.agentsActive}
+                    onChange={e => set('agentsActive', e.target.checked)}
+                    className="accent-blue-600 w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-gray-700">פעיל במפת סוכנים</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.groupsActive}
+                    onChange={e => set('groupsActive', e.target.checked)}
+                    className="accent-purple-600 w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-gray-700">פעיל במפת קבוצות</span>
+                </label>
+              </>
+            )}
           </div>
 
           {/* Save-time error */}
@@ -912,6 +1018,34 @@ export function PoiEditPage() {
           </div>
         </div>
       </form>
+
+      {/* Duplicate to families confirmation */}
+      {showDuplicateConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowDuplicateConfirm(false)} />
+          <div className="relative bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">שכפול למפת משפחות</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              ייווצר עותק עצמאי של הנקודה במפת משפחות. שינויים באחד לא ישפיעו על השני.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setShowDuplicateConfirm(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={() => handleDuplicateToFamilies().catch(err => reportError(err, { source: 'PoiEditPage.duplicate' }))}
+                disabled={duplicating}
+                className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50"
+              >
+                {duplicating ? 'משכפל...' : 'שכפל'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
