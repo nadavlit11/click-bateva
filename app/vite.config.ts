@@ -11,6 +11,8 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/storage', 'firebase/functions'],
           'vendor-maps': ['@vis.gl/react-google-maps'],
+          'vendor-leaflet': ['leaflet', 'react-leaflet'],
+          'vendor-recharts': ['recharts'],
         },
       },
     },

@@ -10,7 +10,7 @@ import { SubcategoryModal } from "./components/SubcategoryModal";
 import { FloatingSearch } from "./components/FloatingSearch";
 import { LoginModal } from "./components/LoginModal";
 import { RegisterModal } from "./components/RegisterModal";
-import { ChangePasswordModal } from "./components/ChangePasswordModal";
+import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { MapIndicator } from "./components/MapIndicator";
 import { ContactUsModal } from "./components/ContactUsModal";
 import { usePois, useCategories, useSubcategories } from "../hooks/useFirestoreData";
