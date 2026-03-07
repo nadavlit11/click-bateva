@@ -4,6 +4,7 @@ import type { Poi, Category, DayHours } from "../../../types";
 import { lighten } from "../../../lib/colorUtils";
 import { DAY_KEYS, DAY_NAMES_HE, getOpeningStatusText, isCurrentlyOpen } from "../../../lib/openingStatus";
 import { renderBoldText } from "../../../lib/renderBoldText";
+import { FOOD_CATEGORY_ID } from "../../../lib/constants";
 
 interface PoiDetailPanelProps {
   poi: Poi;
@@ -267,7 +268,7 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
         )}
 
         {/* Restaurant buttons — Firestore doc ID for "מסעדות וארוחות" category */}
-        {category?.id === "GACgSvKyWbBZegz02zI5" && (poi.kashrutCertUrl || poi.menuUrl) && (
+        {category?.id === FOOD_CATEGORY_ID && (poi.kashrutCertUrl || poi.menuUrl) && (
           <div className="flex gap-2 mt-3">
             {poi.kashrutCertUrl && (
               <a

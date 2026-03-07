@@ -13,6 +13,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
+import { FOOD_CATEGORY_ID } from '../../lib/constants.ts'
 import type { Poi, Category, Subcategory, DayHours, Icon, Business } from '../types/index.ts'
 import { IconPicker } from '../components/IconPicker.tsx'
 
@@ -674,7 +675,7 @@ export function PoiEditPage() {
           </div>
 
           {/* Restaurant-specific: Kashrut Certificate & Menu */}
-          {form.categoryId === 'GACgSvKyWbBZegz02zI5' && (
+          {form.categoryId === FOOD_CATEGORY_ID && (
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">תעודת כשרות</label>
