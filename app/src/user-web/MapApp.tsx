@@ -222,13 +222,6 @@ export default function MapApp() {
         catSubIds.forEach(sid => next.delete(sid));
         return next;
       });
-    } else {
-      const catSubIds = subcategories.filter(s => s.categoryId === id).map(s => s.id);
-      setSelectedSubcategories(prev => {
-        const next = new Set(prev);
-        catSubIds.forEach(sid => next.add(sid));
-        return next;
-      });
     }
   }
 
