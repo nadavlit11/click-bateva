@@ -556,9 +556,10 @@ export default function MapApp() {
         />
         {showOnboarding && <EmptyMapOverlay />}
         {poisLoading && (
-          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-            <div className="bg-white/80 rounded-xl px-5 py-3 shadow text-gray-500 text-sm font-medium">
-              טוען...
+          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none bg-black/15">
+            <div className="bg-white rounded-2xl px-8 py-5 shadow-xl flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-3 border-green-600 border-t-transparent rounded-full animate-spin" />
+              <span className="text-gray-600 text-base font-medium">טוען נקודות...</span>
             </div>
           </div>
         )}

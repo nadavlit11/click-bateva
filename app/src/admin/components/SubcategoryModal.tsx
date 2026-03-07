@@ -5,6 +5,7 @@ import { db, storage } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import type { Subcategory, Category, Icon } from '../types/index.ts'
 import { IconPicker } from './IconPicker.tsx'
+import { ColorPickerField } from './ColorPickerField.tsx'
 
 interface Props {
   isOpen: boolean
@@ -21,6 +22,9 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
   const [categoryId, setCategoryId] = useState('')
   const [group, setGroup] = useState('')
   const [iconId, setIconId] = useState('')
+  const [color, setColor] = useState('')
+  const [borderColor, setBorderColor] = useState('')
+  const [markerSize, setMarkerSize] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -29,6 +33,9 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
     setCategoryId(subcategory?.categoryId ?? '')
     setGroup(subcategory?.group ?? '')
     setIconId(subcategory?.iconId ?? '')
+    setColor(subcategory?.color ?? '')
+    setBorderColor(subcategory?.borderColor ?? '')
+    setMarkerSize(subcategory?.markerSize?.toString() ?? '')
     setError('')
   }, [subcategory, isOpen])
 
@@ -51,10 +58,14 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
         }
       }
 
+      const sizeNum = parseInt(markerSize, 10)
       const data = {
         name: name.trim(),
         categoryId,
         group: group || null,
+        color: color.trim() || null,
+        borderColor: borderColor.trim() || null,
+        markerSize: markerSize && !isNaN(sizeNum) ? sizeNum : null,
         iconId: resolvedIconId,
         iconUrl: resolvedIconUrl,
         updatedAt: serverTimestamp(),
@@ -137,6 +148,24 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">אייקון</label>
             <IconPicker icons={icons} value={iconId} onChange={setIconId} />
+          </div>
+
+          <p className="text-xs text-gray-400 mt-2 mb-1">עקיפות תצוגה (אופציונלי — עוקף הגדרות קטגוריה)</p>
+
+          <ColorPickerField label="צבע" value={color} onChange={setColor} />
+          <ColorPickerField label="צבע מסגרת" value={borderColor} onChange={setBorderColor} />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">גודל סמן</label>
+            <input
+              type="number"
+              value={markerSize}
+              onChange={e => setMarkerSize(e.target.value)}
+              className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              placeholder="ברירת מחדל"
+              min="8"
+              max="128"
+            />
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}

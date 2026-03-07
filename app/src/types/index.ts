@@ -2,6 +2,8 @@ export interface Category {
   id: string;
   name: string;     // Hebrew e.g. "מסעדות"
   color: string;    // hex e.g. "#FF5733" — used for marker gradient
+  borderColor: string | null;  // hex — ring color around marker icon
+  markerSize: number | null;   // default marker size for this category
   iconUrl: string | null;
   order: number;
   locationless?: boolean;
@@ -12,6 +14,9 @@ export interface Subcategory {
   categoryId: string;    // which category this refinement belongs to
   group: string | null;  // e.g. "kashrut" | "price" | "audience" | null
   name: string;          // Hebrew e.g. "כשר", "זול"
+  color: string | null;        // override category color
+  borderColor: string | null;  // override category borderColor
+  markerSize: number | null;   // override category markerSize
   iconUrl: string | null;
 }
 
@@ -60,4 +65,8 @@ export interface Poi {
   iconId: string | null;
   businessId: string | null;
   capacity: string | null;
+  color: string | null;        // override subcategory/category color
+  borderColor: string | null;  // override subcategory/category borderColor
+  markerSize: number | null;   // override subcategory/category markerSize
+  flicker: boolean | null;     // animate-pulse on marker
 }
