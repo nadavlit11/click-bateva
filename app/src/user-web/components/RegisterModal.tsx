@@ -141,7 +141,7 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  אימייל <span className="text-gray-400 font-normal">(לא חובה)</span>
+                  אימייל
                 </label>
                 <input
                   type="email"
