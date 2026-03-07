@@ -5,7 +5,14 @@
 - `app/src/admin/AdminSection.tsx` — lazy-loaded route definitions (mounted under `/admin/*` in root App.tsx); imports `leaflet/dist/leaflet.css`
 - `app/src/admin/components/AuthGuard.tsx` — reads `user`, `role`, `loading` from `useAuth()` context; gates on admin | content_manager; unauthenticated redirects to `/` (map)
 - `app/src/admin/pages/PoisPage.tsx` — POI list; clicking a POI navigates to `/pois/:id`
-- `app/src/admin/pages/PoiEditPage.tsx` — full-page POI editor; CRUD + image upload + MapPicker + per-map price/active. Display overrides section: color, borderColor, markerSize, flicker (admin/CM only). Subcategory selector directly under category. Business selector: filtered dropdown (search shown when >10 businesses).
+- `app/src/admin/pages/PoiEditPage.tsx` — full-page POI editor; CRUD + MapPicker + per-map price/active. Split into sub-components in `poi-form/`:
+  - `poi-form/types.ts` — FormState, INITIAL_FORM, SetField, day/hour constants
+  - `poi-form/utils.ts` — shared `uploadFile` (Storage upload helper)
+  - `poi-form/MediaSection.tsx` — images + videos
+  - `poi-form/OpeningHoursSection.tsx` — day-by-day hours or by-appointment
+  - `poi-form/ContactDetailsSection.tsx` — phone, whatsapp, contact name, website, facebook, capacity
+  - `poi-form/FoodExtrasSection.tsx` — kashrut cert + menu (food category only)
+  - `poi-form/DisplaySettingsSection.tsx` — icon picker, color, borderColor, markerSize, flicker, active toggles
 - `app/src/admin/components/MapPicker.tsx` — Leaflet + Nominatim geocoding; click/drag/search to set lat/lng
 - `app/src/admin/components/ColorPickerField.tsx` — shared color picker (type=color + text input + clear button); used by CategoryModal, SubcategoryModal, PoiEditPage
 - `app/src/admin/pages/CategoriesPage.tsx` + `CategoryModal.tsx` — category CRUD with icon picker + color + borderColor + markerSize
