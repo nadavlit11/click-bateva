@@ -20,7 +20,7 @@ interface SidebarProps {
   className?: string;
   // map
   mapKey: MapKey;
-  isAgent: boolean;
+  canSeeAgents: boolean;
   onMapKeyChange: (key: MapKey) => void;
   // auth
   role?: string | null;
@@ -62,7 +62,7 @@ export function Sidebar({
   onClose,
   className,
   mapKey,
-  isAgent,
+  canSeeAgents,
   onMapKeyChange,
   role,
   isLoggedIn,
@@ -96,7 +96,7 @@ export function Sidebar({
       style={{ boxShadow: "4px 0 20px rgba(0,0,0,0.08)" }}
     >
       <div className="relative">
-        <AppHeader mapKey={mapKey} isAgent={isAgent} onMapKeyChange={onMapKeyChange} />
+        <AppHeader mapKey={mapKey} canSeeAgents={canSeeAgents} onMapKeyChange={onMapKeyChange} />
         <button
           onClick={onClose}
           className="absolute top-4 end-4 w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"

@@ -25,7 +25,7 @@
 - `app/src/user-web/lib/openingStatus.ts` — opening hours display logic; exports `getOpeningStatusText()` (string) and `isCurrentlyOpen()` (boolean predicate); unit tested (52 tests) + mutation tested
 - `app/src/user-web/lib/renderBoldText.tsx` — simple `**bold**` parser; handles unmatched delimiters gracefully
 - `app/src/user-web/lib/constants.ts` — shared constants: `MAP_LABELS` (Hebrew labels for map keys)
-- `app/src/user-web/components/MapIndicator.tsx` — mobile-only map label (non-agent) or map switcher (agent); positioned bottom-left above bottom sheet
+- `app/src/user-web/components/MapIndicator.tsx` — mobile-only map switcher (visible to travel_agent/admin/content_manager with agents tab, otherwise groups+families only); positioned bottom-left above bottom sheet
 - `app/src/user-web/components/MapView/EmptyMapOverlay.tsx` — first-visit onboarding overlay; shown via `showOnboarding` bool in App.tsx (`!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && !hasVisited`). Desktop: animated right-pointing arrow. Mobile: card only — arrow is rendered in App.tsx co-located with the menu button (flex-col child, bounces upward)
 - `app/src/user-web/types/index.ts` — Poi (+ whatsapp, iconUrl, iconId, capacity, location nullable), Category (+ order, locationless?), Subcategory (+ iconUrl) interfaces
 - `app/src/user-web/pages/ServicesPage.tsx` — **locationless POIs page** (route `/services`): card grid of POIs from `locationless: true` category; uses usePois/useCategories/useSubcategories; subcategory chip filtering; inline ServiceCard with contact actions. Lazy-loaded from App.tsx.
@@ -53,7 +53,7 @@ App.tsx (owns state: selectedCategories, selectedSubcategories, focusLocation, s
   └─ PoiDetailPanel (when selectedPoi != null; click outside closes)
 
 Data: Firestore onSnapshot → usePois(mapKey)/useCategories/useSubcategories → mapPois (location !== null) → filterPois() → filteredPois
-Map switching: travel_agent role → 'agents' map, everyone else → 'groups' map. usePois queries where maps.<mapKey>.active == true.
+Map switching: travel_agent/admin/content_manager can see agents map (tab order: agents | groups | families in RTL); travel_agent defaults to 'agents', others default to 'groups'. usePois queries where maps.<mapKey>.active == true.
 filterPois: category + subcategory filters ONLY — no text search
 Categories sorted by `order` field before rendering.
 When category toggled ON: all its subcategories auto-selected.
@@ -69,7 +69,7 @@ Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes t
 - `useMap()` hook must be called inside a child of `<Map>`, not a sibling
 - Emulator connection gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`)
 - POI query filters `where("maps.<mapKey>.active", "==", true)` — inactive POIs for the current map never reach frontend
-- Auth: `useAuth()` context hook (AuthProvider at App.tsx root) provides `{ user, role, loading }`. **Single `onAuthStateChanged` listener for the whole app** — do NOT add new listeners in components. `firebase.ts` exports `auth` (Firebase Auth instance). LoginModal handles general email/password sign-in (all roles). ChangePasswordModal (`app/src/components/ChangePasswordModal.tsx`) handles password change for logged-in users (reauthenticate + updatePassword); user-web imports via `app/src/user-web/components/ChangePasswordModal.tsx` re-export. Map key derived from role: `travel_agent` → `'agents'`, all others → `'groups'`. Click analytics suppressed for admin/content_manager (all clicks) and business_user (own POI only) — enforced both client-side (`App.tsx`) and server-side (`firestore.rules`).
+- Auth: `useAuth()` context hook (AuthProvider at App.tsx root) provides `{ user, role, loading }`. **Single `onAuthStateChanged` listener for the whole app** — do NOT add new listeners in components. `firebase.ts` exports `auth` (Firebase Auth instance). LoginModal handles general email/password sign-in (all roles). ChangePasswordModal (`app/src/components/ChangePasswordModal.tsx`) handles password change for logged-in users (reauthenticate + updatePassword); user-web imports via `app/src/user-web/components/ChangePasswordModal.tsx` re-export. Map key default: `travel_agent` → `'agents'`, all others → `'groups'`. Agents tab visible to `travel_agent`, `admin`, `content_manager`. Click analytics suppressed for admin/content_manager (all clicks) and business_user (own POI only) — enforced both client-side (`App.tsx`) and server-side (`firestore.rules`).
 - Mobile uses `100dvh` (not `100vh`) for full-screen layouts
 - RTL: first flex child renders on RIGHT; collapsed indicators point LEFT (◂)
 
