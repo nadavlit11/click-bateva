@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import type { Icon } from '../types/index.ts'
-import { useAuth } from '../../hooks/useAuth.ts'
+import { useAuth } from '../../hooks/useAuth'
 
 type BulkItemStatus = 'pending' | 'uploading' | 'done' | 'error'
 interface BulkItem { name: string; status: BulkItemStatus }

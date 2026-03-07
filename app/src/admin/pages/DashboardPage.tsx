@@ -172,11 +172,11 @@ export function DashboardPage() {
       ) : counts && (
         <div className="grid grid-cols-5 gap-3">
           {[
-            { label: 'נקודות עניין', value: counts.pois,       href: '/pois' },
-            { label: 'קטגוריות',    value: counts.categories,  href: '/categories' },
-            { label: 'תת-קטגוריות', value: counts.subcategories, href: '/subcategories' },
-            { label: 'מפרסמים',     value: counts.businesses,  href: '/businesses' },
-            { label: 'קליקים',      value: counts.clicks,      href: '/analytics' },
+            { label: 'נקודות עניין', value: counts.pois,       href: '/admin/pois' },
+            { label: 'קטגוריות',    value: counts.categories,  href: '/admin/categories' },
+            { label: 'תת-קטגוריות', value: counts.subcategories, href: '/admin/subcategories' },
+            { label: 'מפרסמים',     value: counts.businesses,  href: '/admin/users' },
+            { label: 'קליקים',      value: counts.clicks,      href: '/admin/analytics' },
           ].map(s => (
             <Link
               key={s.href}
@@ -195,10 +195,10 @@ export function DashboardPage() {
         <h2 className="text-sm font-semibold text-gray-700 mb-3">פעולות מהירות</h2>
         <div className="flex flex-wrap gap-2">
           {[
-            { label: '+ נקודת עניין חדשה', href: '/pois' },
-            { label: '+ קטגוריה חדשה',    href: '/categories' },
-            { label: '+ תת-קטגוריה חדשה', href: '/subcategories' },
-            { label: '+ מפרסם חדש',       href: '/businesses' },
+            { label: '+ נקודת עניין חדשה', href: '/admin/pois' },
+            { label: '+ קטגוריה חדשה',    href: '/admin/categories' },
+            { label: '+ תת-קטגוריה חדשה', href: '/admin/subcategories' },
+            { label: '+ מפרסם חדש',       href: '/admin/users' },
           ].map(a => (
             <Link
               key={a.href}

@@ -12,7 +12,7 @@ import {
 import { db } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import type { Poi, Category } from '../types/index.ts'
-import { useAuth } from '../../hooks/useAuth.ts'
+import { useAuth } from '../../hooks/useAuth'
 
 export function PoisPage() {
   const { role } = useAuth()

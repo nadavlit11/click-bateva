@@ -4,7 +4,7 @@ import { db } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import type { Subcategory, Category, Icon } from '../types/index.ts'
 import { SubcategoryModal } from '../components/SubcategoryModal.tsx'
-import { useAuth } from '../../hooks/useAuth.ts'
+import { useAuth } from '../../hooks/useAuth'
 
 export function SubcategoriesPage() {
   const { role } = useAuth()

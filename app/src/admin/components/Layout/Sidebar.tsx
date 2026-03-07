@@ -3,7 +3,7 @@ import { NavLink, Link } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '../../../lib/firebase.ts'
 import { reportError } from '../../../lib/errorReporting.ts'
-import { useAuth } from '../../../hooks/useAuth.ts'
+import { useAuth } from '../../../hooks/useAuth'
 import { ChangePasswordModal } from '../../../components/ChangePasswordModal'
 
 const NAV = [

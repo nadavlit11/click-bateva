@@ -5,7 +5,7 @@ import { reportError } from '../../lib/errorReporting.ts'
 import type { Category, Icon } from '../types/index.ts'
 import { CategoryModal } from '../components/CategoryModal.tsx'
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx'
-import { useAuth } from '../../hooks/useAuth.ts'
+import { useAuth } from '../../hooks/useAuth'
 
 export function CategoriesPage() {
   const { role } = useAuth()

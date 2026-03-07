@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
+import { FOOD_CATEGORY_ID } from '../../lib/constants.ts'
 import { ImageUploader } from '../components/ImageUploader.tsx'
 import type { Poi, PoiEditableFields, DayHours } from '../types/index.ts'
 
@@ -313,7 +314,7 @@ export function PoiEditPage() {
         </div>
 
         {/* Restaurant-specific: Kashrut Certificate & Menu — Firestore doc ID for "מסעדות וארוחות" */}
-        {poi?.categoryId === 'GACgSvKyWbBZegz02zI5' && (
+        {poi?.categoryId === FOOD_CATEGORY_ID && (
           <>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">תעודת כשרות</label>
