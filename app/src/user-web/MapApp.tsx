@@ -180,22 +180,28 @@ export default function MapApp() {
     setSheetExpanded(false);
   }, [user?.uid, role]);
 
+  // POIs with a physical location (excludes locationless category)
+  const mapPois = useMemo(
+    () => pois.filter(p => p.location !== null),
+    [pois]
+  );
+
   const filteredPois = useMemo(
-    () => filterPois(pois, {
+    () => filterPois(mapPois, {
       selectedCategories,
       selectedSubcategories,
       subcategories,
     }),
-    [pois, selectedCategories, selectedSubcategories, subcategories]
+    [mapPois, selectedCategories, selectedSubcategories, subcategories]
   );
 
   // Always show trip POIs on the map, even when their category isn't selected
   const displayPois = useMemo(() => {
     if (tripPoiIdSet.size === 0) return filteredPois;
     const filteredIds = new Set(filteredPois.map(p => p.id));
-    const missingTripPois = pois.filter(p => tripPoiIdSet.has(p.id) && !filteredIds.has(p.id));
+    const missingTripPois = mapPois.filter(p => tripPoiIdSet.has(p.id) && !filteredIds.has(p.id));
     return missingTripPois.length > 0 ? [...filteredPois, ...missingTripPois] : filteredPois;
-  }, [filteredPois, pois, tripPoiIdSet]);
+  }, [filteredPois, mapPois, tripPoiIdSet]);
 
   const showOnboarding = !poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && !hasVisited;
 
@@ -215,6 +221,8 @@ export default function MapApp() {
   );
 
   function handleCategoryToggle(id: string) {
+    const cat = visibleCategories.find(c => c.id === id);
+    if (cat?.locationless) return;
     const isCurrentlySelected = selectedCategories.has(id);
     if (!isCurrentlySelected && !hasVisited) {
       localStorage.setItem("click-bateva:hasVisited", "1");
@@ -284,7 +292,9 @@ export default function MapApp() {
 
   function handleSearchPoiSelect(poi: Poi) {
     handlePoiClick(poi);
-    setFocusLocation({ lat: poi.location.lat, lng: poi.location.lng });
+    if (poi.location) {
+      setFocusLocation({ lat: poi.location.lat, lng: poi.location.lng });
+    }
   }
 
   function handlePoiSelectFromTrip(poiId: string) {
@@ -483,7 +493,7 @@ export default function MapApp() {
             <div className="flex-1">
               <FloatingSearch
                 key={user?.uid ?? "anon"}
-                pois={pois}
+                pois={mapPois}
                 categories={sortedCategories}
                 subcategories={subcategories}
                 mapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}

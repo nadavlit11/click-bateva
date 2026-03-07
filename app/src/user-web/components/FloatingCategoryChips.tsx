@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { Category, Subcategory } from "../../types";
 import { CATEGORY_EMOJI } from "../data/defaults";
 import { lighten, lightenBorder } from "../../lib/colorUtils";
@@ -21,20 +22,23 @@ export function FloatingCategoryChips({
   tripCount,
   onTripChipClick,
 }: FloatingCategoryChipsProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="md:hidden absolute bottom-4 left-0 right-0 z-10">
       <div
         className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-none"
       >
         {categories.map((cat) => {
-          const isSelected = selectedCategories.has(cat.id);
+          const isLocationless = cat.locationless === true;
+          const isSelected = !isLocationless && selectedCategories.has(cat.id);
           const hasSubs = subcategories.some(
             s => s.categoryId === cat.id
           );
           return (
             <div key={cat.id} className="relative shrink-0">
               <button
-                onClick={() => onCategoryToggle(cat.id)}
+                onClick={() => isLocationless ? navigate("/services") : onCategoryToggle(cat.id)}
                 className={
                   "flex items-center gap-1.5 py-1.5 px-3 rounded-full"
                   + " border-2 transition-all text-sm"

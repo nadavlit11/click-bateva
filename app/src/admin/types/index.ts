@@ -10,7 +10,7 @@ export interface Poi {
   id: string
   name: string
   description: string
-  location: { lat: number; lng: number }
+  location: { lat: number; lng: number } | null
   mainImage: string
   images: string[]
   videos: string[]
@@ -50,6 +50,7 @@ export interface Category {
   iconId: string | null
   iconUrl: string | null
   order: number
+  locationless?: boolean
   createdAt: unknown
   updatedAt: unknown
 }
