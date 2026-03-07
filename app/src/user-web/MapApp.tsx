@@ -27,11 +27,21 @@ const PoiDetailPanel = lazy(() => import("./components/MapView/PoiDetailPanel").
 
 const recentClicks = new Map<string, number>();
 const CLICK_DEBOUNCE_MS = 3000;
+const VALID_MAP_KEYS: MapKey[] = ["agents", "groups", "families"];
+
+function resolveMapKey(role: string | undefined): MapKey {
+  const saved = localStorage.getItem("click-bateva:mapKey");
+  const roleDefault: MapKey = role === "travel_agent" ? "agents" : "groups";
+  const canSeeAgents = role === "travel_agent" || role === "admin" || role === "content_manager";
+  if (saved === "agents" && !canSeeAgents) return roleDefault;
+  if (VALID_MAP_KEYS.includes(saved as MapKey)) return saved as MapKey;
+  return roleDefault;
+}
 
 export default function MapApp() {
   const { user, role, login, logout } = useAuth();
   const canSeeAgents = role === "travel_agent" || role === "admin" || role === "content_manager";
-  const [mapKey, setMapKey] = useState<MapKey>(role === "travel_agent" ? "agents" : "groups");
+  const [mapKey, setMapKey] = useState<MapKey>(() => resolveMapKey(role));
   const { pois, loading: poisLoading } = usePois(mapKey);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
@@ -166,8 +176,10 @@ export default function MapApp() {
   useEffect(() => {
     if (prevUid.current === user?.uid) return;
     prevUid.current = user?.uid;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on auth change (no cascading render)
-    setMapKey(role === "travel_agent" ? "agents" : "groups");
+    const next = resolveMapKey(role);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on auth change
+    setMapKey(next);
+    localStorage.setItem("click-bateva:mapKey", next);
     setSelectedCategories(new Set());
     setSelectedSubcategories(new Set());
     setSelectedPoi(null);
@@ -258,6 +270,7 @@ export default function MapApp() {
 
   function handleMapKeyChange(key: MapKey) {
     setMapKey(key);
+    localStorage.setItem("click-bateva:mapKey", key);
     setSelectedCategories(new Set());
     setSelectedSubcategories(new Set());
     setSelectedPoi(null);
