@@ -528,8 +528,10 @@ export default function MapApp() {
         {!sheetExpanded && !selectedPoi && (
           <FloatingCategoryChips
             categories={sortedCategories}
+            subcategories={subcategories}
             selectedCategories={selectedCategories}
             onCategoryToggle={handleCategoryToggle}
+            onSubcategoryFilter={setSubcategoryModalCategoryId}
             tripCount={orderedTripPoiIds.length}
             onTripChipClick={() => setSheetExpanded(true)}
           />
