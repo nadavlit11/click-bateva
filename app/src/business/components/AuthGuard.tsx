@@ -3,7 +3,7 @@ import { Outlet, Navigate } from 'react-router-dom'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
-import { useAuth } from '../../hooks/useAuth.ts'
+import { useAuth } from '../../hooks/useAuth'
 import { BusinessProvider } from '../context/BusinessContext.tsx'
 import type { BusinessContextValue, Business } from '../types/index.ts'
 
