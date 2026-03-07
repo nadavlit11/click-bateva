@@ -12,6 +12,7 @@ import { LoginModal } from "./components/LoginModal";
 import { RegisterModal } from "./components/RegisterModal";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { MapIndicator } from "./components/MapIndicator";
+import { FloatingCategoryChips } from "./components/FloatingCategoryChips";
 import { ContactUsModal } from "./components/ContactUsModal";
 import { usePois, useCategories, useSubcategories } from "../hooks/useFirestoreData";
 import { useContactInfo } from "../hooks/useContactInfo";
@@ -524,6 +525,15 @@ export default function MapApp() {
           onNewTrip={handleNewTrip}
           onPoiSelect={handlePoiSelectFromTrip}
         />
+        {!sheetExpanded && !selectedPoi && (
+          <FloatingCategoryChips
+            categories={sortedCategories}
+            selectedCategories={selectedCategories}
+            onCategoryToggle={handleCategoryToggle}
+            tripCount={orderedTripPoiIds.length}
+            onTripChipClick={() => setSheetExpanded(true)}
+          />
+        )}
         <MapIndicator
           mapKey={mapKey}
           isAgent={isAgent}
