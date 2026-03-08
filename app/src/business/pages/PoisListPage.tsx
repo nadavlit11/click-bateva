@@ -43,7 +43,7 @@ export function PoisListPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {pois.map(poi => (
-            <Link key={poi.id} to={`/pois/${poi.id}`}>
+            <Link key={poi.id} to={`pois/${poi.id}`}>
               <PoiCard poi={poi} />
             </Link>
           ))}
