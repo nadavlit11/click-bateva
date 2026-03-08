@@ -6,9 +6,12 @@ interface Props {
 }
 
 const PRESET_COLORS = [
-  '#000000', '#FFFFFF', '#EF4444', '#F97316', '#F59E0B',
-  '#22C55E', '#16A34A', '#14B8A6', '#3B82F6', '#6366F1',
-  '#8B5CF6', '#EC4899', '#78716C', '#A855F7', '#0EA5E9',
+  '#000000', '#374151', '#6B7280', '#9CA3AF', '#FFFFFF',
+  '#DC2626', '#EF4444', '#F97316', '#F59E0B', '#EAB308',
+  '#84CC16', '#22C55E', '#16A34A', '#059669', '#14B8A6',
+  '#06B6D4', '#0EA5E9', '#3B82F6', '#2563EB', '#4F46E5',
+  '#6366F1', '#8B5CF6', '#A855F7', '#D946EF', '#EC4899',
+  '#F43F5E', '#78716C', '#92400E', '#065F46', '#1E3A5F',
 ]
 
 export function ColorPickerField({ label, value, onChange, allowClear = true }: Props) {
