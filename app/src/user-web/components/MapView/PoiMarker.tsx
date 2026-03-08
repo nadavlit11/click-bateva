@@ -26,10 +26,10 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
     [setMarkerRef, poi.id]
   );
 
-  // pinSize/markerSize = circle diameter; icon = 50%, border = 7%
+  // pinSize/markerSize = circle diameter; icon = 50%, border = 10%
   const circleSize = markerSize ?? pinSize;
   const baseSize = Math.round(circleSize * 0.5);
-  const borderWidth = Math.round(circleSize * 0.07);
+  const borderWidth = Math.round(circleSize * 0.1);
   const markerColor = tripNumber ? AMBER : color;
   const dropShadow = selected
     ? `drop-shadow(0 0 5px ${markerColor}) drop-shadow(0 2px 4px rgba(0,0,0,0.3))`
@@ -135,11 +135,11 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
               background: "white",
               borderRadius: 999,
               padding: "2px 9px",
-              fontSize: 11,
+              fontSize: 12.5,
               fontWeight: 500,
               whiteSpace: "nowrap",
               boxShadow: "0 1px 6px rgba(0,0,0,0.18)",
-              color: "#374151",
+              color: "#000000",
             }}
           >
             {poi.name}

@@ -31,7 +31,7 @@ function firstSubMatch<T>(sids: string[], map: Record<string, T>): T | undefined
 const ISRAEL_CENTER = { lat: 31.5, lng: 34.8 };
 const MAP_ID = "DEMO_MAP_ID";
 const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
-const LABEL_ZOOM_THRESHOLD = 11;
+const LABEL_ZOOM_THRESHOLD = 10;
 
 export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed, pinSize = 24, highlightPoi, orderedTripPoiIds = [], activeDayPoiIds = [] }: MapViewProps) {
   return (
