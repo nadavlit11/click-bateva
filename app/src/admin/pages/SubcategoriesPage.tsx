@@ -83,6 +83,8 @@ export function SubcategoriesPage() {
               <thead>
                 <tr className="border-b border-gray-100">
                   <th className="text-right px-4 py-2 font-medium text-gray-500 text-xs">שם</th>
+                  <th className="text-right px-4 py-2 font-medium text-gray-500 text-xs">צבע</th>
+                  <th className="text-right px-4 py-2 font-medium text-gray-500 text-xs">מסגרת</th>
                   <th className="text-right px-4 py-2 font-medium text-gray-500 text-xs">קבוצה</th>
                   <th className="px-4 py-2"></th>
                 </tr>
@@ -97,6 +99,26 @@ export function SubcategoriesPage() {
                         )}
                         {sub.name}
                       </span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {sub.color ? (
+                        <div
+                          className="w-5 h-5 rounded-full border border-gray-200"
+                          style={{ backgroundColor: sub.color }}
+                        />
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {sub.borderColor ? (
+                        <div
+                          className="w-5 h-5 rounded-full border border-gray-200"
+                          style={{ backgroundColor: sub.borderColor }}
+                        />
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-2.5">
                       {sub.group ? (
