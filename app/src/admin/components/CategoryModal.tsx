@@ -25,7 +25,7 @@ interface FormState {
 }
 
 const INITIAL_FORM: FormState = {
-  name: '', color: '#16a34a', borderColor: '', markerSize: '',
+  name: '', color: '#16a34a', borderColor: '#000000', markerSize: '',
   iconId: '', order: 0,
 }
 
@@ -39,7 +39,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
       setForm({
         name: category.name,
         color: category.color,
-        borderColor: category.borderColor ?? '',
+        borderColor: category.borderColor ?? '#000000',
         markerSize: category.markerSize?.toString() ?? '',
         iconId: category.iconId ?? '',
         order: category.order ?? 0,
