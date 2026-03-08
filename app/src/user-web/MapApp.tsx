@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { reportError } from "../lib/errorReporting";
@@ -39,6 +40,7 @@ function resolveMapKey(role: string | null | undefined): MapKey {
 }
 
 export default function MapApp() {
+  const navigate = useNavigate();
   const { user, role, login, logout } = useAuth();
   const canSeeAgents = role === "travel_agent" || role === "admin" || role === "content_manager";
   const [mapKey, setMapKey] = useState<MapKey>(() => resolveMapKey(role));
@@ -191,6 +193,13 @@ export default function MapApp() {
     setContactModalOpen(false);
     setSheetExpanded(false);
   }, [user?.uid, role]);
+
+  // Redirect business users to their dashboard
+  useEffect(() => {
+    if (role === "business_user") {
+      navigate("/business/", { replace: true });
+    }
+  }, [role, navigate]);
 
   // POIs with a physical location (excludes locationless category)
   const mapPois = useMemo(
