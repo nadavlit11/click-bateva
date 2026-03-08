@@ -70,33 +70,43 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
             } : {}),
           }}
         >
-          {iconUrl ? (
-            <img
-              src={iconUrl}
-              alt=""
-              className={iconFlicker ? "animate-pulse" : undefined}
-              style={{
-                width: effectiveSize,
-                height: effectiveSize,
-                objectFit: "contain",
-                display: "block",
-                filter: dropShadow,
-                transform: hovered || selected ? "scale(1.2)" : "scale(1)",
-                transition: "transform 0.2s ease, filter 0.2s ease",
-              }}
-            />
-          ) : (
-            <span
-              style={{
-                fontSize: effectiveSize,
-                lineHeight: 1,
-                filter: dropShadow,
-                transform: hovered || selected ? "scale(1.2)" : "scale(1)",
-                transition: "transform 0.2s ease, filter 0.2s ease",
-                display: "block",
-              }}
-            >📍</span>
-          )}
+          <div
+            style={{
+              borderRadius: "50%",
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {iconUrl ? (
+              <img
+                src={iconUrl}
+                alt=""
+                className={iconFlicker ? "animate-pulse" : undefined}
+                style={{
+                  width: effectiveSize,
+                  height: effectiveSize,
+                  objectFit: "contain",
+                  display: "block",
+                  filter: dropShadow,
+                  transform: hovered || selected ? "scale(1.2)" : "scale(1)",
+                  transition: "transform 0.2s ease, filter 0.2s ease",
+                }}
+              />
+            ) : (
+              <span
+                style={{
+                  fontSize: effectiveSize,
+                  lineHeight: 1,
+                  filter: dropShadow,
+                  transform: hovered || selected ? "scale(1.2)" : "scale(1)",
+                  transition: "transform 0.2s ease, filter 0.2s ease",
+                  display: "block",
+                }}
+              >📍</span>
+            )}
+          </div>
 
           {/* Trip number badge */}
           {tripNumber !== undefined && (
