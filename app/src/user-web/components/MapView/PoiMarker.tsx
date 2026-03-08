@@ -59,13 +59,14 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
         <div
           style={{
             position: "relative",
+            borderRadius: "50%",
+            backgroundColor: markerColor,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 2,
             ...(borderColor ? {
-              borderRadius: "50%",
               boxShadow: `0 0 0 2.5px ${borderColor}`,
-              padding: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
             } : {}),
           }}
         >
