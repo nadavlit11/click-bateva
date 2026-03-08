@@ -9,8 +9,8 @@ interface FloatingCategoryChipsProps {
   selectedCategories: Set<string>;
   onCategoryToggle: (id: string) => void;
   onSubcategoryFilter: (categoryId: string) => void;
-  tripCount: number;
-  onTripChipClick: () => void;
+  tripCount?: number;
+  onTripChipClick?: () => void;
 }
 
 export function FloatingCategoryChips({
@@ -104,7 +104,7 @@ export function FloatingCategoryChips({
           );
         })}
 
-        {tripCount > 0 && (
+        {!!tripCount && tripCount > 0 && onTripChipClick && (
           <button
             onClick={onTripChipClick}
             className={

@@ -26,6 +26,7 @@ App.tsx (BrowserRouter, root)
                   ├─ PoisListPage — query: where("businessId", "==", businessId)
                   └─ PoiEditPage — reads single POI, saves PoiEditableFields
 
+MapApp: useEffect watches `role` — redirects `business_user` to `/business/` on login
 TopBar: "← המפה" link back to map (to="/")
 ```
 
