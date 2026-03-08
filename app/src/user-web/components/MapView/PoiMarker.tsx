@@ -29,6 +29,7 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
   );
 
   const effectiveSize = iconSize ?? markerSize ?? pinSize;
+  const iconPadding = Math.round(effectiveSize * 0.15);
   const markerColor = tripNumber ? AMBER : color;
   const dropShadow = selected
     ? `drop-shadow(0 0 5px ${markerColor}) drop-shadow(0 2px 4px rgba(0,0,0,0.3))`
@@ -64,7 +65,7 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 2,
+            padding: iconPadding,
             ...(borderColor ? {
               boxShadow: `0 0 0 2.5px ${borderColor}`,
             } : {}),
