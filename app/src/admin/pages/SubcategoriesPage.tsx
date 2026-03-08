@@ -82,73 +82,71 @@ export function SubcategoriesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100">
+                  <th className="text-right px-4 py-2 font-medium text-gray-500 text-xs">סמן</th>
                   <th className="text-right px-4 py-2 font-medium text-gray-500 text-xs">שם</th>
-                  <th className="text-right px-4 py-2 font-medium text-gray-500 text-xs">צבע</th>
-                  <th className="text-right px-4 py-2 font-medium text-gray-500 text-xs">מסגרת</th>
                   <th className="text-right px-4 py-2 font-medium text-gray-500 text-xs">קבוצה</th>
                   <th className="px-4 py-2"></th>
                 </tr>
               </thead>
               <tbody>
-                {subs.map(sub => (
-                  <tr key={sub.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="px-4 py-2.5 font-medium text-gray-900">
-                      <span className="flex items-center gap-2">
-                        {sub.iconUrl && (
-                          <img src={sub.iconUrl} alt="" className="w-5 h-5 object-contain shrink-0" />
-                        )}
-                        {sub.name}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      {sub.color ? (
+                {subs.map(sub => {
+                  const bgColor = sub.color || cat.color
+                  const border = sub.borderColor ?? cat.borderColor ?? '#000000'
+                  const icon = sub.iconUrl || cat.iconUrl
+                  return (
+                    <tr key={sub.id} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="px-4 py-2.5">
                         <div
-                          className="w-5 h-5 rounded-full border border-gray-200"
-                          style={{ backgroundColor: sub.color }}
-                        />
-                      ) : (
-                        <span className="text-gray-300 text-xs">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      {sub.borderColor ? (
-                        <div
-                          className="w-5 h-5 rounded-full border border-gray-200"
-                          style={{ backgroundColor: sub.borderColor }}
-                        />
-                      ) : (
-                        <span className="text-gray-300 text-xs">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      {sub.group ? (
-                        <span className="inline-block px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200">
-                          {sub.group}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-xs">כללי</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => openEdit(sub)}
-                          className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: '50%',
+                            backgroundColor: bgColor,
+                            border: `2px solid ${border}`,
+                            boxSizing: 'border-box',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
                         >
-                          עריכה
-                        </button>
-                        {role === 'admin' && (
-                          <button
-                            onClick={() => handleDelete(sub.id).catch(err => reportError(err, { source: 'SubcategoriesPage.delete' }))}
-                            className="text-red-500 hover:text-red-700 text-xs font-medium"
-                          >
-                            מחיקה
-                          </button>
+                          {icon ? (
+                            <img src={icon} alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                          ) : (
+                            <span style={{ fontSize: 12, lineHeight: 1 }}>📍</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5 font-medium text-gray-900">{sub.name}</td>
+                      <td className="px-4 py-2.5">
+                        {sub.group ? (
+                          <span className="inline-block px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200">
+                            {sub.group}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">כללי</span>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => openEdit(sub)}
+                            className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                          >
+                            עריכה
+                          </button>
+                          {role === 'admin' && (
+                            <button
+                              onClick={() => handleDelete(sub.id).catch(err => reportError(err, { source: 'SubcategoriesPage.delete' }))}
+                              className="text-red-500 hover:text-red-700 text-xs font-medium"
+                            >
+                              מחיקה
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

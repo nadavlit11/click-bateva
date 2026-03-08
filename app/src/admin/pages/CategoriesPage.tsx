@@ -62,9 +62,7 @@ export function CategoriesPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
-              <th className="text-right px-4 py-3 font-medium text-gray-600">צבע</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">מסגרת</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">אייקון</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">סמן</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">שם</th>
               <th className="px-4 py-3"></th>
             </tr>
@@ -72,7 +70,7 @@ export function CategoriesPage() {
           <tbody>
             {categories.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center py-10 text-gray-400">
+                <td colSpan={3} className="text-center py-10 text-gray-400">
                   אין קטגוריות עדיין
                 </td>
               </tr>
@@ -81,21 +79,24 @@ export function CategoriesPage() {
               <tr key={cat.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <div
-                    className="w-6 h-6 rounded-full border border-gray-200"
-                    style={{ backgroundColor: cat.color }}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <div
-                    className="w-6 h-6 rounded-full border border-gray-200"
-                    style={{ backgroundColor: cat.borderColor ?? '#000000' }}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  {cat.iconUrl
-                    ? <img src={cat.iconUrl} alt="" className="w-7 h-7 object-contain" />
-                    : <span className="text-gray-300 text-xs">—</span>
-                  }
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      backgroundColor: cat.color,
+                      border: `2px solid ${cat.borderColor ?? '#000000'}`,
+                      boxSizing: 'border-box',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {cat.iconUrl ? (
+                      <img src={cat.iconUrl} alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontSize: 12, lineHeight: 1 }}>📍</span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3 font-medium text-gray-900">{cat.name}</td>
                 <td className="px-4 py-3">
