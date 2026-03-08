@@ -106,7 +106,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
           <h2 className="text-base font-semibold text-gray-900">
             {category ? 'עריכת קטגוריה' : 'הוספת קטגוריה'}
@@ -116,7 +116,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4 overflow-y-auto">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">שם *</label>
             <input
