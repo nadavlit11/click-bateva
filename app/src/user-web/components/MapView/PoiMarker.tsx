@@ -69,9 +69,10 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            ...(borderColor ? {
-              boxShadow: `0 0 0 ${borderWidth}px ${borderColor}`,
-            } : {}),
+            border: borderColor
+              ? `${borderWidth}px solid ${borderColor}`
+              : `${borderWidth}px solid transparent`,
+            boxSizing: "border-box",
           }}
         >
           {iconUrl ? (
