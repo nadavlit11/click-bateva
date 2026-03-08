@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useState } from 'react'
+import { useEffect, useCallback, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
@@ -6,7 +6,9 @@ import { db, storage } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { FOOD_CATEGORY_ID } from '../../lib/constants.ts'
 import { ImageUploader } from '../components/ImageUploader.tsx'
+import { PoiDetailPanel } from '../../user-web/components/MapView/PoiDetailPanel.tsx'
 import type { Poi, PoiEditableFields, DayHours } from '../types/index.ts'
+import type { Poi as SharedPoi, Category } from '../../types/index.ts'
 
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
 const DAY_NAMES_HE: Record<string, string> = {
@@ -18,7 +20,8 @@ export function PoiEditPage() {
   const { poiId } = useParams<{ poiId: string }>()
   const navigate = useNavigate()
   const [poi, setPoi] = useState<Poi | null>(null)
-  const [categoryName, setCategoryName] = useState('')
+  const [category, setCategory] = useState<Category | null>(null)
+  const [showMobilePreview, setShowMobilePreview] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -40,6 +43,7 @@ export function PoiEditPage() {
 
   useEffect(() => {
     if (!poiId) return
+    setShowMobilePreview(false)
     getDoc(doc(db, 'points_of_interest', poiId))
       .then(snap => {
         if (!snap.exists()) { setError('נקודת עניין לא נמצאה'); setLoading(false); return }
@@ -59,8 +63,21 @@ export function PoiEditPage() {
         })
         if (data.categoryId) {
           getDoc(doc(db, 'categories', data.categoryId))
-            .then(catSnap => { if (catSnap.exists()) setCategoryName(catSnap.data().name ?? data.categoryId) })
-            .catch(() => setCategoryName(data.categoryId))
+            .then(catSnap => {
+              if (catSnap.exists()) {
+                const d = catSnap.data()
+                setCategory({
+                  id: catSnap.id,
+                  name: d.name ?? data.categoryId,
+                  color: d.color ?? '#4caf50',
+                  borderColor: d.borderColor ?? null,
+                  markerSize: d.markerSize ?? null,
+                  iconUrl: d.iconUrl ?? null,
+                  order: d.order ?? 0,
+                })
+              }
+            })
+            .catch(err => reportError(err, { source: 'PoiEditPage.loadCategory' }))
         }
         setLoading(false)
       })
@@ -122,6 +139,38 @@ export function PoiEditPage() {
     })
   }, [form.description])
 
+  const previewPoi: SharedPoi | null = useMemo(() => {
+    if (!poi) return null
+    return {
+      id: poi.id,
+      name: poi.name,
+      description: form.description,
+      location: poi.location ?? null,
+      mainImage: form.mainImage || null,
+      images: form.images,
+      videos: form.videos,
+      phone: form.phone || null,
+      whatsapp: form.whatsapp || null,
+      email: null,
+      website: form.website || null,
+      openingHours: poi.openingHours,
+      price: poi.price,
+      kashrutCertUrl: form.kashrutCertUrl || null,
+      menuUrl: form.menuUrl || null,
+      facebook: form.facebook || null,
+      categoryId: poi.categoryId,
+      subcategoryIds: [],
+      iconUrl: null,
+      iconId: null,
+      businessId: poi.businessId,
+      capacity: null,
+      color: null,
+      borderColor: null,
+      markerSize: null,
+      flicker: null,
+    }
+  }, [poi, form])
+
   async function handleSave() {
     if (!poiId) return
     setSaving(true)
@@ -144,16 +193,20 @@ export function PoiEditPage() {
   if (error && !poi) return <div className="text-center py-10 text-red-500">{error}</div>
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <div className="flex items-center gap-3">
+    <div className="max-w-5xl mx-auto">
+      <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate('/')} className="text-gray-500 hover:text-gray-700 text-sm">← חזרה</button>
         <h2 className="text-xl font-bold text-gray-900">{poi?.name}</h2>
       </div>
 
+      <div className="flex flex-col md:flex-row gap-6">
+      {/* ── Form column ── */}
+      <div className="flex-1 max-w-lg space-y-6">
+
       {/* Read-only info */}
       {poi && (
         <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 text-sm text-gray-600 space-y-1">
-          <p><span className="font-medium text-gray-900">קטגוריה:</span> {categoryName || poi.categoryId}</p>
+          <p><span className="font-medium text-gray-900">קטגוריה:</span> {category?.name ?? poi.categoryId}</p>
           <p><span className="font-medium text-gray-900">סטטוס:</span> {poi.active ? 'פעיל' : 'לא פעיל'}</p>
           {poi.openingHours && (
             <div>
@@ -381,6 +434,56 @@ export function PoiEditPage() {
       >
         {saving ? 'שומר...' : 'שמור שינויים'}
       </button>
+      </div>{/* end form column */}
+
+      {/* ── Desktop preview column ── */}
+      {previewPoi && (
+        <div className="hidden md:block w-[320px] shrink-0">
+          <div className="sticky top-6">
+            <p className="text-sm font-medium text-gray-500 mb-2">תצוגה מקדימה</p>
+            <PoiDetailPanel
+              poi={previewPoi}
+              category={category ?? undefined}
+              onClose={() => {}}
+              preview
+            />
+          </div>
+        </div>
+      )}
+      </div>{/* end flex row */}
+
+      {/* ── Mobile preview toggle ── */}
+      {previewPoi && (
+        <>
+          <button
+            onClick={() => setShowMobilePreview(true)}
+            className="md:hidden fixed bottom-6 left-6 z-20 px-4 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          >
+            👁 תצוגה מקדימה
+          </button>
+          {showMobilePreview && (
+            <div
+              className="md:hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+              onClick={() => setShowMobilePreview(false)}
+            >
+              <div className="w-[300px] max-h-[80vh]" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => setShowMobilePreview(false)}
+                  className="mb-2 w-full py-1.5 bg-white text-gray-600 text-sm font-medium rounded-lg shadow"
+                >
+                  סגור תצוגה מקדימה
+                </button>
+                <PoiDetailPanel
+                  poi={previewPoi}
+                  category={category ?? undefined}
+                  onClose={() => setShowMobilePreview(false)}
+                  preview
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
