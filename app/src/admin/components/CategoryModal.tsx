@@ -129,26 +129,9 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">צבע</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={form.color}
-                onChange={e => set('color', e.target.value)}
-                className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer p-0.5"
-              />
-              <input
-                type="text"
-                value={form.color}
-                onChange={e => set('color', e.target.value)}
-                className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 font-mono"
-                placeholder="#16a34a"
-              />
-            </div>
-          </div>
+          <ColorPickerField label="צבע" value={form.color} onChange={v => set('color', v)} allowClear={false} />
 
-          <ColorPickerField label="צבע מסגרת" value={form.borderColor} onChange={v => set('borderColor', v)} />
+          <ColorPickerField label="צבע מסגרת" value={form.borderColor} onChange={v => set('borderColor', v)} allowClear={false} />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">גודל סמן</label>
