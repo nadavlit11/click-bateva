@@ -33,20 +33,20 @@ interface SidebarProps {
   onContactClick?: () => void;
   // terms
   termsUrl?: string;
-  // trip
-  trip: TripDoc | null;
-  allPois: Poi[];
-  orderedTripPoiIds: string[];
-  activeDayNumber: number;
-  onSetActiveDayNumber: (n: number) => void;
-  onRemovePoi: (poiId: string) => void;
-  onReorderPoi: (poiId: string, newDay: number, newIndex: number) => void;
-  onAddDay: () => void;
-  onSetClientName: (name: string) => void;
-  onClearTrip: () => void;
-  onShareTrip: () => Promise<string>;
-  onNewTrip: () => void;
-  onPoiSelect: (poiId: string) => void;
+  // trip (optional — hidden when not provided)
+  trip?: TripDoc | null;
+  allPois?: Poi[];
+  orderedTripPoiIds?: string[];
+  activeDayNumber?: number;
+  onSetActiveDayNumber?: (n: number) => void;
+  onRemovePoi?: (poiId: string) => void;
+  onReorderPoi?: (poiId: string, newDay: number, newIndex: number) => void;
+  onAddDay?: () => void;
+  onSetClientName?: (name: string) => void;
+  onClearTrip?: () => void;
+  onShareTrip?: () => Promise<string>;
+  onNewTrip?: () => void;
+  onPoiSelect?: (poiId: string) => void;
 }
 
 type ActiveTab = "filter" | "trip";
@@ -86,9 +86,10 @@ export function Sidebar({
   onNewTrip,
   onPoiSelect,
 }: SidebarProps) {
+  const tripEnabled = !!onPoiSelect; // trip props provided
   const [activeTab, setActiveTab] = useState<ActiveTab>("filter");
 
-  const tripCount = orderedTripPoiIds.length;
+  const tripCount = orderedTripPoiIds?.length ?? 0;
 
   return (
     <aside
@@ -108,32 +109,34 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* Tab row */}
-      <div className="flex border-b border-gray-100 shrink-0">
-        <button
-          onClick={() => setActiveTab("filter")}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-            activeTab === "filter"
-              ? "text-green-700 border-b-2 border-green-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          🗂️ מסנן
-        </button>
-        <button
-          onClick={() => setActiveTab("trip")}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-            activeTab === "trip"
-              ? "text-teal-700 border-b-2 border-teal-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          ✈️ תכנן טיול{tripCount > 0 ? ` · ${tripCount}` : ""}
-        </button>
-      </div>
+      {/* Tab row — only shown when trip is enabled */}
+      {tripEnabled && (
+        <div className="flex border-b border-gray-100 shrink-0">
+          <button
+            onClick={() => setActiveTab("filter")}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === "filter"
+                ? "text-green-700 border-b-2 border-green-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            🗂️ מסנן
+          </button>
+          <button
+            onClick={() => setActiveTab("trip")}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === "trip"
+                ? "text-teal-700 border-b-2 border-teal-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            ✈️ תכנן טיול{tripCount > 0 ? ` · ${tripCount}` : ""}
+          </button>
+        </div>
+      )}
 
       {/* Tab content */}
-      {activeTab === "filter" ? (
+      {activeTab === "filter" || !tripEnabled ? (
         <>
           <div className="flex-1 overflow-y-auto">
             <CategoryGrid
@@ -148,20 +151,20 @@ export function Sidebar({
         </>
       ) : (
         <TripPanel
-          trip={trip}
-          allPois={allPois}
+          trip={trip!}
+          allPois={allPois!}
           categories={categories}
-          orderedTripPoiIds={orderedTripPoiIds}
-          activeDayNumber={activeDayNumber}
-          onSetActiveDayNumber={onSetActiveDayNumber}
-          onRemovePoi={onRemovePoi}
-          onReorderPoi={onReorderPoi}
-          onAddDay={onAddDay}
-          onSetClientName={onSetClientName}
-          onClearTrip={onClearTrip}
-          onShareTrip={onShareTrip}
-          onNewTrip={onNewTrip}
-          onPoiSelect={onPoiSelect}
+          orderedTripPoiIds={orderedTripPoiIds!}
+          activeDayNumber={activeDayNumber!}
+          onSetActiveDayNumber={onSetActiveDayNumber!}
+          onRemovePoi={onRemovePoi!}
+          onReorderPoi={onReorderPoi!}
+          onAddDay={onAddDay!}
+          onSetClientName={onSetClientName!}
+          onClearTrip={onClearTrip!}
+          onShareTrip={onShareTrip!}
+          onNewTrip={onNewTrip!}
+          onPoiSelect={onPoiSelect!}
           isLoggedIn={isLoggedIn}
           onLoginClick={onLoginClick}
         />

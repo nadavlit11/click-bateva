@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
@@ -19,7 +19,7 @@ import { usePois, useCategories, useSubcategories } from "../hooks/useFirestoreD
 import { useContactInfo } from "../hooks/useContactInfo";
 import { useAuth } from "../hooks/useAuth";
 import { useMapSettings } from "../hooks/useMapSettings";
-import { useTrip } from "../hooks/useTrip";
+// import { useTrip } from "../hooks/useTrip";
 import { filterPois } from "../lib/filterPois";
 import type { Poi, TripDoc } from "../types";
 import type { MapKey } from "../hooks/useFirestoreData";
@@ -95,35 +95,23 @@ export default function MapApp() {
     });
   }, [tripShareId]);
 
-  // ── Trip (all users — Firestore for logged-in, localStorage for anonymous) ─
-  const { trip, addPoi, removePoi, reorderPoi, addDay, setClientName, clearTrip, shareTrip, newTrip } = useTrip(
-    user?.uid ?? null
-  );
+  // ── Trip (disabled in production — uncomment to re-enable) ─────────────
+  // const { trip, addPoi, removePoi, reorderPoi, addDay, setClientName,
+  //   clearTrip, shareTrip, newTrip } = useTrip(user?.uid ?? null);
+  // const [activeDayNumber, setActiveDayNumber] = useState(1);
+  // const tripNumDays = trip?.numDays ?? 1;
+  // const clampedActiveDay = Math.min(activeDayNumber, tripNumDays);
+  // const handleAddDay = useCallback(async () => {
+  //   await addDay(); setActiveDayNumber(n => n + 1);
+  // }, [addDay]);
+  // const handleNewTrip = useCallback(async () => {
+  //   await newTrip(); setActiveDayNumber(1);
+  // }, [newTrip]);
+  // const handleClearTrip = useCallback(async () => {
+  //   await clearTrip(); setActiveDayNumber(1);
+  // }, [clearTrip]);
 
-  // Which day new POIs are added to (1-indexed). Defaults to 1, switches to
-  // the new day when the agent adds a day or clicks a day header.
-  const [activeDayNumber, setActiveDayNumber] = useState(1);
-
-  // Keep activeDayNumber in bounds whenever numDays changes
-  const tripNumDays = trip?.numDays ?? 1;
-  const clampedActiveDay = Math.min(activeDayNumber, tripNumDays);
-
-  const handleAddDay = useCallback(async () => {
-    await addDay();
-    setActiveDayNumber(n => n + 1);
-  }, [addDay]);
-
-  const handleNewTrip = useCallback(async () => {
-    await newTrip();
-    setActiveDayNumber(1);
-  }, [newTrip]);
-
-  const handleClearTrip = useCallback(async () => {
-    await clearTrip();
-    setActiveDayNumber(1);
-  }, [clearTrip]);
-
-  const activeTrip = tripShareId ? sharedTrip : trip;
+  const activeTrip = tripShareId ? sharedTrip : null;
 
   const orderedTripPoiIds = useMemo(
     () => [...(activeTrip?.pois ?? [])]
@@ -139,11 +127,11 @@ export default function MapApp() {
   // POI IDs for the active day only (for route rendering)
   const activeDayPoiIds = useMemo(() => {
     const dayPois = (activeTrip?.pois ?? [])
-      .filter(p => (p.dayNumber ?? 1) === clampedActiveDay)
+      .filter(p => (p.dayNumber ?? 1) === 1)
       .sort((a, b) => a.addedAt - b.addedAt)
       .map(p => p.poiId);
     return dayPois;
-  }, [activeTrip, clampedActiveDay]);
+  }, [activeTrip]);
 
   // ── Filter state (persisted in localStorage) ────────────────────────────
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(() => {
@@ -432,19 +420,6 @@ export default function MapApp() {
           onChangePasswordClick={() => setChangePasswordModalOpen(true)}
           onContactClick={contactInfo ? () => setContactModalOpen(true) : undefined}
           termsUrl={termsUrl || undefined}
-          trip={trip}
-          allPois={pois}
-          orderedTripPoiIds={orderedTripPoiIds}
-          activeDayNumber={clampedActiveDay}
-          onSetActiveDayNumber={setActiveDayNumber}
-          onRemovePoi={removePoi}
-          onReorderPoi={reorderPoi}
-          onAddDay={handleAddDay}
-          onSetClientName={setClientName}
-          onClearTrip={handleClearTrip}
-          onShareTrip={shareTrip}
-          onNewTrip={handleNewTrip}
-          onPoiSelect={handlePoiSelectFromTrip}
         />
       )}
       <main className="flex-1 h-full relative">
@@ -546,19 +521,6 @@ export default function MapApp() {
           onChangePasswordClick={() => setChangePasswordModalOpen(true)}
           onContactClick={contactInfo ? () => setContactModalOpen(true) : undefined}
           termsUrl={termsUrl || undefined}
-          trip={trip}
-          allPois={pois}
-          orderedTripPoiIds={orderedTripPoiIds}
-          activeDayNumber={clampedActiveDay}
-          onSetActiveDayNumber={setActiveDayNumber}
-          onRemovePoi={removePoi}
-          onReorderPoi={reorderPoi}
-          onAddDay={handleAddDay}
-          onSetClientName={setClientName}
-          onClearTrip={handleClearTrip}
-          onShareTrip={shareTrip}
-          onNewTrip={handleNewTrip}
-          onPoiSelect={handlePoiSelectFromTrip}
         />
         {!sheetExpanded && !selectedPoi && (
           <FloatingCategoryChips
@@ -567,8 +529,6 @@ export default function MapApp() {
             selectedCategories={selectedCategories}
             onCategoryToggle={handleCategoryToggle}
             onSubcategoryFilter={setSubcategoryModalCategoryId}
-            tripCount={orderedTripPoiIds.length}
-            onTripChipClick={() => setSheetExpanded(true)}
           />
         )}
         <MapIndicator
@@ -591,9 +551,6 @@ export default function MapApp() {
               poi={selectedPoi}
               category={sortedCategories.find(c => c.id === selectedPoi.categoryId)}
               onClose={() => setSelectedPoi(null)}
-              tripPoiIds={tripPoiIdSet}
-              onAddToTrip={(id) => addPoi(id, clampedActiveDay)}
-              onRemoveFromTrip={removePoi}
             />
           </Suspense>
         )}
