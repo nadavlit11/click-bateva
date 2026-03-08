@@ -244,7 +244,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
         const resolvedBorderColor = poi.borderColor
           ?? firstSubMatch(sids, subMaps.borderColor)
           ?? catMaps.borderColor[poi.categoryId]
-          ?? null;
+          ?? "#000000";
         const resolvedMarkerSize = poi.markerSize
           ?? firstSubMatch(sids, subMaps.markerSize)
           ?? catMaps.markerSize[poi.categoryId]
