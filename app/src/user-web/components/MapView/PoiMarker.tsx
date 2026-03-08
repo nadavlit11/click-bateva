@@ -30,6 +30,7 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
 
   const effectiveSize = iconSize ?? markerSize ?? pinSize;
   const iconPadding = Math.round(effectiveSize * 0.15);
+  const innerSize = effectiveSize - iconPadding * 2;
   const markerColor = tripNumber ? AMBER : color;
   const dropShadow = selected
     ? `drop-shadow(0 0 5px ${markerColor}) drop-shadow(0 2px 4px rgba(0,0,0,0.3))`
@@ -71,43 +72,33 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
             } : {}),
           }}
         >
-          <div
-            style={{
-              borderRadius: "50%",
-              overflow: "hidden",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {iconUrl ? (
-              <img
-                src={iconUrl}
-                alt=""
-                className={iconFlicker ? "animate-pulse" : undefined}
-                style={{
-                  width: effectiveSize,
-                  height: effectiveSize,
-                  objectFit: "contain",
-                  display: "block",
-                  filter: dropShadow,
-                  transform: hovered || selected ? "scale(1.2)" : "scale(1)",
-                  transition: "transform 0.2s ease, filter 0.2s ease",
-                }}
-              />
-            ) : (
-              <span
-                style={{
-                  fontSize: effectiveSize,
-                  lineHeight: 1,
-                  filter: dropShadow,
-                  transform: hovered || selected ? "scale(1.2)" : "scale(1)",
-                  transition: "transform 0.2s ease, filter 0.2s ease",
-                  display: "block",
-                }}
-              >📍</span>
-            )}
-          </div>
+          {iconUrl ? (
+            <img
+              src={iconUrl}
+              alt=""
+              className={iconFlicker ? "animate-pulse" : undefined}
+              style={{
+                width: innerSize,
+                height: innerSize,
+                objectFit: "contain",
+                display: "block",
+                filter: dropShadow,
+                transform: hovered || selected ? "scale(1.2)" : "scale(1)",
+                transition: "transform 0.2s ease, filter 0.2s ease",
+              }}
+            />
+          ) : (
+            <span
+              style={{
+                fontSize: innerSize,
+                lineHeight: 1,
+                filter: dropShadow,
+                transform: hovered || selected ? "scale(1.2)" : "scale(1)",
+                transition: "transform 0.2s ease, filter 0.2s ease",
+                display: "block",
+              }}
+            >📍</span>
+          )}
 
           {/* Trip number badge */}
           {tripNumber !== undefined && (
