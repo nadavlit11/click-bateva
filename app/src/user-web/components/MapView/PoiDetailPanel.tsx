@@ -13,9 +13,10 @@ interface PoiDetailPanelProps {
   tripPoiIds?: Set<string>;
   onAddToTrip?: (id: string) => void;
   onRemoveFromTrip?: (id: string) => void;
+  preview?: boolean;
 }
 
-export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip, onRemoveFromTrip }: PoiDetailPanelProps) {
+export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip, onRemoveFromTrip, preview }: PoiDetailPanelProps) {
   const [virtualSlide, setVirtualSlide] = useState(0);
   const [skipTransition, setSkipTransition] = useState(false);
   const isDesktop = useMemo(() => typeof window !== "undefined" && !("ontouchstart" in window), []);
@@ -40,6 +41,7 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
 
   // ESC to close
   useEffect(() => {
+    if (preview) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (showPhoneModal) { setShowPhoneModal(false); }
@@ -48,7 +50,7 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose, showPhoneModal]);
+  }, [onClose, showPhoneModal, preview]);
 
   // RTL: left button = next, right button = prev
   function next() { setVirtualSlide(s => s + 1); }
@@ -110,24 +112,29 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
 
   return (
     <div
-      className="absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100dvh-120px-2rem)] md:max-h-[calc(100dvh-2rem)]"
+      className={preview
+        ? "w-full bg-white rounded-2xl shadow-xl overflow-hidden max-h-[70vh]"
+        : "absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100dvh-120px-2rem)] md:max-h-[calc(100dvh-2rem)]"
+      }
       style={{ outline: `3px solid ${color}` }}
     >
 
       {/* Floating close button — positioned over scrollable content */}
-      <button
-        onClick={onClose}
-        style={{
-          position: "absolute", top: 10, left: 10,
-          width: 30, height: 30,
-          background: "white", border: "none", borderRadius: "50%", cursor: "pointer",
-          fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.2)", color: "#374151", zIndex: 10,
-        }}
-        aria-label="סגור"
-      >
-        ×
-      </button>
+      {!preview && (
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute", top: 10, left: 10,
+            width: 30, height: 30,
+            background: "white", border: "none", borderRadius: "50%", cursor: "pointer",
+            fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)", color: "#374151", zIndex: 10,
+          }}
+          aria-label="סגור"
+        >
+          ×
+        </button>
+      )}
 
       <div className="overflow-y-auto max-h-[inherit]">
 
@@ -232,7 +239,7 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
         {/* Quick-action icon row */}
         <div className="flex justify-evenly mt-3">
           {poi.phone && (
-            isDesktop
+            isDesktop && !preview
               ? <ActionIcon href={`tel:${poi.phone}`} icon={ICON_PHONE} label="שיחה" color={color} asButton onClick={() => setShowPhoneModal(true)} />
               : <ActionIcon href={`tel:${poi.phone}`} icon={ICON_PHONE} label="שיחה" color={color} />
           )}
