@@ -79,8 +79,6 @@ export interface Icon {
   id: string
   name: string
   path: string   // Storage path, e.g. 'icons/{uuid}.png'
-  size: number | null
-  flicker: boolean
   createdAt: unknown
 }
 

@@ -14,14 +14,12 @@ interface PoiMarkerProps {
   setMarkerRef: (marker: google.maps.marker.AdvancedMarkerElement | null, key: string) => void;
   tripNumber?: number;
   isDimmed?: boolean;
-  iconFlicker?: boolean;
-  iconSize?: number;
   markerSize?: number;
 }
 
 const AMBER = "#F59E0B";
 
-export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef, tripNumber, isDimmed, iconFlicker, iconSize, markerSize }: PoiMarkerProps) {
+export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef, tripNumber, isDimmed, markerSize }: PoiMarkerProps) {
   const [hovered, setHovered] = useState(false);
   const ref = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement | null) => setMarkerRef(marker, poi.id),
@@ -29,7 +27,7 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
   );
 
   // pinSize/markerSize = circle diameter; icon = 50%, border = 7%
-  const circleSize = iconSize ?? markerSize ?? pinSize;
+  const circleSize = markerSize ?? pinSize;
   const baseSize = Math.round(circleSize * 0.5);
   const borderWidth = Math.round(circleSize * 0.07);
   const markerColor = tripNumber ? AMBER : color;
@@ -79,7 +77,7 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
             <img
               src={iconUrl}
               alt=""
-              className={iconFlicker ? "animate-pulse" : undefined}
+              className={poi.flicker ? "animate-pulse" : undefined}
               style={{
                 width: baseSize,
                 height: baseSize,

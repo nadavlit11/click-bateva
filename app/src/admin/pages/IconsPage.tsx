@@ -30,9 +30,7 @@ export function IconsPage() {
   const [bulkUploading, setBulkUploading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<{ name: string; size: string; flicker: boolean }>({
-    name: '', size: '', flicker: false,
-  })
+  const [editForm, setEditForm] = useState<{ name: string }>({ name: '' })
 
   useEffect(() => {
     return onSnapshot(collection(db, 'icons'), snap => {
@@ -103,7 +101,7 @@ export function IconsPage() {
 
   function startEdit(icon: Icon) {
     setEditingId(icon.id)
-    setEditForm({ name: icon.name, size: icon.size ? String(icon.size) : '', flicker: icon.flicker ?? false })
+    setEditForm({ name: icon.name })
   }
 
   async function handleSaveEdit(id: string) {
@@ -112,11 +110,8 @@ export function IconsPage() {
       return
     }
     try {
-      const sizeNum = parseInt(editForm.size, 10)
       await updateDoc(doc(db, 'icons', id), {
         name: editForm.name.trim(),
-        size: editForm.size.trim() && !isNaN(sizeNum) ? sizeNum : null,
-        flicker: editForm.flicker,
       })
       setEditingId(null)
     } catch (err) {
@@ -236,15 +231,13 @@ export function IconsPage() {
             <tr className="border-b border-gray-200 bg-gray-50">
               <th className="text-right px-4 py-3 font-medium text-gray-600">תמונה</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">שם</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">גודל (px)</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">מהבהב</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {sortedIcons.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center py-10 text-gray-400">
+                <td colSpan={3} className="text-center py-10 text-gray-400">
                   {icons.length > 0 ? 'לא נמצאו אייקונים' : 'אין אייקונים עדיין'}
                 </td>
               </tr>
@@ -275,25 +268,6 @@ export function IconsPage() {
                       />
                     </td>
                     <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        value={editForm.size}
-                        onChange={e => setEditForm(f => ({ ...f, size: e.target.value }))}
-                        className="border border-gray-300 rounded px-2 py-1 text-sm w-20 focus:outline-none focus:border-green-500"
-                        placeholder="ברירת מחדל"
-                        min={8}
-                        max={200}
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={editForm.flicker}
-                        onChange={e => setEditForm(f => ({ ...f, flicker: e.target.checked }))}
-                        className="w-4 h-4 accent-green-600"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
                       <div className="flex gap-2">
                         <button
                           onClick={() => { handleSaveEdit(icon.id) }}
@@ -313,10 +287,6 @@ export function IconsPage() {
                 ) : (
                   <>
                     <td className="px-4 py-3 font-medium text-gray-900">{icon.name}</td>
-                    <td className="px-4 py-3 text-gray-500">{icon.size ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      {icon.flicker ? <span className="text-green-600 font-medium">✓</span> : <span className="text-gray-300">—</span>}
-                    </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-3">
                         <button

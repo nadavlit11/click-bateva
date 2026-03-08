@@ -5,7 +5,6 @@ import type { Marker } from "@googlemaps/markerclusterer";
 import { PoiMarker } from "./PoiMarker";
 import { TripRouteOverlay } from "./TripRouteOverlay";
 import type { Poi, Category, Subcategory } from "../../../types";
-import { useIcons, type IconMeta } from "../../../hooks/useFirestoreData";
 
 interface MapViewProps {
   pois: Poi[];
@@ -35,11 +34,6 @@ const ISRAEL_BOUNDS = { north: 33.8, south: 29.0, west: 33.8, east: 36.0 };
 const LABEL_ZOOM_THRESHOLD = 11;
 
 export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiClick, onMapClick, focusLocation, onFocusConsumed, pinSize = 24, highlightPoi, orderedTripPoiIds = [], activeDayPoiIds = [] }: MapViewProps) {
-  const iconMetas = useIcons();
-  const iconMetaMap = useMemo(
-    () => Object.fromEntries(iconMetas.map(m => [m.id, m])),
-    [iconMetas]
-  );
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} language="he" region="IL">
       <GoogleMap
@@ -67,7 +61,6 @@ export function MapView({ pois, categories, subcategories, selectedPoiId, onPoiC
           highlightPoi={highlightPoi}
           orderedTripPoiIds={orderedTripPoiIds}
           activeDayPoiIds={activeDayPoiIds}
-          iconMetaMap={iconMetaMap}
         />
       </GoogleMap>
     </APIProvider>
@@ -86,10 +79,9 @@ interface ClusteredPoiMarkersProps {
   highlightPoi?: Poi | null;
   orderedTripPoiIds: string[];
   activeDayPoiIds: string[];
-  iconMetaMap: Record<string, IconMeta>;
 }
 
-function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed, pinSize, highlightPoi, orderedTripPoiIds, activeDayPoiIds, iconMetaMap }: ClusteredPoiMarkersProps) {
+function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, onPoiClick, focusLocation, onFocusConsumed, pinSize, highlightPoi, orderedTripPoiIds, activeDayPoiIds }: ClusteredPoiMarkersProps) {
   const map = useMap();
   const [zoom, setZoom] = useState(8);
   const clusterer = useRef<MarkerClusterer | null>(null);
@@ -157,6 +149,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
           const el = document.createElement("div");
           el.style.cssText = `
             width: ${size}px; height: ${size}px;
+            box-sizing: border-box;
             background: rgba(22, 163, 74, 0.85);
             border: 2px solid white;
             border-radius: 50%;
@@ -250,7 +243,6 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
           ?? catMaps.markerSize[poi.categoryId]
           ?? undefined;
         const tripNumber = tripNumberMap.get(poi.id);
-        const iconMeta = poi.iconId ? iconMetaMap[poi.iconId] : undefined;
         return (
           <PoiMarker
             key={poi.id}
@@ -264,8 +256,6 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
             onClick={() => onPoiClick(poi)}
             setMarkerRef={setMarkerRef}
             tripNumber={tripNumber}
-            iconFlicker={poi.flicker ?? iconMeta?.flicker ?? false}
-            iconSize={iconMeta?.size ?? undefined}
             markerSize={resolvedMarkerSize}
           />
         );
