@@ -3,8 +3,6 @@ name: CI/CD
 on:
   push:
     branches: [main, develop, 'feat/**', 'fix/**']
-  pull_request:
-    branches: [main]
 
 concurrency:
   group: ci-cd-${{ github.ref }}
