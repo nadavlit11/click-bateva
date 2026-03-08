@@ -29,9 +29,9 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
   );
 
   const baseSize = iconSize ?? markerSize ?? pinSize;
-  // Icon = 60% of circle, border = 12% of circle
-  const circleSize = Math.round(baseSize / 0.6);
-  const borderWidth = Math.round(circleSize * 0.12);
+  // Icon = 50% of circle, border = 7% of circle
+  const circleSize = Math.round(baseSize / 0.5);
+  const borderWidth = Math.round(circleSize * 0.07);
   const markerColor = tripNumber ? AMBER : color;
   const dropShadow = selected
     ? `drop-shadow(0 0 5px ${markerColor}) drop-shadow(0 2px 4px rgba(0,0,0,0.3))`
