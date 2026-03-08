@@ -5,8 +5,6 @@ import { db } from "../lib/firebase";
 import { reportError } from "../lib/errorReporting";
 import type { Category, Poi, Subcategory } from "../types";
 
-export interface IconMeta { id: string; size: number | null; flicker: boolean }
-
 export type MapKey = "agents" | "groups" | "families";
 
 function snapshotToPois(snap: QuerySnapshot<DocumentData>, mapKey: MapKey): Poi[] {
@@ -101,18 +99,3 @@ export function useSubcategories() {
   return subcategories;
 }
 
-export function useIcons(): IconMeta[] {
-  const [icons, setIcons] = useState<IconMeta[]>([]);
-
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "icons"), snap => {
-      setIcons(snap.docs.map(doc => {
-        const d = doc.data();
-        return { id: doc.id, size: d.size ?? null, flicker: d.flicker ?? false };
-      }));
-    }, err => reportError(err, { source: 'useIcons' }));
-    return unsub;
-  }, []);
-
-  return icons;
-}
