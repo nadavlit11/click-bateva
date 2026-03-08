@@ -28,9 +28,10 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
     [setMarkerRef, poi.id]
   );
 
-  const effectiveSize = iconSize ?? markerSize ?? pinSize;
-  const iconPadding = Math.round(effectiveSize * 0.15);
-  const innerSize = effectiveSize - iconPadding * 2;
+  const baseSize = iconSize ?? markerSize ?? pinSize;
+  // Total circle = baseSize * 1.4 so the icon has room inside
+  const circleSize = Math.round(baseSize * 1.4);
+  const borderWidth = Math.round(circleSize * 0.07);
   const markerColor = tripNumber ? AMBER : color;
   const dropShadow = selected
     ? `drop-shadow(0 0 5px ${markerColor}) drop-shadow(0 2px 4px rgba(0,0,0,0.3))`
@@ -61,14 +62,15 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
         <div
           style={{
             position: "relative",
+            width: circleSize,
+            height: circleSize,
             borderRadius: "50%",
             backgroundColor: markerColor,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: iconPadding,
             ...(borderColor ? {
-              boxShadow: `0 0 0 2.5px ${borderColor}`,
+              boxShadow: `0 0 0 ${borderWidth}px ${borderColor}`,
             } : {}),
           }}
         >
@@ -78,8 +80,8 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
               alt=""
               className={iconFlicker ? "animate-pulse" : undefined}
               style={{
-                width: innerSize,
-                height: innerSize,
+                width: baseSize,
+                height: baseSize,
                 objectFit: "contain",
                 display: "block",
                 filter: dropShadow,
@@ -90,7 +92,7 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
           ) : (
             <span
               style={{
-                fontSize: innerSize,
+                fontSize: baseSize,
                 lineHeight: 1,
                 filter: dropShadow,
                 transform: hovered || selected ? "scale(1.2)" : "scale(1)",
