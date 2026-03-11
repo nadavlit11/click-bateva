@@ -145,6 +145,20 @@ describe("createTravelAgent — success path", () => {
     });
   });
 
+  it("treats whitespace-only name as absent", async () => {
+    await createTravelAgent.run(makeCreateRequest({
+      data: {email: "agent@example.com", password: "StrongPass1!", name: "  "},
+    }));
+
+    expect(mockCreateUser).toHaveBeenCalledWith({
+      email: "agent@example.com",
+      password: "StrongPass1!",
+    });
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({name: null}),
+    );
+  });
+
   it("maps auth/email-already-exists to already-exists HttpsError", async () => {
     mockCreateUser.mockRejectedValueOnce({code: "auth/email-already-exists"});
 
