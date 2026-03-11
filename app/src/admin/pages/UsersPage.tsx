@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot, query, where, orderBy, doc, getDoc } from 'firebase/firestore'
+import { collection, onSnapshot, query, where, orderBy, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { db, functions } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
@@ -12,6 +12,8 @@ interface ManagedUser {
   id: string
   email: string
   name?: string
+  contactName?: string
+  phone?: string
   blocked?: boolean
 }
 
@@ -70,6 +72,12 @@ export function UsersPage() {
   const [bizModalOpen, setBizModalOpen] = useState(false)
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null)
   const [bizConfirmDelete, setBizConfirmDelete] = useState<Business | null>(null)
+  // Agent edit
+  const [editingAgent, setEditingAgent] = useState<ManagedUser | null>(null)
+  const [editAgentName, setEditAgentName] = useState('')
+  const [editAgentContact, setEditAgentContact] = useState('')
+  const [editAgentPhone, setEditAgentPhone] = useState('')
+  const [editAgentSaving, setEditAgentSaving] = useState(false)
   // T&C
   const [termsUrl, setTermsUrl] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
@@ -199,6 +207,24 @@ export function UsersPage() {
     }
   }
 
+  async function handleAgentEdit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingAgent) return
+    setEditAgentSaving(true)
+    try {
+      await updateDoc(doc(db, 'users', editingAgent.id), {
+        name: editAgentName.trim() || null,
+        contactName: editAgentContact.trim() || null,
+        phone: editAgentPhone.trim() || null,
+      })
+      setEditingAgent(null)
+    } catch (err: unknown) {
+      reportError(err, { source: 'UsersPage.editAgent' })
+    } finally {
+      setEditAgentSaving(false)
+    }
+  }
+
   function handleAddClick() {
     if (isBusinessTab) {
       setEditingBusiness(null)
@@ -254,6 +280,7 @@ export function UsersPage() {
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="text-right px-4 py-3 font-medium text-gray-600">שם המפרסם</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">איש קשר</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">טלפון</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">אימייל</th>
                   <th className="px-4 py-3" />
                 </tr>
@@ -261,7 +288,7 @@ export function UsersPage() {
               <tbody>
                 {businesses.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="text-center py-10 text-gray-400">
+                    <td colSpan={5} className="text-center py-10 text-gray-400">
                       {config.emptyLabel}
                     </td>
                   </tr>
@@ -270,19 +297,20 @@ export function UsersPage() {
                   <tr key={business.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{business.name}</td>
                     <td className="px-4 py-3 text-gray-700">{business.contactName ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-600" dir="ltr">{business.phone ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-600" dir="ltr">{business.email}</td>
                     <td className="px-4 py-3 text-left">
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => { setEditingBusiness(business); setBizModalOpen(true) }}
-                          className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                          className="px-3 py-1 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
                         >
                           עריכה
                         </button>
                         <button
                           onClick={() => setBizConfirmDelete(business)}
                           disabled={bizDeletingId === business.id}
-                          className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-40"
+                          className="px-3 py-1 text-xs font-medium rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-40 transition-colors"
                         >
                           {bizDeletingId === business.id ? '...' : 'מחק'}
                         </button>
@@ -303,6 +331,8 @@ export function UsersPage() {
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="text-right px-4 py-3 font-medium text-gray-600">שם</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">איש קשר</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">טלפון</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">אימייל</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">סטטוס</th>
                   <th className="px-4 py-3" />
@@ -311,7 +341,7 @@ export function UsersPage() {
               <tbody>
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="text-center py-10 text-gray-400">
+                    <td colSpan={6} className="text-center py-10 text-gray-400">
                       {config.emptyLabel}
                     </td>
                   </tr>
@@ -319,6 +349,8 @@ export function UsersPage() {
                 {users.map(user => (
                   <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-3 text-gray-700">{user.name ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-700">{user.contactName ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-600" dir="ltr">{user.phone ?? '—'}</td>
                     <td className="px-4 py-3 font-medium text-gray-900">{user.email}</td>
                     <td className="px-4 py-3">
                       {user.blocked ? (
@@ -333,11 +365,19 @@ export function UsersPage() {
                     </td>
                     <td className="px-4 py-3 text-left">
                       <div className="flex gap-2 justify-end">
+                        {activeTab === 'travel_agent' && (
+                          <button
+                            onClick={() => { setEditingAgent(user); setEditAgentName(user.name ?? ''); setEditAgentContact(user.contactName ?? ''); setEditAgentPhone(user.phone ?? '') }}
+                            className="px-3 py-1 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                          >
+                            עריכה
+                          </button>
+                        )}
                         {activeTab === 'content_manager' && !user.blocked && (
                           <button
                             onClick={() => setConfirmModal({ id: user.id, name: user.email, action: 'block' })}
                             disabled={blockingId === user.id}
-                            className="text-xs text-gray-400 hover:text-orange-600 disabled:opacity-40"
+                            className="px-3 py-1 text-xs font-medium rounded-lg border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 disabled:opacity-40 transition-colors"
                           >
                             {blockingId === user.id ? '...' : 'חסום'}
                           </button>
@@ -345,7 +385,7 @@ export function UsersPage() {
                         <button
                           onClick={() => setConfirmModal({ id: user.id, name: user.email, action: 'delete' })}
                           disabled={deletingId === user.id}
-                          className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-40"
+                          className="px-3 py-1 text-xs font-medium rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-40 transition-colors"
                         >
                           {deletingId === user.id ? '...' : 'מחק'}
                         </button>
@@ -482,6 +522,70 @@ export function UsersPage() {
                   className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
                 >
                   {addSaving ? 'שומר...' : 'צור משתמש'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Agent edit modal */}
+      {editingAgent && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingAgent(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">עריכת מפיק</h2>
+            <form onSubmit={handleAgentEdit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">אימייל</label>
+                <input
+                  type="text"
+                  value={editingAgent.email}
+                  disabled
+                  className="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-500"
+                  dir="ltr"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">שם</label>
+                <input
+                  type="text"
+                  value={editAgentName}
+                  onChange={e => setEditAgentName(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  placeholder="שם המפיק"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">איש קשר</label>
+                <input
+                  type="text"
+                  value={editAgentContact}
+                  onChange={e => setEditAgentContact(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  placeholder="שם איש קשר"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">טלפון</label>
+                <input
+                  type="tel"
+                  value={editAgentPhone}
+                  onChange={e => setEditAgentPhone(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  placeholder="050-1234567"
+                  dir="ltr"
+                />
+              </div>
+              <div className="flex gap-3 justify-end pt-2">
+                <button type="button" onClick={() => setEditingAgent(null)} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  ביטול
+                </button>
+                <button
+                  type="submit"
+                  disabled={editAgentSaving}
+                  className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                >
+                  {editAgentSaving ? 'שומר...' : 'שמור'}
                 </button>
               </div>
             </form>

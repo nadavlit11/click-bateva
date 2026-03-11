@@ -59,6 +59,7 @@ filterPois: category + subcategory filters ONLY — no text search
 Categories sorted by `order` field before rendering.
 When category toggled ON: all its subcategories auto-selected.
 Locationless category: `cat.locationless === true` → clicking navigates to `/services` instead of toggling map filter. POIs with `location: null` excluded from map/search via `mapPois` memo.
+ServicesPage: standalone route at `/services`, uses `position: fixed; inset: 0; overflow-y-auto` to override global `body { overflow: hidden }`. Features: image carousel (inline style physical positioning for RTL arrows), YouTube embed via `getYouTubeId()`, subcategory chips, ABC sort, search, phone modal (desktop), WhatsApp/Facebook/website buttons.
 Clicks: PoiMarker.onClick → App.handlePoiClick → sets selectedPoi + writes to clicks collection (suppressed for admin/cm, and for business_user on own POI)
 ```
 

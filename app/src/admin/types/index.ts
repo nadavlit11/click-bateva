@@ -90,6 +90,7 @@ export interface Business {
   name: string
   email: string
   contactName?: string
+  phone?: string
   ownerUid: string
   associatedUserIds: string[]   // UIDs allowed to edit this business's POIs
   createdAt: unknown

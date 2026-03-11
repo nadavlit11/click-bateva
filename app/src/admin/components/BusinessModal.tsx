@@ -38,6 +38,7 @@ function mapError(code: string): string {
 export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
   const [name, setName] = useState('')
   const [contactName, setContactName] = useState('')
+  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [saving, setSaving] = useState(false)
@@ -59,6 +60,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
     if (isOpen) {
       setName(business?.name ?? '')
       setContactName(business?.contactName ?? '')
+      setPhone(business?.phone ?? '')
       setEmail(business?.email ?? '')
       setPassword('')
       setError('')
@@ -84,6 +86,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
         await updateDoc(doc(db, 'businesses', business.id), {
           name: name.trim(),
           contactName: contactName.trim() || null,
+          phone: phone.trim() || null,
           updatedAt: serverTimestamp(),
         })
         alert('המפרסם עודכן בהצלחה')
@@ -157,6 +160,18 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
               onChange={e => setContactName(e.target.value)}
               className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="שם איש קשר"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">טלפון</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              placeholder="050-1234567"
+              dir="ltr"
             />
           </div>
 
