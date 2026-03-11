@@ -19,7 +19,7 @@ export function MapIndicator({ mapKey, canSeeAgents, onMapKeyChange }: MapIndica
           <button
             key={key}
             onClick={() => onMapKeyChange(key)}
-            className={`px-5 py-2.5 rounded-xl transition-all ${
+            className={`${keys.length > 2 ? "px-3" : "px-5"} py-2.5 rounded-xl transition-all ${
               mapKey === key
                 ? "bg-green-600 text-white shadow-md"
                 : "text-gray-600 hover:bg-gray-100"
