@@ -13,7 +13,7 @@ function getRedirectPath(role: string | null): string | null {
   return null;
 }
 
-const M = "https://click-bateva.web.app/markers";
+const M = "http://click-bateva.web.app/markers";
 const STATIC_MAP_URL = `https://maps.googleapis.com/maps/api/staticmap`
   + `?center=31.75,35.25&zoom=10&size=1280x900&scale=2&maptype=roadmap`
   + `&style=feature:road|visibility:simplified`
