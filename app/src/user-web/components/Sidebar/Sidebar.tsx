@@ -33,6 +33,8 @@ interface SidebarProps {
   onContactClick?: () => void;
   // terms
   termsUrl?: string;
+  // welcome
+  welcomeName?: string | null;
   // trip (optional — hidden when not provided)
   trip?: TripDoc | null;
   allPois?: Poi[];
@@ -85,6 +87,7 @@ export function Sidebar({
   onShareTrip,
   onNewTrip,
   onPoiSelect,
+  welcomeName,
 }: SidebarProps) {
   const tripEnabled = !!onPoiSelect; // trip props provided
   const [activeTab, setActiveTab] = useState<ActiveTab>("filter");
@@ -97,7 +100,7 @@ export function Sidebar({
       style={{ boxShadow: "4px 0 20px rgba(0,0,0,0.08)" }}
     >
       <div className="relative">
-        <AppHeader mapKey={mapKey} canSeeAgents={canSeeAgents} onMapKeyChange={onMapKeyChange} />
+        <AppHeader mapKey={mapKey} canSeeAgents={canSeeAgents} onMapKeyChange={onMapKeyChange} welcomeName={welcomeName} />
         <button
           onClick={onClose}
           className="absolute top-4 end-4 w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"

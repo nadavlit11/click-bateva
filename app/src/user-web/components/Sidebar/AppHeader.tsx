@@ -5,9 +5,10 @@ interface AppHeaderProps {
   mapKey: MapKey;
   canSeeAgents: boolean;
   onMapKeyChange: (key: MapKey) => void;
+  welcomeName?: string | null;
 }
 
-export function AppHeader({ mapKey, canSeeAgents, onMapKeyChange }: AppHeaderProps) {
+export function AppHeader({ mapKey, canSeeAgents, onMapKeyChange, welcomeName }: AppHeaderProps) {
   const keys: MapKey[] = canSeeAgents
     ? ["agents", "groups", "families"]
     : ["groups", "families"];
@@ -18,6 +19,11 @@ export function AppHeader({ mapKey, canSeeAgents, onMapKeyChange }: AppHeaderPro
         <img src="/icon-192.png" alt="קליק בטבע" className="w-18 h-18 rounded-2xl object-contain shrink-0" />
         <h1 className="text-2xl font-bold text-gray-800">קליק בטבע</h1>
       </div>
+      {welcomeName !== undefined && welcomeName !== null && (
+        <p className="text-sm text-green-700 font-medium mt-2">
+          {welcomeName ? `${welcomeName}, ברוך הבא למפת קליק בטבע` : "ברוך הבא למפת קליק בטבע"}
+        </p>
+      )}
       <div className="inline-flex bg-gray-100 rounded-xl p-1 text-sm font-semibold mt-3 gap-1">
         {keys.map((key) => (
           <button

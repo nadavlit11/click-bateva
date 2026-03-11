@@ -203,18 +203,21 @@ export default function MapApp() {
   // Welcome banner for travel agents
   const [welcomeBanner, setWelcomeBanner] = useState<string | null>(null);
   useEffect(() => {
-    if (user && role === "travel_agent") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional on auth change
-      setWelcomeBanner(user.displayName || "");
-    } else {
+    if (!user || role !== "travel_agent") {
       setWelcomeBanner(null);
+      return;
     }
+    if (user.displayName) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional on auth change
+      setWelcomeBanner(user.displayName);
+      return;
+    }
+    // Fallback: read name from Firestore users doc
+    getDoc(doc(db, "users", user.uid)).then(snap => {
+      const name = snap.data()?.name;
+      setWelcomeBanner(name || "");
+    }).catch(() => setWelcomeBanner(""));
   }, [user?.uid, role]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (welcomeBanner === null) return;
-    const t = setTimeout(() => setWelcomeBanner(null), 5000);
-    return () => clearTimeout(t);
-  }, [welcomeBanner]);
 
   // Redirect business users to their dashboard
   useEffect(() => {
@@ -457,6 +460,7 @@ export default function MapApp() {
           onChangePasswordClick={() => setChangePasswordModalOpen(true)}
           onContactClick={contactInfo ? () => setContactModalOpen(true) : undefined}
           termsUrl={termsUrl || undefined}
+          welcomeName={welcomeBanner}
         />
       )}
       <main className="flex-1 h-full relative">
@@ -580,17 +584,6 @@ export default function MapApp() {
               <div className="w-8 h-8 border-3 border-green-600 border-t-transparent rounded-full animate-spin" />
               <span className="text-gray-600 text-base font-medium">טוען נקודות...</span>
             </div>
-          </div>
-        )}
-        {welcomeBanner !== null && (
-          <div
-            className="absolute top-4 start-4 end-4 z-40 bg-green-600 text-white rounded-xl px-4 py-3 shadow-lg flex items-center justify-between cursor-pointer"
-            onClick={() => setWelcomeBanner(null)}
-          >
-            <span className="text-sm font-medium">
-              {welcomeBanner ? `${welcomeBanner} ברוך הבא למפת קליק בטבע` : "ברוך הבא למפת קליק בטבע"}
-            </span>
-            <span className="text-white/70 text-lg leading-none">✕</span>
           </div>
         )}
         {selectedPoi && (
