@@ -30,15 +30,15 @@ export function AuthModal({
         className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Tab toggle */}
-        <div className="flex rounded-lg border border-gray-300 overflow-hidden mb-5">
+        {/* Tab toggle — underline style */}
+        <div className="flex border-b border-gray-200 mb-5">
           <button
             type="button"
             onClick={() => setTab("login")}
-            className={`cursor-pointer flex-1 py-2 text-sm font-medium transition-colors ${
+            className={`cursor-pointer flex-1 pb-2.5 text-sm font-semibold transition-colors ${
               tab === "login"
-                ? "bg-green-600 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-50"
+                ? "text-green-700 border-b-2 border-green-600"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
             התחברות
@@ -46,10 +46,10 @@ export function AuthModal({
           <button
             type="button"
             onClick={() => setTab("register")}
-            className={`cursor-pointer flex-1 py-2 text-sm font-medium transition-colors ${
+            className={`cursor-pointer flex-1 pb-2.5 text-sm font-semibold transition-colors ${
               tab === "register"
-                ? "bg-green-600 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-50"
+                ? "text-green-700 border-b-2 border-green-600"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
             הרשמה
@@ -233,15 +233,15 @@ function RegisterForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Type toggle */}
-      <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+      {/* Type toggle — small pill */}
+      <div className="flex gap-2 justify-center">
         <button
           type="button"
           onClick={() => setType("business")}
-          className={`cursor-pointer flex-1 py-2 text-sm font-medium transition-colors ${
+          className={`cursor-pointer px-4 py-1.5 text-xs font-medium rounded-full transition-colors ${
             type === "business"
-              ? "bg-green-600 text-white"
-              : "bg-white text-gray-600 hover:bg-gray-50"
+              ? "bg-green-50 text-green-700 ring-1 ring-green-300"
+              : "bg-gray-100 text-gray-500 hover:bg-gray-150"
           }`}
         >
           מפרסם
@@ -249,10 +249,10 @@ function RegisterForm({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={() => setType("agent")}
-          className={`cursor-pointer flex-1 py-2 text-sm font-medium transition-colors ${
+          className={`cursor-pointer px-4 py-1.5 text-xs font-medium rounded-full transition-colors ${
             type === "agent"
-              ? "bg-green-600 text-white"
-              : "bg-white text-gray-600 hover:bg-gray-50"
+              ? "bg-green-50 text-green-700 ring-1 ring-green-300"
+              : "bg-gray-100 text-gray-500 hover:bg-gray-150"
           }`}
         >
           מפיק
