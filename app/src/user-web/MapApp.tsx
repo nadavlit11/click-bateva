@@ -205,13 +205,13 @@ export default function MapApp() {
   useEffect(() => {
     if (user && role === "travel_agent") {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional on auth change
-      setWelcomeBanner(user.displayName || null);
+      setWelcomeBanner(user.displayName || "");
     } else {
       setWelcomeBanner(null);
     }
   }, [user?.uid, role]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!welcomeBanner) return;
+    if (welcomeBanner === null) return;
     const t = setTimeout(() => setWelcomeBanner(null), 5000);
     return () => clearTimeout(t);
   }, [welcomeBanner]);
@@ -582,12 +582,14 @@ export default function MapApp() {
             </div>
           </div>
         )}
-        {welcomeBanner && (
+        {welcomeBanner !== null && (
           <div
             className="absolute top-4 start-4 end-4 z-40 bg-green-600 text-white rounded-xl px-4 py-3 shadow-lg flex items-center justify-between cursor-pointer"
             onClick={() => setWelcomeBanner(null)}
           >
-            <span className="text-sm font-medium">{welcomeBanner} ברוך הבא למפת קליק בטבע</span>
+            <span className="text-sm font-medium">
+              {welcomeBanner ? `${welcomeBanner} ברוך הבא למפת קליק בטבע` : "ברוך הבא למפת קליק בטבע"}
+            </span>
             <span className="text-white/70 text-lg leading-none">✕</span>
           </div>
         )}
