@@ -87,6 +87,7 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
                 transform: hovered || selected ? "scale(1.2)" : "scale(1)",
                 transition: "transform 0.2s ease, filter 0.2s ease",
               }}
+              onError={e => { e.currentTarget.hidden = true }}
             />
           ) : (
             <span

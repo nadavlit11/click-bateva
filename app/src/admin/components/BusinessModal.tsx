@@ -97,7 +97,9 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
         const authCodeMatch = message.match(/\(([^)]+)\)/)
         const authCode = authCodeMatch ? authCodeMatch[1] : strippedCode
         setError(mapError(authCode))
-        reportError(err, { source: 'BusinessModal.create' })
+        if (strippedCode !== 'already-exists' && authCode !== 'auth/email-already-in-use') {
+          reportError(err, { source: 'BusinessModal.create' })
+        }
       }
     } finally {
       setSaving(false)

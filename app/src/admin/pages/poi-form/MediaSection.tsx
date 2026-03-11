@@ -34,7 +34,7 @@ export function MediaSection({ form, setForm, fieldErrors, setFieldErrors, setEr
   }
 
   function addVideoLink() {
-    const url = videoInput.trim()
+    const url = (videoInput ?? '').trim()
     if (!url) return
     setForm(prev => ({ ...prev, videos: [...prev.videos, url] }))
     setVideoInput('')

@@ -198,17 +198,18 @@ export function PoiEditPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const t = (v: string) => (v ?? '').trim()
     const errors = new Set<string>()
-    if (!form.name.trim()) errors.add('name')
+    if (!t(form.name)) errors.add('name')
     if (!form.categoryId) errors.add('categoryId')
-    if (!form.description.trim()) errors.add('description')
+    if (!t(form.description)) errors.add('description')
 
     function isInvalidPhone(value: string) {
-      const stripped = value.replace(/[\s\-()]/g, '')
-      return stripped.length < 9 || !/^[\d\s\-()+ ]+$/.test(value.trim())
+      const stripped = (value ?? '').replace(/[\s\-()]/g, '')
+      return stripped.length < 9 || !/^[\d\s\-()+ ]+$/.test(t(value))
     }
-    if (form.phone.trim() && isInvalidPhone(form.phone)) errors.add('phone')
-    if (form.whatsapp.trim() && isInvalidPhone(form.whatsapp)) errors.add('whatsapp')
+    if (t(form.phone) && isInvalidPhone(form.phone)) errors.add('phone')
+    if (t(form.whatsapp) && isInvalidPhone(form.whatsapp)) errors.add('whatsapp')
 
     if (errors.size > 0) {
       setFieldErrors(errors)
@@ -239,18 +240,18 @@ export function PoiEditPage() {
 
       const allImages = form.images.filter(Boolean)
       const data = {
-        name: form.name.trim(),
-        description: form.description.trim(),
+        name: t(form.name),
+        description: t(form.description),
         location: isLocationless
           ? null
           : { lat: parseFloat(form.lat) || 0, lng: parseFloat(form.lng) || 0 },
         mainImage: allImages[0] ?? '',
         images: allImages.slice(1),
         videos: form.videos.filter(Boolean),
-        phone: form.phone.trim() || null,
-        whatsapp: form.whatsapp.trim() || null,
+        phone: t(form.phone) || null,
+        whatsapp: t(form.whatsapp) || null,
         email: null,
-        website: form.website.trim() || null,
+        website: t(form.website) || null,
         categoryId: form.categoryId,
         subcategoryIds: form.selectedSubcategoryIds,
         iconId: resolvedIconId,
@@ -263,19 +264,19 @@ export function PoiEditPage() {
         mapType: form.mapType,
         ...(form.mapType === 'default' ? {
           maps: {
-            agents: { price: form.agentsPrice.trim() || null, active: form.agentsActive },
-            groups: { price: form.groupsPrice.trim() || null, active: form.groupsActive },
+            agents: { price: t(form.agentsPrice) || null, active: form.agentsActive },
+            groups: { price: t(form.groupsPrice) || null, active: form.groupsActive },
           },
         } : {
-          price: form.familiesPrice.trim() || null,
+          price: t(form.familiesPrice) || null,
         }),
-        kashrutCertUrl: form.kashrutCertUrl.trim() || null,
-        menuUrl: form.menuUrl.trim() || null,
-        facebook: form.facebook.trim() || null,
-        contactName: form.contactName.trim() || null,
-        capacity: form.capacity.trim() || null,
-        color: form.color.trim() || null,
-        borderColor: form.borderColor.trim() || null,
+        kashrutCertUrl: t(form.kashrutCertUrl) || null,
+        menuUrl: t(form.menuUrl) || null,
+        facebook: t(form.facebook) || null,
+        contactName: t(form.contactName) || null,
+        capacity: t(form.capacity) || null,
+        color: t(form.color) || null,
+        borderColor: t(form.borderColor) || null,
         markerSize: (() => {
           const n = parseInt(form.markerSize, 10)
           return form.markerSize && !isNaN(n) ? n : null

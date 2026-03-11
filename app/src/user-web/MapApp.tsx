@@ -24,7 +24,20 @@ import { filterPois } from "../lib/filterPois";
 import type { Poi, TripDoc } from "../types";
 import type { MapKey } from "../hooks/useFirestoreData";
 
-const PoiDetailPanel = lazy(() => import("./components/MapView/PoiDetailPanel").then(m => ({ default: m.PoiDetailPanel })));
+function lazyRetry<T>(importFn: () => Promise<T>): Promise<T> {
+  return importFn().catch(() => {
+    const reloaded = sessionStorage.getItem("chunk-reload");
+    if (!reloaded) {
+      sessionStorage.setItem("chunk-reload", "1");
+      window.location.reload();
+      return new Promise<T>(() => {});
+    }
+    sessionStorage.removeItem("chunk-reload");
+    return importFn();
+  });
+}
+
+const PoiDetailPanel = lazy(() => lazyRetry(() => import("./components/MapView/PoiDetailPanel").then(m => ({ default: m.PoiDetailPanel }))));
 
 const recentClicks = new Map<string, number>();
 const CLICK_DEBOUNCE_MS = 3000;

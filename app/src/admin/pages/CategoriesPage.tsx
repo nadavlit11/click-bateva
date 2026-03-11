@@ -92,7 +92,7 @@ export function CategoriesPage() {
                     }}
                   >
                     {cat.iconUrl ? (
-                      <img src={cat.iconUrl} alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                      <img src={cat.iconUrl} alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} onError={e => { e.currentTarget.hidden = true }} />
                     ) : (
                       <span style={{ fontSize: 12, lineHeight: 1 }}>📍</span>
                     )}

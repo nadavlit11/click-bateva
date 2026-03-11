@@ -38,6 +38,7 @@ jest.mock("firebase-functions/logger", () => ({
 // ── Imports (after mocks) ─────────────────────────────────────────────────────
 
 import firebaseFunctionsTest from "firebase-functions-test";
+import * as logger from "firebase-functions/logger";
 import {setUserRole, onUserCreated} from "../auth.js";
 
 const testEnv = firebaseFunctionsTest(); // offline mode — no real Firebase project
@@ -120,6 +121,10 @@ describe("setUserRole — success path", () => {
     expect(mockSetCustomUserClaims).toHaveBeenCalledWith("target-uid", {
       role: "content_manager",
     });
+    expect(logger.info).toHaveBeenCalledWith(
+      "User role updated",
+      {uid: "target-uid", role: "content_manager", by: "admin-uid"},
+    );
   });
 
   it("accepts all four valid roles", async () => {
@@ -149,6 +154,10 @@ describe("onUserCreated", () => {
       updatedAt: "mock-timestamp",
     });
     expect(mockSetCustomUserClaims).toHaveBeenCalledWith("new-user", {role: "standard_user"});
+    expect(logger.info).toHaveBeenCalledWith(
+      "User created",
+      {uid: "new-user", email: "test@example.com"},
+    );
   });
 
   it("handles null email gracefully", async () => {
@@ -168,5 +177,9 @@ describe("onUserCreated", () => {
 
     expect(mockSet).not.toHaveBeenCalled();
     expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining("existing role"),
+      expect.objectContaining({uid: "biz-user", role: "business_user"}),
+    );
   });
 });
