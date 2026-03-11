@@ -151,7 +151,7 @@ export function IconsPage() {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="למשל: מסעדה"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             />
           </div>
           <input
@@ -220,7 +220,7 @@ export function IconsPage() {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="חפש אייקון..."
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+          className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
         />
       </div>
 

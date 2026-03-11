@@ -12,8 +12,15 @@ import type { MapKey } from "../../hooks/useFirestoreData";
 
 const isDesktop = !("ontouchstart" in window);
 
+function getYouTubeId(url: string): string | null {
+  const m = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/,
+  );
+  return m ? m[1] : null;
+}
+
 export default function ServicesPage() {
-  const { role } = useAuth();
+  const { user, role } = useAuth();
   const mapKey: MapKey = role === "travel_agent" ? "agents" : "groups";
   const { pois, loading } = usePois(mapKey);
   const categories = useCategories();
@@ -66,32 +73,40 @@ export default function ServicesPage() {
   const color = locationlessCategory?.color ?? "#6366f1";
 
   return (
-    <div className="min-h-dvh bg-gray-50" dir="rtl">
-      {/* Header */}
-      <header
-        className="sticky top-0 z-10 bg-white shadow-sm px-4 py-3 flex items-center gap-3"
-      >
+    <div className="min-h-dvh bg-gray-50 overflow-y-auto" dir="rtl" style={{ position: "fixed", inset: 0 }}>
+      {/* Header bar */}
+      <header className="sticky top-0 z-10 bg-white shadow-sm px-4 py-3 flex items-center justify-between">
         <Link
           to="/"
-          className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors shrink-0"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors shrink-0"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
+          חזרה למפה
         </Link>
-        <h1 className="text-lg font-bold text-gray-800 shrink-0">
+        {user?.displayName && (
+          <p className="text-sm text-green-700 font-medium">
+            {user.displayName}, ברוך הבא למפת קליק בטבע
+          </p>
+        )}
+      </header>
+
+      {/* Title + search */}
+      <div className="px-4 pt-5 pb-3">
+        <h1 className="text-3xl font-extrabold text-gray-800 mb-3">
           {locationlessCategory?.name ?? "בכל הארץ"}
         </h1>
-        <div className="flex-1 max-w-xs">
+        <div className="max-w-md">
           <input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="חיפוש..."
-            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-green-500 bg-gray-50"
+            className="w-full border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-green-500 bg-white shadow-sm"
           />
         </div>
-      </header>
+      </div>
 
       {/* Subcategory filter chips */}
       {catSubcategories.length > 0 && (
@@ -157,16 +172,18 @@ function ImageCarousel({ images, name }: { images: string[]; name: string }) {
     <div className="relative h-40 overflow-hidden group">
       <img src={images[idx]} alt={name} className="w-full h-full object-cover" />
       <button
-        onClick={() => setIdx(i => (i - 1 + images.length) % images.length)}
-        className="absolute top-1/2 start-1 -translate-y-1/2 bg-black/40 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        ›
-      </button>
-      <button
         onClick={() => setIdx(i => (i + 1) % images.length)}
-        className="absolute top-1/2 end-1 -translate-y-1/2 bg-black/40 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{ right: "4px" }}
       >
         ‹
+      </button>
+      <button
+        onClick={() => setIdx(i => (i - 1 + images.length) % images.length)}
+        className="absolute top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{ left: "4px" }}
+      >
+        ›
       </button>
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
         {images.map((_, i) => (
@@ -226,6 +243,7 @@ function ServiceCard({
   })();
 
   const firstVideoUrl = poi.videos?.length > 0 ? poi.videos[0] : null;
+  const youTubeId = firstVideoUrl ? getYouTubeId(firstVideoUrl) : null;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-shadow hover:shadow-md">
@@ -291,12 +309,22 @@ function ServiceCard({
         {/* Video */}
         {firstVideoUrl && (
           <div className="mb-3 rounded-lg overflow-hidden">
-            <video
-              src={firstVideoUrl}
-              controls
-              preload="metadata"
-              className="w-full rounded-lg"
-            />
+            {youTubeId ? (
+              <iframe
+                src={`https://www.youtube.com/embed/${youTubeId}`}
+                title={poi.name}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full aspect-video rounded-lg"
+              />
+            ) : (
+              <video
+                src={firstVideoUrl}
+                controls
+                preload="metadata"
+                className="w-full rounded-lg"
+              />
+            )}
           </div>
         )}
 

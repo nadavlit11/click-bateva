@@ -310,7 +310,7 @@ export function PoiEditPage() {
             value={form.description}
             onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
             rows={4}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 resize-none"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 resize-none"
           />
         </div>
         <div>
@@ -319,7 +319,7 @@ export function PoiEditPage() {
             type="tel"
             value={form.phone}
             onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             dir="ltr"
           />
         </div>
@@ -330,7 +330,7 @@ export function PoiEditPage() {
             type="tel"
             value={form.whatsapp}
             onChange={e => setForm(prev => ({ ...prev, whatsapp: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             placeholder="050-000-0000"
             dir="ltr"
           />
@@ -342,7 +342,7 @@ export function PoiEditPage() {
             value={form.website}
             onChange={e => setForm(prev => ({ ...prev, website: e.target.value }))}
             placeholder="example.com"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             dir="ltr"
           />
         </div>
@@ -353,7 +353,7 @@ export function PoiEditPage() {
             value={form.facebook}
             onChange={e => setForm(prev => ({ ...prev, facebook: e.target.value }))}
             placeholder="https://facebook.com/businesspage"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             dir="ltr"
           />
         </div>

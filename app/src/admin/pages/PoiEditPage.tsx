@@ -443,7 +443,7 @@ export function PoiEditPage() {
                   value={businessSearch}
                   onChange={e => setBusinessSearch(e.target.value)}
                   placeholder="סינון עסקים..."
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 mt-1"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 mt-1"
                 />
               )}
               {form.businessId && (
@@ -532,7 +532,7 @@ export function PoiEditPage() {
                 type="text"
                 value={form.agentsPrice}
                 onChange={e => set('agentsPrice', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
                 placeholder="₪30 למבוגר, חינם לילדים"
               />
             </div>
