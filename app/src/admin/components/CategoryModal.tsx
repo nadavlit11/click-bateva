@@ -123,7 +123,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
               type="text"
               value={form.name}
               onChange={e => set('name', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="שם הקטגוריה"
               autoFocus
             />
@@ -139,7 +139,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
               type="number"
               value={form.markerSize}
               onChange={e => set('markerSize', e.target.value)}
-              className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              className="w-32 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="24 (ברירת מחדל)"
               min="8"
               max="128"
@@ -157,7 +157,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
               type="number"
               value={form.order}
               onChange={e => setForm(prev => ({ ...prev, order: parseInt(e.target.value, 10) || 0 }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="0"
             />
           </div>

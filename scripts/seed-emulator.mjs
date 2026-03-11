@@ -19,6 +19,7 @@ const CATEGORIES = [
   { id: "hiking", name: "טיול רגלי", color: "#43A047", iconUrl: null, order: 2 },
   { id: "water", name: "מים מים מיים", color: "#039BE5", iconUrl: null, order: 3 },
   { id: "accommodation", name: "לינה", color: "#2196F3", iconUrl: null, order: 4 },
+  { id: "workshops", name: "סדנאות", color: "#9C27B0", iconUrl: null, order: 5, locationless: true },
 ];
 
 const SUBCATEGORIES = [
@@ -32,6 +33,8 @@ const SUBCATEGORIES = [
   { id: "spring", categoryId: "water", group: null, name: "מעיין", iconUrl: null },
   { id: "zimmer", categoryId: "accommodation", group: null, name: "צימר", iconUrl: null },
   { id: "hotel", categoryId: "accommodation", group: null, name: "מלון", iconUrl: null },
+  { id: "cooking", categoryId: "workshops", group: "type", name: "בישול", iconUrl: null },
+  { id: "art", categoryId: "workshops", group: "type", name: "אומנות", iconUrl: null },
 ];
 
 const MAPS_DEFAULT = { agents: { price: null, active: true }, groups: { price: null, active: true } };
@@ -116,6 +119,57 @@ const POIS = [
     email: null, website: null, openingHours: null, price: "₪600/לילה",
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
     businessId: null, active: true, maps: MAPS_DEFAULT,
+  },
+  {
+    id: "poi-ws-1", name: "סדנת בישול גולני",
+    description: "סדנת בישול עם **שף מקומי** — מכינים ארוחה מלאה ממרכיבים מקומיים",
+    location: null, categoryId: "workshops", subcategoryIds: ["cooking"],
+    mainImage: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600",
+    images: [
+      "https://images.unsplash.com/photo-1507048331197-7d4ac70811cf?w=600",
+      "https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=600",
+    ],
+    videos: ["https://www.youtube.com/watch?v=6n3pFFPSlW4"],
+    phone: "04-1112233", whatsapp: "0541112233",
+    email: "cook@golan.co.il", website: null,
+    openingHours: null, price: "₪180",
+    kashrutCertUrl: null, menuUrl: null,
+    facebook: "https://facebook.com/golancooking", iconUrl: null,
+    businessId: null, active: true, maps: MAPS_DEFAULT,
+    mapType: "default", minPeople: "4", maxPeople: "20",
+  },
+  {
+    id: "poi-ws-2", name: "סדנת ציור בטבע",
+    description: "ציור בצבעי מים מול הנוף — מתאים לכל הגילאים",
+    location: null, categoryId: "workshops", subcategoryIds: ["art"],
+    mainImage: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600",
+    images: [
+      "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600",
+    ],
+    videos: [],
+    phone: "04-2223344", whatsapp: null,
+    email: null, website: "www.art-golan.co.il",
+    openingHours: "by_appointment", price: "₪120",
+    kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
+    businessId: null, active: true, maps: MAPS_DEFAULT,
+    mapType: "default", minPeople: "2", maxPeople: "15",
+  },
+  {
+    id: "poi-ws-3", name: "סדנת קרמיקה",
+    description: "יצירת כלים מחימר — סדנה מעשית של 3 שעות עם הכנה ושריפה בכבשן",
+    location: null, categoryId: "workshops", subcategoryIds: ["art"],
+    mainImage: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600",
+    images: [
+      "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600",
+      "https://images.unsplash.com/photo-1612198188700-08c5e4a1a5a5?w=600",
+    ],
+    videos: [],
+    phone: "04-3334455", whatsapp: "0543334455",
+    email: null, website: null,
+    openingHours: null, price: "₪200",
+    kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
+    businessId: null, active: true, maps: MAPS_DEFAULT,
+    mapType: "default", minPeople: "2", maxPeople: "10",
   },
 ];
 

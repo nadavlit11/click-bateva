@@ -143,7 +143,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="שם המפרסם"
               autoFocus
             />
@@ -155,7 +155,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
               type="text"
               value={contactName}
               onChange={e => setContactName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="שם איש קשר"
             />
           </div>
@@ -166,7 +166,7 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 disabled:bg-gray-100 disabled:text-gray-500"
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 disabled:bg-gray-100 disabled:text-gray-500"
               placeholder="email@example.com"
               dir="ltr"
               disabled={isEdit}

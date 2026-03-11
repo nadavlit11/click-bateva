@@ -141,7 +141,7 @@ export function MediaSection({ form, setForm, fieldErrors, setFieldErrors, setEr
             onChange={e => setVideoInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addVideoLink() } }}
             placeholder="https://www.youtube.com/watch?v=..."
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
           />
           <button
             type="button"

@@ -20,7 +20,7 @@ export function PasswordInput({ value, onChange, placeholder, className, dir, au
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`${className ?? 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500'} !pe-10`}
+        className={`${className ?? 'w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500'} !pe-10`}
         dir={dir}
         autoFocus={autoFocus}
         required={required}

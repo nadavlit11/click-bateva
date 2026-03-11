@@ -45,7 +45,7 @@ export function ContactDetailsSection({ form, set, fieldErrors }: Props) {
           type="text"
           value={form.contactName}
           onChange={e => set("contactName", e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+          className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
           placeholder="למשל: ישראל ישראלי"
         />
       </div>
@@ -57,7 +57,7 @@ export function ContactDetailsSection({ form, set, fieldErrors }: Props) {
           type="url"
           value={form.website}
           onChange={e => set('website', e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+          className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
           placeholder="https://www.example.co.il"
         />
       </div>
@@ -69,7 +69,7 @@ export function ContactDetailsSection({ form, set, fieldErrors }: Props) {
           type="url"
           value={form.facebook}
           onChange={e => set('facebook', e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+          className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
           placeholder="https://facebook.com/businesspage"
         />
       </div>
@@ -82,7 +82,7 @@ export function ContactDetailsSection({ form, set, fieldErrors }: Props) {
             type="text"
             value={form.minPeople}
             onChange={e => set("minPeople", e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             placeholder="למשל: 20"
           />
         </div>
@@ -92,7 +92,7 @@ export function ContactDetailsSection({ form, set, fieldErrors }: Props) {
             type="text"
             value={form.maxPeople}
             onChange={e => set("maxPeople", e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             placeholder="למשל: 200"
           />
         </div>

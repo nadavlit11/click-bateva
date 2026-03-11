@@ -183,8 +183,12 @@ export default function MapApp() {
   useEffect(() => {
     if (prevUid.current === user?.uid) return;
     prevUid.current = user?.uid;
+    // Redirect business users to their dashboard on login
+    if (user && role === "business_user") {
+      navigate("/business/", { replace: true });
+      return;
+    }
     const next = resolveMapKey(role);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on auth change
     setMapKey(next);
     localStorage.setItem("click-bateva:mapKey", next);
     if (!tripShareId) navigate(`/map/${next}`, { replace: true });
@@ -208,7 +212,6 @@ export default function MapApp() {
       return;
     }
     if (user.displayName) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional on auth change
       setWelcomeBanner(user.displayName);
       return;
     }
@@ -217,14 +220,9 @@ export default function MapApp() {
       const name = snap.data()?.name;
       setWelcomeBanner(name || "");
     }).catch(() => setWelcomeBanner(""));
-  }, [user?.uid, role]); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally keyed on uid, not full user object
+  }, [user?.uid, role]);
 
-  // Redirect business users to their dashboard
-  useEffect(() => {
-    if (role === "business_user") {
-      navigate("/business/", { replace: true });
-    }
-  }, [role, navigate]);
 
   // POIs with a physical location (excludes locationless category)
   const mapPois = useMemo(

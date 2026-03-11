@@ -421,7 +421,7 @@ export function UsersPage() {
                     type="text"
                     value={addName}
                     onChange={e => setAddName(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
                     placeholder="שם המפיק"
                   />
                 </div>
@@ -432,7 +432,7 @@ export function UsersPage() {
                   type="email"
                   value={addEmail}
                   onChange={e => setAddEmail(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
                   placeholder="user@example.com"
                   dir="ltr"
                 />
@@ -442,7 +442,7 @@ export function UsersPage() {
                 <PasswordInput
                   value={addPassword}
                   onChange={e => setAddPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
                   placeholder="לפחות 8 תווים"
                   dir="ltr"
                 />

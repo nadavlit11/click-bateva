@@ -186,7 +186,7 @@ export function Sidebar({
             to="/business"
             className="flex w-full justify-center py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors text-sm font-medium"
           >
-            פורטל עסקים ←
+            ניהול הנקודות שלי ←
           </Link>
         )}
         {isLoggedIn ? (

@@ -122,7 +122,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
               list="group-suggestions"
               value={group}
               onChange={e => setGroup(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="למשל: סוג, מחיר, קהל יעד"
             />
             <datalist id="group-suggestions">
@@ -139,7 +139,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="שם התת-קטגוריה"
               autoFocus
             />
@@ -161,7 +161,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
               type="number"
               value={markerSize}
               onChange={e => setMarkerSize(e.target.value)}
-              className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              className="w-32 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
               placeholder="ברירת מחדל"
               min="8"
               max="128"

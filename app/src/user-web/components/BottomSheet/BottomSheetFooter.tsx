@@ -33,7 +33,7 @@ export function BottomSheetFooter({
         )}
         {isLoggedIn && role === "business_user" && (
           <Link to="/business" className="text-sm text-green-700 font-semibold hover:text-green-900">
-            פורטל עסקים
+            ניהול הנקודות שלי
           </Link>
         )}
         {isLoggedIn ? (
