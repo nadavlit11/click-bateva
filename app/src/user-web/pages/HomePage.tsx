@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../hooks/useAuth";
-import { LoginModal } from "../components/LoginModal";
+import { AuthModal } from "../components/AuthModal";
 import { CookiesConsentBanner } from "../components/CookiesConsentBanner";
 
 function getRedirectPath(role: string | null): string | null {
@@ -138,9 +138,9 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* Login modal */}
+      {/* Auth modal (login + register tabs) */}
       {loginModalOpen && (
-        <LoginModal
+        <AuthModal
           onLogin={handleLogin}
           onClose={() => setLoginModalOpen(false)}
         />
