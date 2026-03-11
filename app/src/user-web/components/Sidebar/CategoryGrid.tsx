@@ -21,15 +21,30 @@ export function CategoryGrid({ categories, subcategories, selectedCategories, on
         {categories.map((cat) => {
           const isLocationless = cat.locationless === true;
           const isSelected = !isLocationless && selectedCategories.has(cat.id);
+          const hasSubs = !isLocationless && onSubcategoryFilter && subcategories.some(s => s.categoryId === cat.id);
           return (
-            <div key={cat.id} className="relative">
+            <div key={cat.id} className="flex flex-col justify-end min-h-[84px] hover:-translate-y-0.5 transition-transform">
+              {isSelected && hasSubs && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSubcategoryFilter(cat.id);
+                  }}
+                  className="w-full py-1.5 text-xs font-bold rounded-t-2xl bg-white hover:bg-gray-100 transition-colors border-2 border-b-0 cursor-pointer flex items-center justify-center gap-1"
+                  style={{ color: cat.color, borderColor: cat.color }}
+                >
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  סינון תוצאות
+                </button>
+              )}
               <button
                 onClick={() => isLocationless ? navigate("/services") : onToggle(cat.id)}
-                className="flex items-center gap-2 py-3 px-4 rounded-2xl border-2 transition-all hover:-translate-y-0.5 hover:shadow-md text-start w-full"
+                className={`flex items-center gap-2 py-2 px-4 text-start w-full h-[56px] border-2 cursor-pointer ${isSelected && hasSubs ? "rounded-b-2xl" : "rounded-2xl"}`}
                 style={{
                   backgroundColor: lighten(cat.color),
                   borderColor: isSelected ? cat.color : lightenBorder(cat.color),
-                  boxShadow: isSelected ? `0 0 0 2px ${cat.color}` : "none",
                 }}
               >
                 <span className="w-6 h-6 flex items-center justify-center text-lg shrink-0">
@@ -46,21 +61,6 @@ export function CategoryGrid({ categories, subcategories, selectedCategories, on
                   </svg>
                 )}
               </button>
-              {isSelected && onSubcategoryFilter && subcategories.some(s => s.categoryId === cat.id) && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSubcategoryFilter(cat.id);
-                  }}
-                  className="absolute -top-2 -end-2 w-8 h-8 rounded-full shadow-md flex items-center justify-center transition-opacity hover:opacity-80"
-                  style={{ backgroundColor: cat.color }}
-                  title="סנן תתי-קטגוריות"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" style={{ color: "white" }}>
-                    <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                </button>
-              )}
             </div>
           );
         })}

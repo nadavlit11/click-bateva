@@ -24,15 +24,15 @@ export function AppHeader({ mapKey, canSeeAgents, onMapKeyChange, welcomeName }:
           {welcomeName ? `${welcomeName}, ברוך הבא למפת קליק בטבע` : "ברוך הבא למפת קליק בטבע"}
         </p>
       )}
-      <div className="inline-flex bg-gray-100 rounded-xl p-1 text-sm font-semibold mt-3 gap-1">
+      <div className="flex mt-3 rounded-xl border-2 border-gray-300 overflow-hidden">
         {keys.map((key) => (
           <button
             key={key}
             onClick={() => onMapKeyChange(key)}
-            className={`px-4 py-2 rounded-lg transition-all ${
+            className={`flex-1 py-3 text-base font-bold transition-all ${
               mapKey === key
-                ? "bg-green-600 text-white shadow-md"
-                : "text-gray-500 hover:bg-gray-200"
+                ? "bg-green-600 text-white"
+                : "bg-white text-gray-500 hover:bg-gray-100"
             }`}
           >
             {MAP_LABELS[key]}
