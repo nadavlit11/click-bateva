@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore'
+import { collection, onSnapshot, query, where, orderBy, doc, getDoc } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { db, functions } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
@@ -11,6 +11,7 @@ import type { Business } from '../types/index.ts'
 interface ManagedUser {
   id: string
   email: string
+  name?: string
   blocked?: boolean
 }
 
@@ -19,7 +20,7 @@ type UserTab = 'content_manager' | 'travel_agent' | 'business_user'
 const deleteContentManagerFn = httpsCallable<{ uid: string }, { uid: string }>(functions, 'deleteContentManager')
 const blockContentManagerFn = httpsCallable<{ uid: string }, { uid: string }>(functions, 'blockContentManager')
 const createContentManagerFn = httpsCallable<{ email: string; password: string }, { uid: string }>(functions, 'createContentManager')
-const createTravelAgentFn = httpsCallable<{ email: string; password: string }, { uid: string }>(functions, 'createTravelAgent')
+const createTravelAgentFn = httpsCallable<{ email: string; password: string; name: string }, { uid: string }>(functions, 'createTravelAgent')
 const deleteTravelAgentFn = httpsCallable<{ uid: string }, { uid: string }>(functions, 'deleteTravelAgent')
 const deleteBusinessUserFn = httpsCallable<{ uid: string }, { uid: string }>(functions, 'deleteBusinessUser')
 
@@ -55,6 +56,7 @@ export function UsersPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [blockingId, setBlockingId] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [addName, setAddName] = useState('')
   const [addEmail, setAddEmail] = useState('')
   const [addPassword, setAddPassword] = useState('')
   const [addSaving, setAddSaving] = useState(false)
@@ -68,6 +70,17 @@ export function UsersPage() {
   const [bizModalOpen, setBizModalOpen] = useState(false)
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null)
   const [bizConfirmDelete, setBizConfirmDelete] = useState<Business | null>(null)
+  // T&C
+  const [termsUrl, setTermsUrl] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
+
+  useEffect(() => {
+    getDoc(doc(db, 'settings', 'terms'))
+      .then(snap => {
+        if (snap.exists()) setTermsUrl(snap.data().userTermsUrl ?? '')
+      })
+      .catch(err => reportError(err, { source: 'UsersPage.loadTerms' }))
+  }, [])
 
   const config = TAB_CONFIG[activeTab]
   const isBusinessTab = activeTab === 'business_user'
@@ -163,9 +176,14 @@ export function UsersPage() {
       if (activeTab === 'content_manager') {
         await createContentManagerFn({ email: addEmail.trim(), password: addPassword })
       } else {
-        await createTravelAgentFn({ email: addEmail.trim(), password: addPassword })
+        await createTravelAgentFn({
+          email: addEmail.trim(),
+          password: addPassword,
+          name: addName.trim(),
+        })
       }
       setShowAdd(false)
+      setAddName('')
       setAddEmail('')
       setAddPassword('')
     } catch (err: unknown) {
@@ -187,9 +205,11 @@ export function UsersPage() {
       setBizModalOpen(true)
     } else {
       setShowAdd(true)
+      setAddName('')
       setAddEmail('')
       setAddPassword('')
       setAddError('')
+      setTermsAccepted(false)
     }
   }
 
@@ -233,6 +253,7 @@ export function UsersPage() {
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="text-right px-4 py-3 font-medium text-gray-600">שם המפרסם</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">איש קשר</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">אימייל</th>
                   <th className="px-4 py-3" />
                 </tr>
@@ -240,7 +261,7 @@ export function UsersPage() {
               <tbody>
                 {businesses.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="text-center py-10 text-gray-400">
+                    <td colSpan={4} className="text-center py-10 text-gray-400">
                       {config.emptyLabel}
                     </td>
                   </tr>
@@ -248,6 +269,7 @@ export function UsersPage() {
                 {businesses.map(business => (
                   <tr key={business.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{business.name}</td>
+                    <td className="px-4 py-3 text-gray-700">{business.contactName ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-600" dir="ltr">{business.email}</td>
                     <td className="px-4 py-3 text-left">
                       <div className="flex gap-2 justify-end">
@@ -280,6 +302,7 @@ export function UsersPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">שם</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">אימייל</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">סטטוס</th>
                   <th className="px-4 py-3" />
@@ -288,13 +311,14 @@ export function UsersPage() {
               <tbody>
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="text-center py-10 text-gray-400">
+                    <td colSpan={4} className="text-center py-10 text-gray-400">
                       {config.emptyLabel}
                     </td>
                   </tr>
                 )}
                 {users.map(user => (
                   <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3 text-gray-700">{user.name ?? '—'}</td>
                     <td className="px-4 py-3 font-medium text-gray-900">{user.email}</td>
                     <td className="px-4 py-3">
                       {user.blocked ? (
@@ -390,6 +414,18 @@ export function UsersPage() {
           <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-gray-900 mb-4">{config.addTitle}</h2>
             <form onSubmit={handleAdd} className="space-y-4">
+              {activeTab === 'travel_agent' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">שם</label>
+                  <input
+                    type="text"
+                    value={addName}
+                    onChange={e => setAddName(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                    placeholder="שם המפיק"
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">אימייל *</label>
                 <input
@@ -419,12 +455,32 @@ export function UsersPage() {
                   </div>
                 )}
               </div>
+              {termsUrl && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={e => setTermsAccepted(e.target.checked)}
+                    className="accent-green-600 w-4 h-4"
+                  />
+                  <span className="text-sm text-gray-700">
+                    אני מאשר את{" "}
+                    <a href={termsUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                      תנאי השימוש
+                    </a>
+                  </span>
+                </label>
+              )}
               {addError && <p className="text-sm text-red-600">{addError}</p>}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
                   ביטול
                 </button>
-                <button type="submit" disabled={addSaving} className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50">
+                <button
+                  type="submit"
+                  disabled={addSaving || (!!termsUrl && !termsAccepted)}
+                  className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                >
                   {addSaving ? 'שומר...' : 'צור משתמש'}
                 </button>
               </div>

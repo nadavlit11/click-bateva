@@ -20,7 +20,9 @@ export const createTravelAgent = onCall({cors: true}, async (request) => {
     throw new HttpsError("permission-denied", "Admin access required");
   }
 
-  const {email, password} = request.data as { email: string; password: string };
+  const {email, password, name} = request.data as {
+    email: string; password: string; name?: string;
+  };
   if (typeof email !== "string" || !email.trim()) {
     throw new HttpsError("invalid-argument", "Email is required");
   }
@@ -28,9 +30,15 @@ export const createTravelAgent = onCall({cors: true}, async (request) => {
     throw new HttpsError("invalid-argument", "Password is required");
   }
 
+  const trimmedName = typeof name === "string" ? name.trim() : "";
+
   let uid: string;
   try {
-    const userRecord = await adminAuth.createUser({email: email.trim(), password});
+    const userRecord = await adminAuth.createUser({
+      email: email.trim(),
+      password,
+      ...(trimmedName ? {displayName: trimmedName} : {}),
+    });
     uid = userRecord.uid;
   } catch (err: unknown) {
     const code = (err as { code?: string }).code;
@@ -45,6 +53,7 @@ export const createTravelAgent = onCall({cors: true}, async (request) => {
 
   await db.collection("users").doc(uid).set({
     email: email.trim(),
+    name: trimmedName || null,
     role: "travel_agent",
     blocked: false,
     createdAt: FieldValue.serverTimestamp(),

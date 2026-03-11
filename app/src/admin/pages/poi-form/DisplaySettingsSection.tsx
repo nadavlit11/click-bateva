@@ -62,6 +62,15 @@ export function DisplaySettingsSection({ form, set, icons }: Props) {
           />
           <span className="text-sm font-medium text-gray-700">נקודה פעילה</span>
         </label>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.isHomeMap}
+            onChange={e => set('isHomeMap', e.target.checked)}
+            className="accent-amber-600 w-4 h-4"
+          />
+          <span className="text-sm font-medium text-gray-700">הצג במפת הבית</span>
+        </label>
         {form.mapType === 'default' && (
           <>
             <label className="flex items-center gap-3 cursor-pointer">

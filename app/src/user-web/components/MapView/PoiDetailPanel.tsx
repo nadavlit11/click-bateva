@@ -5,6 +5,7 @@ import { lighten } from "../../../lib/colorUtils";
 import { DAY_KEYS, DAY_NAMES_HE, getOpeningStatusText, isCurrentlyOpen } from "../../../lib/openingStatus";
 import { renderBoldText } from "../../../lib/renderBoldText";
 import { FOOD_CATEGORY_ID } from "../../../lib/constants";
+import { safeHttpUrl } from "../../../lib/urlUtils";
 
 interface PoiDetailPanelProps {
   poi: Poi;
@@ -77,26 +78,12 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
   // Guard against username@host URL confusion attacks (e.g. "trusted.com@evil.com")
   const safeWebsiteHref = (() => {
     if (!poi.website) return null;
-    try {
-      const raw = poi.website.trim();
-      if (raw.startsWith('http://') || raw.startsWith('https://')) {
-        const url = new URL(raw);
-        return (url.protocol === 'https:' || url.protocol === 'http:') ? url.href : null;
-      }
-      const url = new URL(`https://${raw}`);
-      return url.href;
-    } catch { return null; }
+    const raw = poi.website.trim();
+    const withProto = /^https?:\/\//.test(raw) ? raw : `https://${raw}`;
+    return safeHttpUrl(withProto);
   })();
 
-  // Validate facebook URL
-  const safeFacebookHref = (() => {
-    if (!poi.facebook) return null;
-    try {
-      const url = new URL(poi.facebook);
-      if (url.protocol === "https:" || url.protocol === "http:") return url.href;
-      return null;
-    } catch { return null; }
-  })();
+  const safeFacebookHref = safeHttpUrl(poi.facebook);
 
   // WhatsApp: normalize Israeli phone — strip non-digits, replace leading 0 with 972
   const whatsappHref = (() => {
@@ -386,10 +373,18 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
           </div>
         )}
 
-        {poi.capacity && (
+        {(poi.minPeople || poi.maxPeople || poi.capacity) && (
           <div className="flex items-center gap-2 mb-2">
             <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">👥</span>
-            <span className="text-sm text-gray-700">{poi.capacity}</span>
+            <span className="text-sm text-gray-700">
+              {poi.minPeople && poi.maxPeople
+                ? `${poi.minPeople}-${poi.maxPeople} אנשים`
+                : poi.maxPeople
+                  ? `עד ${poi.maxPeople} אנשים`
+                  : poi.minPeople
+                    ? `מינימום ${poi.minPeople} אנשים`
+                    : poi.capacity}
+            </span>
           </div>
         )}
 

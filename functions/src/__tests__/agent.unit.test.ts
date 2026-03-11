@@ -118,6 +118,27 @@ describe("createTravelAgent — success path", () => {
     expect(mockDoc).toHaveBeenCalledWith("new-uid");
     expect(mockSet).toHaveBeenCalledWith({
       email: "agent@example.com",
+      name: null,
+      role: "travel_agent",
+      blocked: false,
+      createdAt: "mock-timestamp",
+    });
+  });
+
+  it("passes displayName when name is provided", async () => {
+    const result = await createTravelAgent.run(makeCreateRequest({
+      data: {email: "agent@example.com", password: "StrongPass1!", name: "Yossi"},
+    }));
+
+    expect(result).toEqual({uid: "new-uid"});
+    expect(mockCreateUser).toHaveBeenCalledWith({
+      email: "agent@example.com",
+      password: "StrongPass1!",
+      displayName: "Yossi",
+    });
+    expect(mockSet).toHaveBeenCalledWith({
+      email: "agent@example.com",
+      name: "Yossi",
       role: "travel_agent",
       blocked: false,
       createdAt: "mock-timestamp",

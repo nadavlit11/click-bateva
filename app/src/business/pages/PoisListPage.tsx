@@ -37,7 +37,7 @@ export function PoisListPage() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-gray-900 mb-4">נקודות העניין שלי</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-4">הנקודות שלי</h2>
       {pois.length === 0 ? (
         <p className="text-gray-500">אין נקודות עניין מקושרות לעסק זה.</p>
       ) : (

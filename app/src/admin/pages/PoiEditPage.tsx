@@ -115,12 +115,15 @@ export function PoiEditPage() {
         facebook: poi.facebook ?? '',
         contactName: poi.contactName ?? '',
         capacity: poi.capacity ?? '',
+        minPeople: poi.minPeople ?? '',
+        maxPeople: poi.maxPeople ?? poi.capacity ?? '',
         mapType: poi.mapType ?? 'default',
         familiesPrice: poi.mapType === 'families' ? (poi.price ?? '') : '',
         color: poi.color ?? '',
         borderColor: poi.borderColor ?? '',
         markerSize: poi.markerSize?.toString() ?? '',
         flicker: poi.flicker ?? false,
+        isHomeMap: poi.isHomeMap ?? false,
       })
       setLoading(false)
     }).catch(err => {
@@ -265,16 +268,18 @@ export function PoiEditPage() {
         ...(form.mapType === 'default' ? {
           maps: {
             agents: { price: t(form.agentsPrice) || null, active: form.agentsActive },
-            groups: { price: t(form.groupsPrice) || null, active: form.groupsActive },
+            groups: { price: null, active: form.groupsActive },
           },
         } : {
-          price: t(form.familiesPrice) || null,
+          price: null,
         }),
         kashrutCertUrl: t(form.kashrutCertUrl) || null,
         menuUrl: t(form.menuUrl) || null,
         facebook: t(form.facebook) || null,
         contactName: t(form.contactName) || null,
         capacity: t(form.capacity) || null,
+        minPeople: t(form.minPeople) || null,
+        maxPeople: t(form.maxPeople) || null,
         color: t(form.color) || null,
         borderColor: t(form.borderColor) || null,
         markerSize: (() => {
@@ -282,6 +287,7 @@ export function PoiEditPage() {
           return form.markerSize && !isNaN(n) ? n : null
         })(),
         flicker: form.flicker ? true : null,
+        isHomeMap: form.isHomeMap ? true : null,
         updatedAt: serverTimestamp(),
       }
 
@@ -518,42 +524,16 @@ export function PoiEditPage() {
 
           <OpeningHoursSection form={form} setForm={setForm} />
 
-          {/* Per-map prices (default) or single price (families) */}
-          {form.mapType === 'default' ? (
-            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50/30">
-              <label className="block text-sm font-semibold text-blue-800 mb-3">מחירים לפי מפה</label>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">מחיר סוכנים</label>
-                  <input
-                    type="text"
-                    value={form.agentsPrice}
-                    onChange={e => set('agentsPrice', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                    placeholder="₪30 למבוגר, חינם לילדים"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">מחיר קבוצות</label>
-                  <input
-                    type="text"
-                    value={form.groupsPrice}
-                    onChange={e => set('groupsPrice', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                    placeholder="₪50 לאדם"
-                  />
-                </div>
-              </div>
-            </div>
-          ) : (
+          {/* Price — agents only */}
+          {form.mapType === 'default' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">מחיר</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">מחיר סוכנים</label>
               <input
                 type="text"
-                value={form.familiesPrice}
-                onChange={e => set('familiesPrice', e.target.value)}
+                value={form.agentsPrice}
+                onChange={e => set('agentsPrice', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                placeholder="₪50 לאדם"
+                placeholder="₪30 למבוגר, חינם לילדים"
               />
             </div>
           )}
