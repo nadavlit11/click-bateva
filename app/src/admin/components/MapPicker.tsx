@@ -164,7 +164,7 @@ export function MapPicker({ lat, lng, onChange }: Props) {
             onChange={e => handleSearchChange(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleGeocode() } }}
             placeholder="חפש מיקום או עסק..."
-            className={`flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 ${searchError ? 'border-red-400' : 'border-gray-300'}`}
+            className={`flex-1 bg-white border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 ${searchError ? 'border-red-400' : 'border-gray-300'}`}
           />
           <button
             type="button"

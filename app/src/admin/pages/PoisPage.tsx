@@ -148,7 +148,7 @@ export function PoisPage() {
             return next
           })}
           placeholder="חיפוש לפי שם..."
-          className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="flex-1 px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
         <select
           value={filterCategoryId}
@@ -211,14 +211,14 @@ export function PoisPage() {
                   <div className="flex gap-2 justify-end">
                     <button
                       onClick={() => navigate(`/admin/pois/${poi.id}`, { state: navState() })}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      className="px-3 py-1 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
                     >
                       עריכה
                     </button>
                     {role !== 'content_manager' && (
                       <button
                         onClick={() => setDeleteModalId(poi.id)}
-                        className="text-red-500 hover:text-red-700 text-xs font-medium"
+                        className="px-3 py-1 text-xs font-medium rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
                       >
                         מחיקה
                       </button>

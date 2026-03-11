@@ -188,6 +188,11 @@ export default function MapApp() {
       navigate("/business/", { replace: true });
       return;
     }
+    // Redirect admin/content_manager to admin dashboard on login
+    if (user && (role === "admin" || role === "content_manager")) {
+      navigate("/admin/", { replace: true });
+      return;
+    }
     const next = resolveMapKey(role);
     setMapKey(next);
     localStorage.setItem("click-bateva:mapKey", next);
