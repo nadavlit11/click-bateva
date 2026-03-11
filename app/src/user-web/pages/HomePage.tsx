@@ -13,18 +13,19 @@ function getRedirectPath(role: string | null): string | null {
   return null;
 }
 
+const M = "https://click-bateva.web.app/markers";
 const STATIC_MAP_URL = `https://maps.googleapis.com/maps/api/staticmap`
   + `?center=31.75,35.25&zoom=10&size=1280x900&scale=2&maptype=roadmap`
   + `&style=feature:road|visibility:simplified`
   + `&style=feature:transit|visibility:off`
   + `&style=feature:poi|visibility:off`
   + `&style=feature:administrative|visibility:off`
-  + `&markers=size:tiny|color:0x16a34a|31.78,35.23|31.65,35.45|31.85,35.38`
-  + `&markers=size:tiny|color:0xef4444|31.70,35.10|31.90,35.20|31.60,35.30`
-  + `&markers=size:tiny|color:0x3b82f6|31.80,35.40|31.72,35.35|31.68,35.18`
-  + `&markers=size:tiny|color:0xf97316|31.82,35.30|31.75,35.15|31.62,35.40`
-  + `&markers=size:tiny|color:0xec4899|31.74,35.28|31.88,35.15`
-  + `&markers=size:tiny|color:0x14b8a6|31.68,35.42|31.76,35.12`
+  + `&markers=anchor:center|icon:${M}/green.png|31.78,35.23|31.65,35.45|31.85,35.38`
+  + `&markers=anchor:center|icon:${M}/red.png|31.70,35.10|31.90,35.20|31.60,35.30`
+  + `&markers=anchor:center|icon:${M}/blue.png|31.80,35.40|31.72,35.35|31.68,35.18`
+  + `&markers=anchor:center|icon:${M}/orange.png|31.82,35.30|31.75,35.15|31.62,35.40`
+  + `&markers=anchor:center|icon:${M}/pink.png|31.74,35.28|31.88,35.15`
+  + `&markers=anchor:center|icon:${M}/teal.png|31.68,35.42|31.76,35.12`
   + `&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`;
 
 export default function HomePage() {
