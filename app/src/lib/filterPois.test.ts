@@ -23,6 +23,8 @@ const mkPoi = (overrides: Partial<Poi> & Pick<Poi, "id" | "categoryId">): Poi =>
   iconId: null,
   businessId: null,
   capacity: null,
+  minPeople: null,
+  maxPeople: null,
   color: null,
   borderColor: null,
   markerSize: null,
