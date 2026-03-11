@@ -179,6 +179,7 @@ function RegisterForm({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [consent, setConsent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -192,7 +193,7 @@ function RegisterForm({ onClose }: { onClose: () => void }) {
     setPhoneError(
       phone.trim() && !phoneValid ? "מספר טלפון לא תקין" : "",
     );
-    if (missingFields || !phoneValid) return;
+    if (missingFields || !phoneValid || !consent) return;
     setLoading(true);
     setError("");
     try {
@@ -324,6 +325,29 @@ function RegisterForm({ onClose }: { onClose: () => void }) {
           dir="ltr"
         />
       </div>
+
+      {/* Consent checkbox */}
+      <label
+        className={`flex items-start gap-2 rounded-lg p-2.5 border cursor-pointer ${
+          submitted && !consent
+            ? "border-red-400 bg-red-50"
+            : "border-gray-200 bg-gray-50"
+        }`}
+      >
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          className="mt-0.5 accent-green-600 shrink-0"
+        />
+        <span className="text-xs text-gray-600 leading-relaxed">
+          בסימון תיבה זו, אתה מסכים שקליק בטבע תיצור איתך קשר.
+          תוכל לבטל את הרשמתך בכל עת.
+          <br />
+          קליק בטבע תנהל את המידע שלך בהתאם למדיניות
+          הפרטיות שלה.
+        </span>
+      </label>
 
       {error && (
         <p className="text-sm text-red-600 text-center">{error}</p>
