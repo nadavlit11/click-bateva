@@ -497,7 +497,7 @@ export default function MapApp() {
 
         {/* Floating search + filter button (mobile only) */}
         <div
-          className={`absolute top-3 z-10 end-3 ${!sidebarOpen ? "start-16" : "start-3"} md:start-auto`}
+          className={`absolute top-3 z-10 start-3 ${!sidebarOpen ? "end-16" : "end-3"} md:end-auto`}
           onFocusCapture={() => setSelectedPoi(null)}
           onInputCapture={() => { if (!hasVisited) { localStorage.setItem("click-bateva:hasVisited", "1"); setHasVisited(true); } }}
         >

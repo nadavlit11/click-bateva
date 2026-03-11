@@ -46,7 +46,7 @@ const POIS = [
     mainImage: null, images: [], videos: [], phone: "04-1234567", whatsapp: null,
     email: null, website: null, openingHours: null, price: "₪80-120",
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
-    businessId: null, active: true, maps: MAPS_DEFAULT,
+    businessId: null, active: true, maps: MAPS_DEFAULT, mapType: "default",
   },
   {
     id: "poi-2", name: "פיצה הכפר", description: "פיצה ביתית בכפר",
@@ -54,7 +54,7 @@ const POIS = [
     mainImage: null, images: [], videos: [], phone: "04-2345678", whatsapp: null,
     email: null, website: null, openingHours: null, price: "₪50-80",
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
-    businessId: null, active: true, maps: MAPS_DEFAULT,
+    businessId: null, active: true, maps: MAPS_DEFAULT, mapType: "default",
   },
   {
     id: "poi-3", name: "פארק הירדן", description: "פארק מים לכל המשפחה",
@@ -62,7 +62,7 @@ const POIS = [
     mainImage: null, images: [], videos: [], phone: "04-3456789", whatsapp: null,
     email: null, website: null, openingHours: null, price: "₪60",
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
-    businessId: null, active: true, maps: MAPS_DEFAULT,
+    businessId: null, active: true, maps: MAPS_DEFAULT, mapType: "default",
   },
   {
     id: "poi-4", name: "מעיין החרמון", description: "מעיין טבעי ליד החרמון",
@@ -70,7 +70,7 @@ const POIS = [
     mainImage: null, images: [], videos: [], phone: null, whatsapp: null,
     email: null, website: null, openingHours: null, price: null,
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
-    businessId: null, active: true, maps: MAPS_DEFAULT,
+    businessId: null, active: true, maps: MAPS_DEFAULT, mapType: "default",
   },
   {
     id: "poi-5", name: "טיול נחל עיון", description: "מסלול הליכה קל לאורך נחל עיון",
@@ -78,7 +78,7 @@ const POIS = [
     mainImage: null, images: [], videos: [], phone: null, whatsapp: null,
     email: null, website: null, openingHours: null, price: "₪28",
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
-    businessId: null, active: true, maps: MAPS_DEFAULT,
+    businessId: null, active: true, maps: MAPS_DEFAULT, mapType: "default",
   },
   {
     id: "poi-6", name: "טיול הר בנטל", description: "מסלול בינוני עם נוף לסוריה",
@@ -86,7 +86,7 @@ const POIS = [
     mainImage: null, images: [], videos: [], phone: null, whatsapp: null,
     email: null, website: null, openingHours: null, price: null,
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
-    businessId: null, active: true, maps: MAPS_DEFAULT,
+    businessId: null, active: true, maps: MAPS_DEFAULT, mapType: "default",
   },
   {
     id: "poi-7", name: "אטרקציית הרפתקאות", description: "פארק חבלים ואתגרים",
@@ -94,7 +94,7 @@ const POIS = [
     mainImage: null, images: [], videos: [], phone: "04-4567890", whatsapp: null,
     email: null, website: null, openingHours: null, price: "₪120",
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
-    businessId: null, active: true, maps: MAPS_DEFAULT,
+    businessId: null, active: true, maps: MAPS_DEFAULT, mapType: "default",
   },
   {
     id: "poi-8", name: "ספא בגולן", description: "ספא זוגי מפנק",
@@ -102,7 +102,7 @@ const POIS = [
     mainImage: null, images: [], videos: [], phone: "04-5678901", whatsapp: null,
     email: null, website: null, openingHours: null, price: "₪350",
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
-    businessId: null, active: true, maps: MAPS_DEFAULT,
+    businessId: null, active: true, maps: MAPS_DEFAULT, mapType: "default",
   },
   {
     id: "poi-9", name: "צימר הגליל", description: "צימר רומנטי בגליל",
@@ -110,7 +110,7 @@ const POIS = [
     mainImage: null, images: [], videos: [], phone: "04-6789012", whatsapp: null,
     email: null, website: null, openingHours: null, price: "₪800/לילה",
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
-    businessId: null, active: true, maps: MAPS_DEFAULT,
+    businessId: null, active: true, maps: MAPS_DEFAULT, mapType: "default",
   },
   {
     id: "poi-10", name: "מלון כנרת", description: "מלון על שפת הכנרת",
@@ -118,7 +118,7 @@ const POIS = [
     mainImage: null, images: [], videos: [], phone: "04-7890123", whatsapp: null,
     email: null, website: null, openingHours: null, price: "₪600/לילה",
     kashrutCertUrl: null, menuUrl: null, facebook: null, iconUrl: null,
-    businessId: null, active: true, maps: MAPS_DEFAULT,
+    businessId: null, active: true, maps: MAPS_DEFAULT, mapType: "default",
   },
   {
     id: "poi-ws-1", name: "סדנת בישול גולני",
