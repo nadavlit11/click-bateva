@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { reportError } from "../lib/errorReporting";
@@ -41,9 +41,15 @@ function resolveMapKey(role: string | null | undefined): MapKey {
 
 export default function MapApp() {
   const navigate = useNavigate();
+  const { mapKey: urlMapKey, tripId: urlTripId } = useParams();
   const { user, role, login, logout } = useAuth();
   const canSeeAgents = role === "travel_agent" || role === "admin" || role === "content_manager";
-  const [mapKey, setMapKey] = useState<MapKey>(() => resolveMapKey(role));
+  const [mapKey, setMapKey] = useState<MapKey>(() => {
+    if (urlMapKey && VALID_MAP_KEYS.includes(urlMapKey as MapKey)) {
+      return urlMapKey as MapKey;
+    }
+    return resolveMapKey(role);
+  });
   const { pois, loading: poisLoading } = usePois(mapKey);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
@@ -64,10 +70,7 @@ export default function MapApp() {
   }, []);
 
   // ── Trip share (client read-only view) ───────────────────────────────────
-  const tripShareId = useMemo(() => {
-    const match = window.location.pathname.match(/^\/trip\/([^/]+)$/);
-    return match?.[1] ?? null;
-  }, []);
+  const tripShareId = urlTripId ?? null;
 
   const [sharedTrip, setSharedTrip] = useState<TripDoc | null>(null);
   const [sharedTripNotFound, setSharedTripNotFound] = useState(false);
@@ -170,6 +173,7 @@ export default function MapApp() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on auth change
     setMapKey(next);
     localStorage.setItem("click-bateva:mapKey", next);
+    if (!tripShareId) navigate(`/map/${next}`, { replace: true });
     setSelectedCategories(new Set());
     setSelectedSubcategories(new Set());
     setSelectedPoi(null);
@@ -180,7 +184,7 @@ export default function MapApp() {
     setChangePasswordModalOpen(false);
     setContactModalOpen(false);
     setSheetExpanded(false);
-  }, [user?.uid, role]);
+  }, [user?.uid, role, navigate, tripShareId]);
 
   // Redirect business users to their dashboard
   useEffect(() => {
@@ -268,6 +272,7 @@ export default function MapApp() {
   function handleMapKeyChange(key: MapKey) {
     setMapKey(key);
     localStorage.setItem("click-bateva:mapKey", key);
+    navigate(`/map/${key}`, { replace: true });
     setSelectedCategories(new Set());
     setSelectedSubcategories(new Set());
     setSelectedPoi(null);

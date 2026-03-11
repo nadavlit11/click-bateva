@@ -113,7 +113,7 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
   return (
     <div
       className={preview
-        ? "w-full bg-white rounded-2xl shadow-xl overflow-hidden max-h-[70vh]"
+        ? "w-full bg-white rounded-2xl shadow-xl overflow-hidden max-h-[calc(100dvh-6rem)]"
         : "absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100dvh-120px-2rem)] md:max-h-[calc(100dvh-2rem)]"
       }
       style={{ outline: `3px solid ${color}` }}
