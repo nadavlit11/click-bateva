@@ -76,6 +76,22 @@ npm run test:mutate:functions    # functions only
 - Asset caching: `/assets/**` gets `max-age=31536000, immutable`; HTML gets `no-cache`
 - `Permissions-Policy: geolocation=(self)` — map uses browser geolocation
 
+## Error Reporting (Sentry)
+
+- DSN: configured via `VITE_SENTRY_DSN` in `app/.env.local`
+- Region: **DE** (API base: `https://de.sentry.io`, org slug: `click-bateva`)
+- Auth token in `.mcp.json` (Sentry MCP server config)
+- `app/src/lib/errorReporting.ts` — `reportError(error, { source, extra })` wraps `Sentry.captureException`
+- Sentry disabled in non-production builds (checked in `main.tsx`)
+- Known suppressed errors: `permission-denied` in `usePois` (logged as warning), `already-exists` in `BusinessModal`
+
+## Chunk Loading Resilience
+
+- `lazyRetry()` helper in `app/src/user-web/MapApp.tsx` — auto-reloads page once on stale chunk import failures
+- Uses `sessionStorage("chunk-reload")` guard to prevent infinite reload loops
+- Needed because assets use `Cache-Control: immutable` — after a deploy, users with cached HTML reference old chunk hashes
+- Apply this pattern to any new `React.lazy()` imports
+
 ## Gotchas
 
 - Emulator connection in apps is gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`)
