@@ -36,6 +36,8 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>, mapKey: MapKey): Poi[
       iconId: d.iconId || null,
       businessId: d.businessId || null,
       capacity: d.capacity || null,
+      minPeople: d.minPeople || null,
+      maxPeople: d.maxPeople || null,
       color: d.color || null,
       borderColor: d.borderColor || null,
       markerSize: d.markerSize ?? null,

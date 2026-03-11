@@ -164,6 +164,8 @@ export function PoiEditPage() {
       iconId: null,
       businessId: poi.businessId,
       capacity: null,
+      minPeople: null,
+      maxPeople: null,
       color: null,
       borderColor: null,
       markerSize: null,
