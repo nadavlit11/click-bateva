@@ -70,7 +70,7 @@ export default function HomePage() {
       <header className="relative z-10 flex items-center justify-between px-6 py-3 bg-white shadow-sm">
         <button
           onClick={() => setLoginModalOpen(true)}
-          className="px-4 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-lg hover:bg-green-50 transition-colors"
+          className="cursor-pointer px-4 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-lg hover:bg-green-50 transition-colors"
         >
           מפיקים/מפרסמים
         </button>
@@ -94,7 +94,7 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg">
           <button
             onClick={() => navigate("/map/groups")}
-            className="flex-1 py-6 px-6 bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-green-200 transition-all text-center group"
+            className="cursor-pointer flex-1 py-6 px-6 bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-green-200 transition-all text-center group"
           >
             <div className="text-3xl mb-3">🗺️</div>
             <span className="text-lg font-bold text-gray-800 group-hover:text-green-700 transition-colors">
@@ -103,7 +103,7 @@ export default function HomePage() {
           </button>
           <button
             onClick={() => navigate("/map/families")}
-            className="flex-1 py-6 px-6 bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-green-200 transition-all text-center group"
+            className="cursor-pointer flex-1 py-6 px-6 bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-green-200 transition-all text-center group"
           >
             <div className="text-3xl mb-3">👨‍👩‍👧‍👦</div>
             <span className="text-lg font-bold text-gray-800 group-hover:text-green-700 transition-colors">
@@ -116,28 +116,13 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="relative z-10 px-6 py-4 bg-white/90 backdrop-blur-sm">
         <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-          <button
-            onClick={() => {
-              const w = window as unknown as Record<string, unknown>;
-              if (typeof w.TabNav === "object" && w.TabNav !== null) {
-                const tn = w.TabNav as Record<string, unknown>;
-                if (typeof tn.open === "function") {
-                  (tn.open as () => void)();
-                }
-              }
-            }}
-            className="hover:text-gray-600 transition-colors"
-          >
-            נגישות
-          </button>
-          <span className="text-gray-300">|</span>
           {termsUrl && (
             <>
               <a
                 href={termsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-gray-600 transition-colors"
+                className="cursor-pointer hover:text-gray-600 transition-colors"
               >
                 תנאי שימוש
               </a>
@@ -146,7 +131,7 @@ export default function HomePage() {
           )}
           <button
             onClick={() => setCookiesModalOpen(true)}
-            className="hover:text-gray-600 transition-colors"
+            className="cursor-pointer hover:text-gray-600 transition-colors"
           >
             עוגיות
           </button>
