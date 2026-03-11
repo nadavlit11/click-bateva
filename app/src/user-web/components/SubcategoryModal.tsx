@@ -103,6 +103,7 @@ export function SubcategoryModal({
                               src={sub.iconUrl}
                               alt=""
                               style={{ width: 14, height: 14, objectFit: "contain", flexShrink: 0 }}
+                              onError={e => { e.currentTarget.hidden = true }}
                             />
                           )}
                           {sub.name}

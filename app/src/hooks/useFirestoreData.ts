@@ -64,7 +64,11 @@ export function usePois(mapKey: MapKey = "groups") {
       setPois(snapshotToPois(snap, mapKey));
       setLoading(false);
     }, err => {
-      reportError(err, { source: 'usePois' });
+      if ((err as { code?: string }).code === 'permission-denied') {
+        console.warn('[usePois] permission-denied (expected for some auth states)');
+      } else {
+        reportError(err, { source: 'usePois' });
+      }
       setLoading(false);
     });
     return unsub;

@@ -34,7 +34,7 @@ export function CategoryGrid({ categories, subcategories, selectedCategories, on
               >
                 <span className="w-6 h-6 flex items-center justify-center text-lg shrink-0">
                   {cat.iconUrl ? (
-                    <img src={cat.iconUrl} alt={cat.name} className="w-6 h-6" />
+                    <img src={cat.iconUrl} alt={cat.name} className="w-6 h-6" onError={e => { e.currentTarget.hidden = true }} />
                   ) : (
                     <CategoryEmoji id={cat.id} />
                   )}

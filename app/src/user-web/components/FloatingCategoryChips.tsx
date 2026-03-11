@@ -68,6 +68,7 @@ export function FloatingCategoryChips({
                       src={cat.iconUrl}
                       alt={cat.name}
                       className="w-3 h-3"
+                      onError={e => { e.currentTarget.hidden = true }}
                     />
                   ) : (
                     <span>{CATEGORY_EMOJI[cat.id] ?? "📍"}</span>
