@@ -61,9 +61,10 @@ blockContentManager (v2 callable)
 
 createTravelAgent (v2 callable)
   ├─ Validates caller is admin
-  ├─ Creates Firebase Auth user
+  ├─ Accepts email + password + optional name
+  ├─ Creates Firebase Auth user (with displayName if name provided)
   ├─ Sets claims: { role: "travel_agent" }
-  └─ Creates users/ doc
+  └─ Creates users/ doc (includes name: string | null)
 
 deleteTravelAgent (v2 callable)
   ├─ Validates caller is admin + target has travel_agent role
@@ -88,4 +89,4 @@ deleteTravelAgent (v2 callable)
 - Mutation testing score is 69% (infra/logger lines are expected survivors)
 - **MUST run `npm run build` before deploying new functions** — `firebase deploy` reads compiled JS, not TS. New exports in `index.ts` are silently skipped if JS is stale.
 - `deleteContentManager`/`blockContentManager` validate target user has `content_manager` role before acting
-- All function unit tests (84 total) must pass before deploy: `cd functions && npm test`
+- All function unit tests (85 total) must pass before deploy: `cd functions && npm test`

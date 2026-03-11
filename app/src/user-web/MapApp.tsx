@@ -15,6 +15,7 @@ import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { MapIndicator } from "./components/MapIndicator";
 import { FloatingCategoryChips } from "./components/FloatingCategoryChips";
 import { ContactUsModal } from "./components/ContactUsModal";
+import { CookiesConsentBanner } from "./components/CookiesConsentBanner";
 import { usePois, useCategories, useSubcategories } from "../hooks/useFirestoreData";
 import { useContactInfo } from "../hooks/useContactInfo";
 import { useAuth } from "../hooks/useAuth";
@@ -199,6 +200,22 @@ export default function MapApp() {
     setSheetExpanded(false);
   }, [user?.uid, role, navigate, tripShareId]);
 
+  // Welcome banner for travel agents
+  const [welcomeBanner, setWelcomeBanner] = useState<string | null>(null);
+  useEffect(() => {
+    if (user && role === "travel_agent") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional on auth change
+      setWelcomeBanner(user.displayName || null);
+    } else {
+      setWelcomeBanner(null);
+    }
+  }, [user?.uid, role]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!welcomeBanner) return;
+    const t = setTimeout(() => setWelcomeBanner(null), 5000);
+    return () => clearTimeout(t);
+  }, [welcomeBanner]);
+
   // Redirect business users to their dashboard
   useEffect(() => {
     if (role === "business_user") {
@@ -212,14 +229,16 @@ export default function MapApp() {
     [pois]
   );
 
-  const filteredPois = useMemo(
-    () => filterPois(mapPois, {
+  const filteredPois = useMemo(() => {
+    if (selectedCategories.size === 0 && hasVisited) {
+      return mapPois.filter(p => p.isHomeMap);
+    }
+    return filterPois(mapPois, {
       selectedCategories,
       selectedSubcategories,
       subcategories,
-    }),
-    [mapPois, selectedCategories, selectedSubcategories, subcategories]
-  );
+    });
+  }, [mapPois, selectedCategories, selectedSubcategories, subcategories, hasVisited]);
 
   // Always show trip POIs on the map, even when their category isn't selected
   const displayPois = useMemo(() => {
@@ -563,6 +582,15 @@ export default function MapApp() {
             </div>
           </div>
         )}
+        {welcomeBanner && (
+          <div
+            className="absolute top-4 start-4 end-4 z-40 bg-green-600 text-white rounded-xl px-4 py-3 shadow-lg flex items-center justify-between cursor-pointer"
+            onClick={() => setWelcomeBanner(null)}
+          >
+            <span className="text-sm font-medium">{welcomeBanner} ברוך הבא למפת קליק בטבע</span>
+            <span className="text-white/70 text-lg leading-none">✕</span>
+          </div>
+        )}
         {selectedPoi && (
           <Suspense fallback={null}>
             <PoiDetailPanel
@@ -604,6 +632,8 @@ export default function MapApp() {
       {contactModalOpen && contactInfo && (
         <ContactUsModal contact={contactInfo} onClose={() => setContactModalOpen(false)} />
       )}
+
+      <CookiesConsentBanner />
     </div>
   );
 }

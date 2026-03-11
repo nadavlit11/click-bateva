@@ -39,10 +39,13 @@ export interface Poi {
   facebook: string
   contactName: string
   capacity: string
+  minPeople: string
+  maxPeople: string
   color: string | null
   borderColor: string | null
   markerSize: number | null
   flicker: boolean | null
+  isHomeMap: boolean | null
   createdAt: unknown
   updatedAt: unknown
 }
@@ -86,6 +89,7 @@ export interface Business {
   id: string
   name: string
   email: string
+  contactName?: string
   ownerUid: string
   associatedUserIds: string[]   // UIDs allowed to edit this business's POIs
   createdAt: unknown

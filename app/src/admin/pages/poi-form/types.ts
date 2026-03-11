@@ -33,12 +33,15 @@ export interface FormState {
   facebook: string
   contactName: string
   capacity: string
+  minPeople: string
+  maxPeople: string
   mapType: 'default' | 'families'
   familiesPrice: string
   color: string
   borderColor: string
   markerSize: string
   flicker: boolean
+  isHomeMap: boolean
 }
 
 export const INITIAL_FORM: FormState = {
@@ -66,12 +69,15 @@ export const INITIAL_FORM: FormState = {
   facebook: '',
   contactName: '',
   capacity: '',
+  minPeople: '',
+  maxPeople: '',
   mapType: 'default',
   familiesPrice: '',
   color: '',
   borderColor: '',
   markerSize: '',
   flicker: false,
+  isHomeMap: false,
 }
 
 export type SetField = (field: keyof FormState, value: FormState[typeof field]) => void

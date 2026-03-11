@@ -65,8 +65,11 @@ export interface Poi {
   iconId: string | null;
   businessId: string | null;
   capacity: string | null;
+  minPeople: string | null;
+  maxPeople: string | null;
   color: string | null;        // override subcategory/category color
   borderColor: string | null;  // override subcategory/category borderColor
   markerSize: number | null;   // override subcategory/category markerSize
   flicker: boolean | null;     // animate-pulse on marker
+  isHomeMap?: boolean;         // show on map when no category selected
 }

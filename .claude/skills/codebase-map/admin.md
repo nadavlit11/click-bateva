@@ -10,22 +10,22 @@
   - `poi-form/utils.ts` — shared `uploadFile` (Storage upload helper)
   - `poi-form/MediaSection.tsx` — images + videos
   - `poi-form/OpeningHoursSection.tsx` — day-by-day hours or by-appointment
-  - `poi-form/ContactDetailsSection.tsx` — phone, whatsapp, contact name, website, facebook, capacity
+  - `poi-form/ContactDetailsSection.tsx` — phone, whatsapp, contact name, website, facebook, minPeople/maxPeople (replaced capacity)
   - `poi-form/FoodExtrasSection.tsx` — kashrut cert + menu (food category only)
-  - `poi-form/DisplaySettingsSection.tsx` — icon picker, color, borderColor, markerSize, flicker, active toggles
+  - `poi-form/DisplaySettingsSection.tsx` — icon picker, color, borderColor, markerSize, flicker, active toggles, isHomeMap toggle
 - `app/src/admin/components/MapPicker.tsx` — Leaflet + Nominatim geocoding; click/drag/search to set lat/lng
 - `app/src/admin/components/ColorPickerField.tsx` — shared color picker (type=color + text input + clear button); used by CategoryModal, SubcategoryModal, PoiEditPage
 - `app/src/admin/pages/CategoriesPage.tsx` + `CategoryModal.tsx` — category CRUD with icon picker + color + borderColor + markerSize
 - `app/src/admin/pages/SubcategoriesPage.tsx` + `SubcategoryModal.tsx` — subcategory CRUD with group datalist; optional color/borderColor/markerSize overrides
 - `app/src/admin/pages/IconsPage.tsx` — upload/list/delete icons (Cloud Storage `icons/` prefix); **inline edit per row**: name (guarded against empty), size (px, null = default), flicker (animate-pulse toggle)
-- `app/src/admin/pages/UsersPage.tsx` — tabbed user management: מנהלי תוכן (content_manager), מפיקים (travel_agent), and מפרסמים (business_user) tabs; role tabs have list/add/delete/block via callables; business tab queries `businesses` collection with add/edit via `BusinessModal` and delete via `deleteBusinessUser` callable
-- `app/src/admin/components/BusinessModal.tsx` — מפרסם (business) create (via `createBusinessUser` callable) + edit (via direct Firestore update) modes; password strength indicator
+- `app/src/admin/pages/UsersPage.tsx` — tabbed user management: מנהלי תוכן (content_manager), מפיקים (travel_agent), and מפרסמים (business_user) tabs; role tabs have list/add/delete/block via callables; business tab queries `businesses` collection with add/edit via `BusinessModal` and delete via `deleteBusinessUser` callable. **Agent tab**: name input field, name column in table. **Business tab**: contactName column. **T&C checkbox** on add forms (fetches `settings/terms` for userTermsUrl).
+- `app/src/admin/components/BusinessModal.tsx` — מפרסם (business) create (via `createBusinessUser` callable) + edit (via direct Firestore update) modes; password strength indicator; **contactName** field; **T&C checkbox** (fetches `settings/terms` for businessTermsUrl)
 - `app/src/admin/pages/AnalyticsPage.tsx` — click totals per POI + per category
 - `app/src/admin/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
 - `app/src/admin/components/Layout/AppLayout.tsx` + `Sidebar.tsx` — flex layout with nav links (admin-only gating via `useAuth`); includes "← המפה" link back to map (`to="/"`)
 - `app/src/hooks/useAuth.tsx` — **context-based** auth hook; `AuthProvider` wraps the entire app at `App.tsx` root, runs ONE `onAuthStateChanged` listener for the whole app; `useAuth()` returns `{ user, role, loading, login, logout }` from context (zero extra listeners). `useAuth.ts` is a thin re-export barrel.
 - `app/src/admin/lib/passwordStrength.ts` — shared password validation: `getStrength()`, `isPasswordValid()`, `PASSWORD_ERROR`, strength indicator maps
-- `app/src/admin/types/index.ts` — Poi (+ color, borderColor, markerSize, flicker, maps: MapOverrides, contactName, capacity), MapOverrides, Category (+ borderColor, markerSize), Subcategory (+ color, borderColor, markerSize, iconId, iconUrl), Icon (+ size, flicker) types
+- `app/src/admin/types/index.ts` — Poi (+ color, borderColor, markerSize, flicker, maps: MapOverrides, contactName, capacity, minPeople, maxPeople, isHomeMap), MapOverrides, Category (+ borderColor, markerSize), Subcategory (+ color, borderColor, markerSize, iconId, iconUrl), Icon (+ size, flicker), Business (+ contactName) types
 
 ## Component / Data Flow
 

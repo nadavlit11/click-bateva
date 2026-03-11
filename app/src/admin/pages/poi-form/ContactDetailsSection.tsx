@@ -74,16 +74,28 @@ export function ContactDetailsSection({ form, set, fieldErrors }: Props) {
         />
       </div>
 
-      {/* Capacity */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">כמות אנשים מקסימלית</label>
-        <input
-          type="text"
-          value={form.capacity}
-          onChange={e => set("capacity", e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-          placeholder="למשל: עד 200 אנשים"
-        />
+      {/* Min / Max people */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">כמות מינימלית</label>
+          <input
+            type="text"
+            value={form.minPeople}
+            onChange={e => set("minPeople", e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            placeholder="למשל: 20"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">כמות מקסימלית</label>
+          <input
+            type="text"
+            value={form.maxPeople}
+            onChange={e => set("maxPeople", e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            placeholder="למשל: 200"
+          />
+        </div>
       </div>
     </>
   )

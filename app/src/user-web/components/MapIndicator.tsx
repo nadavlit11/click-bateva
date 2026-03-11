@@ -14,15 +14,15 @@ export function MapIndicator({ mapKey, canSeeAgents, onMapKeyChange }: MapIndica
 
   return (
     <div className="absolute bottom-[68px] start-14 z-10 md:hidden">
-      <div className="inline-flex bg-white/90 backdrop-blur-sm rounded-full shadow-md p-0.5 text-xs font-medium">
+      <div className="inline-flex bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-1 text-sm font-semibold gap-1">
         {keys.map((key) => (
           <button
             key={key}
             onClick={() => onMapKeyChange(key)}
-            className={`px-3 py-1.5 rounded-full transition-colors ${
+            className={`px-5 py-2.5 rounded-xl transition-all ${
               mapKey === key
-                ? "bg-green-600 text-white shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
+                ? "bg-green-600 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-100"
             }`}
           >
             {MAP_LABELS[key]}
