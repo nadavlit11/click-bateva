@@ -14,7 +14,7 @@ function getRedirectPath(role: string | null): string | null {
 }
 
 const STATIC_MAP_URL = `https://maps.googleapis.com/maps/api/staticmap`
-  + `?center=31.75,35.25&zoom=10&size=1280x900&scale=2&maptype=terrain`
+  + `?center=31.75,35.25&zoom=10&size=1280x900&scale=2&maptype=roadmap`
   + `&style=feature:road|visibility:simplified`
   + `&style=feature:transit|visibility:off`
   + `&style=feature:poi|visibility:off`
