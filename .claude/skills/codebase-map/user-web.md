@@ -27,8 +27,9 @@
 - `app/src/user-web/lib/constants.ts` — shared constants: `MAP_LABELS` (Hebrew labels for map keys)
 - `app/src/user-web/components/MapIndicator.tsx` — mobile-only map switcher (visible to travel_agent/admin/content_manager with agents tab, otherwise groups+families only); positioned bottom-left above bottom sheet
 - `app/src/user-web/components/MapView/EmptyMapOverlay.tsx` — first-visit onboarding overlay; shown via `showOnboarding` bool in App.tsx (`!poisLoading && selectedCategories.size === 0 && tripPoiIdSet.size === 0 && !hasVisited`). Desktop: animated right-pointing arrow. Mobile: card only — arrow is rendered in App.tsx co-located with the menu button (flex-col child, bounces upward)
-- `app/src/user-web/types/index.ts` — Poi (+ whatsapp, iconUrl, iconId, capacity, location nullable), Category (+ order, locationless?), Subcategory (+ iconUrl) interfaces
-- `app/src/user-web/pages/ServicesPage.tsx` — **locationless POIs page** (route `/services`): card grid of POIs from `locationless: true` category; uses usePois/useCategories/useSubcategories; subcategory chip filtering; inline ServiceCard with contact actions. Lazy-loaded from App.tsx.
+- `app/src/user-web/types/index.ts` — Poi (+ whatsapp, iconUrl, iconId, capacity, minPeople, maxPeople, location nullable, isHomeMap), Category (+ order, locationless?), Subcategory (+ iconUrl) interfaces
+- `app/src/user-web/pages/ServicesPage.tsx` — **locationless POIs page** (route `/services`): card grid of POIs from `locationless: true` category; uses usePois/useCategories/useSubcategories; subcategory chip filtering; inline ServiceCard with contact actions; **search bar** (filters by name), **ABC sort** (Hebrew locale), **image carousel** (ImageCarousel component), **facebook button**, **desktop phone modal** (isDesktop detection), **opening hours** (via getOpeningStatusText), **video player** (first video), **min/max people** display, **xl:grid-cols-4** for 4-col laptop layout. Lazy-loaded from App.tsx.
+- `app/src/lib/urlUtils.ts` — shared `safeHttpUrl(raw)`: validates URL uses http(s) protocol, returns href or null. Used by ServicesPage and PoiDetailPanel.
 
 ## Component / Data Flow
 
@@ -52,7 +53,7 @@ App.tsx (owns state: selectedCategories, selectedSubcategories, focusLocation, s
   ├─ SubcategoryModal (opened per-category from CategoryGrid badge click)
   └─ PoiDetailPanel (when selectedPoi != null; click outside closes)
 
-Data: Firestore onSnapshot → usePois(mapKey)/useCategories/useSubcategories → mapPois (location !== null) → filterPois() → filteredPois
+Data: Firestore onSnapshot → usePois(mapKey)/useCategories/useSubcategories → mapPois (location !== null) → filteredPois (isHomeMap POIs when no category selected + hasVisited, else filterPois())
 Map switching: travel_agent/admin/content_manager can see agents map (tab order: agents | groups | families in RTL); travel_agent defaults to 'agents', others default to 'groups'. **mapKey persisted to localStorage** (`click-bateva:mapKey`) — restored on refresh via `resolveMapKey(role)` helper (validates saved value + guards "agents" for non-privileged users). usePois queries where maps.<mapKey>.active == true.
 filterPois: category + subcategory filters ONLY — no text search
 Categories sorted by `order` field before rendering.

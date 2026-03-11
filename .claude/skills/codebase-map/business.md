@@ -9,7 +9,7 @@
 - `app/src/business/pages/PoiEditPage.tsx` — edit form for PoiEditableFields + ImageUploader; VAT reminder above price; bold toolbar for description; **live preview panel** (reuses `PoiDetailPanel` from user-web with `preview` prop); two-column layout on desktop (form + sticky preview), mobile floating toggle with overlay
 - `app/src/business/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
 - `app/src/business/components/ImageUploader.tsx` — upload to `poi-media/`, preview list, delete
-- `app/src/business/components/Layout/TopBar.tsx` — header with business name + "שנה סיסמה" + "התנתקות" buttons
+- `app/src/business/components/Layout/TopBar.tsx` — header with business name ("מערכת ניהול קליק בטבע" subtitle) + "שנה סיסמה" + "התנתקות" buttons; **welcome banner** (auto-dismiss 5s) showing "{businessName} ברוך הבא למפת קליק בטבע"
 - `app/src/business/lib/passwordStrength.ts` — shared password validation (same as admin, per-app copy)
 - `app/src/business/types/index.ts` — Poi (+ whatsapp), PoiEditableFields (+ whatsapp), Business, BusinessContextValue
 
