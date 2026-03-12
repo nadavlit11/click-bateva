@@ -93,7 +93,8 @@ export function SubcategoriesPage() {
                   const bgColor = sub.color || cat.color
                   const border = sub.borderColor ?? cat.borderColor ?? '#000000'
                   const icon = sub.iconUrl || cat.iconUrl
-                  const previewIconSize = sub.iconSize ?? cat.iconSize ?? 14
+                  const iconFromCategory = !sub.iconUrl
+                  const previewIconSize = sub.iconSize ?? (iconFromCategory ? cat.iconSize : null) ?? 14
                   return (
                     <tr key={sub.id} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="px-4 py-2.5">

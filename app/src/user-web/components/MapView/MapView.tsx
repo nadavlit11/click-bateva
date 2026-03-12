@@ -246,9 +246,13 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
           ?? firstSubMatch(sids, subMaps.markerSize)
           ?? catMaps.markerSize[poi.categoryId]
           ?? undefined;
+        // iconSize cascade: only inherit from a level if the icon also comes from that level.
+        // If a subcategory overrides the icon, the category's iconSize (tuned for a different icon) shouldn't apply.
+        const subIconUrl = firstSubMatch(sids, subMaps.iconUrl);
+        const iconFromCategory = !poi.iconUrl && !subIconUrl;
         const resolvedIconSize = poi.iconSize
           ?? firstSubMatch(sids, subMaps.iconSize)
-          ?? catMaps.iconSize[poi.categoryId]
+          ?? (iconFromCategory ? catMaps.iconSize[poi.categoryId] : undefined)
           ?? undefined;
         const tripNumber = tripNumberMap.get(poi.id);
         return (
