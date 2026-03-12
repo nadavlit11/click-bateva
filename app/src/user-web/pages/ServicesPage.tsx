@@ -38,6 +38,7 @@ export default function ServicesPage() {
   );
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSubs, setSelectedSubs] = useState<Set<string>>(new Set());
 
   const locationlessPois = useMemo(
     () => pois.filter(p => p.categoryId === categoryId),
@@ -70,14 +71,24 @@ export default function ServicesPage() {
       }
     }
     for (const sub of catSubcategories) {
+      if (selectedSubs.size > 0 && !selectedSubs.has(sub.id)) continue;
       const list = subMap.get(sub.id);
       if (list && list.length > 0) groups.push({ sub, pois: list });
     }
-    if (noSub.length > 0) groups.push({ sub: null, pois: noSub });
+    if (selectedSubs.size === 0 && noSub.length > 0) groups.push({ sub: null, pois: noSub });
     return groups;
-  }, [sortedFiltered, catSubcategories]);
+  }, [sortedFiltered, catSubcategories, selectedSubs]);
 
   const color = locationlessCategory?.color ?? "#6366f1";
+
+  function toggleSub(id: string) {
+    setSelectedSubs(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   return (
     <div className="min-h-dvh bg-gray-50 overflow-y-auto" dir="rtl" style={{ position: "fixed", inset: 0 }}>
@@ -113,6 +124,27 @@ export default function ServicesPage() {
             className="w-full border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-green-500 bg-white shadow-sm"
           />
         </div>
+        {catSubcategories.length > 1 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {catSubcategories.map(sub => {
+              const active = selectedSubs.has(sub.id);
+              return (
+                <button
+                  key={sub.id}
+                  onClick={() => toggleSub(sub.id)}
+                  className="px-3 py-1 rounded-full text-sm font-medium transition-colors border"
+                  style={{
+                    backgroundColor: active ? color : lighten(color),
+                    color: active ? "#fff" : color,
+                    borderColor: active ? color : "transparent",
+                  }}
+                >
+                  {sub.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Content */}

@@ -318,9 +318,9 @@ export function PoiEditPage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate(poisListPath, { state: { poisScrollTop } })}
-          className="text-gray-400 hover:text-gray-600 text-lg"
+          className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          →
+          → חזרה
         </button>
         <h1 className="text-xl font-bold text-gray-900 flex-1">
           {isNew ? 'הוספת נקודת עניין' : 'עריכת נקודת עניין'}

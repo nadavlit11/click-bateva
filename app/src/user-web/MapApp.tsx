@@ -45,12 +45,12 @@ const CLICK_DEBOUNCE_MS = 3000;
 const VALID_MAP_KEYS: MapKey[] = ["agents", "groups", "families"];
 
 function resolveMapKey(role: string | null | undefined): MapKey {
+  if (role === "travel_agent") return "agents";
   const saved = localStorage.getItem("click-bateva:mapKey");
-  const roleDefault: MapKey = role === "travel_agent" ? "agents" : "groups";
-  const canSeeAgents = role === "travel_agent" || role === "admin" || role === "content_manager";
-  if (saved === "agents" && !canSeeAgents) return roleDefault;
+  const canSeeAgents = role === "admin" || role === "content_manager";
+  if (saved === "agents" && !canSeeAgents) return "groups";
   if (VALID_MAP_KEYS.includes(saved as MapKey)) return saved as MapKey;
-  return roleDefault;
+  return "groups";
 }
 
 export default function MapApp() {
@@ -212,7 +212,7 @@ export default function MapApp() {
   // Welcome banner for travel agents
   const [welcomeBanner, setWelcomeBanner] = useState<string | null>(null);
   useEffect(() => {
-    if (!user || role !== "travel_agent") {
+    if (!user || (role !== "travel_agent" && role !== "business_user")) {
       setWelcomeBanner(null);
       return;
     }
@@ -220,8 +220,11 @@ export default function MapApp() {
       setWelcomeBanner(user.displayName);
       return;
     }
-    // Fallback: read name from Firestore users doc
-    getDoc(doc(db, "users", user.uid)).then(snap => {
+    // Fallback: read name from Firestore
+    const docRef = role === "business_user"
+      ? doc(db, "businesses", user.uid)
+      : doc(db, "users", user.uid);
+    getDoc(docRef).then(snap => {
       const name = snap.data()?.name;
       setWelcomeBanner(name || "");
     }).catch(() => setWelcomeBanner(""));
