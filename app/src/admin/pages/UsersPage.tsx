@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot, query, where, orderBy, doc, getDoc, updateDoc } from 'firebase/firestore'
+import { collection, onSnapshot, query, where, orderBy, doc, updateDoc } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { db, functions } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
@@ -78,17 +78,6 @@ export function UsersPage() {
   const [editAgentContact, setEditAgentContact] = useState('')
   const [editAgentPhone, setEditAgentPhone] = useState('')
   const [editAgentSaving, setEditAgentSaving] = useState(false)
-  // T&C
-  const [termsUrl, setTermsUrl] = useState('')
-  const [termsAccepted, setTermsAccepted] = useState(false)
-
-  useEffect(() => {
-    getDoc(doc(db, 'settings', 'terms'))
-      .then(snap => {
-        if (snap.exists()) setTermsUrl(snap.data().userTermsUrl ?? '')
-      })
-      .catch(err => reportError(err, { source: 'UsersPage.loadTerms' }))
-  }, [])
 
   const config = TAB_CONFIG[activeTab]
   const isBusinessTab = activeTab === 'business_user'
@@ -235,7 +224,6 @@ export function UsersPage() {
       setAddEmail('')
       setAddPassword('')
       setAddError('')
-      setTermsAccepted(false)
     }
   }
 
@@ -495,22 +483,6 @@ export function UsersPage() {
                   </div>
                 )}
               </div>
-              {termsUrl && (
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={termsAccepted}
-                    onChange={e => setTermsAccepted(e.target.checked)}
-                    className="accent-green-600 w-4 h-4"
-                  />
-                  <span className="text-sm text-gray-700">
-                    אני מאשר את{" "}
-                    <a href={termsUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                      תנאי השימוש
-                    </a>
-                  </span>
-                </label>
-              )}
               {addError && <p className="text-sm text-red-600">{addError}</p>}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
@@ -518,7 +490,7 @@ export function UsersPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={addSaving || (!!termsUrl && !termsAccepted)}
+                  disabled={addSaving}
                   className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
                 >
                   {addSaving ? 'שומר...' : 'צור משתמש'}
