@@ -63,10 +63,10 @@ export function BottomSheetFooter({
           </>
         ) : (
           <>
-            <button onClick={onLoginClick} className="text-sm text-gray-500 hover:text-gray-700 font-semibold">
+            <button onClick={onLoginClick} className="text-sm text-gray-500 font-semibold px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
               כניסה
             </button>
-            <button onClick={onRegisterClick} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+            <button onClick={onRegisterClick} className="text-sm text-gray-500 font-medium px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
               הרשמה
             </button>
           </>
