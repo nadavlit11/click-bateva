@@ -49,6 +49,7 @@ export function PoiEditPage() {
   const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
+  const originalIconRef = useRef<{ iconId: string | null; iconUrl: string | null }>({ iconId: null, iconUrl: null })
 
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
@@ -86,6 +87,7 @@ export function PoiEditPage() {
         return
       }
       const poi = { id: snap.id, ...snap.data() } as Poi
+      originalIconRef.current = { iconId: poi.iconId ?? null, iconUrl: poi.iconUrl ?? null }
       setForm({
         name: poi.name ?? '',
         description: poi.description ?? '',
@@ -122,6 +124,7 @@ export function PoiEditPage() {
         color: poi.color ?? '',
         borderColor: poi.borderColor ?? '',
         markerSize: poi.markerSize?.toString() ?? '',
+        iconSize: poi.iconSize?.toString() ?? '',
         flicker: poi.flicker ?? false,
         isHomeMap: poi.isHomeMap ?? false,
       })
@@ -230,15 +233,18 @@ export function PoiEditPage() {
     setSaving(true)
     setError('')
     try {
-      let resolvedIconId: string | null = null
-      let resolvedIconUrl: string | null = null
+      let resolvedIconId: string | null = originalIconRef.current.iconId
+      let resolvedIconUrl: string | null = originalIconRef.current.iconUrl
 
-      if (form.iconId) {
+      if (form.iconId && form.iconId !== originalIconRef.current.iconId) {
         const selectedIcon = icons.find(i => i.id === form.iconId)
         if (selectedIcon) {
           resolvedIconId = selectedIcon.id
           resolvedIconUrl = await getDownloadURL(ref(storage, selectedIcon.path))
         }
+      } else if (!form.iconId && originalIconRef.current.iconId) {
+        resolvedIconId = null
+        resolvedIconUrl = null
       }
 
       const allImages = form.images.filter(Boolean)
@@ -286,6 +292,10 @@ export function PoiEditPage() {
           const n = parseInt(form.markerSize, 10)
           return form.markerSize && !isNaN(n) ? n : null
         })(),
+        iconSize: (() => {
+          const n = parseInt(form.iconSize, 10)
+          return form.iconSize && !isNaN(n) ? n : null
+        })(),
         flicker: form.flicker ? true : null,
         isHomeMap: form.isHomeMap ? true : null,
         updatedAt: serverTimestamp(),
@@ -318,9 +328,9 @@ export function PoiEditPage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate(poisListPath, { state: { poisScrollTop } })}
-          className="text-gray-400 hover:text-gray-600 text-lg"
+          className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          →
+          → חזרה
         </button>
         <h1 className="text-xl font-bold text-gray-900 flex-1">
           {isNew ? 'הוספת נקודת עניין' : 'עריכת נקודת עניין'}

@@ -93,6 +93,7 @@ export function SubcategoriesPage() {
                   const bgColor = sub.color || cat.color
                   const border = sub.borderColor ?? cat.borderColor ?? '#000000'
                   const icon = sub.iconUrl || cat.iconUrl
+                  const previewIconSize = sub.iconSize ?? cat.iconSize ?? 14
                   return (
                     <tr key={sub.id} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="px-4 py-2.5">
@@ -110,7 +111,7 @@ export function SubcategoriesPage() {
                           }}
                         >
                           {icon ? (
-                            <img src={icon} alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                            <img src={icon} alt="" style={{ width: previewIconSize, height: previewIconSize, objectFit: 'contain' }} onError={e => { e.currentTarget.hidden = true }} />
                           ) : (
                             <span style={{ fontSize: 12, lineHeight: 1 }}>📍</span>
                           )}
@@ -130,14 +131,14 @@ export function SubcategoriesPage() {
                         <div className="flex gap-2 justify-end">
                           <button
                             onClick={() => openEdit(sub)}
-                            className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                            className="px-3 py-1.5 text-xs font-medium text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
                           >
                             עריכה
                           </button>
                           {role === 'admin' && (
                             <button
                               onClick={() => handleDelete(sub.id).catch(err => reportError(err, { source: 'SubcategoriesPage.delete' }))}
-                              className="text-red-500 hover:text-red-700 text-xs font-medium"
+                              className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
                             >
                               מחיקה
                             </button>
@@ -164,7 +165,7 @@ export function SubcategoriesPage() {
                     <td className="px-4 py-2.5 font-medium text-gray-900">
                       <span className="flex items-center gap-2">
                         {sub.iconUrl && (
-                          <img src={sub.iconUrl} alt="" className="w-5 h-5 object-contain shrink-0" />
+                          <img src={sub.iconUrl} alt="" className="w-5 h-5 object-contain shrink-0" onError={e => { e.currentTarget.hidden = true }} />
                         )}
                         {sub.name}
                       </span>
@@ -174,14 +175,14 @@ export function SubcategoriesPage() {
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => openEdit(sub)}
-                          className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                          className="px-3 py-1.5 text-xs font-medium text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
                         >
                           עריכה
                         </button>
                         {role === 'admin' && (
                           <button
                             onClick={() => handleDelete(sub.id).catch(err => reportError(err, { source: 'SubcategoriesPage.delete' }))}
-                            className="text-red-500 hover:text-red-700 text-xs font-medium"
+                            className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
                           >
                             מחיקה
                           </button>

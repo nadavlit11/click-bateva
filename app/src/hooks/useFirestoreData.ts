@@ -41,6 +41,7 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>, mapKey: MapKey): Poi[
       color: d.color || null,
       borderColor: d.borderColor || null,
       markerSize: d.markerSize ?? null,
+      iconSize: d.iconSize ?? null,
       flicker: d.flicker ?? null,
       isHomeMap: d.isHomeMap ?? false,
     };

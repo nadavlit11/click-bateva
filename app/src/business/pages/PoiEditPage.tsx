@@ -112,6 +112,7 @@ export function PoiEditPage() {
                   color: d.color ?? '#4caf50',
                   borderColor: d.borderColor ?? null,
                   markerSize: d.markerSize ?? null,
+                  iconSize: d.iconSize ?? null,
                   iconUrl: d.iconUrl ?? null,
                   order: d.order ?? 0,
                 })
@@ -209,6 +210,7 @@ export function PoiEditPage() {
       color: null,
       borderColor: null,
       markerSize: null,
+      iconSize: null,
       flicker: null,
     }
   }, [poi, form])
@@ -231,7 +233,7 @@ export function PoiEditPage() {
         maxPeople: form.maxPeople.trim() || null,
         updatedAt: serverTimestamp(),
       })
-      navigate('/')
+      navigate('/business/')
     } catch (err) {
       reportError(err, { source: 'PoiEditPage.save' })
       setError('שגיאה בשמירה')
@@ -247,7 +249,7 @@ export function PoiEditPage() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/business/')}
           className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
         >
           ← חזרה

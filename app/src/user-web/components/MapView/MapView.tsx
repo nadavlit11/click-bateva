@@ -92,13 +92,15 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     const iconUrl: Record<string, string | null> = {};
     const borderColor: Record<string, string> = {};
     const markerSize: Record<string, number> = {};
+    const iconSize: Record<string, number> = {};
     for (const c of categories) {
       color[c.id] = c.color;
       iconUrl[c.id] = c.iconUrl;
       if (c.borderColor) borderColor[c.id] = c.borderColor;
       if (c.markerSize != null) markerSize[c.id] = c.markerSize;
+      if (c.iconSize != null) iconSize[c.id] = c.iconSize;
     }
-    return { color, iconUrl, borderColor, markerSize };
+    return { color, iconUrl, borderColor, markerSize, iconSize };
   }, [categories]);
 
   const subMaps = useMemo(() => {
@@ -106,13 +108,15 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     const color: Record<string, string> = {};
     const borderColor: Record<string, string> = {};
     const markerSize: Record<string, number> = {};
+    const iconSize: Record<string, number> = {};
     for (const s of subcategories) {
       if (s.iconUrl) iconUrl[s.id] = s.iconUrl;
       if (s.color) color[s.id] = s.color;
       if (s.borderColor) borderColor[s.id] = s.borderColor;
       if (s.markerSize != null) markerSize[s.id] = s.markerSize;
+      if (s.iconSize != null) iconSize[s.id] = s.iconSize;
     }
-    return { iconUrl, color, borderColor, markerSize };
+    return { iconUrl, color, borderColor, markerSize, iconSize };
   }, [subcategories]);
 
   // Trip number map: poiId → 1-indexed position
@@ -242,6 +246,10 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
           ?? firstSubMatch(sids, subMaps.markerSize)
           ?? catMaps.markerSize[poi.categoryId]
           ?? undefined;
+        const resolvedIconSize = poi.iconSize
+          ?? firstSubMatch(sids, subMaps.iconSize)
+          ?? catMaps.iconSize[poi.categoryId]
+          ?? undefined;
         const tripNumber = tripNumberMap.get(poi.id);
         return (
           <PoiMarker
@@ -257,6 +265,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
             setMarkerRef={setMarkerRef}
             tripNumber={tripNumber}
             markerSize={resolvedMarkerSize}
+            iconSize={resolvedIconSize}
           />
         );
       })}

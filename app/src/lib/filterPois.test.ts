@@ -28,6 +28,7 @@ const mkPoi = (overrides: Partial<Poi> & Pick<Poi, "id" | "categoryId">): Poi =>
   color: null,
   borderColor: null,
   markerSize: null,
+  iconSize: null,
   flicker: null,
   ...overrides,
 });
@@ -83,9 +84,9 @@ describe("filterPois", () => {
   });
 
   describe("subcategory filter — per-category scoping", () => {
-    const kosherSub: Subcategory = { id: "kosher", categoryId: "restaurants", group: "kashrut", name: "כשר", iconUrl: null, color: null, borderColor: null, markerSize: null };
-    const couplesSub: Subcategory = { id: "couples", categoryId: "hotels", group: "audience", name: "זוגות", iconUrl: null, color: null, borderColor: null, markerSize: null };
-    const cheapSub: Subcategory = { id: "cheap", categoryId: "restaurants", group: "price", name: "זול", iconUrl: null, color: null, borderColor: null, markerSize: null };
+    const kosherSub: Subcategory = { id: "kosher", categoryId: "restaurants", group: "kashrut", name: "כשר", iconUrl: null, color: null, borderColor: null, markerSize: null, iconSize: null };
+    const couplesSub: Subcategory = { id: "couples", categoryId: "hotels", group: "audience", name: "זוגות", iconUrl: null, color: null, borderColor: null, markerSize: null, iconSize: null };
+    const cheapSub: Subcategory = { id: "cheap", categoryId: "restaurants", group: "price", name: "זול", iconUrl: null, color: null, borderColor: null, markerSize: null, iconSize: null };
 
     const hike    = mkPoi({ id: "hike",    categoryId: "hikes" });
     const kosherRest = mkPoi({ id: "krest", categoryId: "restaurants", subcategoryIds: ["kosher"] });
@@ -148,7 +149,7 @@ describe("filterPois", () => {
     });
 
     it("OR-within-subcategory-group: two options in same group", () => {
-      const mediumSub: Subcategory = { id: "medium", categoryId: "restaurants", group: "price", name: "בינוני", iconUrl: null, color: null, borderColor: null, markerSize: null };
+      const mediumSub: Subcategory = { id: "medium", categoryId: "restaurants", group: "price", name: "בינוני", iconUrl: null, color: null, borderColor: null, markerSize: null, iconSize: null };
       const cheapRest  = mkPoi({ id: "cr", categoryId: "restaurants", subcategoryIds: ["cheap"] });
       const mediumRest = mkPoi({ id: "mr", categoryId: "restaurants", subcategoryIds: ["medium"] });
       const expRest    = mkPoi({ id: "er", categoryId: "restaurants", subcategoryIds: [] });

@@ -25,6 +25,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
   const [color, setColor] = useState('')
   const [borderColor, setBorderColor] = useState('')
   const [markerSize, setMarkerSize] = useState('')
+  const [iconSize, setIconSize] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -36,6 +37,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
     setColor(subcategory?.color ?? '')
     setBorderColor(subcategory?.borderColor ?? '')
     setMarkerSize(subcategory?.markerSize?.toString() ?? '')
+    setIconSize(subcategory?.iconSize?.toString() ?? '')
     setError('')
   }, [subcategory, isOpen])
 
@@ -47,18 +49,22 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
     setSaving(true)
     setError('')
     try {
-      let resolvedIconId: string | null = null
-      let resolvedIconUrl: string | null = null
+      let resolvedIconId: string | null = subcategory?.iconId ?? null
+      let resolvedIconUrl: string | null = subcategory?.iconUrl ?? null
 
-      if (iconId) {
+      if (iconId && iconId !== subcategory?.iconId) {
         const selectedIcon = icons.find(i => i.id === iconId)
         if (selectedIcon) {
           resolvedIconId = selectedIcon.id
           resolvedIconUrl = await getDownloadURL(ref(storage, selectedIcon.path))
         }
+      } else if (!iconId && subcategory?.iconId) {
+        resolvedIconId = null
+        resolvedIconUrl = null
       }
 
       const sizeNum = parseInt(markerSize, 10)
+      const iconSizeNum = parseInt(iconSize, 10)
       const data = {
         name: name.trim(),
         categoryId,
@@ -66,6 +72,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
         color: color.trim() || null,
         borderColor: borderColor.trim() || null,
         markerSize: markerSize && !isNaN(sizeNum) ? sizeNum : null,
+        iconSize: iconSize && !isNaN(iconSizeNum) ? iconSizeNum : null,
         iconId: resolvedIconId,
         iconUrl: resolvedIconUrl,
         updatedAt: serverTimestamp(),
@@ -155,17 +162,31 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
           <ColorPickerField label="צבע" value={color} onChange={setColor} />
           <ColorPickerField label="צבע מסגרת" value={borderColor} onChange={setBorderColor} />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">גודל סמן</label>
-            <input
-              type="number"
-              value={markerSize}
-              onChange={e => setMarkerSize(e.target.value)}
-              className="w-32 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-              placeholder="ברירת מחדל"
-              min="8"
-              max="128"
-            />
+          <div className="flex gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">גודל סמן</label>
+              <input
+                type="number"
+                value={markerSize}
+                onChange={e => setMarkerSize(e.target.value)}
+                className="w-28 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                placeholder="ברירת מחדל"
+                min="8"
+                max="128"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">גודל אייקון</label>
+              <input
+                type="number"
+                value={iconSize}
+                onChange={e => setIconSize(e.target.value)}
+                className="w-28 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                placeholder="ברירת מחדל"
+                min="4"
+                max="64"
+              />
+            </div>
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
