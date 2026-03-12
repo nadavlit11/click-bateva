@@ -49,15 +49,18 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
     setSaving(true)
     setError('')
     try {
-      let resolvedIconId: string | null = null
-      let resolvedIconUrl: string | null = null
+      let resolvedIconId: string | null = subcategory?.iconId ?? null
+      let resolvedIconUrl: string | null = subcategory?.iconUrl ?? null
 
-      if (iconId) {
+      if (iconId && iconId !== subcategory?.iconId) {
         const selectedIcon = icons.find(i => i.id === iconId)
         if (selectedIcon) {
           resolvedIconId = selectedIcon.id
           resolvedIconUrl = await getDownloadURL(ref(storage, selectedIcon.path))
         }
+      } else if (!iconId && subcategory?.iconId) {
+        resolvedIconId = null
+        resolvedIconUrl = null
       }
 
       const sizeNum = parseInt(markerSize, 10)

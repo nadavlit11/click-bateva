@@ -63,15 +63,18 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
     setSaving(true)
     setError('')
     try {
-      let iconId: string | null = null
-      let iconUrl: string | null = null
+      let iconId: string | null = category?.iconId ?? null
+      let iconUrl: string | null = category?.iconUrl ?? null
 
-      if (form.iconId) {
+      if (form.iconId && form.iconId !== category?.iconId) {
         const selectedIcon = icons.find(i => i.id === form.iconId)
         if (selectedIcon) {
           iconId = selectedIcon.id
           iconUrl = await getDownloadURL(ref(storage, selectedIcon.path))
         }
+      } else if (!form.iconId && category?.iconId) {
+        iconId = null
+        iconUrl = null
       }
 
       const sizeNum = parseInt(form.markerSize, 10)

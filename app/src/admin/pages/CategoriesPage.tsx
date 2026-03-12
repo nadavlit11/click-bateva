@@ -103,14 +103,14 @@ export function CategoriesPage() {
                   <div className="flex gap-2 justify-end">
                     <button
                       onClick={() => openEdit(cat)}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      className="px-3 py-1.5 text-xs font-medium text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
                     >
                       עריכה
                     </button>
                     {role === 'admin' && (
                       <button
                         onClick={() => setDeletingCategoryId(cat.id)}
-                        className="text-red-500 hover:text-red-700 text-xs font-medium"
+                        className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
                       >
                         מחיקה
                       </button>

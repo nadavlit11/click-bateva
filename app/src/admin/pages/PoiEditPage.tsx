@@ -49,6 +49,7 @@ export function PoiEditPage() {
   const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
+  const originalIconRef = useRef<{ iconId: string | null; iconUrl: string | null }>({ iconId: null, iconUrl: null })
 
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
@@ -86,6 +87,7 @@ export function PoiEditPage() {
         return
       }
       const poi = { id: snap.id, ...snap.data() } as Poi
+      originalIconRef.current = { iconId: poi.iconId ?? null, iconUrl: poi.iconUrl ?? null }
       setForm({
         name: poi.name ?? '',
         description: poi.description ?? '',
@@ -231,15 +233,18 @@ export function PoiEditPage() {
     setSaving(true)
     setError('')
     try {
-      let resolvedIconId: string | null = null
-      let resolvedIconUrl: string | null = null
+      let resolvedIconId: string | null = originalIconRef.current.iconId
+      let resolvedIconUrl: string | null = originalIconRef.current.iconUrl
 
-      if (form.iconId) {
+      if (form.iconId && form.iconId !== originalIconRef.current.iconId) {
         const selectedIcon = icons.find(i => i.id === form.iconId)
         if (selectedIcon) {
           resolvedIconId = selectedIcon.id
           resolvedIconUrl = await getDownloadURL(ref(storage, selectedIcon.path))
         }
+      } else if (!form.iconId && originalIconRef.current.iconId) {
+        resolvedIconId = null
+        resolvedIconUrl = null
       }
 
       const allImages = form.images.filter(Boolean)
