@@ -121,6 +121,9 @@ export function FloatingCategoryChips({
             </span>
           </button>
         )}
+
+        {/* Spacer so last chip scrolls past the TabNav accessibility icon */}
+        <div className="shrink-0 w-10" aria-hidden="true" />
       </div>
     </div>
   );
