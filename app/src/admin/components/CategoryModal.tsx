@@ -154,15 +154,15 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">גודל אייקון</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">גודל אייקון (%)</label>
               <input
                 type="number"
                 value={form.iconSize}
                 onChange={e => set('iconSize', e.target.value)}
                 className="w-28 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-                placeholder="ברירת מחדל"
-                min="4"
-                max="64"
+                placeholder="50%"
+                min="10"
+                max="100"
               />
             </div>
           </div>

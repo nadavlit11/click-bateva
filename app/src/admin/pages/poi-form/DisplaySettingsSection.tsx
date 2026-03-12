@@ -39,15 +39,15 @@ export function DisplaySettingsSection({ form, set, icons }: Props) {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">גודל אייקון</label>
+            <label className="block text-xs text-gray-500 mb-1">גודל אייקון (%)</label>
             <input
               type="number"
               value={form.iconSize}
               onChange={e => set('iconSize', e.target.value)}
               className="w-24 bg-white border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-green-500"
-              placeholder="ברירת מחדל"
-              min="4"
-              max="64"
+              placeholder="50%"
+              min="10"
+              max="100"
             />
           </div>
           <label className="flex items-center gap-2 cursor-pointer mt-4">
