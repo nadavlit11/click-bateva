@@ -26,6 +26,9 @@ export function Sidebar() {
       <div className="p-6 border-b border-gray-200">
         <h1 className="text-lg font-bold text-green-700">קליק בטבע</h1>
         <p className="text-xs text-gray-500 mt-0.5">לוח ניהול</p>
+        {email && (
+          <p className="text-sm text-green-700 font-medium mt-2">שלום, {email}</p>
+        )}
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5">

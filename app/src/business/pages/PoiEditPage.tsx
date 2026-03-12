@@ -9,12 +9,9 @@ import { ImageUploader } from '../components/ImageUploader.tsx'
 import { PoiDetailPanel } from '../../user-web/components/MapView/PoiDetailPanel.tsx'
 import type { Poi, PoiEditableFields, DayHours } from '../types/index.ts'
 import type { Poi as SharedPoi, Category } from '../../types/index.ts'
-
-const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
-const DAY_NAMES_HE: Record<string, string> = {
-  sunday: 'ראשון', monday: 'שני', tuesday: 'שלישי', wednesday: 'רביעי',
-  thursday: 'חמישי', friday: 'שישי', saturday: 'שבת',
-}
+import {
+  DAY_KEYS, DAY_NAMES_HE, DEFAULT_HOURS, EMPTY_HOURS,
+} from '../../admin/pages/poi-form/types.ts'
 
 export function PoiEditPage() {
   const { poiId } = useParams<{ poiId: string }>()
@@ -39,6 +36,10 @@ export function PoiEditPage() {
     kashrutCertUrl: '',
     menuUrl: '',
     facebook: '',
+    openingHours: null,
+    price: '',
+    minPeople: '',
+    maxPeople: '',
   })
 
   useEffect(() => {
@@ -60,6 +61,14 @@ export function PoiEditPage() {
           kashrutCertUrl: data.kashrutCertUrl ?? '',
           menuUrl: data.menuUrl ?? '',
           facebook: data.facebook ?? '',
+          openingHours: data.openingHours === 'by_appointment'
+            ? 'by_appointment'
+            : (typeof data.openingHours === 'object' && data.openingHours !== null)
+              ? { ...EMPTY_HOURS, ...data.openingHours }
+              : null,
+          price: data.price ?? '',
+          minPeople: data.minPeople ?? '',
+          maxPeople: data.maxPeople ?? '',
         })
         if (data.categoryId) {
           getDoc(doc(db, 'categories', data.categoryId))
@@ -153,8 +162,8 @@ export function PoiEditPage() {
       whatsapp: form.whatsapp || null,
       email: null,
       website: form.website || null,
-      openingHours: poi.openingHours,
-      price: poi.price,
+      openingHours: form.openingHours,
+      price: form.price || null,
       kashrutCertUrl: form.kashrutCertUrl || null,
       menuUrl: form.menuUrl || null,
       facebook: form.facebook || null,
@@ -164,8 +173,8 @@ export function PoiEditPage() {
       iconId: null,
       businessId: poi.businessId,
       capacity: null,
-      minPeople: null,
-      maxPeople: null,
+      minPeople: form.minPeople || null,
+      maxPeople: form.maxPeople || null,
       color: null,
       borderColor: null,
       markerSize: null,
@@ -178,8 +187,17 @@ export function PoiEditPage() {
     setSaving(true)
     setError('')
     try {
+      const normalizedHours = form.openingHours === 'by_appointment'
+        ? 'by_appointment'
+        : form.openingHours && typeof form.openingHours === 'object'
+          ? (Object.values(form.openingHours).every(v => v === null) ? null : form.openingHours)
+          : null
       await updateDoc(doc(db, 'points_of_interest', poiId), {
         ...form,
+        openingHours: normalizedHours,
+        price: form.price.trim() || null,
+        minPeople: form.minPeople.trim() || null,
+        maxPeople: form.maxPeople.trim() || null,
         updatedAt: serverTimestamp(),
       })
       navigate('/')
@@ -197,7 +215,12 @@ export function PoiEditPage() {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/')} className="text-gray-500 hover:text-gray-700 text-sm">← חזרה</button>
+        <button
+          onClick={() => navigate('/')}
+          className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          ← חזרה
+        </button>
         <h2 className="text-xl font-bold text-gray-900">{poi?.name}</h2>
       </div>
 
@@ -210,35 +233,6 @@ export function PoiEditPage() {
         <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 text-sm text-gray-600 space-y-1">
           <p><span className="font-medium text-gray-900">קטגוריה:</span> {category?.name ?? poi.categoryId}</p>
           <p><span className="font-medium text-gray-900">סטטוס:</span> {poi.active ? 'פעיל' : 'לא פעיל'}</p>
-          {poi.openingHours && (
-            <div>
-              <span className="font-medium text-gray-900">שעות פתיחה:</span>
-              {typeof poi.openingHours === 'string'
-                ? <span className="mr-1">{poi.openingHours === 'by_appointment' ? 'בתיאום מראש' : poi.openingHours}</span>
-                : (
-                  <div className="mt-1 space-y-0.5">
-                    {DAY_KEYS.map(day => {
-                      const hours = (poi.openingHours as Record<string, DayHours | null>)[day]
-                      return (
-                        <div key={day} className="flex justify-between text-sm">
-                          <span>{DAY_NAMES_HE[day]}</span>
-                          <span dir="ltr">{hours ? `${hours.open}–${hours.close}` : 'סגור'}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
-              }
-            </div>
-          )}
-          {poi.price && (
-            <>
-              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                יש לציין אם המחיר כולל מע״מ או לא
-              </p>
-              <p><span className="font-medium text-gray-900">מחיר:</span> {poi.price}</p>
-            </>
-          )}
         </div>
       )}
 
@@ -356,6 +350,153 @@ export function PoiEditPage() {
             className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             dir="ltr"
           />
+        </div>
+
+        {/* Opening Hours */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">שעות פתיחה</label>
+          <div className="flex gap-4 mb-2">
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="radio"
+                name="hoursMode"
+                checked={form.openingHours !== null && form.openingHours !== 'by_appointment'}
+                onChange={() => setForm(prev => ({
+                  ...prev,
+                  openingHours: { ...EMPTY_HOURS },
+                }))}
+                className="accent-green-600"
+              />
+              <span className="text-sm text-gray-700">שעות פתיחה קבועות</span>
+            </label>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="radio"
+                name="hoursMode"
+                checked={form.openingHours === 'by_appointment'}
+                onChange={() => setForm(prev => ({
+                  ...prev,
+                  openingHours: 'by_appointment',
+                }))}
+                className="accent-green-600"
+              />
+              <span className="text-sm text-gray-700">בתיאום מראש</span>
+            </label>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="radio"
+                name="hoursMode"
+                checked={form.openingHours === null}
+                onChange={() => setForm(prev => ({
+                  ...prev,
+                  openingHours: null,
+                }))}
+                className="accent-green-600"
+              />
+              <span className="text-sm text-gray-700">ללא</span>
+            </label>
+          </div>
+          {form.openingHours !== null && form.openingHours !== 'by_appointment' && (
+            <div className="space-y-2">
+              {DAY_KEYS.map(day => {
+                const hrs = (form.openingHours as Record<string, DayHours | null>)[day]
+                const isOpen = hrs !== null
+                return (
+                  <div key={day} className="flex items-center gap-2">
+                    <span className="text-sm text-gray-700 w-14 shrink-0">{DAY_NAMES_HE[day]}</span>
+                    <label className="flex items-center gap-1 cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={isOpen}
+                        onChange={() => setForm(prev => ({
+                          ...prev,
+                          openingHours: {
+                            ...(prev.openingHours as Record<string, DayHours | null>),
+                            [day]: isOpen ? null : { ...DEFAULT_HOURS },
+                          },
+                        }))}
+                        className="accent-green-600"
+                      />
+                      <span className="text-xs text-gray-500">{isOpen ? 'פתוח' : 'סגור'}</span>
+                    </label>
+                    {isOpen && (
+                      <div className="flex items-center gap-1 flex-1" dir="ltr">
+                        <input
+                          type="time"
+                          value={hrs.open}
+                          onChange={e => setForm(prev => ({
+                            ...prev,
+                            openingHours: {
+                              ...(prev.openingHours as Record<string, DayHours | null>),
+                              [day]: {
+                                ...(prev.openingHours as Record<string, DayHours | null>)[day]!,
+                                open: e.target.value,
+                              },
+                            },
+                          }))}
+                          className="border border-gray-300 rounded px-2 py-1 text-sm"
+                        />
+                        <span className="text-gray-400">-</span>
+                        <input
+                          type="time"
+                          value={hrs.close}
+                          onChange={e => setForm(prev => ({
+                            ...prev,
+                            openingHours: {
+                              ...(prev.openingHours as Record<string, DayHours | null>),
+                              [day]: {
+                                ...(prev.openingHours as Record<string, DayHours | null>)[day]!,
+                                close: e.target.value,
+                              },
+                            },
+                          }))}
+                          className="border border-gray-300 rounded px-2 py-1 text-sm"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Price */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">מחיר</label>
+          <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-1">
+            יש לציין אם המחיר כולל מע״מ או לא
+          </p>
+          <textarea
+            value={form.price}
+            onChange={e => setForm(prev => ({ ...prev, price: e.target.value }))}
+            rows={2}
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 resize-none"
+          />
+        </div>
+
+        {/* People count */}
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">מינימום משתתפים</label>
+            <input
+              type="number"
+              value={form.minPeople}
+              onChange={e => setForm(prev => ({ ...prev, minPeople: e.target.value }))}
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              min="0"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">מקסימום משתתפים</label>
+            <input
+              type="number"
+              value={form.maxPeople}
+              onChange={e => setForm(prev => ({ ...prev, maxPeople: e.target.value }))}
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+              min="0"
+            />
+          </div>
         </div>
 
         {/* Extra Images */}

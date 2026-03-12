@@ -6,6 +6,12 @@ body {
   overflow: hidden;
 }
 
+/* Marker pulse animation for selected POI */
+@keyframes poi-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
 /* Push TabNav accessibility icon above floating category chips on mobile */
 @media (max-width: 767px) {
   button-expand-panel-element {

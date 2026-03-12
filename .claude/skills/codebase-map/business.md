@@ -6,12 +6,12 @@
 - `app/src/business/components/AuthGuard.tsx` — gates on `business_user` role; extracts businessId from `businessRef` custom claim; loads business doc; provides BusinessContext
 - `app/src/business/context/BusinessContext.tsx` — createContext/Provider/useBusinessContext for `{ businessId, businessName }`
 - `app/src/business/pages/PoisListPage.tsx` — grid of PoiCards for business's assigned POIs
-- `app/src/business/pages/PoiEditPage.tsx` — edit form for PoiEditableFields + ImageUploader; VAT reminder above price; bold toolbar for description; **live preview panel** (reuses `PoiDetailPanel` from user-web with `preview` prop); two-column layout on desktop (form + sticky preview), mobile floating toggle with overlay
+- `app/src/business/pages/PoiEditPage.tsx` — edit form for PoiEditableFields + ImageUploader; **editable fields**: description, images, videos, phone, whatsapp, website, kashrutCertUrl, menuUrl, facebook, **openingHours** (inline day-by-day editor with 3 modes: structured/by-appointment/none), **price** (textarea with VAT reminder), **minPeople/maxPeople** (number inputs); bold toolbar for description; **live preview panel** (reuses `PoiDetailPanel` from user-web with `preview` prop); two-column layout on desktop (form + sticky preview), mobile floating toggle with overlay; **styled back button** (`px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg`)
 - `app/src/business/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
 - `app/src/business/components/ImageUploader.tsx` — upload to `poi-media/`, preview list, delete
-- `app/src/business/components/Layout/TopBar.tsx` — header with business name ("מערכת ניהול קליק בטבע" subtitle) + "שנה סיסמה" + "התנתקות" buttons; **welcome banner** (auto-dismiss 5s) showing "{businessName} ברוך הבא למפת קליק בטבע"
+- `app/src/business/components/Layout/TopBar.tsx` — header with business name (`text-xl font-bold`) + "מערכת ניהול קליק בטבע" subtitle (`text-sm`) + welcome line (`text-base`); **styled buttons**: map link (blue), שנה סיסמה/תנאי שימוש (gray), התנתקות (red) — all `px-4 py-2 text-sm font-medium border rounded-lg`; **welcome banner** (auto-dismiss 5s) showing "{businessName} ברוך הבא למפת קליק בטבע"
 - `app/src/business/lib/passwordStrength.ts` — shared password validation (same as admin, per-app copy)
-- `app/src/business/types/index.ts` — Poi (+ whatsapp), PoiEditableFields (+ whatsapp), Business, BusinessContextValue
+- `app/src/business/types/index.ts` — Poi (+ whatsapp, minPeople, maxPeople, capacity), PoiEditableFields (+ whatsapp, openingHours, price, minPeople, maxPeople), Business, BusinessContextValue
 
 ## Component / Data Flow
 
@@ -34,8 +34,9 @@ TopBar: "← המפה" link back to map (to="/")
 ## Patterns & Conventions
 
 - BusinessId derived from `businessRef` custom claim path (NOT from a Firestore query)
-- `PoiEditableFields`: description, images, videos, phone, whatsapp, email, website — only these fields are editable
-- Read-only fields displayed but not editable: name, location, mainImage, categoryId, active, openingHours, price
+- `PoiEditableFields`: description, images, videos, phone, whatsapp, website, kashrutCertUrl, menuUrl, facebook, openingHours, price, minPeople, maxPeople — all editable by business users
+- Read-only fields displayed but not editable: name, location, mainImage, categoryId, active
+- Firestore rules `affectedKeys().hasOnly(...)` must include all `PoiEditableFields` keys + `updatedAt`
 - VAT reminder note shown above price in read-only view
 - Business users CAN see their own inactive POIs (unlike public users)
 - No Leaflet/map dependency — business users don't manage location

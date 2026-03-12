@@ -365,7 +365,7 @@ export function UsersPage() {
                     </td>
                     <td className="px-4 py-3 text-left">
                       <div className="flex gap-2 justify-end">
-                        {activeTab === 'travel_agent' && (
+                        {(activeTab === 'travel_agent' || activeTab === 'content_manager') && (
                           <button
                             onClick={() => { setEditingAgent(user); setEditAgentName(user.name ?? ''); setEditAgentContact(user.contactName ?? ''); setEditAgentPhone(user.phone ?? '') }}
                             className="px-3 py-1 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
@@ -533,7 +533,7 @@ export function UsersPage() {
       {editingAgent && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingAgent(null)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-gray-900 mb-4">עריכת מפיק</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{activeTab === 'content_manager' ? 'עריכת מנהל תוכן' : 'עריכת מפיק'}</h2>
             <form onSubmit={handleAgentEdit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">אימייל</label>

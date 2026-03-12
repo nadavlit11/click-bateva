@@ -22,6 +22,9 @@ export interface Poi {
   kashrutCertUrl: string    // '' means no certificate
   menuUrl: string           // '' means no menu
   facebook: string          // '' means no facebook
+  minPeople: string | null
+  maxPeople: string | null
+  capacity: string | null
   createdAt: unknown        // Firestore serverTimestamp
   updatedAt: unknown
 }
@@ -39,6 +42,10 @@ export interface PoiEditableFields {
   kashrutCertUrl: string    // '' means no certificate
   menuUrl: string           // '' means no menu
   facebook: string          // '' means no facebook
+  openingHours: Record<string, { open: string; close: string } | null> | 'by_appointment' | null
+  price: string
+  minPeople: string
+  maxPeople: string
 }
 
 // Business record from the `businesses` Firestore collection

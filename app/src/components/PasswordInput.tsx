@@ -20,7 +20,7 @@ export function PasswordInput({ value, onChange, placeholder, className, dir, au
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`${className ?? 'w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500'} !pe-10`}
+        className={`${className ?? 'w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500'} !ps-10`}
         dir={dir}
         autoFocus={autoFocus}
         required={required}
@@ -28,7 +28,7 @@ export function PasswordInput({ value, onChange, placeholder, className, dir, au
       <button
         type="button"
         onClick={() => setVisible(v => !v)}
-        className="absolute top-1/2 end-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+        className="absolute top-1/2 start-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
         tabIndex={-1}
         aria-label={visible ? 'הסתר סיסמה' : 'הצג סיסמה'}
       >

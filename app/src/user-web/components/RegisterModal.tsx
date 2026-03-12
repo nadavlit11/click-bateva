@@ -1,7 +1,9 @@
 // Registration modal — sends request email via Cloud Function
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { httpsCallable } from "firebase/functions";
-import { functions } from "../../lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { functions, db } from "../../lib/firebase";
+import { reportError } from "../../lib/errorReporting";
 
 const sendRegistrationRequest = httpsCallable(functions, "sendRegistrationRequest");
 
@@ -22,6 +24,17 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
   const [phoneError, setPhoneError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [contactConsent, setContactConsent] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsUrl, setTermsUrl] = useState("");
+
+  useEffect(() => {
+    getDoc(doc(db, "settings", "terms"))
+      .then(snap => {
+        if (snap.exists()) setTermsUrl(snap.data().userTermsUrl ?? "");
+      })
+      .catch(err => reportError(err, { source: "RegisterModal.loadTerms" }));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -152,6 +165,40 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                 />
               </div>
 
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={contactConsent}
+                  onChange={e => setContactConsent(e.target.checked)}
+                  className="accent-green-600 w-4 h-4 mt-0.5 shrink-0"
+                />
+                <span className="text-xs text-gray-600">
+                  בסימון תיבה זו, אני מסכים/ה שקליק בטבע יצרו איתי קשר. ניתן לבטל בכל עת.
+                </span>
+              </label>
+
+              {termsUrl && (
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={e => setTermsAccepted(e.target.checked)}
+                    className="accent-green-600 w-4 h-4 mt-0.5 shrink-0"
+                  />
+                  <span className="text-xs text-gray-600">
+                    אני מאשר/ת את{" "}
+                    <a
+                      href={termsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      תנאי השימוש
+                    </a>
+                  </span>
+                </label>
+              )}
+
               {error && <p className="text-sm text-red-600 text-center">{error}</p>}
 
               <div className="flex gap-3 justify-end pt-2">
@@ -164,7 +211,7 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !contactConsent || (!!termsUrl && !termsAccepted)}
                   className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
                 >
                   {loading ? "שולח..." : "שליחה"}
