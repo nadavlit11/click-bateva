@@ -13,7 +13,7 @@ export function MapIndicator({ mapKey, canSeeAgents, onMapKeyChange }: MapIndica
     : ["groups", "families"];
 
   return (
-    <div className="absolute bottom-[68px] start-14 z-10 md:hidden">
+    <div className="absolute bottom-[68px] left-0 right-0 z-10 md:hidden flex justify-center">
       <div className="inline-flex bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-1 text-sm font-semibold gap-1">
         {keys.map((key) => (
           <button
