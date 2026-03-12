@@ -224,13 +224,13 @@ export function Sidebar({
           <div className="flex gap-2">
             <button
               onClick={onLoginClick}
-              className="flex-1 text-sm text-gray-600 hover:text-gray-800 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 text-sm text-gray-500 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
             >
               כניסה
             </button>
             <button
               onClick={onRegisterClick}
-              className="flex-1 text-sm text-gray-600 hover:text-gray-800 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 text-sm text-gray-500 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
             >
               הרשמה
             </button>
