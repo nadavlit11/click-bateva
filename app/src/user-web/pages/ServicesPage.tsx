@@ -2,11 +2,10 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { usePois, useCategories, useSubcategories } from "../../hooks/useFirestoreData";
-import { filterPois } from "../../lib/filterPois";
-import { lighten, lightenBorder } from "../../lib/colorUtils";
+import { lighten } from "../../lib/colorUtils";
 import { renderBoldText } from "../../lib/renderBoldText";
-import { getOpeningStatusText } from "../../lib/openingStatus";
 import { safeHttpUrl } from "../../lib/urlUtils";
+import { OpeningHoursDisplay } from "../components/OpeningHoursDisplay";
 import type { Poi, Subcategory } from "../../types";
 import type { MapKey } from "../../hooks/useFirestoreData";
 
@@ -38,7 +37,6 @@ export default function ServicesPage() {
     [subcategories, categoryId],
   );
 
-  const [selectedSubs, setSelectedSubs] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
   const locationlessPois = useMemo(
@@ -46,29 +44,38 @@ export default function ServicesPage() {
     [pois, categoryId],
   );
 
-  const filteredPois = useMemo(() => {
+  const sortedFiltered = useMemo(() => {
     let result = locationlessPois;
-    if (selectedSubs.size > 0) {
-      result = filterPois(result, {
-        selectedCategories: new Set(categoryId ? [categoryId] : []),
-        selectedSubcategories: selectedSubs,
-        subcategories,
-      });
-    }
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       result = result.filter(p => p.name.toLowerCase().includes(q));
     }
     return [...result].sort((a, b) => a.name.localeCompare(b.name, "he"));
-  }, [locationlessPois, selectedSubs, categoryId, subcategories, searchQuery]);
+  }, [locationlessPois, searchQuery]);
 
-  function toggleSub(id: string) {
-    setSelectedSubs(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }
+  const groupedPois = useMemo(() => {
+    const groups: { sub: Subcategory | null; pois: typeof sortedFiltered }[] = [];
+    const subMap = new Map<string, typeof sortedFiltered>();
+    const noSub: typeof sortedFiltered = [];
+    for (const poi of sortedFiltered) {
+      const matched = catSubcategories.filter(s => poi.subcategoryIds.includes(s.id));
+      if (matched.length === 0) {
+        noSub.push(poi);
+      } else {
+        for (const sub of matched) {
+          const list = subMap.get(sub.id) ?? [];
+          list.push(poi);
+          subMap.set(sub.id, list);
+        }
+      }
+    }
+    for (const sub of catSubcategories) {
+      const list = subMap.get(sub.id);
+      if (list && list.length > 0) groups.push({ sub, pois: list });
+    }
+    if (noSub.length > 0) groups.push({ sub: null, pois: noSub });
+    return groups;
+  }, [sortedFiltered, catSubcategories]);
 
   const color = locationlessCategory?.color ?? "#6366f1";
 
@@ -108,48 +115,36 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      {/* Subcategory filter chips */}
-      {catSubcategories.length > 0 && (
-        <div className="px-4 pt-3 pb-1 flex gap-2 flex-wrap">
-          {catSubcategories.map(sub => {
-            const active = selectedSubs.has(sub.id);
-            return (
-              <button
-                key={sub.id}
-                onClick={() => toggleSub(sub.id)}
-                className="py-1.5 px-3 rounded-full border-2 text-sm font-medium transition-all"
-                style={{
-                  backgroundColor: active ? lighten(color) : "white",
-                  borderColor: active ? color : lightenBorder(color),
-                  boxShadow: active ? `0 0 0 1px ${color}` : "none",
-                }}
-              >
-                {sub.name}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-20 text-gray-400 text-sm">
           טוען...
         </div>
-      ) : filteredPois.length === 0 ? (
+      ) : sortedFiltered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400">
           <span className="text-3xl mb-2">🔍</span>
           <p className="text-sm">לא נמצאו תוצאות</p>
         </div>
       ) : (
-        <div className="px-4 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredPois.map(poi => (
-            <ServiceCard
-              key={poi.id}
-              poi={poi}
-              color={color}
-              subcategories={catSubcategories}
-            />
+        <div className="py-4">
+          {groupedPois.map(({ sub, pois: groupPois }) => (
+            <div key={sub?.id ?? "other"}>
+              {sub && (
+                <h3 className="text-lg font-bold text-gray-800 mt-6 mb-3 px-4">
+                  {sub.name}
+                </h3>
+              )}
+              <div className="px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {groupPois.map(poi => (
+                  <ServiceCard
+                    key={poi.id}
+                    poi={poi}
+                    color={color}
+                    subcategories={catSubcategories}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -230,14 +225,10 @@ function ServiceCard({
 
   const matchedSubs = subcategories.filter(s => poi.subcategoryIds.includes(s.id));
 
-  const openingText = poi.openingHours && typeof poi.openingHours !== "string"
-    ? getOpeningStatusText(poi.openingHours)
-    : poi.openingHours === "by_appointment" ? "בתיאום מראש" : null;
-
   const peopleText = (() => {
-    if (poi.minPeople && poi.maxPeople) return `${poi.minPeople}-${poi.maxPeople} אנשים`;
-    if (poi.maxPeople) return `עד ${poi.maxPeople} אנשים`;
-    if (poi.minPeople) return `מינימום ${poi.minPeople} אנשים`;
+    if (poi.minPeople && poi.maxPeople) return `${poi.minPeople}-${poi.maxPeople} משתתפים`;
+    if (poi.maxPeople) return `עד ${poi.maxPeople} משתתפים`;
+    if (poi.minPeople) return `מינימום ${poi.minPeople} משתתפים`;
     if (poi.capacity) return poi.capacity;
     return null;
   })();
@@ -279,8 +270,8 @@ function ServiceCard({
         )}
 
         {/* Opening hours */}
-        {openingText && (
-          <p className="text-xs text-gray-500 mb-2">{openingText}</p>
+        {poi.openingHours && (
+          <OpeningHoursDisplay openingHours={poi.openingHours} />
         )}
 
         {/* People count */}

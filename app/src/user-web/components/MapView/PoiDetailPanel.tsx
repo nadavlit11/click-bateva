@@ -4,7 +4,7 @@ import type { Poi, Category, DayHours } from "../../../types";
 import { lighten } from "../../../lib/colorUtils";
 import { DAY_KEYS, DAY_NAMES_HE, getOpeningStatusText, isCurrentlyOpen } from "../../../lib/openingStatus";
 import { renderBoldText } from "../../../lib/renderBoldText";
-import { FOOD_CATEGORY_ID } from "../../../lib/constants";
+import { FOOD_CATEGORY_ID, HIKE_CATEGORY_ID } from "../../../lib/constants";
 import { safeHttpUrl } from "../../../lib/urlUtils";
 
 interface PoiDetailPanelProps {
@@ -101,7 +101,7 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
     <div
       className={preview
         ? "w-full bg-white rounded-2xl shadow-xl overflow-hidden max-h-[calc(100dvh-6rem)]"
-        : "absolute top-4 left-4 w-[300px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100dvh-120px-2rem)] md:max-h-[calc(100dvh-2rem)]"
+        : "absolute top-4 left-4 w-[340px] bg-white rounded-2xl shadow-xl overflow-hidden z-10 max-h-[calc(100dvh-120px-2rem)] md:max-h-[calc(100dvh-2rem)]"
       }
       style={{ outline: `3px solid ${color}` }}
     >
@@ -291,6 +291,30 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
           </div>
         )}
 
+        {/* Hike app links */}
+        {category?.id === HIKE_CATEGORY_ID && (
+          <div className="flex gap-2 mt-3">
+            <a
+              href="https://play.google.com/store/apps/details?id=com.yahlli.travelaya&hl=he"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-2 text-center text-xs font-medium rounded-lg border transition-colors hover:opacity-80"
+              style={{ borderColor: color, color }}
+            >
+              Google Play
+            </a>
+            <a
+              href="https://apps.apple.com/il/app/travelaya/id1526944700"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-2 text-center text-xs font-medium rounded-lg border transition-colors hover:opacity-80"
+              style={{ borderColor: color, color }}
+            >
+              App Store
+            </a>
+          </div>
+        )}
+
         {/* Info + contact section */}
         {(poi.openingHours || poi.price || poi.videos.length > 0) && (
           <div className="h-px bg-gray-100 my-3" />
@@ -378,11 +402,11 @@ export function PoiDetailPanel({ poi, category, onClose, tripPoiIds, onAddToTrip
             <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-sm shrink-0">👥</span>
             <span className="text-sm text-gray-700">
               {poi.minPeople && poi.maxPeople
-                ? `${poi.minPeople}-${poi.maxPeople} אנשים`
+                ? `${poi.minPeople}-${poi.maxPeople} משתתפים`
                 : poi.maxPeople
-                  ? `עד ${poi.maxPeople} אנשים`
+                  ? `עד ${poi.maxPeople} משתתפים`
                   : poi.minPeople
-                    ? `מינימום ${poi.minPeople} אנשים`
+                    ? `מינימום ${poi.minPeople} משתתפים`
                     : poi.capacity}
             </span>
           </div>

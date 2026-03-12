@@ -316,6 +316,11 @@ export default function MapApp() {
     setSelectedPoi(null);
   }
 
+  function handleOverlayClose() {
+    localStorage.setItem("click-bateva:hasVisited", "1");
+    setHasVisited(true);
+  }
+
   function handleMapClick() {
     if (selectedPoi) setSelectedPoi(null);
   }
@@ -580,7 +585,7 @@ export default function MapApp() {
           canSeeAgents={canSeeAgents}
           onMapKeyChange={handleMapKeyChange}
         />
-        {showOnboarding && <EmptyMapOverlay />}
+        {showOnboarding && <EmptyMapOverlay onClose={handleOverlayClose} />}
         {poisLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none bg-black/15">
             <div className="bg-white rounded-2xl px-8 py-5 shadow-xl flex flex-col items-center gap-3">

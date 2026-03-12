@@ -173,6 +173,7 @@ export function Sidebar({
         />
       )}
       <div className="px-4 py-3 border-t border-gray-100 space-y-2">
+        {/* Dashboard links */}
         {isLoggedIn && (role === "admin" || role === "content_manager") && (
           <Link
             to="/admin"
@@ -189,21 +190,41 @@ export function Sidebar({
             ניהול הנקודות שלי ←
           </Link>
         )}
+
+        {/* Share + Contact row */}
+        <div className="flex gap-2">
+          <WhatsAppShareButton className="flex-1 justify-center py-1.5 rounded-lg hover:bg-green-50 transition-colors font-medium text-sm" />
+          {onContactClick && (
+            <button
+              onClick={onContactClick}
+              className="flex-1 text-sm text-blue-600 hover:text-blue-800 font-medium py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              צור קשר
+            </button>
+          )}
+        </div>
+
+        {/* Auth buttons */}
         {isLoggedIn ? (
           <div className="flex gap-2">
-            <WhatsAppShareButton className="flex-1 justify-center py-1.5 rounded-lg hover:bg-green-50 transition-colors font-medium text-sm" />
             <button
               onClick={onLogout}
               className="flex-1 text-sm text-red-500 hover:text-red-700 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
             >
               התנתקות
             </button>
+            <button
+              onClick={onChangePasswordClick}
+              className="flex-1 text-xs text-gray-400 hover:text-gray-600 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              שינוי סיסמה
+            </button>
           </div>
         ) : (
           <div className="flex gap-2">
             <button
               onClick={onLoginClick}
-              className="flex-1 text-sm text-green-600 hover:text-green-800 font-medium py-1.5 rounded-lg hover:bg-green-50 transition-colors"
+              className="flex-1 text-sm text-gray-600 hover:text-gray-800 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
             >
               כניסה
             </button>
@@ -215,24 +236,10 @@ export function Sidebar({
             </button>
           </div>
         )}
-        <div className="flex items-center gap-3">
-          {isLoggedIn && (
-            <button
-              onClick={onChangePasswordClick}
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              שינוי סיסמה
-            </button>
-          )}
-          {onContactClick && (
-            <button
-              onClick={onContactClick}
-              className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
-            >
-              צור קשר
-            </button>
-          )}
-          {termsUrl && (
+
+        {/* Terms link */}
+        {termsUrl && (
+          <div className="flex items-center justify-center">
             <a
               href={termsUrl}
               target="_blank"
@@ -241,9 +248,8 @@ export function Sidebar({
             >
               תנאי שימוש
             </a>
-          )}
-          {!isLoggedIn && <WhatsAppShareButton />}
-        </div>
+          </div>
+        )}
       </div>
     </aside>
   );

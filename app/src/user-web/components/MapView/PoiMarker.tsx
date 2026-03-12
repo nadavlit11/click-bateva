@@ -37,6 +37,10 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
     ? "drop-shadow(0 3px 8px rgba(0,0,0,0.45))"
     : "drop-shadow(0 2px 5px rgba(0,0,0,0.3))";
 
+  const selectedRing = selected
+    ? `0 0 0 4px white, 0 0 12px 4px ${markerColor}88`
+    : undefined;
+
   return (
     <AdvancedMarker
       position={poi.location}
@@ -71,6 +75,8 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
               ? `${borderWidth}px solid ${borderColor}`
               : `${borderWidth}px solid transparent`,
             boxSizing: "border-box",
+            boxShadow: selectedRing,
+            animation: selected ? "poi-pulse 1.5s ease-in-out infinite" : undefined,
           }}
         >
           {iconUrl ? (

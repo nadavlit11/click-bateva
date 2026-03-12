@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { httpsCallable } from 'firebase/functions'
-import { updateDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { db, functions } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { getStrength, isPasswordValid, PASSWORD_ERROR, strengthLabel, strengthColor, strengthWidth } from '../../lib/passwordStrength.ts'
@@ -43,18 +43,8 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
   const [password, setPassword] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [termsUrl, setTermsUrl] = useState('')
-  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const isEdit = business !== null
-
-  useEffect(() => {
-    getDoc(doc(db, 'settings', 'terms'))
-      .then(snap => {
-        if (snap.exists()) setTermsUrl(snap.data().businessTermsUrl ?? '')
-      })
-      .catch(err => reportError(err, { source: 'BusinessModal.loadTerms' }))
-  }, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -64,7 +54,6 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
       setEmail(business?.email ?? '')
       setPassword('')
       setError('')
-      setTermsAccepted(false)
     }
   }, [isOpen, business])
 
@@ -213,29 +202,12 @@ export function BusinessModal({ isOpen, onClose, onSaved, business }: Props) {
             </div>
           )}
 
-          {!isEdit && termsUrl && (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={termsAccepted}
-                onChange={e => setTermsAccepted(e.target.checked)}
-                className="accent-green-600 w-4 h-4"
-              />
-              <span className="text-sm text-gray-700">
-                אני מאשר את{" "}
-                <a href={termsUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                  תנאי השימוש
-                </a>
-              </span>
-            </label>
-          )}
-
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
           <div className="flex gap-2 pt-1">
             <button
               type="submit"
-              disabled={saving || (!isEdit && !!termsUrl && !termsAccepted)}
+              disabled={saving}
               className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
             >
               {saving ? (isEdit ? 'שומר...' : 'יוצר...') : (isEdit ? 'שמירה' : 'יצירה')}
