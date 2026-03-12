@@ -20,13 +20,14 @@ interface FormState {
   color: string
   borderColor: string
   markerSize: string
+  iconSize: string
   iconId: string
   order: number
 }
 
 const INITIAL_FORM: FormState = {
   name: '', color: '#16a34a', borderColor: '#000000', markerSize: '',
-  iconId: '', order: 0,
+  iconSize: '', iconId: '', order: 0,
 }
 
 export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Props) {
@@ -41,6 +42,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
         color: category.color,
         borderColor: category.borderColor ?? '#000000',
         markerSize: category.markerSize?.toString() ?? '',
+        iconSize: category.iconSize?.toString() ?? '',
         iconId: category.iconId ?? '',
         order: category.order ?? 0,
       })
@@ -73,11 +75,13 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
       }
 
       const sizeNum = parseInt(form.markerSize, 10)
+      const iconSizeNum = parseInt(form.iconSize, 10)
       const data = {
         name: form.name.trim(),
         color: form.color,
         borderColor: form.borderColor.trim() || null,
         markerSize: form.markerSize && !isNaN(sizeNum) ? sizeNum : null,
+        iconSize: form.iconSize && !isNaN(iconSizeNum) ? iconSizeNum : null,
         iconId,
         iconUrl,
         order: form.order,
@@ -133,17 +137,31 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
 
           <ColorPickerField label="צבע מסגרת" value={form.borderColor} onChange={v => set('borderColor', v)} allowClear={false} />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">גודל סמן</label>
-            <input
-              type="number"
-              value={form.markerSize}
-              onChange={e => set('markerSize', e.target.value)}
-              className="w-32 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-              placeholder="24 (ברירת מחדל)"
-              min="8"
-              max="128"
-            />
+          <div className="flex gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">גודל סמן</label>
+              <input
+                type="number"
+                value={form.markerSize}
+                onChange={e => set('markerSize', e.target.value)}
+                className="w-28 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                placeholder="24 (ברירת מחדל)"
+                min="8"
+                max="128"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">גודל אייקון</label>
+              <input
+                type="number"
+                value={form.iconSize}
+                onChange={e => set('iconSize', e.target.value)}
+                className="w-28 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                placeholder="ברירת מחדל"
+                min="4"
+                max="64"
+              />
+            </div>
           </div>
 
           <div>

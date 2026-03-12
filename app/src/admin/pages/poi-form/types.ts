@@ -40,6 +40,7 @@ export interface FormState {
   color: string
   borderColor: string
   markerSize: string
+  iconSize: string
   flicker: boolean
   isHomeMap: boolean
 }
@@ -76,6 +77,7 @@ export const INITIAL_FORM: FormState = {
   color: '',
   borderColor: '',
   markerSize: '',
+  iconSize: '',
   flicker: false,
   isHomeMap: false,
 }

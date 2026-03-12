@@ -112,6 +112,7 @@ export function PoiEditPage() {
                   color: d.color ?? '#4caf50',
                   borderColor: d.borderColor ?? null,
                   markerSize: d.markerSize ?? null,
+                  iconSize: d.iconSize ?? null,
                   iconUrl: d.iconUrl ?? null,
                   order: d.order ?? 0,
                 })
@@ -209,6 +210,7 @@ export function PoiEditPage() {
       color: null,
       borderColor: null,
       markerSize: null,
+      iconSize: null,
       flicker: null,
     }
   }, [poi, form])

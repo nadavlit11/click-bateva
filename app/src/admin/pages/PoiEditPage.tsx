@@ -122,6 +122,7 @@ export function PoiEditPage() {
         color: poi.color ?? '',
         borderColor: poi.borderColor ?? '',
         markerSize: poi.markerSize?.toString() ?? '',
+        iconSize: poi.iconSize?.toString() ?? '',
         flicker: poi.flicker ?? false,
         isHomeMap: poi.isHomeMap ?? false,
       })
@@ -285,6 +286,10 @@ export function PoiEditPage() {
         markerSize: (() => {
           const n = parseInt(form.markerSize, 10)
           return form.markerSize && !isNaN(n) ? n : null
+        })(),
+        iconSize: (() => {
+          const n = parseInt(form.iconSize, 10)
+          return form.iconSize && !isNaN(n) ? n : null
         })(),
         flicker: form.flicker ? true : null,
         isHomeMap: form.isHomeMap ? true : null,

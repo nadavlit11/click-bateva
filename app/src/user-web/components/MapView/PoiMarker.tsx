@@ -15,11 +15,12 @@ interface PoiMarkerProps {
   tripNumber?: number;
   isDimmed?: boolean;
   markerSize?: number;
+  iconSize?: number;
 }
 
 const AMBER = "#F59E0B";
 
-export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef, tripNumber, isDimmed, markerSize }: PoiMarkerProps) {
+export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef, tripNumber, isDimmed, markerSize, iconSize }: PoiMarkerProps) {
   const [hovered, setHovered] = useState(false);
   const ref = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement | null) => setMarkerRef(marker, poi.id),
@@ -28,7 +29,7 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
 
   // pinSize/markerSize = circle diameter; icon = 50%, border = 10%
   const circleSize = markerSize ?? pinSize;
-  const baseSize = Math.round(circleSize * 0.5);
+  const baseSize = iconSize ?? Math.round(circleSize * 0.5);
   const borderWidth = Math.round(circleSize * 0.1);
   const markerColor = tripNumber ? AMBER : color;
   const dropShadow = selected
