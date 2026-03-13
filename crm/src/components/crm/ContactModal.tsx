@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import {
   collection, addDoc, updateDoc, doc, serverTimestamp,
 } from 'firebase/firestore'
-import { db } from '../../../lib/firebase.ts'
-import { reportError } from '../../../lib/errorReporting.ts'
-import { useAuth } from '../../../hooks/useAuth'
+import { db } from '../../lib/firebase.ts'
+import { reportError } from '../../lib/errorReporting.ts'
+import { useAuth } from '../../hooks/useAuth'
 import type { CrmContact } from '../../types/index.ts'
 
 interface Props {

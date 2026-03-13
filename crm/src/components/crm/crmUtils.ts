@@ -1,6 +1,6 @@
 import { Timestamp, doc, updateDoc, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore'
-import { db } from '../../../lib/firebase.ts'
-import { reportError } from '../../../lib/errorReporting.ts'
+import { db } from '../../lib/firebase.ts'
+import { reportError } from '../../lib/errorReporting.ts'
 import type { CrmTask, TaskPriority } from '../../types/index.ts'
 
 export const PRIORITY_LABELS: Record<TaskPriority, string> = {

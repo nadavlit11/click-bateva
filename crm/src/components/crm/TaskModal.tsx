@@ -3,9 +3,9 @@ import {
   collection, addDoc, updateDoc, doc, serverTimestamp,
   onSnapshot, query, where, Timestamp,
 } from 'firebase/firestore'
-import { db } from '../../../lib/firebase.ts'
-import { reportError } from '../../../lib/errorReporting.ts'
-import { useAuth } from '../../../hooks/useAuth'
+import { db } from '../../lib/firebase.ts'
+import { reportError } from '../../lib/errorReporting.ts'
+import { useAuth } from '../../hooks/useAuth'
 import type {
   CrmTask, CrmContact, TaskPriority,
 } from '../../types/index.ts'

@@ -3,13 +3,13 @@ import {
   collection, onSnapshot, doc, deleteDoc,
   orderBy, query, Timestamp,
 } from 'firebase/firestore'
-import { db } from '../../../lib/firebase.ts'
-import { reportError } from '../../../lib/errorReporting.ts'
-import { useAuth } from '../../../hooks/useAuth'
-import { TaskModal } from '../../components/crm/TaskModal.tsx'
-import { TaskCard } from '../../components/crm/TaskCard.tsx'
-import { toggleTaskFollow, toggleTaskComplete } from '../../components/crm/crmUtils.ts'
-import type { CrmTask, TaskPriority } from '../../types/index.ts'
+import { db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
+import { useAuth } from '../hooks/useAuth'
+import { TaskModal } from '../components/crm/TaskModal.tsx'
+import { TaskCard } from '../components/crm/TaskCard.tsx'
+import { toggleTaskFollow, toggleTaskComplete } from '../components/crm/crmUtils.ts'
+import type { CrmTask, TaskPriority } from '../types/index.ts'
 
 const PRIORITY_ORDER: Record<TaskPriority, number> = {
   high: 0,
@@ -159,13 +159,9 @@ export function TasksPage() {
   return (
     <div className="p-4 md:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <h1 className="text-xl font-bold text-gray-900">
-          כל המשימות
-        </h1>
+        <h1 className="text-xl font-bold text-gray-900">כל המשימות</h1>
         <button
-          onClick={() => {
-            setEditing(null); setModalOpen(true)
-          }}
+          onClick={() => { setEditing(null); setModalOpen(true) }}
           className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
         >
           + משימה חדשה
@@ -218,9 +214,7 @@ export function TasksPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-10 text-gray-400">
-          טוען...
-        </div>
+        <div className="text-center py-10 text-gray-400">טוען...</div>
       ) : tab === 'active' ? (
         activeCount === 0 ? (
           <div className="text-center py-10 text-gray-400">
@@ -243,9 +237,7 @@ export function TasksPage() {
                       key={t.id}
                       task={t}
                       currentUid={user?.uid ?? ''}
-                      onEdit={task => {
-                        setEditing(task); setModalOpen(true)
-                      }}
+                      onEdit={task => { setEditing(task); setModalOpen(true) }}
                       onToggleFollow={toggleFollow}
                       onToggleComplete={handleToggleComplete}
                       onDelete={role === 'admin' ? task => setConfirmDelete(task) : undefined}
@@ -268,9 +260,7 @@ export function TasksPage() {
                 key={t.id}
                 task={t}
                 currentUid={user?.uid ?? ''}
-                onEdit={task => {
-                  setEditing(task); setModalOpen(true)
-                }}
+                onEdit={task => { setEditing(task); setModalOpen(true) }}
                 onToggleFollow={toggleFollow}
                 onToggleComplete={handleToggleComplete}
                 onDelete={role === 'admin' ? task => setConfirmDelete(task) : undefined}
@@ -282,13 +272,9 @@ export function TasksPage() {
 
       <TaskModal
         isOpen={modalOpen}
-        onClose={() => {
-          setModalOpen(false); setEditing(null)
-        }}
+        onClose={() => { setModalOpen(false); setEditing(null) }}
         task={editing}
-        onSaved={() => {
-          setModalOpen(false); setEditing(null)
-        }}
+        onSaved={() => { setModalOpen(false); setEditing(null) }}
       />
 
       {confirmDelete && (
@@ -300,9 +286,7 @@ export function TasksPage() {
             className="bg-white rounded-2xl p-6 w-full max-w-sm"
             onClick={e => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold text-gray-900 mb-2">
-              מחיקת משימה
-            </h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">מחיקת משימה</h2>
             <p className="text-sm text-gray-600 mb-4">
               {`למחוק את "${confirmDelete.title}"?`}
             </p>

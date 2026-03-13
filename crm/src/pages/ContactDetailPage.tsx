@@ -5,15 +5,15 @@ import {
   serverTimestamp, collection, query, where, orderBy,
   writeBatch,
 } from 'firebase/firestore'
-import { db } from '../../../lib/firebase.ts'
-import { reportError } from '../../../lib/errorReporting.ts'
-import { useAuth } from '../../../hooks/useAuth'
-import { ActivityTimeline } from '../../components/crm/ActivityTimeline.tsx'
-import { TaskModal } from '../../components/crm/TaskModal.tsx'
+import { db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
+import { useAuth } from '../hooks/useAuth'
+import { ActivityTimeline } from '../components/crm/ActivityTimeline.tsx'
+import { TaskModal } from '../components/crm/TaskModal.tsx'
 import {
   PRIORITY_LABELS, PRIORITY_COLORS, formatDate,
-} from '../../components/crm/crmUtils.ts'
-import type { CrmContact, CrmTask } from '../../types/index.ts'
+} from '../components/crm/crmUtils.ts'
+import type { CrmContact, CrmTask } from '../types/index.ts'
 
 export function ContactDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -128,7 +128,7 @@ export function ContactDetailPage() {
         await batch.commit()
       }
       await deleteDoc(doc(db, 'crm_contacts', id))
-      navigate('/admin/crm/contacts')
+      navigate('/contacts')
     } catch (err: unknown) {
       reportError(err, {
         source: 'ContactDetailPage.delete',
@@ -151,7 +151,7 @@ export function ContactDetailPage() {
       <div className="p-6 text-center">
         <p className="text-gray-500 mb-4">איש הקשר לא נמצא</p>
         <Link
-          to="/admin/crm/contacts"
+          to="/contacts"
           className="text-blue-600 hover:underline text-sm"
         >
           חזרה לרשימה
@@ -164,7 +164,7 @@ export function ContactDetailPage() {
     <div className="p-4 md:p-6">
       <div className="flex items-center gap-3 mb-6">
         <Link
-          to="/admin/crm/contacts"
+          to="/contacts"
           className="text-sm text-blue-600 hover:underline"
         >
           אנשי קשר
@@ -232,55 +232,39 @@ export function ContactDetailPage() {
             {editing ? (
               <>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
-                    שם
-                  </label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">שם</label>
                   <input
                     type="text"
                     value={form.name}
-                    onChange={e => setForm(p => ({
-                      ...p, name: e.target.value,
-                    }))}
+                    onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
                     className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
-                    עסק
-                  </label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">עסק</label>
                   <input
                     type="text"
                     value={form.businessName}
-                    onChange={e => setForm(p => ({
-                      ...p, businessName: e.target.value,
-                    }))}
+                    onChange={e => setForm(p => ({ ...p, businessName: e.target.value }))}
                     className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
-                    טלפון
-                  </label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">טלפון</label>
                   <input
                     type="tel"
                     value={form.phone}
-                    onChange={e => setForm(p => ({
-                      ...p, phone: e.target.value,
-                    }))}
+                    onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
                     className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
                     dir="ltr"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
-                    אימייל
-                  </label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">אימייל</label>
                   <input
                     type="email"
                     value={form.email}
-                    onChange={e => setForm(p => ({
-                      ...p, email: e.target.value,
-                    }))}
+                    onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
                     className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
                     dir="ltr"
                   />
@@ -289,10 +273,7 @@ export function ContactDetailPage() {
             ) : (
               <>
                 <Field label="שם" value={contact.name} />
-                <Field
-                  label="עסק"
-                  value={contact.businessName || '—'}
-                />
+                <Field label="עסק" value={contact.businessName || '—'} />
                 <Field
                   label="טלפון"
                   value={contact.phone || '—'}
@@ -334,9 +315,7 @@ export function ContactDetailPage() {
                       style={{ backgroundColor: t.color || '#6b7280' }}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-800 truncate">
-                        {t.title}
-                      </p>
+                      <p className="text-sm font-medium text-gray-800 truncate">{t.title}</p>
                       <p className="text-xs text-gray-400">
                         {formatDate(t.date)}
                         {' — '}
@@ -378,9 +357,7 @@ export function ContactDetailPage() {
             className="bg-white rounded-2xl p-6 w-full max-w-sm"
             onClick={e => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold text-gray-900 mb-2">
-              מחיקת איש קשר
-            </h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">מחיקת איש קשר</h2>
             <p className="text-sm text-gray-600 mb-4">
               {`למחוק את "${contact.name}"? כל יומן הפעילות ימחק גם.`}
             </p>
