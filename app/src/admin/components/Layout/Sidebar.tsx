@@ -86,28 +86,21 @@ export function Sidebar() {
 
         {showCrm && (
           <div>
-            <div className="flex items-center">
-              <NavLink
-                to="/admin/crm/my-tasks"
-                className={
-                  `flex-1 block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isCrmRoute
-                      ? 'bg-green-50 text-green-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`
-                }
-              >
-                CRM
-              </NavLink>
-              <button
-                onClick={() => setCrmOpen(!crmOpen)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors"
-              >
-                <span className={`inline-block transition-transform ${crmOpen ? 'rotate-90' : ''}`}>
-                  ◂
-                </span>
-              </button>
-            </div>
+            <button
+              onClick={() => setCrmOpen(!crmOpen)}
+              className={
+                `w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isCrmRoute
+                    ? 'bg-green-50 text-green-700'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`
+              }
+            >
+              CRM
+              <span className={`inline-block transition-transform ${crmOpen ? 'rotate-90' : ''}`}>
+                ◂
+              </span>
+            </button>
 
             {crmOpen && (
               <div className="me-3 space-y-0.5 mt-0.5">
