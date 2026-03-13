@@ -6,6 +6,7 @@ import {
 import { db } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { useAuth } from '../../hooks/useAuth'
+import { TaskComments } from './TaskComments'
 import type {
   CrmTask, CrmContact, TaskPriority,
 } from '../../types/index.ts'
@@ -431,6 +432,13 @@ export function TaskModal({
             </button>
           </div>
         </form>
+
+        {task && (
+          <div className="border-t border-gray-200 mt-5 pt-5">
+            <h3 className="text-sm font-bold text-gray-700 mb-3">שיחה</h3>
+            <TaskComments taskId={task.id} />
+          </div>
+        )}
       </div>
     </div>
   )
