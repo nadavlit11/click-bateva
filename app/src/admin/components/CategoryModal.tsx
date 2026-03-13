@@ -19,6 +19,7 @@ interface FormState {
   name: string
   color: string
   borderColor: string
+  hideBorder: boolean
   markerSize: string
   iconSize: string
   iconId: string
@@ -26,8 +27,8 @@ interface FormState {
 }
 
 const INITIAL_FORM: FormState = {
-  name: '', color: '#16a34a', borderColor: '#000000', markerSize: '',
-  iconSize: '', iconId: '', order: 0,
+  name: '', color: '#16a34a', borderColor: '#000000', hideBorder: false,
+  markerSize: '', iconSize: '', iconId: '', order: 0,
 }
 
 export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Props) {
@@ -41,6 +42,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
         name: category.name,
         color: category.color,
         borderColor: category.borderColor ?? '#000000',
+        hideBorder: category.hideBorder ?? false,
         markerSize: category.markerSize?.toString() ?? '',
         iconSize: category.iconSize?.toString() ?? '',
         iconId: category.iconId ?? '',
@@ -83,6 +85,7 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
         name: form.name.trim(),
         color: form.color,
         borderColor: form.borderColor.trim() || null,
+        hideBorder: form.hideBorder ? true : null,
         markerSize: form.markerSize && !isNaN(sizeNum) ? sizeNum : null,
         iconSize: form.iconSize && !isNaN(iconSizeNum) ? iconSizeNum : null,
         iconId,
@@ -139,6 +142,16 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
           <ColorPickerField label="צבע" value={form.color} onChange={v => set('color', v)} allowClear={false} />
 
           <ColorPickerField label="צבע מסגרת" value={form.borderColor} onChange={v => set('borderColor', v)} allowClear={false} />
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.hideBorder}
+              onChange={e => setForm(prev => ({ ...prev, hideBorder: e.target.checked }))}
+              className="accent-green-600 w-4 h-4"
+            />
+            <span className="text-sm text-gray-700">הסתר מסגרת</span>
+          </label>
 
           <div className="flex gap-4">
             <div>

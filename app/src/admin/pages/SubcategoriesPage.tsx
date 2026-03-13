@@ -91,9 +91,10 @@ export function SubcategoriesPage() {
               <tbody>
                 {subs.map(sub => {
                   const bgColor = sub.color || cat.color
+                  const iconFromCategory = !sub.iconUrl
+                  const isHideBorder = sub.hideBorder ?? (iconFromCategory ? cat.hideBorder : null) ?? false
                   const border = sub.borderColor ?? cat.borderColor ?? '#000000'
                   const icon = sub.iconUrl || cat.iconUrl
-                  const iconFromCategory = !sub.iconUrl
                   const pct = sub.iconSize ?? (iconFromCategory ? cat.iconSize : null) ?? 50
                   const previewIconSize = Math.round(28 * (pct / 100))
                   return (
@@ -105,7 +106,7 @@ export function SubcategoriesPage() {
                             height: 28,
                             borderRadius: '50%',
                             backgroundColor: bgColor,
-                            border: `2px solid ${border}`,
+                            border: isHideBorder ? 'none' : `2px solid ${border}`,
                             boxSizing: 'border-box',
                             display: 'flex',
                             alignItems: 'center',

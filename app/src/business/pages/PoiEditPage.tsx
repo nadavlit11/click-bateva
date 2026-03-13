@@ -212,6 +212,7 @@ export function PoiEditPage() {
       markerSize: null,
       iconSize: null,
       flicker: null,
+      hideBorder: false,
     }
   }, [poi, form])
 

@@ -46,6 +46,7 @@ export interface Poi {
   markerSize: number | null
   iconSize: number | null
   flicker: boolean | null
+  hideBorder: boolean | null
   isHomeMap: boolean | null
   createdAt: unknown
   updatedAt: unknown
@@ -58,6 +59,7 @@ export interface Category {
   borderColor: string | null
   markerSize: number | null
   iconSize: number | null
+  hideBorder: boolean | null
   iconId: string | null
   iconUrl: string | null
   order: number
@@ -75,6 +77,7 @@ export interface Subcategory {
   borderColor: string | null
   markerSize: number | null
   iconSize: number | null
+  hideBorder: boolean | null
   iconId: string | null
   iconUrl: string | null
   createdAt: unknown

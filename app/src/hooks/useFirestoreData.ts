@@ -43,6 +43,7 @@ function snapshotToPois(snap: QuerySnapshot<DocumentData>, mapKey: MapKey): Poi[
       markerSize: d.markerSize ?? null,
       iconSize: d.iconSize ?? null,
       flicker: d.flicker ?? null,
+      hideBorder: d.hideBorder ?? false,
       isHomeMap: d.isHomeMap ?? false,
     };
   });

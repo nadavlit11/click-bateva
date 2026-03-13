@@ -26,6 +26,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
   const [borderColor, setBorderColor] = useState('')
   const [markerSize, setMarkerSize] = useState('')
   const [iconSize, setIconSize] = useState('')
+  const [hideBorder, setHideBorder] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -38,6 +39,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
     setBorderColor(subcategory?.borderColor ?? '')
     setMarkerSize(subcategory?.markerSize?.toString() ?? '')
     setIconSize(subcategory?.iconSize?.toString() ?? '')
+    setHideBorder(subcategory?.hideBorder ?? false)
     setError('')
   }, [subcategory, isOpen])
 
@@ -73,6 +75,7 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
         borderColor: borderColor.trim() || null,
         markerSize: markerSize && !isNaN(sizeNum) ? sizeNum : null,
         iconSize: iconSize && !isNaN(iconSizeNum) ? iconSizeNum : null,
+        hideBorder: hideBorder ? true : null,
         iconId: resolvedIconId,
         iconUrl: resolvedIconUrl,
         updatedAt: serverTimestamp(),
@@ -161,6 +164,16 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
 
           <ColorPickerField label="צבע" value={color} onChange={setColor} />
           <ColorPickerField label="צבע מסגרת" value={borderColor} onChange={setBorderColor} />
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={hideBorder}
+              onChange={e => setHideBorder(e.target.checked)}
+              className="accent-green-600 w-4 h-4"
+            />
+            <span className="text-sm text-gray-700">הסתר מסגרת</span>
+          </label>
 
           <div className="flex gap-4">
             <div>

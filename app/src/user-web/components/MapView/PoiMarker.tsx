@@ -16,11 +16,12 @@ interface PoiMarkerProps {
   isDimmed?: boolean;
   markerSize?: number;
   iconSize?: number;
+  hideBorder?: boolean;
 }
 
 const AMBER = "#F59E0B";
 
-export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef, tripNumber, isDimmed, markerSize, iconSize }: PoiMarkerProps) {
+export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabel, pinSize, onClick, setMarkerRef, tripNumber, isDimmed, markerSize, iconSize, hideBorder }: PoiMarkerProps) {
   const [hovered, setHovered] = useState(false);
   const ref = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement | null) => setMarkerRef(marker, poi.id),
@@ -29,7 +30,7 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
 
   // pinSize/markerSize = circle diameter; iconSize = percentage of interior (default 50%)
   const circleSize = markerSize ?? pinSize;
-  const borderWidth = Math.round(circleSize * 0.1);
+  const borderWidth = hideBorder ? 0 : Math.round(circleSize * 0.1);
   const innerSize = circleSize - 2 * borderWidth;
   const baseSize = iconSize != null
     ? Math.round(innerSize * (iconSize / 100))
@@ -75,9 +76,11 @@ export function PoiMarker({ poi, color, borderColor, iconUrl, selected, showLabe
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            border: borderColor
-              ? `${borderWidth}px solid ${borderColor}`
-              : `${borderWidth}px solid transparent`,
+            border: hideBorder
+              ? "none"
+              : borderColor
+                ? `${borderWidth}px solid ${borderColor}`
+                : `${borderWidth}px solid transparent`,
             boxSizing: "border-box",
             boxShadow: selectedRing,
             animation: selected ? "poi-pulse 1.5s ease-in-out infinite" : undefined,

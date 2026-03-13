@@ -25,6 +25,15 @@ export function DisplaySettingsSection({ form, set, icons }: Props) {
         </label>
         <ColorPickerField label="צבע" value={form.color} onChange={v => set('color', v)} />
         <ColorPickerField label="צבע מסגרת" value={form.borderColor} onChange={v => set('borderColor', v)} />
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.hideBorder}
+            onChange={e => set('hideBorder', e.target.checked)}
+            className="accent-green-600 w-4 h-4"
+          />
+          <span className="text-sm text-gray-700">הסתר מסגרת</span>
+        </label>
         <div className="flex items-center gap-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">גודל סמן</label>
