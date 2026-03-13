@@ -37,10 +37,39 @@ const MapSettingsPage = lazy(() =>
   }))
 );
 
+// CRM pages
+const ContactsPage = lazy(() =>
+  import("./pages/crm/ContactsPage").then((m) => ({
+    default: m.ContactsPage,
+  }))
+);
+const ContactDetailPage = lazy(() =>
+  import("./pages/crm/ContactDetailPage").then((m) => ({
+    default: m.ContactDetailPage,
+  }))
+);
+const TasksPage = lazy(() =>
+  import("./pages/crm/TasksPage").then((m) => ({ default: m.TasksPage }))
+);
+const MyTasksPage = lazy(() =>
+  import("./pages/crm/MyTasksPage").then((m) => ({
+    default: m.MyTasksPage,
+  }))
+);
+
 function AdminOnlyRoute() {
   const { role } = useAuth();
   if (role === null) return null;
   if (role !== "admin") return <Navigate to="/admin" replace />;
+  return <Outlet />;
+}
+
+function CrmOnlyRoute() {
+  const { role } = useAuth();
+  if (role === null) return null;
+  if (role !== "admin" && role !== "crm_user") {
+    return <Navigate to="/admin" replace />;
+  }
   return <Outlet />;
 }
 
@@ -65,6 +94,12 @@ export default function AdminSection() {
             <Route element={<AdminOnlyRoute />}>
               <Route path="users" element={<UsersPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
+            </Route>
+            <Route element={<CrmOnlyRoute />}>
+              <Route path="crm/contacts" element={<ContactsPage />} />
+              <Route path="crm/contacts/:id" element={<ContactDetailPage />} />
+              <Route path="crm/tasks" element={<TasksPage />} />
+              <Route path="crm/my-tasks" element={<MyTasksPage />} />
             </Route>
           </Route>
         </Route>

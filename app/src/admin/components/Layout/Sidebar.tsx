@@ -6,20 +6,37 @@ import { reportError } from '../../../lib/errorReporting.ts'
 import { useAuth } from '../../../hooks/useAuth'
 import { ChangePasswordModal } from '../../../components/ChangePasswordModal'
 
-const NAV = [
-  { path: '/admin',              label: 'לוח בקרה',      end: true,  adminOnly: false },
-  { path: '/admin/pois',         label: 'נקודות עניין',  end: false, adminOnly: false },
-  { path: '/admin/categories',   label: 'קטגוריות',      end: false, adminOnly: false },
-  { path: '/admin/subcategories', label: 'תת-קטגוריות',  end: false, adminOnly: false },
-  { path: '/admin/icons',        label: 'אייקונים',      end: false, adminOnly: false },
-  { path: '/admin/users',        label: 'משתמשים',       end: false, adminOnly: true },
-  { path: '/admin/analytics',    label: 'אנליטיקס',      end: true,  adminOnly: true },
+interface NavItem {
+  path: string
+  label: string
+  end: boolean
+  roles?: string[]  // undefined = visible to all admin-section roles
+}
+
+const CONTENT_ROLES = ['admin', 'content_manager']
+const CRM_ROLES = ['admin', 'crm_user']
+
+const NAV: NavItem[] = [
+  { path: '/admin',               label: 'לוח בקרה',      end: true,  roles: CONTENT_ROLES },
+  { path: '/admin/pois',          label: 'נקודות עניין',  end: false, roles: CONTENT_ROLES },
+  { path: '/admin/categories',    label: 'קטגוריות',      end: false, roles: CONTENT_ROLES },
+  { path: '/admin/subcategories', label: 'תת-קטגוריות',   end: false, roles: CONTENT_ROLES },
+  { path: '/admin/icons',         label: 'אייקונים',      end: false, roles: CONTENT_ROLES },
+  { path: '/admin/users',         label: 'משתמשים',       end: false, roles: ['admin'] },
+  { path: '/admin/analytics',     label: 'אנליטיקס',      end: true,  roles: ['admin'] },
+  { path: '/admin/crm/my-tasks',  label: 'המשימות שלי',   end: false, roles: CRM_ROLES },
+  { path: '/admin/crm/contacts',  label: 'אנשי קשר',      end: false, roles: CRM_ROLES },
+  { path: '/admin/crm/tasks',     label: 'כל המשימות',    end: false, roles: CRM_ROLES },
 ]
 
 export function Sidebar() {
   const { role, user } = useAuth()
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const email = user?.email ?? null
+
+  const visibleNav = NAV.filter(item =>
+    !item.roles || (role && item.roles.includes(role))
+  )
 
   return (
     <aside className="w-64 bg-white border-s border-gray-200 flex flex-col h-full shrink-0">
@@ -32,7 +49,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5">
-        {NAV.filter(item => !item.adminOnly || role === 'admin').map(item => (
+        {visibleNav.map(item => (
           <NavLink
             key={item.path}
             to={item.path}

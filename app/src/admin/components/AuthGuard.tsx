@@ -12,7 +12,7 @@ export function AuthGuard() {
     )
   }
   if (!user) return <Navigate to="/" replace />
-  if (role !== 'admin' && role !== 'content_manager') {
+  if (role !== 'admin' && role !== 'content_manager' && role !== 'crm_user') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-red-600 text-sm">אין לך הרשאה לגשת ללוח הניהול.</p>

@@ -1266,3 +1266,463 @@ describe("trips collection", () => {
     });
   });
 });
+
+// ── CRM contacts collection ──────────────────────────────────────────────────
+
+describe("crm_contacts collection", () => {
+  const mkContactData = (uid: string, email: string) => ({
+    name: "Test Contact",
+    businessName: "Test Biz",
+    phone: "050-1234567",
+    email: "test@example.com",
+    createdBy: uid,
+    createdByEmail: email,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  it("allows crm_user to create a contact", async () => {
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertSucceeds(
+      addDoc(
+        collection(db, "crm_contacts"),
+        mkContactData("crm-uid", "crm@example.com")
+      )
+    );
+  });
+
+  it("allows admin to create a contact", async () => {
+    const admin = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    const db = admin.firestore();
+    await assertSucceeds(
+      addDoc(
+        collection(db, "crm_contacts"),
+        mkContactData("admin-uid", "admin@example.com")
+      )
+    );
+  });
+
+  it("denies create with mismatched createdBy", async () => {
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertFails(
+      addDoc(
+        collection(db, "crm_contacts"),
+        mkContactData("other-uid", "other@example.com")
+      )
+    );
+  });
+
+  it("denies create with extra fields", async () => {
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertFails(
+      addDoc(collection(db, "crm_contacts"), {
+        ...mkContactData("crm-uid", "crm@example.com"),
+        extraField: "hack",
+      })
+    );
+  });
+
+  it("denies content_manager from creating a contact", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertFails(
+      addDoc(
+        collection(db, "crm_contacts"),
+        mkContactData("cm-uid", "cm@example.com")
+      )
+    );
+  });
+
+  it("denies unauthenticated from reading contacts", async () => {
+    const unauthed = env.unauthenticatedContext();
+    const db = unauthed.firestore();
+    await assertFails(
+      getDoc(doc(db, "crm_contacts", "c1"))
+    );
+  });
+
+  it("allows crm_user to read a contact", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "crm_contacts", "c1"),
+      mkContactData("admin-uid", "admin@example.com")
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertSucceeds(getDoc(doc(db, "crm_contacts", "c1")));
+  });
+
+  it("allows crm_user to update allowed fields", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "crm_contacts", "c1"),
+      mkContactData("admin-uid", "admin@example.com")
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertSucceeds(
+      updateDoc(doc(db, "crm_contacts", "c1"), {
+        name: "Updated",
+        updatedAt: serverTimestamp(),
+      })
+    );
+  });
+
+  it("denies crm_user from updating disallowed fields", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "crm_contacts", "c1"),
+      mkContactData("admin-uid", "admin@example.com")
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertFails(
+      updateDoc(doc(db, "crm_contacts", "c1"), {
+        createdBy: "crm-uid",
+      })
+    );
+  });
+
+  it("denies crm_user from deleting a contact", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "crm_contacts", "c1"),
+      mkContactData("admin-uid", "admin@example.com")
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertFails(deleteDoc(doc(db, "crm_contacts", "c1")));
+  });
+
+  it("allows admin to delete a contact", async () => {
+    const admin = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    const db = admin.firestore();
+    await setDoc(
+      doc(db, "crm_contacts", "c1"),
+      mkContactData("admin-uid", "admin@example.com")
+    );
+    await assertSucceeds(deleteDoc(doc(db, "crm_contacts", "c1")));
+  });
+});
+
+// ── CRM contacts activity_log subcollection ──────────────────────────────────
+
+describe("crm_contacts activity_log subcollection", () => {
+  const mkLogEntry = (uid: string, email: string) => ({
+    text: "Called, interested",
+    createdBy: uid,
+    createdByEmail: email,
+    createdAt: serverTimestamp(),
+  });
+
+  it("allows crm_user to add an activity log entry", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "crm_contacts", "c1"),
+      { name: "Test" }
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertSucceeds(
+      addDoc(
+        collection(db, "crm_contacts", "c1", "activity_log"),
+        mkLogEntry("crm-uid", "crm@example.com")
+      )
+    );
+  });
+
+  it("denies activity log create with mismatched createdBy", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "crm_contacts", "c1"),
+      { name: "Test" }
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertFails(
+      addDoc(
+        collection(db, "crm_contacts", "c1", "activity_log"),
+        mkLogEntry("other-uid", "other@example.com")
+      )
+    );
+  });
+
+  it("allows crm_user to read activity log", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    const adminDb = adminCtx.firestore();
+    await setDoc(doc(adminDb, "crm_contacts", "c1"), { name: "T" });
+    await setDoc(
+      doc(adminDb, "crm_contacts", "c1", "activity_log", "l1"),
+      mkLogEntry("admin-uid", "admin@example.com")
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertSucceeds(
+      getDoc(doc(db, "crm_contacts", "c1", "activity_log", "l1"))
+    );
+  });
+
+  it("denies crm_user from deleting activity log", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    const adminDb = adminCtx.firestore();
+    await setDoc(doc(adminDb, "crm_contacts", "c1"), { name: "T" });
+    await setDoc(
+      doc(adminDb, "crm_contacts", "c1", "activity_log", "l1"),
+      mkLogEntry("admin-uid", "admin@example.com")
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertFails(
+      deleteDoc(
+        doc(db, "crm_contacts", "c1", "activity_log", "l1")
+      )
+    );
+  });
+
+  it("denies content_manager from adding activity log", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "crm_contacts", "c1"),
+      { name: "T" }
+    );
+
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertFails(
+      addDoc(
+        collection(db, "crm_contacts", "c1", "activity_log"),
+        mkLogEntry("cm-uid", "cm@example.com")
+      )
+    );
+  });
+});
+
+// ── CRM tasks collection ─────────────────────────────────────────────────────
+
+describe("crm_tasks collection", () => {
+  const mkTaskData = (uid: string, email: string) => ({
+    contactId: "c1",
+    contactName: "Test Contact",
+    title: "Call back",
+    description: "Follow up",
+    date: new Date(),
+    color: "#FF0000",
+    priority: "high",
+    assigneeUid: uid,
+    assigneeEmail: email,
+    followers: [],
+    createdBy: uid,
+    createdByEmail: email,
+    completed: false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  it("allows crm_user to create a task", async () => {
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertSucceeds(
+      addDoc(
+        collection(db, "crm_tasks"),
+        mkTaskData("crm-uid", "crm@example.com")
+      )
+    );
+  });
+
+  it("allows admin to create a task", async () => {
+    const admin = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    const db = admin.firestore();
+    await assertSucceeds(
+      addDoc(
+        collection(db, "crm_tasks"),
+        mkTaskData("admin-uid", "admin@example.com")
+      )
+    );
+  });
+
+  it("denies create with mismatched createdBy", async () => {
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertFails(
+      addDoc(
+        collection(db, "crm_tasks"),
+        mkTaskData("other-uid", "other@example.com")
+      )
+    );
+  });
+
+  it("allows crm_user to update allowed fields", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "crm_tasks", "t1"),
+      mkTaskData("admin-uid", "admin@example.com")
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertSucceeds(
+      updateDoc(doc(db, "crm_tasks", "t1"), {
+        assigneeUid: "other-uid",
+        assigneeEmail: "other@example.com",
+      })
+    );
+  });
+
+  it("denies crm_user from updating disallowed fields", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "crm_tasks", "t1"),
+      mkTaskData("admin-uid", "admin@example.com")
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertFails(
+      updateDoc(doc(db, "crm_tasks", "t1"), {
+        createdBy: "crm-uid",
+      })
+    );
+  });
+
+  it("denies crm_user from deleting a task", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "crm_tasks", "t1"),
+      mkTaskData("admin-uid", "admin@example.com")
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertFails(deleteDoc(doc(db, "crm_tasks", "t1")));
+  });
+
+  it("allows admin to delete a task", async () => {
+    const admin = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    const db = admin.firestore();
+    await setDoc(
+      doc(db, "crm_tasks", "t1"),
+      mkTaskData("admin-uid", "admin@example.com")
+    );
+    await assertSucceeds(deleteDoc(doc(db, "crm_tasks", "t1")));
+  });
+
+  it("denies content_manager from accessing tasks", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertFails(
+      addDoc(
+        collection(db, "crm_tasks"),
+        mkTaskData("cm-uid", "cm@example.com")
+      )
+    );
+  });
+
+  it("denies unauthenticated from reading tasks", async () => {
+    const unauthed = env.unauthenticatedContext();
+    const db = unauthed.firestore();
+    await assertFails(getDoc(doc(db, "crm_tasks", "t1")));
+  });
+});
+
+// ── CRM user can read users collection (for assignee picker) ────────────────
+
+describe("crm_user reading users collection", () => {
+  it("allows crm_user to read any user doc", async () => {
+    const adminCtx = env.authenticatedContext("admin-uid", {
+      role: "admin",
+    });
+    await setDoc(
+      doc(adminCtx.firestore(), "users", "other-uid"),
+      { email: "other@example.com", role: "crm_user" }
+    );
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertSucceeds(
+      getDoc(doc(db, "users", "other-uid"))
+    );
+  });
+});
