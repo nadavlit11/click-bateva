@@ -5,6 +5,7 @@ export interface Category {
   borderColor: string | null;  // hex — ring color around marker icon
   markerSize: number | null;   // default marker size for this category
   iconSize: number | null;     // icon size inside marker (px)
+  hideBorder?: boolean;        // hide marker border ring
   iconUrl: string | null;
   order: number;
   locationless?: boolean;
@@ -19,6 +20,7 @@ export interface Subcategory {
   borderColor: string | null;  // override category borderColor
   markerSize: number | null;   // override category markerSize
   iconSize: number | null;     // override category iconSize
+  hideBorder?: boolean;        // override category hideBorder
   iconUrl: string | null;
 }
 
@@ -74,5 +76,6 @@ export interface Poi {
   markerSize: number | null;   // override subcategory/category markerSize
   iconSize: number | null;     // override subcategory/category iconSize
   flicker: boolean | null;     // animate-pulse on marker
+  hideBorder?: boolean;        // hide marker border ring
   isHomeMap?: boolean;         // show on map when no category selected
 }

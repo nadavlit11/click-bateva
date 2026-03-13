@@ -42,6 +42,7 @@ export interface FormState {
   markerSize: string
   iconSize: string
   flicker: boolean
+  hideBorder: boolean
   isHomeMap: boolean
 }
 
@@ -79,6 +80,7 @@ export const INITIAL_FORM: FormState = {
   markerSize: '',
   iconSize: '',
   flicker: false,
+  hideBorder: false,
   isHomeMap: false,
 }
 

@@ -84,7 +84,7 @@ export function CategoriesPage() {
                       height: 28,
                       borderRadius: '50%',
                       backgroundColor: cat.color,
-                      border: `2px solid ${cat.borderColor ?? '#000000'}`,
+                      border: cat.hideBorder ? 'none' : `2px solid ${cat.borderColor ?? '#000000'}`,
                       boxSizing: 'border-box',
                       display: 'flex',
                       alignItems: 'center',

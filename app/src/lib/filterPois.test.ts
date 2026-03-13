@@ -30,6 +30,7 @@ const mkPoi = (overrides: Partial<Poi> & Pick<Poi, "id" | "categoryId">): Poi =>
   markerSize: null,
   iconSize: null,
   flicker: null,
+  hideBorder: false,
   ...overrides,
 });
 

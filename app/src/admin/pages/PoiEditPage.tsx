@@ -126,6 +126,7 @@ export function PoiEditPage() {
         markerSize: poi.markerSize?.toString() ?? '',
         iconSize: poi.iconSize?.toString() ?? '',
         flicker: poi.flicker ?? false,
+        hideBorder: poi.hideBorder ?? false,
         isHomeMap: poi.isHomeMap ?? false,
       })
       setLoading(false)
@@ -181,6 +182,7 @@ export function PoiEditPage() {
         borderColor: source.borderColor ?? null,
         markerSize: source.markerSize ?? null,
         flicker: source.flicker ?? null,
+        hideBorder: source.hideBorder ?? null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }
@@ -297,6 +299,7 @@ export function PoiEditPage() {
           return form.iconSize && !isNaN(n) ? n : null
         })(),
         flicker: form.flicker ? true : null,
+        hideBorder: form.hideBorder ? true : null,
         isHomeMap: form.isHomeMap ? true : null,
         updatedAt: serverTimestamp(),
       }

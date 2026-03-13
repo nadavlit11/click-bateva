@@ -93,14 +93,16 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     const borderColor: Record<string, string> = {};
     const markerSize: Record<string, number> = {};
     const iconSize: Record<string, number> = {};
+    const hideBorder: Record<string, boolean> = {};
     for (const c of categories) {
       color[c.id] = c.color;
       iconUrl[c.id] = c.iconUrl;
       if (c.borderColor) borderColor[c.id] = c.borderColor;
       if (c.markerSize != null) markerSize[c.id] = c.markerSize;
       if (c.iconSize != null) iconSize[c.id] = c.iconSize;
+      if (c.hideBorder) hideBorder[c.id] = true;
     }
-    return { color, iconUrl, borderColor, markerSize, iconSize };
+    return { color, iconUrl, borderColor, markerSize, iconSize, hideBorder };
   }, [categories]);
 
   const subMaps = useMemo(() => {
@@ -109,14 +111,16 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
     const borderColor: Record<string, string> = {};
     const markerSize: Record<string, number> = {};
     const iconSize: Record<string, number> = {};
+    const hideBorder: Record<string, boolean> = {};
     for (const s of subcategories) {
       if (s.iconUrl) iconUrl[s.id] = s.iconUrl;
       if (s.color) color[s.id] = s.color;
       if (s.borderColor) borderColor[s.id] = s.borderColor;
       if (s.markerSize != null) markerSize[s.id] = s.markerSize;
       if (s.iconSize != null) iconSize[s.id] = s.iconSize;
+      if (s.hideBorder) hideBorder[s.id] = true;
     }
-    return { iconUrl, color, borderColor, markerSize, iconSize };
+    return { iconUrl, color, borderColor, markerSize, iconSize, hideBorder };
   }, [subcategories]);
 
   // Trip number map: poiId → 1-indexed position
@@ -254,6 +258,11 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
           ?? firstSubMatch(sids, subMaps.iconSize)
           ?? (iconFromCategory ? catMaps.iconSize[poi.categoryId] : undefined)
           ?? undefined;
+        // hideBorder cascade: only inherit from category if the icon also comes from that level
+        const resolvedHideBorder = poi.hideBorder
+          || firstSubMatch(sids, subMaps.hideBorder)
+          || (iconFromCategory ? catMaps.hideBorder[poi.categoryId] : false)
+          || false;
         const tripNumber = tripNumberMap.get(poi.id);
         return (
           <PoiMarker
@@ -270,6 +279,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
             tripNumber={tripNumber}
             markerSize={resolvedMarkerSize}
             iconSize={resolvedIconSize}
+            hideBorder={resolvedHideBorder}
           />
         );
       })}
