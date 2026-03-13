@@ -9,6 +9,7 @@ import { db } from '../../../lib/firebase.ts'
 import { reportError } from '../../../lib/errorReporting.ts'
 import { useAuth } from '../../../hooks/useAuth'
 import { ActivityTimeline } from '../../components/crm/ActivityTimeline.tsx'
+import { TaskModal } from '../../components/crm/TaskModal.tsx'
 import {
   PRIORITY_LABELS, PRIORITY_COLORS, formatDate,
 } from '../../components/crm/crmUtils.ts'
@@ -32,6 +33,9 @@ export function ContactDetailPage() {
   // Delete
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  // Create task modal
+  const [taskModalOpen, setTaskModalOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -306,11 +310,19 @@ export function ContactDetailPage() {
           </div>
 
           {/* Linked tasks */}
-          {tasks.length > 0 && (
-            <div className="mt-6 pt-4 border-t border-gray-100">
-              <h3 className="text-sm font-bold text-gray-700 mb-3">
-                משימות ({tasks.length})
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-700">
+                משימות{tasks.length > 0 ? ` (${tasks.length})` : ''}
               </h3>
+              <button
+                onClick={() => setTaskModalOpen(true)}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+              >
+                + משימה חדשה
+              </button>
+            </div>
+            {tasks.length > 0 && (
               <div className="space-y-2">
                 {tasks.map(t => (
                   <div
@@ -337,8 +349,8 @@ export function ContactDetailPage() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Right: Activity timeline */}
@@ -346,6 +358,15 @@ export function ContactDetailPage() {
           {id && <ActivityTimeline contactId={id} />}
         </div>
       </div>
+
+      <TaskModal
+        isOpen={taskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        task={null}
+        onSaved={() => setTaskModalOpen(false)}
+        preselectedContactId={id}
+        preselectedContactName={contact.name}
+      />
 
       {/* Delete confirm */}
       {confirmDelete && (
