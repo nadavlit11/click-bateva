@@ -31,13 +31,13 @@
   - `ContactModal.tsx` — create/edit contact
   - `ExcelImportModal.tsx` — xlsx import with Hebrew header support, batch write
   - `TaskModal.tsx` — create/edit task with contact picker + assignee picker
-  - `TaskCard.tsx` — card with colored border, priority badge, follow toggle
+  - `TaskCard.tsx` — card with colored border, priority badge, follow/done/delete buttons
   - `ActivityTimeline.tsx` — real-time activity log subcollection
 - **CRM pages** (`app/src/admin/pages/crm/`):
   - `ContactsPage.tsx` — contact list with search, table/card responsive layout
   - `ContactDetailPage.tsx` — contact info + activity timeline + linked tasks
-  - `TasksPage.tsx` — all tasks with filters, admin-only delete
-  - `MyTasksPage.tsx` — today + overdue tasks sorted by priority
+  - `TasksPage.tsx` — active/completed tabs, active grouped by day with priority sort, admin delete
+  - `MyTasksPage.tsx` — today + overdue sorted by priority, dimmed "done" section for completed
 
 ## Component / Data Flow
 
