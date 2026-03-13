@@ -3,7 +3,7 @@
 ## Key Files
 
 - `app/src/admin/AdminSection.tsx` — lazy-loaded route definitions (mounted under `/admin/*` in root App.tsx); imports `leaflet/dist/leaflet.css`
-- `app/src/admin/components/AuthGuard.tsx` — reads `user`, `role`, `loading` from `useAuth()` context; gates on admin | content_manager; unauthenticated redirects to `/` (map)
+- `app/src/admin/components/AuthGuard.tsx` — reads `user`, `role`, `loading` from `useAuth()` context; gates on admin | content_manager | crm_user; unauthenticated redirects to `/` (map)
 - `app/src/admin/pages/PoisPage.tsx` — POI list; clicking a POI navigates to `/pois/:id`
 - `app/src/admin/pages/PoiEditPage.tsx` — full-page POI editor; CRUD + MapPicker + per-map price/active. Split into sub-components in `poi-form/`:
   - `poi-form/types.ts` — FormState, INITIAL_FORM, SetField, day/hour constants
@@ -25,14 +25,26 @@
 - `app/src/admin/components/Layout/AppLayout.tsx` + `Sidebar.tsx` — flex layout with nav links (admin-only gating via `useAuth`); includes "← המפה" link back to map (`to="/"`). **Sidebar shows `שלום, {email}`** welcome text below header branding.
 - `app/src/hooks/useAuth.tsx` — **context-based** auth hook; `AuthProvider` wraps the entire app at `App.tsx` root, runs ONE `onAuthStateChanged` listener for the whole app; `useAuth()` returns `{ user, role, loading, login, logout }` from context (zero extra listeners). `useAuth.ts` is a thin re-export barrel.
 - `app/src/admin/lib/passwordStrength.ts` — shared password validation: `getStrength()`, `isPasswordValid()`, `PASSWORD_ERROR`, strength indicator maps
-- `app/src/admin/types/index.ts` — Poi (+ color, borderColor, markerSize, flicker, maps: MapOverrides, contactName, capacity, minPeople, maxPeople, isHomeMap), MapOverrides, Category (+ borderColor, markerSize), Subcategory (+ color, borderColor, markerSize, iconId, iconUrl), Icon (+ size, flicker), Business (+ contactName) types
+- `app/src/admin/types/index.ts` — Poi (+ color, borderColor, markerSize, flicker, maps: MapOverrides, contactName, capacity, minPeople, maxPeople, isHomeMap), MapOverrides, Category (+ borderColor, markerSize), Subcategory (+ color, borderColor, markerSize, iconId, iconUrl), Icon (+ size, flicker), Business (+ contactName), CrmContact, CrmTask, ActivityLogEntry, TaskPriority types
+- **CRM components** (`app/src/admin/components/crm/`):
+  - `crmUtils.ts` — shared PRIORITY_LABELS/COLORS, formatDate/DateTime, toggleTaskFollow
+  - `ContactModal.tsx` — create/edit contact
+  - `ExcelImportModal.tsx` — xlsx import with Hebrew header support, batch write
+  - `TaskModal.tsx` — create/edit task with contact picker + assignee picker
+  - `TaskCard.tsx` — card with colored border, priority badge, follow toggle
+  - `ActivityTimeline.tsx` — real-time activity log subcollection
+- **CRM pages** (`app/src/admin/pages/crm/`):
+  - `ContactsPage.tsx` — contact list with search, table/card responsive layout
+  - `ContactDetailPage.tsx` — contact info + activity timeline + linked tasks
+  - `TasksPage.tsx` — all tasks with filters, admin-only delete
+  - `MyTasksPage.tsx` — today + overdue tasks sorted by priority
 
 ## Component / Data Flow
 
 ```
 App.tsx (BrowserRouter, root)
   └─ AdminSection (lazy, mounted at /admin/*)
-      └─ AuthGuard (gates on admin | content_manager; unauthenticated → redirect to /)
+      └─ AuthGuard (gates on admin | content_manager | crm_user; unauthenticated → redirect to /)
           └─ AppLayout (Sidebar nav + Outlet)
               ├─ DashboardPage (stats overview + settings: pin size, contact info, terms upload)
               ├─ PoisPage → navigates to /admin/pois/:id
@@ -42,9 +54,17 @@ App.tsx (BrowserRouter, root)
               ├─ IconsPage (direct upload/delete)
               ├─ MapSettingsPage
               ├─ UsersPage (admin-only via AdminOnlyRoute)
-              └─ AnalyticsPage (admin-only via AdminOnlyRoute)
+              ├─ AnalyticsPage (admin-only via AdminOnlyRoute)
+              └─ CRM routes (via CrmOnlyRoute — admin | crm_user):
+                  ├─ ContactsPage → ContactModal, ExcelImportModal
+                  ├─ ContactDetailPage → ActivityTimeline
+                  ├─ TasksPage → TaskModal, TaskCard
+                  └─ MyTasksPage → TaskModal, TaskCard
 
-Sidebar: nav links filtered by useAuth().role — /users is adminOnly ("משתמשים")
+Sidebar: nav links filtered by useAuth().role via roles[] array
+         Content items: roles ['admin', 'content_manager']
+         CRM items: roles ['admin', 'crm_user']
+         Admin-only items: roles ['admin']
          "← המפה" link back to map
          "שנה סיסמה" button opens ChangePasswordModal
 ```
@@ -72,3 +92,6 @@ Sidebar: nav links filtered by useAuth().role — /users is adminOnly ("משתמ
 - Password quality: min 8 chars, 1 letter + 1 number. Shared via `lib/passwordStrength.ts`.
 - **PasswordInput eye position** (`app/src/components/PasswordInput.tsx`): uses `!ps-10` padding + `start-3` button position (RTL-correct). `start-*` = physical right in RTL document. Previously was `end-3` which put the eye on the wrong side.
 - **MediaSection video URL auto-add**: video URL input has `onBlur={addVideoLink}` — paste URL + click Save (blurs input → auto-adds URL before save). No need to click "add" button separately.
+- **Firestore subcollection cascade delete**: Firestore does NOT auto-delete subcollections when a parent doc is deleted. When deleting `crm_contacts/{id}`, must first `getDocs` + `writeBatch` delete all `activity_log` subcollection docs. Always check for subcollections on any delete operation.
+- **New roles need `users` collection read access**: When a new role (e.g., `crm_user`) needs to query the `users` collection (for pickers, assignee dropdowns), add an explicit `allow read: if isNewRole()` rule to the users match block. Without it, the picker silently fails for non-admin users.
+- **Sidebar uses `roles?: string[]` filter** (not `adminOnly: boolean`). When adding nav items, specify the roles array. Undefined = visible to all roles.

@@ -45,3 +45,6 @@ firebase deploy --only firestore:rules
 - Firestore rules use `get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role`
 - Denormalize fields (copy from related doc) when needed for fast reads without extra lookups
 - `clicks` pattern: store `poiId` + `categoryId` on the click document itself for analytics
+- **Subcollection cascade delete**: Firestore does NOT auto-delete subcollections. Any delete UI for a parent doc must first `getDocs` + `writeBatch` delete all subcollection docs. Chunk into batches of 500 if the subcollection can grow large.
+- **User picker access**: If the new collection has an assignee/owner picker that queries the `users` collection, the accessing role needs `allow read` on the `users` match block in `firestore.rules`.
+- **Composite indexes for ALL query patterns**: Add indexes for every multi-field `where()` combination in the app code, not just the obvious ones. Check the actual queries — e.g., `assigneeUid + completed` needs its own index even if you also have `assigneeUid + date`.

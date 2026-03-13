@@ -6,8 +6,10 @@
 - `functions/src/auth.ts` — `onUserCreated` (v1 auth trigger) + `setUserRole` (v2 callable)
 - `functions/src/business.ts` — `createBusinessUser` + `deleteBusinessUser` (v2 callables)
 - `functions/src/agent.ts` — `createTravelAgent` + `deleteTravelAgent` (v2 callables, admin-only)
+- `functions/src/crm.ts` — `createCrmUser` + `deleteCrmUser` (v2 callables, admin-only)
 - `functions/src/users.ts` — `deleteContentManager` + `blockContentManager` (v2 callables, admin-only)
 - `functions/src/__tests__/auth.unit.test.ts` — unit tests for auth functions (no emulator)
+- `functions/src/__tests__/crm.unit.test.ts` — unit tests for CRM user management functions
 - `functions/src/__tests__/users.unit.test.ts` — unit tests for user management functions
 - `tests/integration/auth-functions.test.ts` — integration tests (emulator required)
 - `functions/stryker.config.json` — mutation testing config for `auth.ts`
@@ -24,6 +26,8 @@
 | `blockContentManager` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `createTravelAgent` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `deleteTravelAgent` | v2 `onCall({ cors: true })` | Admin callable | admin only |
+| `createCrmUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
+| `deleteCrmUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 
 ## Data Flow
 
@@ -70,6 +74,18 @@ deleteTravelAgent (v2 callable)
   ├─ Validates caller is admin + target has travel_agent role
   ├─ Deletes Firebase Auth user (tolerates auth/user-not-found)
   └─ Deletes users/ doc
+
+createCrmUser (v2 callable)
+  ├─ Validates caller is admin
+  ├─ Accepts email + password + name (all required)
+  ├─ Creates Firebase Auth user (with displayName)
+  ├─ Sets claims: { role: "crm_user" }
+  └─ Creates users/ doc (includes name)
+
+deleteCrmUser (v2 callable)
+  ├─ Validates caller is admin
+  ├─ Deletes Firebase Auth user (tolerates auth/user-not-found)
+  └─ Deletes users/ doc
 ```
 
 ## Patterns & Conventions
@@ -78,7 +94,7 @@ deleteTravelAgent (v2 callable)
 - v1 used only for `onUserCreated` (auth triggers not available in v2 at time of writing)
 - All callables validate: (1) authenticated, (2) admin role, (3) input types
 - Sentry error reporting on unexpected errors via `Sentry.captureException`
-- Valid roles: `admin`, `content_manager`, `business_user`, `travel_agent`, `standard_user`
+- Valid roles: `admin`, `content_manager`, `business_user`, `travel_agent`, `standard_user`, `crm_user`
 
 ## Gotchas
 

@@ -47,7 +47,7 @@ Prompt:
 > - `clicks` is a TOP-LEVEL collection (never a subcollection)
 > - `icons` documents have `path` field (NOT `url`, NOT `storagePath`)
 > - `categories` documents have `color`, `iconId`, `iconUrl` fields
-> - Roles: `admin`, `content_manager`, `business_user`, `standard_user`, `travel_agent` (no other values)
+> - Roles: `admin`, `content_manager`, `business_user`, `standard_user`, `travel_agent`, `crm_user`
 > - Storage rules use `request.auth.token.role` (custom claims) — NEVER `firestore.get()`
 > - Firestore rules use `get(/databases/$(database)/documents/users/$(request.auth.uid))` for role checks
 > - Denormalize fields (e.g. `iconUrl` on categories) rather than doing extra reads at query time
@@ -140,6 +140,8 @@ Prompt:
 > - **No inline `<style>` tags in frequently-rendered components:** Never put `@keyframes` or `<style>` blocks inside components that render many instances (e.g., map markers, list items). Each instance injects a duplicate `<style>` tag into the DOM — 100 markers = 100 identical `<style>` tags. Move CSS animations to a global stylesheet (`index.css`) and reference them by name via the `animation` property.
 > - **Admin marker preview must respect all display properties:** CategoriesPage and SubcategoriesPage render inline 28px circle previews of markers. When adding a new display property (hideBorder, borderColor, markerSize, etc.), the inline `style` on these preview circles must also be updated. Check both `CategoriesPage.tsx` and `SubcategoriesPage.tsx` for hardcoded border/size values that ignore the new property.
 > - **Icon-aware cascade for display properties:** Properties like `hideBorder` and `iconSize` should only inherit from category level when the icon also comes from that level (`iconFromCategory = !poi.iconUrl && !subIconUrl`). If a subcategory has its own icon, the category's display tuning (sized/styled for a different icon) shouldn't apply. Match the `iconFromCategory` guard pattern used by `iconSize` in MapView.tsx.
+> - **Firestore subcollection cascade delete:** When a `deleteDoc` call targets a document that has subcollections, the subcollection docs are NOT automatically deleted. Any delete handler must first `getDocs` the subcollection(s) and batch-delete them. Check UI delete confirmation messages — if they promise subcollection data will be deleted, the code must actually do it.
+> - **Composite indexes must match actual queries:** When adding Firestore queries with multiple `where()` clauses, verify that `firestore.indexes.json` has a composite index for that exact field combination. A common mistake: planning index `(fieldA, fieldB)` but the actual query uses `(fieldA, fieldC)`.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >
