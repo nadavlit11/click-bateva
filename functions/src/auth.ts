@@ -12,7 +12,10 @@ if (getApps().length === 0) {
 const db = getFirestore();
 const adminAuth = getAuth();
 
-const VALID_ROLES = ["admin", "content_manager", "business_user", "standard_user", "travel_agent"] as const;
+const VALID_ROLES = [
+  "admin", "content_manager", "business_user",
+  "standard_user", "travel_agent", "crm_user",
+] as const;
 type Role = (typeof VALID_ROLES)[number];
 
 /**

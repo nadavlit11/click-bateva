@@ -33,6 +33,14 @@ service cloud.firestore {
       return isSignedIn() && userRole() == 'travel_agent';
     }
 
+    function isCrmUser() {
+      return isSignedIn() && userRole() == 'crm_user';
+    }
+
+    function isCrmAuthorized() {
+      return isAdmin() || isCrmUser();
+    }
+
     // ─── points_of_interest ─────────────────────────────────────────────────
 
     match /points_of_interest/{poiId} {
@@ -121,11 +129,60 @@ service cloud.firestore {
       allow get: if resource.data.isShared == true;
     }
 
+    // ─── CRM contacts ──────────────────────────────────────────────────
+
+    match /crm_contacts/{contactId} {
+      allow read: if isCrmAuthorized();
+      allow create: if isCrmAuthorized() &&
+        request.resource.data.keys().hasOnly([
+          'name', 'businessName', 'phone', 'email',
+          'createdBy', 'createdByEmail', 'createdAt', 'updatedAt'
+        ]) &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow update: if isCrmAuthorized() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'businessName', 'phone', 'email', 'updatedAt'
+        ]);
+      allow delete: if isAdmin();
+
+      match /activity_log/{logId} {
+        allow read: if isCrmAuthorized();
+        allow create: if isCrmAuthorized() &&
+          request.resource.data.keys().hasOnly([
+            'text', 'createdBy', 'createdByEmail', 'createdAt'
+          ]) &&
+          request.resource.data.createdBy == request.auth.uid;
+        allow delete: if isAdmin();
+      }
+    }
+
+    // ─── CRM tasks ────────────────────────────────────────────────────
+
+    match /crm_tasks/{taskId} {
+      allow read: if isCrmAuthorized();
+      allow create: if isCrmAuthorized() &&
+        request.resource.data.keys().hasOnly([
+          'contactId', 'contactName', 'title', 'description',
+          'date', 'color', 'priority', 'assigneeUid', 'assigneeEmail',
+          'followers', 'createdBy', 'createdByEmail', 'completed',
+          'createdAt', 'updatedAt'
+        ]) &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow update: if isCrmAuthorized() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title', 'description', 'date', 'color', 'priority',
+          'assigneeUid', 'assigneeEmail', 'contactId', 'contactName',
+          'followers', 'completed', 'updatedAt'
+        ]);
+      allow delete: if isAdmin();
+    }
+
     // ─── users ──────────────────────────────────────────────────────────────
 
     match /users/{userId} {
       allow read, write: if isAdmin();
       allow read: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isCrmUser();
       allow update: if isSignedIn() &&
         request.auth.uid == userId &&
         !request.resource.data.diff(resource.data).affectedKeys()

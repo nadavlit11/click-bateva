@@ -4,14 +4,14 @@
 
 - `firestore.rules` — all security rules (root of monorepo)
 - `storage.rules` — Cloud Storage rules (root of monorepo)
-- `firestore-tests/src/firestore.rules.test.ts` — 50 integration tests (Jest + emulator)
+- `firestore-tests/src/firestore.rules.test.ts` — 78 integration tests (Jest + emulator)
 - `firestore-tests/package.json` — standalone package with `@firebase/rules-unit-testing`
 - `firestore-tests/jest.config.js` — test config
 
 ## Rules Structure
 
 ```
-Helper functions: isSignedIn, userRole, isAdmin, isContentManager, isAdminOrContentManager, isBusinessUser, isTravelAgent
+Helper functions: isSignedIn, userRole, isAdmin, isContentManager, isAdminOrContentManager, isBusinessUser, isTravelAgent, isCrmUser, isCrmAuthorized
 
 points_of_interest/{poiId}
   read:   admin/cm OR (travel_agent && maps.agents.active == true) OR (business_user && businessId == uid) OR maps.groups.active == true
@@ -32,9 +32,26 @@ businesses/{businessId}
   write: admin only
   read:  admin OR (business_user && uid == businessId)
 
+crm_contacts/{contactId}
+  read:   admin/crm_user
+  create: admin/crm_user (hasOnly field validation + createdBy == auth.uid)
+  update: admin/crm_user (affectedKeys hasOnly: name, businessName, phone, email, updatedAt)
+  delete: admin only
+  └─ activity_log/{logId}
+       read:   admin/crm_user
+       create: admin/crm_user (hasOnly + createdBy == auth.uid)
+       delete: admin only
+
+crm_tasks/{taskId}
+  read:   admin/crm_user
+  create: admin/crm_user (hasOnly field validation + createdBy == auth.uid)
+  update: admin/crm_user (affectedKeys hasOnly — cannot change createdBy/createdByEmail/createdAt)
+  delete: admin only
+
 users/{userId}
   read/write: admin
   read: own doc
+  read: crm_user (all docs — for assignee picker)
   update: own doc BUT cannot change role or businessRef
 ```
 
