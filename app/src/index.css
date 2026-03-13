@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  --text-xs: 0.8125rem;   /* 13px (was 12px) */
+  --text-sm: 0.9375rem;   /* 15px (was 14px) */
+  --text-base: 1.0625rem; /* 17px (was 16px) */
+  --text-lg: 1.1875rem;   /* 19px (was 18px) */
+  --text-xl: 1.375rem;    /* 22px (was 20px) */
+}
+
 body {
   font-family: "Rubik", sans-serif;
   margin: 0;
