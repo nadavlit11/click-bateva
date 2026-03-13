@@ -42,12 +42,10 @@ export function MyTasksPage() {
 
   useEffect(() => {
     if (!user) return
-    // Query tasks assigned to current user that are not completed
-    // and due date <= end of today (includes overdue)
+    // Query all tasks assigned to current user (including completed)
     const q = query(
       collection(db, 'crm_tasks'),
       where('assigneeUid', '==', user.uid),
-      where('completed', '==', false),
     )
     return onSnapshot(
       q,
@@ -68,22 +66,22 @@ export function MyTasksPage() {
     )
   }, [user])
 
-  // Split into overdue and today, sorted by priority
-  const { overdue, today } = useMemo(() => {
+  // Split into overdue, today, and done — sorted by priority
+  const { overdue, today, done } = useMemo(() => {
     const todayStart = startOfToday()
     const todayEnd = endOfToday()
 
-    const relevant = tasks.filter(t => {
-      const d = taskDate(t)
-      return d && d <= todayEnd
-    })
-
     const overdueList: CrmTask[] = []
     const todayList: CrmTask[] = []
+    const doneList: CrmTask[] = []
 
-    for (const t of relevant) {
-      const d = taskDate(t)!
-      if (d < todayStart) {
+    for (const t of tasks) {
+      const d = taskDate(t)
+      if (!d || d > todayEnd) continue
+
+      if (t.completed) {
+        doneList.push(t)
+      } else if (d < todayStart) {
         overdueList.push(t)
       } else {
         todayList.push(t)
@@ -97,7 +95,7 @@ export function MyTasksPage() {
     overdueList.sort(sortByPriority)
     todayList.sort(sortByPriority)
 
-    return { overdue: overdueList, today: todayList }
+    return { overdue: overdueList, today: todayList, done: doneList }
   }, [tasks])
 
   function toggleFollow(task: CrmTask) {
@@ -109,7 +107,7 @@ export function MyTasksPage() {
     toggleTaskComplete(task, 'MyTasksPage.toggleComplete')
   }
 
-  const total = overdue.length + today.length
+  const activeTotal = overdue.length + today.length
 
   return (
     <div className="p-4 md:p-6">
@@ -118,7 +116,7 @@ export function MyTasksPage() {
           המשימות שלי להיום
           {!loading && (
             <span className="text-sm font-normal text-gray-400 mr-2">
-              ({total})
+              ({activeTotal})
             </span>
           )}
         </h1>
@@ -136,7 +134,7 @@ export function MyTasksPage() {
         <div className="text-center py-10 text-gray-400">
           טוען...
         </div>
-      ) : total === 0 ? (
+      ) : activeTotal === 0 && done.length === 0 ? (
         <div className="text-center py-10 text-gray-400">
           אין משימות להיום
         </div>
@@ -166,12 +164,35 @@ export function MyTasksPage() {
           )}
 
           {today.length > 0 && (
-            <div>
+            <div className="mb-6">
               <h2 className="text-sm font-bold text-gray-700 mb-3">
                 היום ({today.length})
               </h2>
               <div className="space-y-3">
                 {today.map(t => (
+                  <TaskCard
+                    key={t.id}
+                    task={t}
+                    currentUid={user?.uid ?? ''}
+                    onEdit={task => {
+                      setEditing(task)
+                      setModalOpen(true)
+                    }}
+                    onToggleFollow={toggleFollow}
+                    onToggleComplete={handleToggleComplete}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {done.length > 0 && (
+            <div className="opacity-60">
+              <h2 className="text-sm font-bold text-gray-400 mb-3">
+                הושלם ({done.length})
+              </h2>
+              <div className="space-y-3">
+                {done.map(t => (
                   <TaskCard
                     key={t.id}
                     task={t}
