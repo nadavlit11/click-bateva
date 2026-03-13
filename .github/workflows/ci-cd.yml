@@ -74,7 +74,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: npm run build
       - name: Upload dist
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: app-dist
@@ -109,7 +109,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: npm run build
       - name: Upload dist
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: crm-dist
@@ -232,73 +232,3 @@ jobs:
         if: always()
         run: rm -f /tmp/firebase-sa.json
 
-  # ── Deploy: Preview (develop → staging, feat/** → branch slug) ────────
-  deploy-preview:
-    name: Deploy Preview — App
-    needs: [changes, ci-app]
-    if: >-
-      always() &&
-      (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) &&
-      github.event_name == 'push' &&
-      needs.changes.outputs.app == 'true' &&
-      needs.ci-app.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download app dist
-        uses: actions/download-artifact@v4
-        with:
-          name: app-dist
-          path: app/dist
-      - name: Resolve channel ID
-        id: channel
-        run: |
-          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
-            echo "id=staging" >> $GITHUB_OUTPUT
-          else
-            SLUG=$(echo "${{ github.ref_name }}" | sed 's|/|-|g' | tr '[:upper:]' '[:lower:]' | cut -c1-20)
-            echo "id=$SLUG" >> $GITHUB_OUTPUT
-          fi
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: click-bateva
-          target: click-bateva
-          channelId: ${{ steps.channel.outputs.id }}
-          expires: 7d
-
-  deploy-preview-crm:
-    name: Deploy Preview — CRM
-    needs: [changes, ci-crm]
-    if: >-
-      always() &&
-      (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) &&
-      github.event_name == 'push' &&
-      needs.changes.outputs.crm == 'true' &&
-      needs.ci-crm.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download CRM dist
-        uses: actions/download-artifact@v4
-        with:
-          name: crm-dist
-          path: crm/dist
-      - name: Resolve channel ID
-        id: channel
-        run: |
-          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
-            echo "id=staging" >> $GITHUB_OUTPUT
-          else
-            SLUG=$(echo "${{ github.ref_name }}" | sed 's|/|-|g' | tr '[:upper:]' '[:lower:]' | cut -c1-20)
-            echo "id=$SLUG" >> $GITHUB_OUTPUT
-          fi
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: click-bateva
-          target: click-bateva-crm
-          channelId: ${{ steps.channel.outputs.id }}
-          expires: 7d
