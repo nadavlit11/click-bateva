@@ -2,13 +2,13 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   collection, onSnapshot, query, where, Timestamp,
 } from 'firebase/firestore'
-import { db } from '../../../lib/firebase.ts'
-import { reportError } from '../../../lib/errorReporting.ts'
-import { useAuth } from '../../../hooks/useAuth'
-import { TaskModal } from '../../components/crm/TaskModal.tsx'
-import { TaskCard } from '../../components/crm/TaskCard.tsx'
-import { toggleTaskFollow, toggleTaskComplete } from '../../components/crm/crmUtils.ts'
-import type { CrmTask, TaskPriority } from '../../types/index.ts'
+import { db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
+import { useAuth } from '../hooks/useAuth'
+import { TaskModal } from '../components/crm/TaskModal.tsx'
+import { TaskCard } from '../components/crm/TaskCard.tsx'
+import { toggleTaskFollow, toggleTaskComplete } from '../components/crm/crmUtils.ts'
+import type { CrmTask, TaskPriority } from '../types/index.ts'
 
 const PRIORITY_ORDER: Record<TaskPriority, number> = {
   high: 0,
@@ -121,9 +121,7 @@ export function MyTasksPage() {
           )}
         </h1>
         <button
-          onClick={() => {
-            setEditing(null); setModalOpen(true)
-          }}
+          onClick={() => { setEditing(null); setModalOpen(true) }}
           className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
         >
           + משימה חדשה
@@ -131,13 +129,9 @@ export function MyTasksPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-10 text-gray-400">
-          טוען...
-        </div>
+        <div className="text-center py-10 text-gray-400">טוען...</div>
       ) : activeTotal === 0 && done.length === 0 ? (
-        <div className="text-center py-10 text-gray-400">
-          אין משימות להיום
-        </div>
+        <div className="text-center py-10 text-gray-400">אין משימות להיום</div>
       ) : (
         <>
           {overdue.length > 0 && (
@@ -151,10 +145,7 @@ export function MyTasksPage() {
                     key={t.id}
                     task={t}
                     currentUid={user?.uid ?? ''}
-                    onEdit={task => {
-                      setEditing(task)
-                      setModalOpen(true)
-                    }}
+                    onEdit={task => { setEditing(task); setModalOpen(true) }}
                     onToggleFollow={toggleFollow}
                     onToggleComplete={handleToggleComplete}
                   />
@@ -174,10 +165,7 @@ export function MyTasksPage() {
                     key={t.id}
                     task={t}
                     currentUid={user?.uid ?? ''}
-                    onEdit={task => {
-                      setEditing(task)
-                      setModalOpen(true)
-                    }}
+                    onEdit={task => { setEditing(task); setModalOpen(true) }}
                     onToggleFollow={toggleFollow}
                     onToggleComplete={handleToggleComplete}
                   />
@@ -197,10 +185,7 @@ export function MyTasksPage() {
                     key={t.id}
                     task={t}
                     currentUid={user?.uid ?? ''}
-                    onEdit={task => {
-                      setEditing(task)
-                      setModalOpen(true)
-                    }}
+                    onEdit={task => { setEditing(task); setModalOpen(true) }}
                     onToggleFollow={toggleFollow}
                     onToggleComplete={handleToggleComplete}
                   />
@@ -213,13 +198,9 @@ export function MyTasksPage() {
 
       <TaskModal
         isOpen={modalOpen}
-        onClose={() => {
-          setModalOpen(false); setEditing(null)
-        }}
+        onClose={() => { setModalOpen(false); setEditing(null) }}
         task={editing}
-        onSaved={() => {
-          setModalOpen(false); setEditing(null)
-        }}
+        onSaved={() => { setModalOpen(false); setEditing(null) }}
       />
     </div>
   )

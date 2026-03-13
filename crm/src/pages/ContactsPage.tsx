@@ -3,12 +3,12 @@ import {
   collection, onSnapshot, doc, deleteDoc, orderBy, query,
 } from 'firebase/firestore'
 import { useNavigate } from 'react-router-dom'
-import { db } from '../../../lib/firebase.ts'
-import { reportError } from '../../../lib/errorReporting.ts'
-import { useAuth } from '../../../hooks/useAuth'
-import { ContactModal } from '../../components/crm/ContactModal.tsx'
-import { ExcelImportModal } from '../../components/crm/ExcelImportModal.tsx'
-import type { CrmContact } from '../../types/index.ts'
+import { db } from '../lib/firebase.ts'
+import { reportError } from '../lib/errorReporting.ts'
+import { useAuth } from '../hooks/useAuth'
+import { ContactModal } from '../components/crm/ContactModal.tsx'
+import { ExcelImportModal } from '../components/crm/ExcelImportModal.tsx'
+import type { CrmContact } from '../types/index.ts'
 
 export function ContactsPage() {
   const { role } = useAuth()
@@ -117,18 +117,10 @@ export function ContactsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    שם
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    עסק
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    טלפון
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    אימייל
-                  </th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">שם</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">עסק</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">טלפון</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">אימייל</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -137,30 +129,16 @@ export function ContactsPage() {
                   <tr
                     key={c.id}
                     className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/admin/crm/contacts/${c.id}`)}
+                    onClick={() => navigate(`/contacts/${c.id}`)}
                   >
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {c.name}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {c.businessName || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600" dir="ltr">
-                      {c.phone || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600" dir="ltr">
-                      {c.email || '—'}
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
+                    <td className="px-4 py-3 text-gray-700">{c.businessName || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600" dir="ltr">{c.phone || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600" dir="ltr">{c.email || '—'}</td>
                     <td className="px-4 py-3">
-                      <div
-                        className="flex gap-2 justify-end"
-                        onClick={e => e.stopPropagation()}
-                      >
+                      <div className="flex gap-2 justify-end" onClick={e => e.stopPropagation()}>
                         <button
-                          onClick={() => {
-                            setEditing(c)
-                            setModalOpen(true)
-                          }}
+                          onClick={() => { setEditing(c); setModalOpen(true) }}
                           className="px-3 py-1 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
                         >
                           עריכה
@@ -187,28 +165,18 @@ export function ContactsPage() {
               <div
                 key={c.id}
                 className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer active:bg-gray-50"
-                onClick={() => navigate(`/admin/crm/contacts/${c.id}`)}
+                onClick={() => navigate(`/contacts/${c.id}`)}
               >
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-900 truncate">
-                      {c.name}
-                    </p>
+                    <p className="font-medium text-gray-900 truncate">{c.name}</p>
                     {c.businessName && (
-                      <p className="text-sm text-gray-500 truncate">
-                        {c.businessName}
-                      </p>
+                      <p className="text-sm text-gray-500 truncate">{c.businessName}</p>
                     )}
                   </div>
-                  <div
-                    className="flex gap-2 shrink-0 mr-2"
-                    onClick={e => e.stopPropagation()}
-                  >
+                  <div className="flex gap-2 shrink-0 mr-2" onClick={e => e.stopPropagation()}>
                     <button
-                      onClick={() => {
-                        setEditing(c)
-                        setModalOpen(true)
-                      }}
+                      onClick={() => { setEditing(c); setModalOpen(true) }}
                       className="px-2 py-1 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700"
                     >
                       עריכה
@@ -235,9 +203,7 @@ export function ContactsPage() {
                     </a>
                   )}
                   {c.email && (
-                    <span dir="ltr" className="truncate">
-                      {c.email}
-                    </span>
+                    <span dir="ltr" className="truncate">{c.email}</span>
                   )}
                 </div>
               </div>
@@ -268,9 +234,7 @@ export function ContactsPage() {
             className="bg-white rounded-2xl p-6 w-full max-w-sm"
             onClick={e => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold text-gray-900 mb-2">
-              מחיקת איש קשר
-            </h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">מחיקת איש קשר</h2>
             <p className="text-sm text-gray-600 mb-4">
               {`למחוק את "${confirmDelete.name}"? פעולה זו אינה הפיכה.`}
             </p>

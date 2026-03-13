@@ -1,5 +1,5 @@
 import "leaflet/dist/leaflet.css";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { AuthGuard } from "./components/AuthGuard";
 import { AppLayout } from "./components/Layout/AppLayout";
@@ -37,26 +37,6 @@ const MapSettingsPage = lazy(() =>
   }))
 );
 
-// CRM pages
-const ContactsPage = lazy(() =>
-  import("./pages/crm/ContactsPage").then((m) => ({
-    default: m.ContactsPage,
-  }))
-);
-const ContactDetailPage = lazy(() =>
-  import("./pages/crm/ContactDetailPage").then((m) => ({
-    default: m.ContactDetailPage,
-  }))
-);
-const TasksPage = lazy(() =>
-  import("./pages/crm/TasksPage").then((m) => ({ default: m.TasksPage }))
-);
-const MyTasksPage = lazy(() =>
-  import("./pages/crm/MyTasksPage").then((m) => ({
-    default: m.MyTasksPage,
-  }))
-);
-
 function AdminOnlyRoute() {
   const { role } = useAuth();
   if (role === null) return null;
@@ -64,21 +44,21 @@ function AdminOnlyRoute() {
   return <Outlet />;
 }
 
-function CrmOnlyRoute() {
-  const { role } = useAuth();
-  if (role === null) return null;
-  if (role !== "admin" && role !== "crm_user") {
-    return <Navigate to="/admin" replace />;
-  }
-  return <Outlet />;
-}
-
 function AdminIndex() {
   const { role } = useAuth();
   if (role === "crm_user") {
-    return <Navigate to="/admin/crm/my-tasks" replace />;
+    return <CrmRedirect />;
   }
   return <DashboardPage />;
+}
+
+function CrmRedirect() {
+  useEffect(() => {
+    window.location.href = "https://click-bateva-crm.web.app";
+  }, []);
+  return (
+    <div className="text-center py-10 text-gray-400">מעביר ל-CRM...</div>
+  );
 }
 
 const Loading = () => (
@@ -102,12 +82,6 @@ export default function AdminSection() {
             <Route element={<AdminOnlyRoute />}>
               <Route path="users" element={<UsersPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
-            </Route>
-            <Route element={<CrmOnlyRoute />}>
-              <Route path="crm/contacts" element={<ContactsPage />} />
-              <Route path="crm/contacts/:id" element={<ContactDetailPage />} />
-              <Route path="crm/tasks" element={<TasksPage />} />
-              <Route path="crm/my-tasks" element={<MyTasksPage />} />
             </Route>
           </Route>
         </Route>

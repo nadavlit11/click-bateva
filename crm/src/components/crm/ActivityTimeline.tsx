@@ -3,9 +3,9 @@ import {
   collection, onSnapshot, addDoc, serverTimestamp,
   query, orderBy,
 } from 'firebase/firestore'
-import { db } from '../../../lib/firebase.ts'
-import { reportError } from '../../../lib/errorReporting.ts'
-import { useAuth } from '../../../hooks/useAuth'
+import { db } from '../../lib/firebase.ts'
+import { reportError } from '../../lib/errorReporting.ts'
+import { useAuth } from '../../hooks/useAuth'
 import { formatDateTime } from './crmUtils.ts'
 import type { ActivityLogEntry } from '../../types/index.ts'
 

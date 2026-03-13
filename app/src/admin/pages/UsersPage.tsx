@@ -17,7 +17,7 @@ interface ManagedUser {
   blocked?: boolean
 }
 
-type UserTab = 'content_manager' | 'travel_agent' | 'business_user' | 'crm_user'
+type UserTab = 'content_manager' | 'travel_agent' | 'business_user'
 
 const deleteContentManagerFn = httpsCallable<{ uid: string }, { uid: string }>(functions, 'deleteContentManager')
 const blockContentManagerFn = httpsCallable<{ uid: string }, { uid: string }>(functions, 'blockContentManager')
@@ -25,9 +25,6 @@ const createContentManagerFn = httpsCallable<{ email: string; password: string }
 const createTravelAgentFn = httpsCallable<{ email: string; password: string; name: string }, { uid: string }>(functions, 'createTravelAgent')
 const deleteTravelAgentFn = httpsCallable<{ uid: string }, { uid: string }>(functions, 'deleteTravelAgent')
 const deleteBusinessUserFn = httpsCallable<{ uid: string }, { uid: string }>(functions, 'deleteBusinessUser')
-const createCrmUserFn = httpsCallable<{ email: string; password: string; name: string }, { uid: string }>(functions, 'createCrmUser')
-const deleteCrmUserFn = httpsCallable<{ uid: string }, { uid: string }>(functions, 'deleteCrmUser')
-
 const TAB_CONFIG: Record<UserTab, { label: string; addLabel: string; addTitle: string; emptyLabel: string }> = {
   content_manager: {
     label: 'מנהלי תוכן',
@@ -47,18 +44,11 @@ const TAB_CONFIG: Record<UserTab, { label: string; addLabel: string; addTitle: s
     addTitle: 'הוסף מפרסם',
     emptyLabel: 'אין מפרסמים עדיין',
   },
-  crm_user: {
-    label: 'משתמשי CRM',
-    addLabel: '+ הוסף משתמש CRM',
-    addTitle: 'הוסף משתמש CRM',
-    emptyLabel: 'אין משתמשי CRM עדיין',
-  },
 }
 
-const ROLE_MAP: Record<'content_manager' | 'travel_agent' | 'crm_user', string> = {
+const ROLE_MAP: Record<'content_manager' | 'travel_agent', string> = {
   content_manager: 'content_manager',
   travel_agent: 'travel_agent',
-  crm_user: 'crm_user',
 }
 
 export function UsersPage() {
@@ -141,8 +131,6 @@ export function UsersPage() {
       try {
         if (activeTab === 'content_manager') {
           await deleteContentManagerFn({ uid: id })
-        } else if (activeTab === 'crm_user') {
-          await deleteCrmUserFn({ uid: id })
         } else {
           await deleteTravelAgentFn({ uid: id })
         }
@@ -186,12 +174,6 @@ export function UsersPage() {
     try {
       if (activeTab === 'content_manager') {
         await createContentManagerFn({ email: addEmail.trim(), password: addPassword })
-      } else if (activeTab === 'crm_user') {
-        await createCrmUserFn({
-          email: addEmail.trim(),
-          password: addPassword,
-          name: addName.trim(),
-        })
       } else {
         await createTravelAgentFn({
           email: addEmail.trim(),
@@ -373,7 +355,7 @@ export function UsersPage() {
                     </td>
                     <td className="px-4 py-3 text-left">
                       <div className="flex gap-2 justify-end">
-                        {(activeTab === 'travel_agent' || activeTab === 'content_manager' || activeTab === 'crm_user') && (
+                        {(activeTab === 'travel_agent' || activeTab === 'content_manager') && (
                           <button
                             onClick={() => { setEditingAgent(user); setEditAgentName(user.name ?? ''); setEditAgentContact(user.contactName ?? ''); setEditAgentPhone(user.phone ?? '') }}
                             className="px-3 py-1 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
@@ -462,7 +444,7 @@ export function UsersPage() {
           <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-gray-900 mb-4">{config.addTitle}</h2>
             <form onSubmit={handleAdd} className="space-y-4">
-              {(activeTab === 'travel_agent' || activeTab === 'crm_user') && (
+              {activeTab === 'travel_agent' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">שם</label>
                   <input
@@ -470,7 +452,7 @@ export function UsersPage() {
                     value={addName}
                     onChange={e => setAddName(e.target.value)}
                     className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
-                    placeholder={activeTab === 'crm_user' ? 'שם משתמש CRM' : 'שם המפיק'}
+                    placeholder="שם המפיק"
                   />
                 </div>
               )}
@@ -526,7 +508,7 @@ export function UsersPage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingAgent(null)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-gray-900 mb-4">
-              {activeTab === 'content_manager' ? 'עריכת מנהל תוכן' : activeTab === 'crm_user' ? 'עריכת משתמש CRM' : 'עריכת מפיק'}
+              {activeTab === 'content_manager' ? 'עריכת מנהל תוכן' : 'עריכת מפיק'}
             </h2>
             <form onSubmit={handleAgentEdit} className="space-y-4">
               <div>

@@ -3,9 +3,9 @@ import { read, utils } from 'xlsx'
 import {
   collection, writeBatch, doc, serverTimestamp,
 } from 'firebase/firestore'
-import { db } from '../../../lib/firebase.ts'
-import { reportError } from '../../../lib/errorReporting.ts'
-import { useAuth } from '../../../hooks/useAuth'
+import { db } from '../../lib/firebase.ts'
+import { reportError } from '../../lib/errorReporting.ts'
+import { useAuth } from '../../hooks/useAuth'
 
 interface Props {
   isOpen: boolean

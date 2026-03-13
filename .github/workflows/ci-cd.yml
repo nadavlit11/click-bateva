@@ -22,6 +22,7 @@ jobs:
       pull-requests: read
     outputs:
       app: ${{ steps.filter.outputs.app }}
+      crm: ${{ steps.filter.outputs.crm }}
       functions: ${{ steps.filter.outputs.functions }}
       firestore: ${{ steps.filter.outputs.firestore }}
       storage: ${{ steps.filter.outputs.storage }}
@@ -33,6 +34,8 @@ jobs:
           filters: |
             app:
               - 'app/**'
+            crm:
+              - 'crm/**'
             functions:
               - 'functions/**'
             firestore:
@@ -78,6 +81,41 @@ jobs:
           path: app/dist
           retention-days: 1
 
+  # ── CI: CRM ──────────────────────────────────────────────────────────
+  ci-crm:
+    name: CI — CRM
+    needs: changes
+    if: needs.changes.outputs.crm == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: crm/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+        continue-on-error: ${{ startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/') }}
+      - name: Build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: npm run build
+      - name: Upload dist
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: crm-dist
+          path: crm/dist
+          retention-days: 1
+
   # ── CI: Functions ─────────────────────────────────────────────────────
   ci-functions:
     name: CI — Functions
@@ -113,7 +151,7 @@ jobs:
   # ── Deploy: Production (main only) ────────────────────────────────────
   deploy-production:
     name: Deploy to Production
-    needs: [changes, ci-app, ci-functions]
+    needs: [changes, ci-app, ci-crm, ci-functions]
     if: >-
       always() &&
       github.ref == 'refs/heads/main' &&
@@ -152,10 +190,21 @@ jobs:
           name: app-dist
           path: app/dist
 
+      - name: Download CRM dist
+        if: needs.changes.outputs.crm == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: crm-dist
+          path: crm/dist
+
       # Deploy hosting
       - name: Deploy app hosting
         if: needs.changes.outputs.app == 'true'
         run: firebase deploy --only hosting:click-bateva --project click-bateva
+
+      - name: Deploy CRM hosting
+        if: needs.changes.outputs.crm == 'true'
+        run: firebase deploy --only hosting:click-bateva-crm --project click-bateva
 
       # Deploy functions
       - name: Download functions build
@@ -216,5 +265,40 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: click-bateva
           target: click-bateva
+          channelId: ${{ steps.channel.outputs.id }}
+          expires: 7d
+
+  deploy-preview-crm:
+    name: Deploy Preview — CRM
+    needs: [changes, ci-crm]
+    if: >-
+      always() &&
+      (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) &&
+      github.event_name == 'push' &&
+      needs.changes.outputs.crm == 'true' &&
+      needs.ci-crm.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download CRM dist
+        uses: actions/download-artifact@v4
+        with:
+          name: crm-dist
+          path: crm/dist
+      - name: Resolve channel ID
+        id: channel
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            echo "id=staging" >> $GITHUB_OUTPUT
+          else
+            SLUG=$(echo "${{ github.ref_name }}" | sed 's|/|-|g' | tr '[:upper:]' '[:lower:]' | cut -c1-20)
+            echo "id=$SLUG" >> $GITHUB_OUTPUT
+          fi
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: click-bateva
+          target: click-bateva-crm
           channelId: ${{ steps.channel.outputs.id }}
           expires: 7d

@@ -7,6 +7,9 @@
       "hosting": {
         "click-bateva": [
           "click-bateva"
+        ],
+        "click-bateva-crm": [
+          "click-bateva-crm"
         ]
       }
     }
