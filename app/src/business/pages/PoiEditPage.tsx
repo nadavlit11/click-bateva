@@ -113,6 +113,7 @@ export function PoiEditPage() {
                   borderColor: d.borderColor ?? null,
                   markerSize: d.markerSize ?? null,
                   iconSize: d.iconSize ?? null,
+                  hideBorder: d.hideBorder ?? false,
                   iconUrl: d.iconUrl ?? null,
                   order: d.order ?? 0,
                 })

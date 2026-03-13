@@ -258,7 +258,7 @@ function ClusteredPoiMarkers({ pois, categories, subcategories, selectedPoiId, o
           ?? firstSubMatch(sids, subMaps.iconSize)
           ?? (iconFromCategory ? catMaps.iconSize[poi.categoryId] : undefined)
           ?? undefined;
-        // hideBorder cascade: only inherit from category if the icon also comes from that level
+        // hideBorder cascade: uses || (not ??) so false falls through to parent level
         const resolvedHideBorder = poi.hideBorder
           || firstSubMatch(sids, subMaps.hideBorder)
           || (iconFromCategory ? catMaps.hideBorder[poi.categoryId] : false)
