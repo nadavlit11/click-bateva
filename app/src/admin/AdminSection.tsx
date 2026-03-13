@@ -73,6 +73,14 @@ function CrmOnlyRoute() {
   return <Outlet />;
 }
 
+function AdminIndex() {
+  const { role } = useAuth();
+  if (role === "crm_user") {
+    return <Navigate to="/admin/crm/my-tasks" replace />;
+  }
+  return <DashboardPage />;
+}
+
 const Loading = () => (
   <div className="text-center py-10 text-gray-400">טוען...</div>
 );
@@ -83,7 +91,7 @@ export default function AdminSection() {
       <Routes>
         <Route element={<AuthGuard />}>
           <Route element={<AppLayout />}>
-            <Route index element={<DashboardPage />} />
+            <Route index element={<AdminIndex />} />
             <Route path="pois" element={<PoisPage />} />
             <Route path="pois/new" element={<PoiEditPage />} />
             <Route path="pois/:id" element={<PoiEditPage />} />

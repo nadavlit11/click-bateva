@@ -8,7 +8,7 @@ import { reportError } from '../../../lib/errorReporting.ts'
 import { useAuth } from '../../../hooks/useAuth'
 import { TaskModal } from '../../components/crm/TaskModal.tsx'
 import { TaskCard } from '../../components/crm/TaskCard.tsx'
-import { toggleTaskFollow } from '../../components/crm/crmUtils.ts'
+import { toggleTaskFollow, toggleTaskComplete } from '../../components/crm/crmUtils.ts'
 import type { CrmTask } from '../../types/index.ts'
 
 export function TasksPage() {
@@ -50,6 +50,10 @@ export function TasksPage() {
   function toggleFollow(task: CrmTask) {
     if (!user) return
     toggleTaskFollow(task, user.uid, 'TasksPage.toggleFollow')
+  }
+
+  function handleToggleComplete(task: CrmTask) {
+    toggleTaskComplete(task, 'TasksPage.toggleComplete')
   }
 
   async function handleDelete() {
@@ -155,6 +159,7 @@ export function TasksPage() {
                   setEditing(task); setModalOpen(true)
                 }}
                 onToggleFollow={toggleFollow}
+                onToggleComplete={handleToggleComplete}
               />
               {role === 'admin' && (
                 <button

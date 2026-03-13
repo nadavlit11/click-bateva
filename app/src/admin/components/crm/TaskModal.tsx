@@ -10,6 +10,19 @@ import type {
   CrmTask, CrmContact, TaskPriority,
 } from '../../types/index.ts'
 
+const TASK_COLORS = [
+  '#3b82f6', // blue
+  '#22c55e', // green
+  '#f59e0b', // amber
+  '#ef4444', // red
+  '#a855f7', // purple
+  '#ec4899', // pink
+  '#14b8a6', // teal
+  '#f97316', // orange
+  '#6366f1', // indigo
+  '#64748b', // slate
+]
+
 interface Props {
   isOpen: boolean
   onClose: () => void
@@ -340,12 +353,19 @@ export function TaskModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 צבע
               </label>
-              <input
-                type="color"
-                value={form.color}
-                onChange={e => set('color', e.target.value)}
-                className="w-full h-[38px] bg-white border border-gray-300 rounded-lg cursor-pointer"
-              />
+              <div className="flex flex-wrap gap-2">
+                {TASK_COLORS.map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => set('color', c)}
+                    className={`w-8 h-8 rounded-full border-2 transition-transform ${
+                      form.color === c ? 'border-gray-800 scale-110' : 'border-transparent'
+                    }`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 

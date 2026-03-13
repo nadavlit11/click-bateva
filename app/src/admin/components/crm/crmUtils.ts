@@ -1,4 +1,4 @@
-import { Timestamp, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore'
+import { Timestamp, doc, updateDoc, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../../lib/firebase.ts'
 import { reportError } from '../../../lib/errorReporting.ts'
 import type { CrmTask, TaskPriority } from '../../types/index.ts'
@@ -32,6 +32,20 @@ export function formatDateTime(ts: unknown): string {
     })
   }
   return ''
+}
+
+export async function toggleTaskComplete(
+  task: CrmTask,
+  source: string,
+) {
+  try {
+    await updateDoc(doc(db, 'crm_tasks', task.id), {
+      completed: !task.completed,
+      updatedAt: serverTimestamp(),
+    })
+  } catch (err: unknown) {
+    reportError(err, { source })
+  }
 }
 
 export async function toggleTaskFollow(

@@ -7,7 +7,7 @@ import { reportError } from '../../../lib/errorReporting.ts'
 import { useAuth } from '../../../hooks/useAuth'
 import { TaskModal } from '../../components/crm/TaskModal.tsx'
 import { TaskCard } from '../../components/crm/TaskCard.tsx'
-import { toggleTaskFollow } from '../../components/crm/crmUtils.ts'
+import { toggleTaskFollow, toggleTaskComplete } from '../../components/crm/crmUtils.ts'
 import type { CrmTask, TaskPriority } from '../../types/index.ts'
 
 const PRIORITY_ORDER: Record<TaskPriority, number> = {
@@ -105,6 +105,10 @@ export function MyTasksPage() {
     toggleTaskFollow(task, user.uid, 'MyTasksPage.toggleFollow')
   }
 
+  function handleToggleComplete(task: CrmTask) {
+    toggleTaskComplete(task, 'MyTasksPage.toggleComplete')
+  }
+
   const total = overdue.length + today.length
 
   return (
@@ -154,6 +158,7 @@ export function MyTasksPage() {
                       setModalOpen(true)
                     }}
                     onToggleFollow={toggleFollow}
+                    onToggleComplete={handleToggleComplete}
                   />
                 ))}
               </div>
@@ -176,6 +181,7 @@ export function MyTasksPage() {
                       setModalOpen(true)
                     }}
                     onToggleFollow={toggleFollow}
+                    onToggleComplete={handleToggleComplete}
                   />
                 ))}
               </div>

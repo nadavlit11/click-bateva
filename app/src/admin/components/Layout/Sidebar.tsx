@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Link } from 'react-router-dom'
+import { NavLink, Link, useLocation } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '../../../lib/firebase.ts'
 import { reportError } from '../../../lib/errorReporting.ts'
@@ -24,17 +24,48 @@ const NAV: NavItem[] = [
   { path: '/admin/icons',         label: 'אייקונים',      end: false, roles: CONTENT_ROLES },
   { path: '/admin/users',         label: 'משתמשים',       end: false, roles: ['admin'] },
   { path: '/admin/analytics',     label: 'אנליטיקס',      end: true,  roles: ['admin'] },
+]
+
+const CRM_SUB_NAV: NavItem[] = [
   { path: '/admin/crm/my-tasks',  label: 'המשימות שלי',   end: false, roles: CRM_ROLES },
   { path: '/admin/crm/contacts',  label: 'אנשי קשר',      end: false, roles: CRM_ROLES },
   { path: '/admin/crm/tasks',     label: 'כל המשימות',    end: false, roles: CRM_ROLES },
 ]
 
+function NavItemLink({ item }: { item: NavItem }) {
+  return (
+    <NavLink
+      to={item.path}
+      end={item.end}
+      className={({ isActive }) =>
+        `block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+          isActive
+            ? 'bg-green-50 text-green-700'
+            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+        }`
+      }
+    >
+      {item.label}
+    </NavLink>
+  )
+}
+
 export function Sidebar() {
   const { role, user } = useAuth()
+  const location = useLocation()
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const email = user?.email ?? null
 
+  const isCrmRoute = location.pathname.startsWith('/admin/crm')
+  const [crmOpen, setCrmOpen] = useState(isCrmRoute)
+
+  const showCrm = role && CRM_ROLES.includes(role)
+
   const visibleNav = NAV.filter(item =>
+    !item.roles || (role && item.roles.includes(role))
+  )
+
+  const visibleCrmNav = CRM_SUB_NAV.filter(item =>
     !item.roles || (role && item.roles.includes(role))
   )
 
@@ -50,21 +81,43 @@ export function Sidebar() {
 
       <nav className="flex-1 p-3 space-y-0.5">
         {visibleNav.map(item => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.end}
-            className={({ isActive }) =>
-              `block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-green-50 text-green-700'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`
-            }
-          >
-            {item.label}
-          </NavLink>
+          <NavItemLink key={item.path} item={item} />
         ))}
+
+        {showCrm && (
+          <div>
+            <div className="flex items-center">
+              <NavLink
+                to="/admin/crm/my-tasks"
+                className={
+                  `flex-1 block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isCrmRoute
+                      ? 'bg-green-50 text-green-700'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`
+                }
+              >
+                CRM
+              </NavLink>
+              <button
+                onClick={() => setCrmOpen(!crmOpen)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors"
+              >
+                <span className={`inline-block transition-transform ${crmOpen ? 'rotate-90' : ''}`}>
+                  ◂
+                </span>
+              </button>
+            </div>
+
+            {crmOpen && (
+              <div className="me-3 space-y-0.5 mt-0.5">
+                {visibleCrmNav.map(item => (
+                  <NavItemLink key={item.path} item={item} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </nav>
 
       <div className="p-3 border-t border-gray-200">
