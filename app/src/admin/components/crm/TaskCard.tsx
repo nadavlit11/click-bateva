@@ -7,11 +7,12 @@ interface Props {
   onEdit: (task: CrmTask) => void
   onToggleFollow: (task: CrmTask) => void
   onToggleComplete: (task: CrmTask) => void
+  onDelete?: (task: CrmTask) => void
   currentUid: string
 }
 
 export function TaskCard({
-  task, onEdit, onToggleFollow, onToggleComplete, currentUid,
+  task, onEdit, onToggleFollow, onToggleComplete, onDelete, currentUid,
 }: Props) {
   const isFollowing = task.followers?.includes(currentUid)
   const isOverdue =
@@ -74,24 +75,32 @@ export function TaskCard({
           </span>
           <button
             onClick={e => { e.stopPropagation(); onToggleComplete(task) }}
-            className={`text-sm px-3 py-1.5 rounded-lg border font-medium transition-colors ${
+            className={`text-sm px-4 py-1.5 min-w-[4.5rem] rounded-lg font-medium transition-colors ${
               task.completed
-                ? 'border-green-300 bg-green-50 text-green-700'
-                : 'border-gray-300 text-gray-500 hover:bg-gray-50'
+                ? 'bg-green-600 text-white hover:bg-green-700'
+                : 'bg-green-100 text-green-700 hover:bg-green-200'
             }`}
           >
             {task.completed ? '✓ הושלם' : 'סיום'}
           </button>
           <button
             onClick={e => { e.stopPropagation(); onToggleFollow(task) }}
-            className={`text-sm px-3 py-1.5 rounded-lg border font-medium transition-colors ${
+            className={`text-sm px-4 py-1.5 min-w-[4.5rem] rounded-lg font-medium transition-colors ${
               isFollowing
-                ? 'border-green-300 bg-green-50 text-green-700'
-                : 'border-gray-300 text-gray-500 hover:bg-gray-50'
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
             }`}
           >
             {isFollowing ? 'עוקב' : 'עקוב'}
           </button>
+          {onDelete && (
+            <button
+              onClick={e => { e.stopPropagation(); onDelete(task) }}
+              className="text-sm px-4 py-1.5 min-w-[4.5rem] rounded-lg font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+            >
+              מחק
+            </button>
+          )}
         </div>
       </div>
     </div>

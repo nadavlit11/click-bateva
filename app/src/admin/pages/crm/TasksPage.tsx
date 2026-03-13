@@ -151,25 +151,17 @@ export function TasksPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map(t => (
-            <div key={t.id} className="relative">
-              <TaskCard
-                task={t}
-                currentUid={user?.uid ?? ''}
-                onEdit={task => {
-                  setEditing(task); setModalOpen(true)
-                }}
-                onToggleFollow={toggleFollow}
-                onToggleComplete={handleToggleComplete}
-              />
-              {role === 'admin' && (
-                <button
-                  onClick={() => setConfirmDelete(t)}
-                  className="absolute top-2 left-2 px-2 py-1 text-xs font-medium rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
-                >
-                  מחק
-                </button>
-              )}
-            </div>
+            <TaskCard
+              key={t.id}
+              task={t}
+              currentUid={user?.uid ?? ''}
+              onEdit={task => {
+                setEditing(task); setModalOpen(true)
+              }}
+              onToggleFollow={toggleFollow}
+              onToggleComplete={handleToggleComplete}
+              onDelete={role === 'admin' ? task => setConfirmDelete(task) : undefined}
+            />
           ))}
         </div>
       )}
