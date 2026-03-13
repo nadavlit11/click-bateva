@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Link, useLocation } from 'react-router-dom'
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '../../../lib/firebase.ts'
 import { reportError } from '../../../lib/errorReporting.ts'
@@ -53,6 +53,7 @@ function NavItemLink({ item }: { item: NavItem }) {
 export function Sidebar() {
   const { role, user } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const email = user?.email ?? null
 
@@ -87,7 +88,10 @@ export function Sidebar() {
         {showCrm && (
           <div>
             <button
-              onClick={() => setCrmOpen(!crmOpen)}
+              onClick={() => {
+                setCrmOpen(!crmOpen)
+                if (!isCrmRoute) navigate('/admin/crm/my-tasks')
+              }}
               className={
                 `w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isCrmRoute
