@@ -14,7 +14,7 @@
   - `poi-form/FoodExtrasSection.tsx` — kashrut cert + menu (food category only)
   - `poi-form/DisplaySettingsSection.tsx` — icon picker, color, borderColor, markerSize, flicker, active toggles, isHomeMap toggle
 - `app/src/admin/components/MapPicker.tsx` — Leaflet + Nominatim geocoding; click/drag/search to set lat/lng
-- `app/src/admin/components/ColorPickerField.tsx` — shared color picker (type=color + text input + clear button); used by CategoryModal, SubcategoryModal, PoiEditPage
+- `app/src/admin/components/ColorPickerField.tsx` — shared color picker: trigger button + modal with 64 preset swatches (8-col grid) + native `<input type="color">` for custom colors; used by CategoryModal, SubcategoryModal, PoiEditPage
 - `app/src/admin/pages/CategoriesPage.tsx` + `CategoryModal.tsx` — category CRUD with icon picker + color + borderColor + markerSize
 - `app/src/admin/pages/SubcategoriesPage.tsx` + `SubcategoryModal.tsx` — subcategory CRUD with group datalist; optional color/borderColor/markerSize overrides
 - `app/src/admin/pages/IconsPage.tsx` — upload/list/delete icons (Cloud Storage `icons/` prefix); **inline edit per row**: name (guarded against empty), size (px, null = default), flicker (animate-pulse toggle)
