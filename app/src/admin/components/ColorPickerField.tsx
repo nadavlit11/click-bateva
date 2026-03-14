@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { Modal } from '../../components/Modal.tsx'
 
 interface Props {
   label: string
@@ -87,34 +88,7 @@ export function ColorPickerField(
         )}
       </div>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center
-          justify-center"
-        >
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setOpen(false)}
-          />
-
-          <div className="relative bg-white rounded-xl shadow-2xl
-            w-full max-w-sm mx-4 max-h-[90vh] flex flex-col"
-          >
-            <div className="flex items-center justify-between
-              px-5 py-4 border-b border-gray-200"
-            >
-              <h2 className="text-base font-semibold text-gray-900">
-                {label}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="text-gray-400 hover:text-gray-600
-                  text-xl leading-none"
-              >
-                ✕
-              </button>
-            </div>
-
+      <Modal open={open} onClose={() => setOpen(false)} title={label}>
             <div className="px-5 py-4 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-8 gap-2">
                 {PRESET_COLORS.map(color => (
@@ -178,9 +152,7 @@ export function ColorPickerField(
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </div>
   )
 }
