@@ -207,7 +207,7 @@ export function ExcelImportModal({
               {rows.length} שורות נמצאו — תצוגה מקדימה:
             </p>
             <div className="flex-1 overflow-auto border border-gray-200 rounded-lg mb-4">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[500px]">
                 <thead>
                   <tr className="border-b bg-gray-50 sticky top-0">
                     <th className="text-right px-3 py-2 font-medium text-gray-600">

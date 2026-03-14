@@ -20,17 +20,21 @@ const NAV: NavItem[] = [
   { path: '/users',     label: 'משתמשי CRM',    end: false, adminOnly: true },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  open: boolean
+  onClose: () => void
+}
+
+export function Sidebar({ open, onClose }: SidebarProps) {
   const { role, user } = useAuth()
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const email = user?.email ?? null
-
   const visibleNav = NAV.filter(item =>
     !item.adminOnly || role === 'admin',
   )
 
-  return (
-    <aside className="w-64 bg-white border-s border-gray-200 flex flex-col h-full shrink-0">
+  const sidebarContent = (
+    <>
       <div className="p-6 border-b border-gray-200">
         <h1 className="text-lg font-bold text-green-700">קליק בטבע</h1>
         <p className="text-xs text-gray-500 mt-0.5">CRM</p>
@@ -45,6 +49,7 @@ export function Sidebar() {
             key={item.path}
             to={item.path}
             end={item.end}
+            onClick={() => onClose()}
             className={({ isActive }) =>
               `block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive
@@ -90,6 +95,37 @@ export function Sidebar() {
       </div>
 
       <ChangePasswordModal isOpen={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible */}
+      <aside className="hidden md:flex w-64 bg-white border-s border-gray-200 flex-col h-full shrink-0">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile sidebar — overlay */}
+      {open && (
+        <div className="md:hidden fixed inset-0 z-40 flex">
+          {/* Backdrop */}
+          <div className="fixed inset-0 bg-black/40" onClick={onClose} />
+          {/* Sidebar panel */}
+          <aside className="relative z-50 w-64 bg-white flex flex-col h-full shadow-xl">
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              aria-label="סגור"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   )
 }
