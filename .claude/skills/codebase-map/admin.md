@@ -26,18 +26,7 @@
 - `app/src/hooks/useAuth.tsx` — **context-based** auth hook; `AuthProvider` wraps the entire app at `App.tsx` root, runs ONE `onAuthStateChanged` listener for the whole app; `useAuth()` returns `{ user, role, loading, login, logout }` from context (zero extra listeners). `useAuth.ts` is a thin re-export barrel.
 - `app/src/admin/lib/passwordStrength.ts` — shared password validation: `getStrength()`, `isPasswordValid()`, `PASSWORD_ERROR`, strength indicator maps
 - `app/src/admin/types/index.ts` — Poi (+ color, borderColor, markerSize, flicker, maps: MapOverrides, contactName, capacity, minPeople, maxPeople, isHomeMap), MapOverrides, Category (+ borderColor, markerSize), Subcategory (+ color, borderColor, markerSize, iconId, iconUrl), Icon (+ size, flicker), Business (+ contactName), CrmContact, CrmTask, ActivityLogEntry, TaskPriority types
-- **CRM components** (`app/src/admin/components/crm/`):
-  - `crmUtils.ts` — shared PRIORITY_LABELS/COLORS, formatDate/DateTime, toggleTaskFollow
-  - `ContactModal.tsx` — create/edit contact
-  - `ExcelImportModal.tsx` — xlsx import with Hebrew header support, batch write
-  - `TaskModal.tsx` — create/edit task with contact picker + assignee picker
-  - `TaskCard.tsx` — card with colored border, priority badge, follow/done/delete buttons
-  - `ActivityTimeline.tsx` — real-time activity log subcollection
-- **CRM pages** (`app/src/admin/pages/crm/`):
-  - `ContactsPage.tsx` — contact list with search, table/card responsive layout
-  - `ContactDetailPage.tsx` — contact info + activity timeline + linked tasks
-  - `TasksPage.tsx` — active/completed tabs, active grouped by day with priority sort, admin delete
-  - `MyTasksPage.tsx` — today + overdue sorted by priority, dimmed "done" section for completed
+- **CRM is a separate app** — see `crm.md` for the standalone CRM app at `crm/` (deployed to `click-bateva-crm.web.app`). Admin redirects `crm_user` role to the CRM app via `CrmRedirect` in `AdminSection.tsx`.
 
 ## Component / Data Flow
 
@@ -54,16 +43,11 @@ App.tsx (BrowserRouter, root)
               ├─ IconsPage (direct upload/delete)
               ├─ MapSettingsPage
               ├─ UsersPage (admin-only via AdminOnlyRoute)
-              ├─ AnalyticsPage (admin-only via AdminOnlyRoute)
-              └─ CRM routes (via CrmOnlyRoute — admin | crm_user):
-                  ├─ ContactsPage → ContactModal, ExcelImportModal
-                  ├─ ContactDetailPage → ActivityTimeline
-                  ├─ TasksPage → TaskModal, TaskCard
-                  └─ MyTasksPage → TaskModal, TaskCard
+              └─ AnalyticsPage (admin-only via AdminOnlyRoute)
+              (CRM is a separate app — crm_user role redirected via CrmRedirect)
 
 Sidebar: nav links filtered by useAuth().role via roles[] array
          Content items: roles ['admin', 'content_manager']
-         CRM items: roles ['admin', 'crm_user']
          Admin-only items: roles ['admin']
          "← המפה" link back to map
          "שנה סיסמה" button opens ChangePasswordModal

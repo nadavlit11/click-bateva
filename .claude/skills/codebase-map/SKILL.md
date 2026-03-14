@@ -19,6 +19,7 @@ app/               Unified React + Vite app — all three sections in one
     types/         Shared base types (Category, Subcategory, Poi variants)
     App.tsx        Root BrowserRouter + lazy-loaded section routes
     main.tsx       Entry point + Sentry init
+crm/               Standalone CRM app (Vite + React) — deployed to click-bateva-crm.web.app
 functions/         Firebase Cloud Functions (Node.js + TypeScript) — auth triggers + callables
 firestore-tests/   Standalone Firestore Security Rules tests (Jest + emulator)
 docs/              Design docs (LLDs, HLD, ATDD) — point-in-time, not live references
@@ -55,6 +56,7 @@ Single auth session at click-bateva.web.app — no re-login when switching secti
 | User map app | `user-web.md` | Modifying map, markers, filters, POI detail, bottom sheet |
 | Admin dashboard | `admin.md` | Modifying POI/category CRUD, admin auth, analytics |
 | Business dashboard | `business.md` | Modifying business POI editing, business auth flow |
+| CRM app | `crm.md` | Modifying CRM contacts, tasks, CRM users (separate app at `crm/`) |
 | Cloud Functions | `cloud-functions.md` | Modifying auth triggers, callables, custom claims |
 | Security rules | `firestore-rules.md` | Modifying Firestore/Storage rules or their tests |
 | Infrastructure | `infra.md` | Firebase config, hosting, deploy, emulators, CI/CD |
