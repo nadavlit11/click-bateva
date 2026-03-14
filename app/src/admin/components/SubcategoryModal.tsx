@@ -6,6 +6,7 @@ import { reportError } from '../../lib/errorReporting.ts'
 import type { Subcategory, Category, Icon } from '../types/index.ts'
 import { IconPicker } from './IconPicker.tsx'
 import { ColorPickerField } from './ColorPickerField.tsx'
+import { Modal } from '../../components/Modal.tsx'
 
 interface Props {
   isOpen: boolean
@@ -94,22 +95,12 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
     }
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-gray-900">
-            {subcategory ? 'עריכת תת-קטגוריה' : 'הוספת תת-קטגוריה'}
-          </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">
-            ✕
-          </button>
-        </div>
-
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      title={subcategory ? 'עריכת תת-קטגוריה' : 'הוספת תת-קטגוריה'}
+    >
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4 overflow-y-auto">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">קטגוריה *</label>
@@ -221,7 +212,6 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }

@@ -4,6 +4,7 @@ import { auth } from '../lib/firebase'
 import { reportError } from '../lib/errorReporting'
 import { getStrength, isPasswordValid, PASSWORD_ERROR, strengthLabel, strengthColor, strengthWidth } from '../lib/passwordStrength'
 import { PasswordInput } from './PasswordInput'
+import { Modal } from './Modal.tsx'
 
 interface Props {
   isOpen: boolean
@@ -97,22 +98,10 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
     }
   }
 
-  if (!isOpen) return null
-
   const strength = newPassword.length > 0 ? getStrength(newPassword) : null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
-
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-gray-900">שינוי סיסמה</h2>
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">
-            ✕
-          </button>
-        </div>
-
+    <Modal open={isOpen} onClose={handleClose} title="שינוי סיסמה">
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">סיסמה נוכחית</label>
@@ -172,7 +161,6 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }
