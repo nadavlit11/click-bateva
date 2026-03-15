@@ -14,7 +14,7 @@ Every feature must ship with tests. Tests are written **alongside the feature**,
 | React component | ✅ pure logic extracted to functions, rendering | — | — |
 | Pure utility / filter function | ✅ all filter combinations | — | — |
 
-**Minimum bar**: every Cloud Function gets a unit test file. Every rules change gets a rules test.
+**Minimum bar**: every Cloud Function gets a unit test file. Every rules change gets a rules test. Every new `lib/` utility gets a co-located `.test.ts` file — no exceptions for "small helpers."
 
 ---
 
@@ -67,6 +67,34 @@ Start emulators: `firebase emulators:start --only auth,functions,firestore`
 - [ ] All 4 roles tested: `admin`, `content_manager`, `business_user`, `standard_user` / unauthenticated
 - [ ] `withSecurityRulesDisabled` used for seeding test data (so rules don't block setup)
 - [ ] Tests committed in the same PR as the rules change
+
+---
+
+## Checklist when adding a new lib/ utility
+
+- [ ] Co-located `.test.ts` file with tests covering all branches
+- [ ] Stryker glob auto-includes it (verify file isn't in the exclude list in `app/stryker.config.json`)
+- [ ] Run `npm run crap` — no function scores above 30
+
+---
+
+## CRAP (Change Risk Anti-Patterns) analysis
+
+Run `npm run crap` from monorepo root. Analyzes all exported functions in `app/src/lib/` and computes:
+
+- **Cyclomatic complexity** via ts-morph AST analysis
+- **Branch coverage** from Vitest coverage JSON
+- **CRAP score**: `comp² × (1 - cov/100)³ + comp`
+
+Threshold: **30**. Functions above 30 are too complex for their coverage level — either simplify the code or add more tests.
+
+---
+
+## Mutation testing (Stryker)
+
+Stryker configs use **glob patterns** — new files in `app/src/lib/` and `functions/src/` are auto-included. No need to manually update the `mutate` array.
+
+Run: `npm run test:mutate` (both packages) or `:user-web` / `:functions` suffix for one package.
 
 ---
 
