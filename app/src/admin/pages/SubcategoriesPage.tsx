@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
-import { db } from '../../lib/firebase.ts'
+import { db, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import type { Subcategory, Category, Icon } from '../types/index.ts'
 import { SubcategoryModal } from '../components/SubcategoryModal.tsx'
@@ -15,16 +15,23 @@ export function SubcategoriesPage() {
   const [editingSub, setEditingSub] = useState<Subcategory | null>(null)
 
   useEffect(() => {
-    const unsub1 = onSnapshot(collection(db, 'subcategories'), snap => {
-      setSubcategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Subcategory))
+    let unsub1: (() => void) | undefined
+    let unsub2: (() => void) | undefined
+    let unsub3: (() => void) | undefined
+    let cancelled = false
+    authReady.then(() => {
+      if (cancelled) return
+      unsub1 = onSnapshot(collection(db, 'subcategories'), snap => {
+        setSubcategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Subcategory))
+      })
+      unsub2 = onSnapshot(collection(db, 'categories'), snap => {
+        setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
+      })
+      unsub3 = onSnapshot(collection(db, 'icons'), snap => {
+        setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
+      })
     })
-    const unsub2 = onSnapshot(collection(db, 'categories'), snap => {
-      setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
-    })
-    const unsub3 = onSnapshot(collection(db, 'icons'), snap => {
-      setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
-    })
-    return () => { unsub1(); unsub2(); unsub3() }
+    return () => { cancelled = true; unsub1?.(); unsub2?.(); unsub3?.() }
   }, [])
 
   async function handleDelete(id: string) {

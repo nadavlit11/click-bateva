@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
+import { db, authReady } from '../../lib/firebase'
 import { reportError } from '../../lib/errorReporting'
 
 const MIN_PIN = 12
@@ -15,10 +15,12 @@ export function MapSettingsPage() {
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    getDoc(doc(db, 'settings', 'map'))
-      .then(snap => { if (snap.exists()) setPinSize(snap.data().pinSize ?? DEFAULT_PIN) })
-      .catch(err => reportError(err, { source: 'MapSettingsPage.load' }))
-      .finally(() => setLoading(false))
+    authReady.then(() =>
+      getDoc(doc(db, 'settings', 'map'))
+        .then(snap => { if (snap.exists()) setPinSize(snap.data().pinSize ?? DEFAULT_PIN) })
+        .catch(err => reportError(err, { source: 'MapSettingsPage.load' }))
+        .finally(() => setLoading(false))
+    )
     return () => { if (savedTimerRef.current) clearTimeout(savedTimerRef.current) }
   }, [])
 

@@ -3,7 +3,7 @@ import {
   collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '../../lib/firebase.ts'
+import { db, storage, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import type { Icon } from '../types/index.ts'
 import { useAuth } from '../../hooks/useAuth'
@@ -33,9 +33,15 @@ export function IconsPage() {
   const [editForm, setEditForm] = useState<{ name: string }>({ name: '' })
 
   useEffect(() => {
-    return onSnapshot(collection(db, 'icons'), snap => {
-      setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
+    let unsub: (() => void) | undefined
+    let cancelled = false
+    authReady.then(() => {
+      if (cancelled) return
+      unsub = onSnapshot(collection(db, 'icons'), snap => {
+        setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
+      })
     })
+    return () => { cancelled = true; unsub?.() }
   }, [])
 
   useEffect(() => {

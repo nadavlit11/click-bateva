@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query, where, orderBy, doc, updateDoc } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
-import { db, functions } from '../../lib/firebase.ts'
+import { db, functions, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { getStrength, isPasswordValid, PASSWORD_ERROR, strengthLabel, strengthColor, strengthWidth } from '../../lib/passwordStrength.ts'
 import { PasswordInput } from '../../components/PasswordInput'
@@ -89,18 +89,24 @@ export function UsersPage() {
     if (activeTab === 'business_user') return
     setLoading(true)
     setLoadError('')
-    const q = query(collection(db, 'users'), where('role', '==', ROLE_MAP[activeTab]))
-    return onSnapshot(
-      q,
-      snap => {
-        setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() }) as ManagedUser))
-        setLoading(false)
-      },
-      () => {
-        setLoadError('שגיאה בטעינת משתמשים')
-        setLoading(false)
-      }
-    )
+    let unsub: (() => void) | undefined
+    let cancelled = false
+    authReady.then(() => {
+      if (cancelled) return
+      const q = query(collection(db, 'users'), where('role', '==', ROLE_MAP[activeTab]))
+      unsub = onSnapshot(
+        q,
+        snap => {
+          setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() }) as ManagedUser))
+          setLoading(false)
+        },
+        () => {
+          setLoadError('שגיאה בטעינת משתמשים')
+          setLoading(false)
+        }
+      )
+    })
+    return () => { cancelled = true; unsub?.() }
   }, [activeTab])
 
   // Load businesses
@@ -108,18 +114,24 @@ export function UsersPage() {
     if (activeTab !== 'business_user') return
     setBizLoading(true)
     setBizLoadError('')
-    const q = query(collection(db, 'businesses'), orderBy('createdAt', 'desc'))
-    return onSnapshot(
-      q,
-      snap => {
-        setBusinesses(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Business))
-        setBizLoading(false)
-      },
-      () => {
-        setBizLoadError('שגיאה בטעינת המפרסמים')
-        setBizLoading(false)
-      }
-    )
+    let unsub: (() => void) | undefined
+    let cancelled = false
+    authReady.then(() => {
+      if (cancelled) return
+      const q = query(collection(db, 'businesses'), orderBy('createdAt', 'desc'))
+      unsub = onSnapshot(
+        q,
+        snap => {
+          setBusinesses(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Business))
+          setBizLoading(false)
+        },
+        () => {
+          setBizLoadError('שגיאה בטעינת המפרסמים')
+          setBizLoading(false)
+        }
+      )
+    })
+    return () => { cancelled = true; unsub?.() }
   }, [activeTab])
 
   async function executeConfirm() {

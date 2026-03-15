@@ -7,7 +7,7 @@ import {
   persistentMultipleTabManager,
 } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getAuth, connectAuthEmulator, onAuthStateChanged, signInAnonymously } from "firebase/auth";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
@@ -51,3 +51,19 @@ if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
     isTokenAutoRefreshEnabled: true,
   });
 }
+
+// Resolves once the user is signed in (anonymous if not logged in).
+// Data hooks wait on this before subscribing to Firestore.
+export const authReady: Promise<void> = new Promise((resolve) => {
+  const unsub = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      unsub();
+      resolve();
+    } else {
+      signInAnonymously(auth).catch(() => {
+        unsub();
+        resolve();
+      });
+    }
+  });
+});

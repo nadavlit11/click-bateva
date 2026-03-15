@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { db, authReady } from "../lib/firebase";
 import { reportError } from "../lib/errorReporting";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MapView } from "./components/MapView/MapView";
@@ -76,11 +76,16 @@ export default function MapApp() {
   const pinSize = useMapSettings();
 
   useEffect(() => {
-    getDoc(doc(db, "settings", "terms"))
-      .then(snap => {
-        if (snap.exists()) setTermsUrl(snap.data().userTermsUrl ?? "");
-      })
-      .catch(err => reportError(err, { source: "App.loadTerms" }));
+    let cancelled = false;
+    authReady.then(() => {
+      if (cancelled) return;
+      getDoc(doc(db, "settings", "terms"))
+        .then(snap => {
+          if (!cancelled && snap.exists()) setTermsUrl(snap.data().userTermsUrl ?? "");
+        })
+        .catch(err => reportError(err, { source: "App.loadTerms" }));
+    });
+    return () => { cancelled = true; };
   }, []);
 
   // ── Trip share (client read-only view) ───────────────────────────────────
@@ -90,7 +95,10 @@ export default function MapApp() {
   const [sharedTripNotFound, setSharedTripNotFound] = useState(false);
   useEffect(() => {
     if (!tripShareId) return;
-    getDoc(doc(db, "trips", tripShareId)).then(snap => {
+    let cancelled = false;
+    authReady.then(() => {
+      if (cancelled) return;
+      getDoc(doc(db, "trips", tripShareId)).then(snap => {
       if (snap.exists() && snap.data().isShared === true) {
         const d = snap.data();
         setSharedTrip({
@@ -108,8 +116,10 @@ export default function MapApp() {
       }
     }).catch(err => {
       reportError(err, { source: "App.sharedTrip" });
-      setSharedTripNotFound(true);
+      if (!cancelled) setSharedTripNotFound(true);
     });
+    });
+    return () => { cancelled = true; };
   }, [tripShareId]);
 
   // ── Trip (disabled in production — uncomment to re-enable) ─────────────

@@ -11,7 +11,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { ref, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '../../lib/firebase.ts'
+import { db, storage, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { FOOD_CATEGORY_ID } from '../../lib/constants.ts'
 import type { Poi, Category, Subcategory, Icon, Business } from '../types/index.ts'
@@ -59,28 +59,38 @@ export function PoiEditPage() {
 
   // Fetch categories, subcategories, and icons once on mount
   useEffect(() => {
-    getDocs(collection(db, 'categories')).then(snap => {
-      setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
-    }).catch(err => reportError(err, { source: 'PoiEditPage.fetch' }))
+    let cancelled = false
+    authReady.then(() => {
+      if (cancelled) return
+      getDocs(collection(db, 'categories')).then(snap => {
+        if (!cancelled) setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
+      }).catch(err => reportError(err, { source: 'PoiEditPage.fetch' }))
 
-    getDocs(collection(db, 'subcategories')).then(snap => {
-      setSubcategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Subcategory))
-    }).catch(err => reportError(err, { source: 'PoiEditPage.fetch' }))
+      getDocs(collection(db, 'subcategories')).then(snap => {
+        if (!cancelled) setSubcategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Subcategory))
+      }).catch(err => reportError(err, { source: 'PoiEditPage.fetch' }))
 
-    getDocs(collection(db, 'icons')).then(snap => {
-      setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
-    }).catch(err => reportError(err, { source: 'PoiEditPage.fetch' }))
+      getDocs(collection(db, 'icons')).then(snap => {
+        if (!cancelled) setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
+      }).catch(err => reportError(err, { source: 'PoiEditPage.fetch' }))
 
-    getDocs(collection(db, 'businesses')).then(snap => {
-      setBusinesses(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Business))
-    }).catch(err => reportError(err, { source: 'PoiEditPage.fetch' }))
+      getDocs(collection(db, 'businesses')).then(snap => {
+        if (!cancelled) setBusinesses(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Business))
+      }).catch(err => reportError(err, { source: 'PoiEditPage.fetch' }))
+    })
+    return () => { cancelled = true }
   }, [])
 
   // Load existing POI when editing
   useEffect(() => {
     if (!id) return
     setLoading(true)
-    getDoc(doc(db, 'points_of_interest', id)).then(snap => {
+    let cancelled = false
+    authReady.then(() => {
+      if (cancelled) return
+      return getDoc(doc(db, 'points_of_interest', id))
+    }).then(snap => {
+      if (cancelled || !snap) return
       if (!snap.exists()) {
         setError('נקודת עניין לא נמצאה')
         setLoading(false)
@@ -132,9 +142,12 @@ export function PoiEditPage() {
       setLoading(false)
     }).catch(err => {
       reportError(err, { source: 'PoiEditPage.load' })
-      setError('שגיאה בטעינת נקודת עניין')
-      setLoading(false)
+      if (!cancelled) {
+        setError('שגיאה בטעינת נקודת עניין')
+        setLoading(false)
+      }
     })
+    return () => { cancelled = true }
   }, [id])
 
   const isLocationless = categories.find(c => c.id === form.categoryId)?.locationless === true

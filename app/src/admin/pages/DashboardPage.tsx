@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { collection, getDocs, query, orderBy, limit, doc, getDoc, setDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { Link } from 'react-router-dom'
-import { db, storage } from '../../lib/firebase.ts'
+import { db, storage, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 
 const MIN_PIN = 12
@@ -104,58 +104,68 @@ export function DashboardPage() {
   }
 
   useEffect(() => {
-    getDoc(doc(db, 'settings', 'map'))
-      .then(snap => { if (snap.exists()) setPinSize(snap.data().pinSize ?? DEFAULT_PIN) })
-      .catch(err => reportError(err, { source: 'DashboardPage.loadPinSize' }))
-    getDoc(doc(db, 'settings', 'contact'))
-      .then(snap => {
-        if (snap.exists()) {
-          const d = snap.data()
-          setContact({ phone: d.phone ?? '', email: d.email ?? '' })
-        }
-      })
-      .catch(err => reportError(err, { source: 'DashboardPage.loadContact' }))
-    getDoc(doc(db, 'settings', 'terms'))
-      .then(snap => {
-        if (snap.exists()) {
-          const d = snap.data()
-          setUserTermsUrl(d.userTermsUrl ?? '')
-          setBizTermsUrl(d.businessTermsUrl ?? '')
-        }
-      })
-      .catch(err => reportError(err, { source: 'DashboardPage.loadTerms' }))
+    let cancelled = false
+    authReady.then(() => {
+      if (cancelled) return
+      getDoc(doc(db, 'settings', 'map'))
+        .then(snap => { if (!cancelled && snap.exists()) setPinSize(snap.data().pinSize ?? DEFAULT_PIN) })
+        .catch(err => reportError(err, { source: 'DashboardPage.loadPinSize' }))
+      getDoc(doc(db, 'settings', 'contact'))
+        .then(snap => {
+          if (!cancelled && snap.exists()) {
+            const d = snap.data()
+            setContact({ phone: d.phone ?? '', email: d.email ?? '' })
+          }
+        })
+        .catch(err => reportError(err, { source: 'DashboardPage.loadContact' }))
+      getDoc(doc(db, 'settings', 'terms'))
+        .then(snap => {
+          if (!cancelled && snap.exists()) {
+            const d = snap.data()
+            setUserTermsUrl(d.userTermsUrl ?? '')
+            setBizTermsUrl(d.businessTermsUrl ?? '')
+          }
+        })
+        .catch(err => reportError(err, { source: 'DashboardPage.loadTerms' }))
+    })
     return () => {
+      cancelled = true
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
       if (contactTimerRef.current) clearTimeout(contactTimerRef.current)
     }
   }, [])
 
   useEffect(() => {
-    Promise.all([
-      getDocs(collection(db, 'points_of_interest')),
-      getDocs(collection(db, 'categories')),
-      getDocs(collection(db, 'subcategories')),
-      getDocs(collection(db, 'businesses')),
-      getDocs(collection(db, 'clicks')),
-      getDocs(query(collection(db, 'points_of_interest'), orderBy('createdAt', 'desc'), limit(5))),
-    ]).then(([poisSnap, catsSnap, subcatsSnap, bizSnap, clicksSnap, recentSnap]) => {
-      setCounts({
-        pois: poisSnap.size,
-        categories: catsSnap.size,
-        subcategories: subcatsSnap.size,
-        businesses: bizSnap.size,
-        clicks: clicksSnap.size,
+    authReady.then(() => {
+      Promise.all([
+        getDocs(collection(db, 'points_of_interest')),
+        getDocs(collection(db, 'categories')),
+        getDocs(collection(db, 'subcategories')),
+        getDocs(collection(db, 'businesses')),
+        getDocs(collection(db, 'clicks')),
+        getDocs(query(collection(db, 'points_of_interest'), orderBy('createdAt', 'desc'), limit(5))),
+      ]).then(([poisSnap, catsSnap, subcatsSnap, bizSnap, clicksSnap, recentSnap]) => {
+        const realPois = poisSnap.docs.filter(d => !d.data()._hp)
+        setCounts({
+          pois: realPois.length,
+          categories: catsSnap.size,
+          subcategories: subcatsSnap.size,
+          businesses: bizSnap.size,
+          clicks: clicksSnap.size,
+        })
+        setRecentPois(recentSnap.docs
+          .filter(d => !d.data()._hp)
+          .map(d => ({
+            id: d.id,
+            name: d.data().name ?? d.id,
+            active: d.data().active ?? false,
+            categoryId: d.data().categoryId ?? '',
+          })))
+        setLoading(false)
+      }).catch(err => {
+        reportError(err, { source: 'DashboardPage.fetch' })
+        setLoading(false)
       })
-      setRecentPois(recentSnap.docs.map(d => ({
-        id: d.id,
-        name: d.data().name ?? d.id,
-        active: d.data().active ?? false,
-        categoryId: d.data().categoryId ?? '',
-      })))
-      setLoading(false)
-    }).catch(err => {
-      reportError(err, { source: 'DashboardPage.fetch' })
-      setLoading(false)
     })
   }, [])
 

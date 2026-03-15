@@ -9,7 +9,7 @@ import {
   serverTimestamp,
   getDocs,
 } from 'firebase/firestore'
-import { db } from '../../lib/firebase.ts'
+import { db, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import type { Poi, Category } from '../types/index.ts'
 import { useAuth } from '../../hooks/useAuth'
@@ -36,20 +36,35 @@ export function PoisPage() {
     if (main) main.scrollTop = savedScrollTop
   }, [savedScrollTop, pois.length])
 
-  // Live POI list
+  // Live POI list (excludes honeypots)
   useEffect(() => {
-    return onSnapshot(collection(db, 'points_of_interest'), snap => {
-      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }) as Poi)
-      docs.sort((a, b) => a.name.localeCompare(b.name, 'he'))
-      setPois(docs)
+    let unsub: (() => void) | undefined
+    let cancelled = false
+    authReady.then(() => {
+      if (cancelled) return
+      unsub = onSnapshot(collection(db, 'points_of_interest'), snap => {
+        const docs = snap.docs
+          .filter(d => !d.data()._hp)
+          .map(d => ({ id: d.id, ...d.data() }) as Poi)
+        docs.sort((a, b) => a.name.localeCompare(b.name, 'he'))
+        setPois(docs)
+      })
     })
+    return () => { cancelled = true; unsub?.() }
   }, [])
 
   // Fetch categories once on mount
   useEffect(() => {
-    getDocs(collection(db, 'categories')).then(snap => {
-      setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
-    }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
+    let cancelled = false
+    authReady.then(() => {
+      if (cancelled) return
+      getDocs(collection(db, 'categories')).then(snap => {
+        if (!cancelled) {
+          setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
+        }
+      }).catch(err => reportError(err, { source: 'PoisPage.fetch' }))
+    })
+    return () => { cancelled = true }
   }, [])
 
   function categoryName(id: string) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import { db } from '../../lib/firebase.ts'
+import { db, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 
 interface ClickDoc {
@@ -64,7 +64,7 @@ export function AnalyticsPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    getDocs(collection(db, 'clicks'))
+    authReady.then(() => getDocs(collection(db, 'clicks'))
       .then(async snap => {
         const clicks = snap.docs.map(d => d.data() as ClickDoc)
         setTotal(clicks.length)
@@ -120,10 +120,16 @@ export function AnalyticsPage() {
           Promise.all(sortedCatEntries.map(([id]) => getDoc(doc(db, 'categories', id)))),
         ])
 
-        setTopPois(sortedPoiEntries.map(([poiId, count], i) => ({
-          poiId,
-          count,
-          name: poiDocs[i].data()?.name ?? poiId,
+        // Filter out honeypot POIs from top list
+        const poiResults = sortedPoiEntries
+          .map(([poiId, count], i) => ({
+            poiId, count,
+            name: poiDocs[i].data()?.name ?? poiId,
+            isHp: poiDocs[i].data()?._hp === true,
+          }))
+          .filter(p => !p.isHp)
+        setTopPois(poiResults.map(({ poiId, count, name }) => ({
+          poiId, count, name,
         })))
 
         setByCategory(sortedCatEntries.map(([categoryId, count], i) => ({
@@ -139,7 +145,7 @@ export function AnalyticsPage() {
         reportError(err, { source: 'AnalyticsPage.fetch' })
         setError('שגיאה בטעינת נתוני קליקים')
         setLoading(false)
-      })
+      }))
   }, [])
 
   if (loading) return <div className="p-6 text-gray-400 text-center">טוען...</div>

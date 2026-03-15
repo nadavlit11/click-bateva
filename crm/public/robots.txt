@@ -1,0 +1,3 @@
+# CRM is internal — block all crawlers
+User-agent: *
+Disallow: /

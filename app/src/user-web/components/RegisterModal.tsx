@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { httpsCallable } from "firebase/functions";
 import { doc, getDoc } from "firebase/firestore";
-import { functions, db } from "../../lib/firebase";
+import { functions, db, authReady } from "../../lib/firebase";
 import { reportError } from "../../lib/errorReporting";
 
 const sendRegistrationRequest = httpsCallable(functions, "sendRegistrationRequest");
@@ -29,11 +29,16 @@ export function RegisterModal({ onClose }: RegisterModalProps) {
   const [termsUrl, setTermsUrl] = useState("");
 
   useEffect(() => {
-    getDoc(doc(db, "settings", "terms"))
-      .then(snap => {
-        if (snap.exists()) setTermsUrl(snap.data().userTermsUrl ?? "");
-      })
-      .catch(err => reportError(err, { source: "RegisterModal.loadTerms" }));
+    let cancelled = false;
+    authReady.then(() => {
+      if (cancelled) return;
+      getDoc(doc(db, "settings", "terms"))
+        .then(snap => {
+          if (!cancelled && snap.exists()) setTermsUrl(snap.data().userTermsUrl ?? "");
+        })
+        .catch(err => reportError(err, { source: "RegisterModal.loadTerms" }));
+    });
+    return () => { cancelled = true; };
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

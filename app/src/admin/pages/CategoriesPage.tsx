@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
-import { db } from '../../lib/firebase.ts'
+import { db, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import type { Category, Icon } from '../types/index.ts'
 import { CategoryModal } from '../components/CategoryModal.tsx'
@@ -16,13 +16,19 @@ export function CategoriesPage() {
   const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null)
 
   useEffect(() => {
-    const unsub1 = onSnapshot(collection(db, 'categories'), snap => {
-      setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
+    let unsub1: (() => void) | undefined
+    let unsub2: (() => void) | undefined
+    let cancelled = false
+    authReady.then(() => {
+      if (cancelled) return
+      unsub1 = onSnapshot(collection(db, 'categories'), snap => {
+        setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Category))
+      })
+      unsub2 = onSnapshot(collection(db, 'icons'), snap => {
+        setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
+      })
     })
-    const unsub2 = onSnapshot(collection(db, 'icons'), snap => {
-      setIcons(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Icon))
-    })
-    return () => { unsub1(); unsub2() }
+    return () => { cancelled = true; unsub1?.(); unsub2?.() }
   }, [])
 
   async function handleDelete() {
