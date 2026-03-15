@@ -166,9 +166,9 @@ Prompt:
 > - Routing and layout scaffolding
 >
 > **Mutation testing coverage:**
-> - These files are under Stryker mutation testing: `app/src/lib/filterPois.ts`, `app/src/lib/openingStatus.ts`, `app/src/lib/tripUtils.ts`, `functions/src/auth.ts`
+> - Stryker mutation testing uses **glob patterns** — all files in `app/src/lib/` (except tests, firebase.ts, constants.ts, errorReporting.ts) and `functions/src/` (except tests, index.ts) are auto-included
 > - When logic in these files changes, flag that `npm run test:mutate` should be run to verify the mutation score hasn't regressed
-> - When new pure-logic utility files are added with tests, suggest adding them to the relevant `stryker.config.json` `mutate` array
+> - New pure-logic utility files are auto-included by the glob — no manual config update needed
 > - **New exports from mutation-tested files need their own direct tests**: if a new function is exported from a file under Stryker mutation testing (e.g., `openingStatus.ts`), its mutations will NOT be killed by tests that only exercise the existing functions — even if both functions share similar logic. Every new exported function in a mutated file needs at least one test that directly imports and calls it, covering key branches (open/closed, null/string inputs, boundary times).
 >
 > For each piece of logic that requires a test, check if a corresponding test file exists in the diff (or already exists in the repo if you can verify). Output PASS if all required tests are present or if nothing testable was added. Output FAIL with a specific list of missing tests otherwise.
