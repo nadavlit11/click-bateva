@@ -67,6 +67,7 @@ users/{userId}
 ## Gotchas
 
 - Custom claims are STRINGS — comparing to a path literal is always false. Use string concatenation: `'/databases/' + database + '/documents/businesses/' + businessId`
+- **Optional fields in rules:** Accessing `resource.data.someField` on a doc that lacks `someField` throws `Property is undefined on object` and denies the request. Use `resource.data.get('someField', defaultValue)` to safely access optional fields.
 - Honeypot POIs (`_hp: true`) are blocked at the rule level for all non-admin reads via `resource.data.get('_hp', false) != true`. Admin/CM bypass this to manage honeypots.
 - POIs now have a `maps` nested field: `{ agents: { price, active }, groups: { price, active } }`. The read rule uses per-map active checks instead of a single top-level `active` field.
 - `isTravelAgent()` helper checks `request.auth.token.role == 'travel_agent'`
