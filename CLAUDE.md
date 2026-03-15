@@ -25,6 +25,18 @@ No exceptions — not even for "obviously safe" changes.
 
 ---
 
+## Data Protection Rules
+
+POI data is the project's competitive moat. These rules prevent accidental regressions that re-expose it:
+
+- **Firestore rules: never `allow read: if true`** on any collection containing POI data, categories, subcategories, icons, or settings. All reads require `isSignedIn()` at minimum.
+- **Storage rules: never `allow read: if true`** on `poi-media/` or `icons/`. All reads require `isSignedIn()`.
+- **New Cloud Functions: always include `enforceAppCheck: true`** in every `onCall()` options object. No exceptions.
+- **New Firestore data hooks: gate behind `authReady`** — import `authReady` from `firebase.ts` and wait for it before subscribing to `onSnapshot`. See `useFirestoreData.ts` for the pattern.
+- **Honeypot POIs: preserve the `_hp` filter** — `snapshotToPois` in `useFirestoreData.ts` filters out docs with `_hp: true`. Never remove this filter.
+
+---
+
 ## Codebase Navigation Rule
 
 Before launching an Explore agent or reading code to understand an area, read the `/codebase-map` skill and the relevant sub-page. Only launch Explore agents for details not covered there. **After exploring, update the relevant sub-page.**

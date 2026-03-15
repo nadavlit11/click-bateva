@@ -31,6 +31,7 @@ Prompt:
 > - Any logic that lets unauthenticated users read or write data they shouldn't
 > - Exposed internal data structures in API responses
 > - Firestore Security Rules comparing a custom claim to a path literal (e.g. `request.auth.token.someRef == /databases/$(database)/documents/...`): custom claims are always **strings**, so this comparison is always false. Use string concatenation instead: `request.auth.token.someRef == '/databases/' + database + '/documents/...'`
+> - **Data protection regressions:** (1) Firestore/Storage rules must NEVER use `allow read: if true` on collections containing POI data, categories, subcategories, icons, or settings — all reads require `isSignedIn()`. (2) New `onCall` Cloud Functions must include `enforceAppCheck: true`. (3) New Firestore data hooks must gate behind the `authReady` promise from `firebase.ts`. (4) The `_hp` honeypot filter in `snapshotToPois` must not be removed.
 >
 > Output: PASS or FAIL, followed by a numbered list of findings (empty list if PASS).
 >
@@ -55,7 +56,7 @@ Prompt:
 > - `businesses` documents must have `associatedUserIds: string[]` (checked by POI update rule)
 > - `createBusinessUser` Cloud Function must set BOTH `role` AND `businessRef` custom claims; `businessRef` format: `/databases/(default)/documents/businesses/${uid}`
 > - Firebase emulator connection must be gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`). Using `DEV` connects every local dev server to the emulator even when QA-ing against production data.
-> - Firebase Functions v2 `onCall` does NOT add CORS headers for arbitrary origins by default (unlike v1). Every `onCall` from `firebase-functions/v2/https` must include `{ cors: true }`: `onCall({ cors: true }, async (request) => { ... })`. Without this, calls from localhost and non-Firebase-Hosting origins fail with a CORS error.
+> - Firebase Functions v2 `onCall` does NOT add CORS headers for arbitrary origins by default (unlike v1). Every `onCall` from `firebase-functions/v2/https` must include `{ cors: true, enforceAppCheck: true }`: `onCall({ cors: true, enforceAppCheck: true }, async (request) => { ... })`. Without this, calls from localhost fail with CORS error, and without `enforceAppCheck` the function accepts requests from scripts without a valid App Check token.
 > - The `onUserCreated` Auth trigger fires for ALL new users, including those created by admin callable functions (e.g. `createBusinessUser`). Any `setCustomUserClaims` call in `onUserCreated` must first check `adminAuth.getUser(uid).customClaims?.role` and skip if a role is already set — otherwise it races with and overwrites claims set by the callable.
 > - After adding a new Firestore collection, always deploy the updated security rules: `firebase deploy --only firestore:rules`. A rule written in the file but not deployed silently blocks all reads/writes.
 > - When removing a concept/entity from the codebase (e.g., deleting a collection, removing a feature), search `.claude/skills/` for references too — skill files encode collection names, field lists, and permission matrices that become stale if not updated.

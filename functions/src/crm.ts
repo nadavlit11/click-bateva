@@ -11,7 +11,7 @@ const db = getFirestore();
  * Callable: admin-only — creates a new CRM user account.
  */
 export const createCrmUser = onCall(
-  {cors: true},
+  {cors: true, enforceAppCheck: true},
   async (request) => {
     if (!request.auth) {
       throw new HttpsError(
@@ -86,7 +86,7 @@ export const createCrmUser = onCall(
  * Callable: admin-only — deletes a CRM user account.
  */
 export const deleteCrmUser = onCall(
-  {cors: true},
+  {cors: true, enforceAppCheck: true},
   async (request) => {
     if (!request.auth) {
       throw new HttpsError(

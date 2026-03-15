@@ -12,7 +12,7 @@ const db = getFirestore();
  * Creates a Firebase Auth user, sets the travel_agent custom claim,
  * and writes the user document to Firestore.
  */
-export const createTravelAgent = onCall({cors: true}, async (request) => {
+export const createTravelAgent = onCall({cors: true, enforceAppCheck: true}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
   }
@@ -68,7 +68,7 @@ export const createTravelAgent = onCall({cors: true}, async (request) => {
  * Callable function: admin-only — deletes a travel agent account.
  * Deletes the Firebase Auth user and removes the user document from Firestore.
  */
-export const deleteTravelAgent = onCall({cors: true}, async (request) => {
+export const deleteTravelAgent = onCall({cors: true, enforceAppCheck: true}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
   }

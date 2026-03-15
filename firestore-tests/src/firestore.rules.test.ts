@@ -394,13 +394,23 @@ describe("points_of_interest collection", () => {
   };
 
   describe("READ", () => {
-    it("allows unauthenticated user to read an active POI", async () => {
+    it("denies unauthenticated user from reading an active POI", async () => {
       await env.withSecurityRulesDisabled(async (ctx) => {
         await setDoc(doc(ctx.firestore(), "points_of_interest", "poi-1"), ACTIVE_POI);
       });
 
       const unauthed = env.unauthenticatedContext();
       const db = unauthed.firestore();
+      await assertFails(getDoc(doc(db, "points_of_interest", "poi-1")));
+    });
+
+    it("allows anonymous (signed-in) user to read an active POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "points_of_interest", "poi-1"), ACTIVE_POI);
+      });
+
+      const anon = env.authenticatedContext("anon-uid");
+      const db = anon.firestore();
       await assertSucceeds(getDoc(doc(db, "points_of_interest", "poi-1")));
     });
 
@@ -468,7 +478,7 @@ describe("points_of_interest collection", () => {
       );
     });
 
-    it("allows unauthenticated user to read a groups-only POI", async () => {
+    it("denies unauthenticated user from reading a groups-only POI", async () => {
       await env.withSecurityRulesDisabled(async (ctx) => {
         await setDoc(
           doc(ctx.firestore(), "points_of_interest", "poi-groups"),
@@ -478,6 +488,21 @@ describe("points_of_interest collection", () => {
 
       const unauthed = env.unauthenticatedContext();
       const db = unauthed.firestore();
+      await assertFails(
+        getDoc(doc(db, "points_of_interest", "poi-groups"))
+      );
+    });
+
+    it("allows anonymous (signed-in) user to read a groups-only POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-groups"),
+          GROUPS_ONLY_POI
+        );
+      });
+
+      const anon = env.authenticatedContext("anon-uid");
+      const db = anon.firestore();
       await assertSucceeds(
         getDoc(doc(db, "points_of_interest", "poi-groups"))
       );
@@ -566,7 +591,7 @@ describe("points_of_interest collection", () => {
 
     // ── Families map read access ──
 
-    it("allows unauthenticated user to read an active families POI", async () => {
+    it("denies unauthenticated user from reading an active families POI", async () => {
       await env.withSecurityRulesDisabled(async (ctx) => {
         await setDoc(
           doc(ctx.firestore(), "points_of_interest", "poi-fam"),
@@ -576,6 +601,21 @@ describe("points_of_interest collection", () => {
 
       const unauthed = env.unauthenticatedContext();
       const db = unauthed.firestore();
+      await assertFails(
+        getDoc(doc(db, "points_of_interest", "poi-fam"))
+      );
+    });
+
+    it("allows anonymous (signed-in) user to read an active families POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-fam"),
+          FAMILIES_POI
+        );
+      });
+
+      const anon = env.authenticatedContext("anon-uid");
+      const db = anon.firestore();
       await assertSucceeds(
         getDoc(doc(db, "points_of_interest", "poi-fam"))
       );
@@ -996,9 +1036,15 @@ describe("icons collection", () => {
   });
 
   describe("READ", () => {
-    it("allows unauthenticated user to read an icon", async () => {
+    it("denies unauthenticated user from reading an icon", async () => {
       const unauthed = env.unauthenticatedContext();
       const db = unauthed.firestore();
+      await assertFails(getDoc(doc(db, "icons", "icon-1")));
+    });
+
+    it("allows anonymous (signed-in) user to read an icon", async () => {
+      const anon = env.authenticatedContext("anon-uid");
+      const db = anon.firestore();
       await assertSucceeds(getDoc(doc(db, "icons", "icon-1")));
     });
 
