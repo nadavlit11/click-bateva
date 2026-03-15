@@ -21,7 +21,7 @@ export function PoisListPage() {
     return onSnapshot(
       q,
       snap => {
-        setPois(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Poi))
+        setPois(snap.docs.filter(d => !d.data()._hp).map(d => ({ id: d.id, ...d.data() }) as Poi))
         setLoading(false)
       },
       err => {

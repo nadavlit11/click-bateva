@@ -667,6 +667,89 @@ describe("points_of_interest collection", () => {
         getDoc(doc(db, "points_of_interest", "poi-fam-off"))
       );
     });
+
+    // ── Honeypot POI tests ──────────────────────────────────────────────
+
+    it("denies anonymous user from reading a honeypot POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-hp"),
+          { ...ACTIVE_POI, _hp: true }
+        );
+      });
+
+      const anon = env.authenticatedContext("anon-uid");
+      const db = anon.firestore();
+      await assertFails(
+        getDoc(doc(db, "points_of_interest", "poi-hp"))
+      );
+    });
+
+    it("denies travel_agent from reading a honeypot POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-hp"),
+          { ...ACTIVE_POI, _hp: true }
+        );
+      });
+
+      const agent = env.authenticatedContext("agent-uid", {
+        role: "travel_agent",
+      });
+      const db = agent.firestore();
+      await assertFails(
+        getDoc(doc(db, "points_of_interest", "poi-hp"))
+      );
+    });
+
+    it("denies business_user from reading a honeypot POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-hp"),
+          { ...ACTIVE_POI, _hp: true, businessId: "biz-uid" }
+        );
+      });
+
+      const biz = env.authenticatedContext("biz-uid", {
+        role: "business_user",
+      });
+      const db = biz.firestore();
+      await assertFails(
+        getDoc(doc(db, "points_of_interest", "poi-hp"))
+      );
+    });
+
+    it("allows admin to read a honeypot POI", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-hp"),
+          { ...ACTIVE_POI, _hp: true }
+        );
+      });
+
+      const admin = env.authenticatedContext("admin-uid", {
+        role: "admin",
+      });
+      const db = admin.firestore();
+      await assertSucceeds(
+        getDoc(doc(db, "points_of_interest", "poi-hp"))
+      );
+    });
+
+    it("allows reading a POI with _hp set to false", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-hp-f"),
+          { ...ACTIVE_POI, _hp: false }
+        );
+      });
+
+      const anon = env.authenticatedContext("anon-uid");
+      const db = anon.firestore();
+      await assertSucceeds(
+        getDoc(doc(db, "points_of_interest", "poi-hp-f"))
+      );
+    });
   });
 
   describe("CREATE", () => {
