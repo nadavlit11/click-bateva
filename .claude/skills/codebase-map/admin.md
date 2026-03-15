@@ -24,7 +24,7 @@
 - `app/src/admin/pages/AnalyticsPage.tsx` — click totals per POI + per category
 - `app/src/admin/components/ChangePasswordModal.tsx` — change password (reauthenticate + updatePassword)
 - `app/src/admin/components/Layout/AppLayout.tsx` + `Sidebar.tsx` — flex layout with nav links (admin-only gating via `useAuth`); includes "← המפה" link back to map (`to="/"`). **Sidebar shows `שלום, {email}`** welcome text below header branding.
-- `app/src/hooks/useAuth.tsx` — **context-based** auth hook; `AuthProvider` wraps the entire app at `App.tsx` root, runs ONE `onAuthStateChanged` listener for the whole app; `useAuth()` returns `{ user, role, loading, login, logout }` from context (zero extra listeners). `useAuth.ts` is a thin re-export barrel.
+- `app/src/hooks/useAuth.tsx` — **context-based** auth hook; `AuthProvider` wraps the entire app at `App.tsx` root, runs ONE `onAuthStateChanged` listener for the whole app; `useAuth()` returns `{ user, role, loading, login, logout }` from context (zero extra listeners).
 - `app/src/admin/lib/passwordStrength.ts` — shared password validation: `getStrength()`, `isPasswordValid()`, `PASSWORD_ERROR`, strength indicator maps
 - `app/src/admin/types/index.ts` — Poi (+ color, borderColor, markerSize, flicker, maps: MapOverrides, contactName, capacity, minPeople, maxPeople, isHomeMap), MapOverrides, Category (+ borderColor, markerSize), Subcategory (+ color, borderColor, markerSize, iconId, iconUrl), Icon (+ size, flicker), Business (+ contactName), CrmContact, CrmTask, ActivityLogEntry, TaskPriority types
 - **CRM is a separate app** — see `crm.md` for the standalone CRM app at `crm/` (deployed to `click-bateva-crm.web.app`). Admin redirects `crm_user` role to the CRM app via `CrmRedirect` in `AdminSection.tsx`.
@@ -66,6 +66,7 @@ Sidebar: nav links filtered by useAuth().role via roles[] array
 
 - MapPicker must NOT be wrapped in a `<form>` — it's embedded in PoiEditPage's form, nested forms cause page refresh
 - Nominatim geocoding uses `Accept-Language: he` for Hebrew results
+- Google Places `locationBias.circle.radius` max is 50,000m — larger values return 400 silently
 - `createBusinessUser` callable sets BOTH `role` AND `businessRef` custom claims
 - When adding new editable fields to POIs, also update the Firestore rules `affectedKeys().hasOnly(...)` allowlist
 - Icon documents use `path` field (NOT `url` or `storagePath`)
