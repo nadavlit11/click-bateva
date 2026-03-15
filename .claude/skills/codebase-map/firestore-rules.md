@@ -24,9 +24,9 @@ clicks/{clickId}
   read:   admin only
   delete: admin only
 
-categories/{id}     — read: anyone, write: admin/cm
-subcategories/{id}  — read: anyone, write: admin/cm
-icons/{id}          — read: anyone, write: admin/cm
+categories/{id}     — read: isSignedIn(), write: admin/cm
+subcategories/{id}  — read: isSignedIn(), write: admin/cm
+icons/{id}          — read: isSignedIn(), write: admin/cm
 
 businesses/{businessId}
   write: admin only
@@ -61,6 +61,8 @@ users/{userId}
 - Business POI update uses `get()` to read associatedUserIds from the business document
 - `affectedKeys().hasOnly(...)` controls which fields business users can modify
 - Storage rules use `request.auth.token.role` (custom claims) — NEVER `firestore.get()`
+
+- `authReady` gate pattern: all `onSnapshot`/`getDoc`/`getDocs` in React effects must await `authReady` before subscribing. Use `cancelled` flag for cleanup. See `useMapSettings.ts` for `onSnapshot` example, `useContactInfo.ts` for `getDoc` example.
 
 ## Gotchas
 
