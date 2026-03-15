@@ -4,9 +4,12 @@
   "checkers": ["typescript"],
   "tsconfigFile": "tsconfig.app.json",
   "mutate": [
-    "src/lib/filterPois.ts",
-    "src/lib/openingStatus.ts",
-    "src/lib/tripUtils.ts"
+    "src/lib/**/*.ts",
+    "src/lib/**/*.tsx",
+    "!src/lib/**/*.test.*",
+    "!src/lib/firebase.ts",
+    "!src/lib/constants.ts",
+    "!src/lib/errorReporting.ts"
   ],
   "reporters": ["clear-text", "html", "progress"],
   "htmlReporter": {

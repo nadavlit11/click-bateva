@@ -12,7 +12,7 @@ const db = getFirestore();
  * Creates a Firebase Auth user, sets the business_user custom claim, and
  * atomically writes user and business documents to Firestore.
  */
-export const createBusinessUser = onCall({cors: true}, async (request) => {
+export const createBusinessUser = onCall({cors: true, enforceAppCheck: true}, async (request) => {
   // Verify caller is authenticated
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
@@ -98,7 +98,7 @@ export const createBusinessUser = onCall({cors: true}, async (request) => {
  * Callable function: admin-only — deletes a business user account.
  * Deletes the Firebase Auth user and atomically removes the user + business documents.
  */
-export const deleteBusinessUser = onCall({cors: true}, async (request) => {
+export const deleteBusinessUser = onCall({cors: true, enforceAppCheck: true}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
   }

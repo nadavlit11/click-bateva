@@ -68,7 +68,7 @@ export const onUserCreated = auth.user().onCreate(async (user) => {
  * Callable function: admin-only — assigns a role to a user.
  * Updates both the Firestore user document and the Auth custom claim.
  */
-export const setUserRole = onCall({cors: true}, async (request) => {
+export const setUserRole = onCall({cors: true, enforceAppCheck: true}, async (request) => {
   // Verify caller is authenticated
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");

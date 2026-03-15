@@ -13,6 +13,7 @@ While the details are fresh, ask:
 - Is there a gotcha worth adding to an existing skill?
 - Did a checklist step turn out to be wrong or incomplete?
 - Could we create or update something (a skill, memory entry, codebase-map page, utility) that would make a similar task faster next time?
+- Before adding a rule, check if an existing rule already covers the same scenario — update it instead of adding a duplicate.
 
 If yes → update the relevant skill file now. No commit needed yet.
 
@@ -31,6 +32,7 @@ If yes → update the relevant skill file now. No commit needed yet.
 Review every skill touched during this work:
 - Add new gotchas or edge cases discovered
 - Fix steps that turned out to be wrong or incomplete
+- **Deduplication check:** Before adding a new rule, search MEMORY.md and code-review/SKILL.md for existing rules that cover the same scenario. If found: update the existing rule instead of adding a new one. If the new rule supersedes an old one, remove the old one.
 - Remove steps that are no longer relevant
 
 Key skills to always check:

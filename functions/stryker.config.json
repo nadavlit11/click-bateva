@@ -7,7 +7,9 @@
   "checkers": ["typescript"],
   "tsconfigFile": "tsconfig.test.json",
   "mutate": [
-    "src/auth.ts"
+    "src/**/*.ts",
+    "!src/**/*.test.*",
+    "!src/index.ts"
   ],
   "reporters": ["clear-text", "html", "progress"],
   "htmlReporter": {

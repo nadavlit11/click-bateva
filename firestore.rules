@@ -46,12 +46,12 @@ service cloud.firestore {
     match /points_of_interest/{poiId} {
       allow read: if isAdminOrContentManager() ||
                      (isBusinessUser() && resource.data.businessId == request.auth.uid) ||
-                     // Default POIs (agents/groups shared)
+                     // Default POIs (agents/groups shared) — requires sign-in
                      (resource.data.mapType == 'default' &&
                        ((isTravelAgent() && resource.data.active == true && resource.data.maps.agents.active == true) ||
-                        (resource.data.active == true && resource.data.maps.groups.active == true))) ||
-                     // Families POIs — visible to everyone when active
-                     (resource.data.mapType == 'families' && resource.data.active == true);
+                        (isSignedIn() && resource.data.active == true && resource.data.maps.groups.active == true))) ||
+                     // Families POIs — visible to signed-in users when active
+                     (isSignedIn() && resource.data.mapType == 'families' && resource.data.active == true);
 
       allow create: if isAdminOrContentManager() &&
                        request.resource.data.mapType in ['default', 'families'];
@@ -87,21 +87,21 @@ service cloud.firestore {
     // ─── categories ─────────────────────────────────────────────────────────
 
     match /categories/{categoryId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow write: if isAdminOrContentManager();
     }
 
     // ─── subcategories ──────────────────────────────────────────────────────
 
     match /subcategories/{subcategoryId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow write: if isAdminOrContentManager();
     }
 
     // ─── icons ──────────────────────────────────────────────────────────────
 
     match /icons/{iconId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow write: if isAdminOrContentManager();
     }
 
@@ -117,7 +117,7 @@ service cloud.firestore {
     // ─── settings ───────────────────────────────────────────────────────────
 
     match /settings/{settingId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow write: if isAdmin();
     }
 

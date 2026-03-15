@@ -11,7 +11,7 @@ const db = getFirestore();
  * Callable function: admin-only — deletes a content manager account.
  * Deletes the Firebase Auth user and removes the user document from Firestore.
  */
-export const deleteContentManager = onCall({cors: true}, async (request) => {
+export const deleteContentManager = onCall({cors: true, enforceAppCheck: true}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
   }
@@ -48,7 +48,7 @@ export const deleteContentManager = onCall({cors: true}, async (request) => {
  * Callable function: admin-only — blocks a content manager account.
  * Disables the Firebase Auth user and marks the Firestore user doc as blocked.
  */
-export const blockContentManager = onCall({cors: true}, async (request) => {
+export const blockContentManager = onCall({cors: true, enforceAppCheck: true}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
   }
@@ -84,7 +84,7 @@ export const blockContentManager = onCall({cors: true}, async (request) => {
  * Creates a Firebase Auth user, sets the content_manager custom claim,
  * and writes the user document to Firestore.
  */
-export const createContentManager = onCall({cors: true}, async (request) => {
+export const createContentManager = onCall({cors: true, enforceAppCheck: true}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
   }

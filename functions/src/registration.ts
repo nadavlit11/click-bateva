@@ -50,7 +50,7 @@ function getTransporter(): nodemailer.Transporter {
  * email to the admin inbox with the prospective business/agent details.
  */
 export const sendRegistrationRequest = onCall(
-  {cors: true, secrets: [gmailUser, gmailAppPassword]},
+  {cors: true, enforceAppCheck: true, secrets: [gmailUser, gmailAppPassword]},
   async (request) => {
     const {
       companyName: rawCompany, contactName: rawContact,

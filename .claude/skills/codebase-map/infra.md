@@ -22,7 +22,8 @@ Single active site: `click-bateva` → https://click-bateva.web.app — serves m
 # Build app first, then deploy:
 firebase deploy --only hosting:click-bateva   # unified app
 
-# Cloud Functions:
+# Cloud Functions (IMPORTANT: rebuild first when adding new functions):
+cd functions && npm run build   # compile TS → JS (deploy reads compiled JS)
 firebase deploy --only functions
 
 # Security Rules:

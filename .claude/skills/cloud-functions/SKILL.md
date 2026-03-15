@@ -6,44 +6,15 @@ Reference for writing, configuring, and testing Firebase Cloud Functions in this
 
 ## firebase.json required config
 
-Every time a new capability is added, make sure `firebase.json` has the relevant block:
-
-```json
-{
-  "functions": [{ "source": "functions", "codebase": "default" }],
-  "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },
-  "storage": { "rules": "storage.rules" },
-  "emulators": {
-    "auth":      { "port": 9099 },
-    "functions": { "port": 5001 },
-    "firestore": { "port": 8080 },
-    "ui":        { "enabled": true }
-  }
-}
-```
+Verify `firebase.json` has `functions`, `firestore`, `storage`, `hosting`, and `emulators` blocks. See the existing file for full config.
 
 ---
 
 ## firebase-admin v13 — use modular imports
 
-**Never** use the legacy namespace pattern — it crashes at runtime:
-```ts
-// ❌ WRONG — admin.firestore is undefined as a namespace
-import * as admin from "firebase-admin";
-admin.firestore.FieldValue.serverTimestamp();
-```
+**Never** use `import * as admin from "firebase-admin"` — it crashes at runtime (`admin.firestore` is undefined).
 
-**Always** use modular imports:
-```ts
-// ✅ CORRECT
-import { initializeApp, getApps } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
-
-if (getApps().length === 0) initializeApp();
-const db = getFirestore();
-const adminAuth = getAuth();
-```
+**Always** use modular imports: `firebase-admin/app`, `firebase-admin/auth`, `firebase-admin/firestore`. See `functions/src/auth.ts` for the canonical pattern.
 
 ---
 
@@ -57,19 +28,9 @@ import { auth } from "firebase-functions/v1";           // Auth trigger (v1)
 import { onCall, HttpsError } from "firebase-functions/v2/https"; // Callable (v2)
 ```
 
-**CRITICAL: Cannot change trigger type on a deployed function.**
-If you try to change from `auth.user().onCreate` (v1 background trigger) to `beforeUserCreated` (v2 identity trigger) or vice versa, Firebase will block the deploy with:
-> "Changing from a background triggered function to providers/cloud.auth/eventTypes/user.beforeCreate is not allowed. Please delete your function and create a new one instead."
+**CRITICAL:** When changing a function's trigger type, delete the old function from Firebase Console first — redeploy won't update the trigger type.
 
-Fix: delete the function from Firebase Console first, then redeploy.
-
-## Node.js version for Gen1 functions
-
-Gen1 (`auth.user().onCreate`) **does not support Node 24**. Maximum is Node 22.
-Set in `functions/package.json`:
-```json
-"engines": { "node": "22" }
-```
+Gen1 auth triggers max Node 22 (not 24). Check `engines.node` in `functions/package.json`.
 
 ---
 
@@ -84,13 +45,7 @@ Set in `functions/package.json`:
 
 ## Testing Auth triggers
 
-**Creating users via the Emulator Suite UI does NOT trigger `onUserCreated`.**
-You must use the Firebase client SDK:
-
-```js
-import { createUserWithEmailAndPassword } from "firebase/app";
-await createUserWithEmailAndPassword(auth, email, password); // ← triggers onUserCreated
-```
+Creating users via the Emulator Suite UI does NOT trigger `onUserCreated`. Use the Firebase client SDK's `createUserWithEmailAndPassword` from `firebase/auth` instead.
 
 ---
 
@@ -169,27 +124,13 @@ module.exports = {
 
 ### Unit test boilerplate — mocking Admin SDK
 
-`auth.ts` calls `getFirestore()` and `getAuth()` at **module load time**. Mocks must be declared with `jest.mock()` (auto-hoisted by Jest) before the `import` of `auth.ts`:
+`auth.ts` calls `getFirestore()` and `getAuth()` at **module load time**. Key rules:
 
-```ts
-// jest.mock() calls are hoisted above imports automatically
-jest.mock("firebase-admin/firestore", () => ({
-  getFirestore: jest.fn(() => ({
-    collection: jest.fn(() => ({ doc: jest.fn(() => ({ set: mockSet, update: mockUpdate })) })),
-  })),
-  FieldValue: { serverTimestamp: jest.fn(() => "mock-timestamp") },
-}));
-jest.mock("firebase-admin/auth", () => ({
-  getAuth: jest.fn(() => ({ setCustomUserClaims: mockSetCustomUserClaims })),
-}));
-jest.mock("firebase-admin/app", () => ({
-  initializeApp: jest.fn(),
-  getApps: jest.fn(() => [{ name: "mock" }]), // non-empty → skip init
-}));
+1. Use `jest.mock()` (auto-hoisted) for all three modules: `firebase-admin/firestore`, `firebase-admin/auth`, `firebase-admin/app`
+2. `import` the module under test AFTER the `jest.mock()` calls
+3. `getApps` mock must return a non-empty array to skip `initializeApp()`
 
-// Import AFTER mocks
-import { setUserRole } from "../auth.js";
-```
+See `functions/src/__tests__/auth.unit.test.ts` for the full working pattern.
 
 ### Calling v2 callables in unit tests
 
@@ -217,12 +158,12 @@ const businessRef = `/databases/(default)/documents/businesses/${uid}`;
 await adminAuth.setCustomUserClaims(uid, { role: "business_user", businessRef });
 ```
 
-The `businessRef` path is checked by the Firestore `businesses` read rule:
+The `businessRef` claim is set for auditability and mirrored in the `users/{uid}` doc. The actual `businesses` read rule uses UID comparison:
 ```
-request.auth.token.businessRef == /databases/$(database)/documents/businesses/$(businessId)
+allow read: if isAdmin() || (isBusinessUser() && request.auth.uid == businessId)
 ```
 
-**Gotcha:** Setting only `{ role: "business_user" }` will cause the business dashboard `AuthGuard` to fail when reading the business document — the Firestore rule will deny the read.
+**Gotcha:** Setting only `{ role: "business_user" }` without `businessRef` will break the business dashboard — `AuthGuard` expects `businessRef` to resolve the business document path.
 
 The `businesses/{uid}` document must also include `associatedUserIds: [uid]` — checked by the POI update rule:
 ```
