@@ -14,7 +14,7 @@
 Helper functions: isSignedIn, userRole, isAdmin, isContentManager, isAdminOrContentManager, isBusinessUser, isTravelAgent, isCrmUser, isCrmAuthorized
 
 points_of_interest/{poiId}
-  read:   admin/cm OR (travel_agent && maps.agents.active == true) OR (business_user && businessId == uid) OR maps.groups.active == true
+  read:   admin/cm OR (NOT honeypot && (travel_agent && maps.agents.active == true) OR (business_user && businessId == uid) OR maps.groups.active == true)
   create: admin/cm
   delete: admin ONLY (content managers CANNOT delete)
   update: admin/cm OR (business_user && in associatedUserIds && affectedKeys allowlist)
@@ -67,6 +67,7 @@ users/{userId}
 ## Gotchas
 
 - Custom claims are STRINGS — comparing to a path literal is always false. Use string concatenation: `'/databases/' + database + '/documents/businesses/' + businessId`
+- Honeypot POIs (`_hp: true`) are blocked at the rule level for all non-admin reads via `resource.data.get('_hp', false) != true`. Admin/CM bypass this to manage honeypots.
 - POIs now have a `maps` nested field: `{ agents: { price, active }, groups: { price, active } }`. The read rule uses per-map active checks instead of a single top-level `active` field.
 - `isTravelAgent()` helper checks `request.auth.token.role == 'travel_agent'`
 - After adding a new field to `PoiEditableFields`, the `affectedKeys().hasOnly(...)` allowlist MUST also be updated
