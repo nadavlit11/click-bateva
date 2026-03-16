@@ -474,7 +474,7 @@ export default function MapApp() {
           canSeeAgents={canSeeAgents}
           onMapKeyChange={handleMapKeyChange}
           role={role}
-          isLoggedIn={!!user}
+          isLoggedIn={!!user && !user.isAnonymous}
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
@@ -576,7 +576,7 @@ export default function MapApp() {
           onSubcategoryFilter={setSubcategoryModalCategoryId}
           onClearAll={handleClearAll}
           role={role}
-          isLoggedIn={!!user}
+          isLoggedIn={!!user && !user.isAnonymous}
           onLoginClick={() => setLoginModalOpen(true)}
           onRegisterClick={() => setRegisterModalOpen(true)}
           onLogout={logout}
