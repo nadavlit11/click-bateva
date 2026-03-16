@@ -223,13 +223,13 @@ jobs:
         if: needs.changes.outputs.functions == 'true'
         run: firebase deploy --only functions --project click-bateva
 
-      # Deploy rules
+      # Deploy rules (independent of functions — must not be skipped by prior failures)
       - name: Deploy Firestore rules
-        if: needs.changes.outputs.firestore == 'true'
+        if: always() && !cancelled() && needs.changes.outputs.firestore == 'true'
         run: firebase deploy --only firestore --project click-bateva
 
       - name: Deploy Storage rules
-        if: needs.changes.outputs.storage == 'true'
+        if: always() && !cancelled() && needs.changes.outputs.storage == 'true'
         run: firebase deploy --only storage --project click-bateva
 
       # Cleanup
