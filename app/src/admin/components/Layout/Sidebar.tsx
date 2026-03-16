@@ -67,16 +67,6 @@ export function Sidebar() {
           <NavItemLink key={item.path} item={item} />
         ))}
 
-        {role === 'admin' && (
-          <a
-            href="https://click-bateva-crm.web.app"
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            CRM ←
-          </a>
-        )}
       </nav>
 
       <div className="p-3 border-t border-gray-200">

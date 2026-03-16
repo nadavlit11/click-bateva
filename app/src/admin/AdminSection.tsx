@@ -1,5 +1,5 @@
 import "leaflet/dist/leaflet.css";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { AuthGuard } from "./components/AuthGuard";
 import { AppLayout } from "./components/Layout/AppLayout";
@@ -45,20 +45,7 @@ function AdminOnlyRoute() {
 }
 
 function AdminIndex() {
-  const { role } = useAuth();
-  if (role === "crm_user") {
-    return <CrmRedirect />;
-  }
   return <DashboardPage />;
-}
-
-function CrmRedirect() {
-  useEffect(() => {
-    window.location.href = "https://click-bateva-crm.web.app";
-  }, []);
-  return (
-    <div className="text-center py-10 text-gray-400">מעביר ל-CRM...</div>
-  );
 }
 
 const Loading = () => (
