@@ -3,6 +3,7 @@ import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/fi
 import { ref, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
+import { useAuth } from '../../hooks/useAuth'
 import type { Category, Icon } from '../types/index.ts'
 import { IconPicker } from './IconPicker.tsx'
 import { ColorPickerField } from './ColorPickerField.tsx'
@@ -33,6 +34,7 @@ const INITIAL_FORM: FormState = {
 }
 
 export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Props) {
+  const { user } = useAuth()
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -96,9 +98,9 @@ export function CategoryModal({ isOpen, onClose, category, onSaved, icons }: Pro
       }
 
       if (category?.id) {
-        await updateDoc(doc(db, 'categories', category.id), data)
+        await updateDoc(doc(db, 'categories', category.id), { ...data, updatedBy: user!.uid })
       } else {
-        await addDoc(collection(db, 'categories'), { ...data, createdAt: serverTimestamp() })
+        await addDoc(collection(db, 'categories'), { ...data, createdAt: serverTimestamp(), createdBy: user!.uid })
       }
       onSaved()
     } catch (err) {

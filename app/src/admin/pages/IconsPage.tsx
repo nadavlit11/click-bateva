@@ -18,7 +18,7 @@ const BULK_STATUS: Record<BulkItemStatus, { dot: string; label: string }> = {
 }
 
 export function IconsPage() {
-  const { role } = useAuth()
+  const { role, user } = useAuth()
   const [icons, setIcons] = useState<Icon[]>([])
   const [resolvedUrls, setResolvedUrls] = useState<Record<string, string>>({})
   const [name, setName] = useState('')
@@ -67,7 +67,7 @@ export function IconsPage() {
       const path = `icons/${crypto.randomUUID()}.${ext}`
       const storageRef = ref(storage, path)
       await uploadBytes(storageRef, file)
-      await addDoc(collection(db, 'icons'), { name: iconName, path, createdAt: serverTimestamp() })
+      await addDoc(collection(db, 'icons'), { name: iconName, path, createdAt: serverTimestamp(), createdBy: user!.uid })
       setName('')
     } catch (err) {
       setError('שגיאה בהעלאת האייקון')
@@ -94,7 +94,7 @@ export function IconsPage() {
         const path = `icons/${crypto.randomUUID()}.${ext}`
         const storageRef = ref(storage, path)
         await uploadBytes(storageRef, file)
-        await addDoc(collection(db, 'icons'), { name: items[i].name, path, createdAt: serverTimestamp() })
+        await addDoc(collection(db, 'icons'), { name: items[i].name, path, createdAt: serverTimestamp(), createdBy: user!.uid })
         setBulkItems(prev => prev.map((it, j) => j === i ? { ...it, status: 'done' } : it))
       } catch (err) {
         setBulkItems(prev => prev.map((it, j) => j === i ? { ...it, status: 'error' } : it))
@@ -118,6 +118,7 @@ export function IconsPage() {
     try {
       await updateDoc(doc(db, 'icons', id), {
         name: editForm.name.trim(),
+        updatedBy: user!.uid,
       })
       setEditingId(null)
     } catch (err) {

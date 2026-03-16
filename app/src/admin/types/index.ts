@@ -50,6 +50,8 @@ export interface Poi {
   isHomeMap: boolean | null
   createdAt: unknown
   updatedAt: unknown
+  createdBy?: string
+  updatedBy?: string
 }
 
 export interface Category {
@@ -66,6 +68,8 @@ export interface Category {
   locationless?: boolean
   createdAt: unknown
   updatedAt: unknown
+  createdBy?: string
+  updatedBy?: string
 }
 
 export interface Subcategory {
@@ -82,6 +86,8 @@ export interface Subcategory {
   iconUrl: string | null
   createdAt: unknown
   updatedAt: unknown
+  createdBy?: string
+  updatedBy?: string
 }
 
 export interface Icon {
@@ -89,6 +95,8 @@ export interface Icon {
   name: string
   path: string   // Storage path, e.g. 'icons/{uuid}.png'
   createdAt: unknown
+  createdBy?: string
+  updatedBy?: string
 }
 
 export interface Business {

@@ -14,6 +14,7 @@ import { ref, getDownloadURL } from 'firebase/storage'
 import { db, storage, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { FOOD_CATEGORY_ID } from '../../lib/constants.ts'
+import { useAuth } from '../../hooks/useAuth'
 import type { Poi, Category, Subcategory, Icon, Business } from '../types/index.ts'
 import type { FormState } from './poi-form/types.ts'
 import { INITIAL_FORM, EMPTY_HOURS } from './poi-form/types.ts'
@@ -27,6 +28,7 @@ export function PoiEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
+  const { user } = useAuth()
   const locState = location.state as {
     poisSearch?: string
     poisScrollTop?: number
@@ -198,6 +200,7 @@ export function PoiEditPage() {
         hideBorder: source.hideBorder ?? null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        createdBy: user!.uid,
       }
 
       const newRef = await addDoc(
@@ -206,6 +209,7 @@ export function PoiEditPage() {
       )
       await updateDoc(doc(db, 'points_of_interest', id), {
         linkedPoiId: newRef.id,
+        updatedBy: user!.uid,
       })
       setShowDuplicateConfirm(false)
       navigate(`/admin/pois/${newRef.id}`, { state: { poisScrollTop } })
@@ -315,6 +319,7 @@ export function PoiEditPage() {
         hideBorder: form.hideBorder ? true : null,
         isHomeMap: form.isHomeMap ? true : null,
         updatedAt: serverTimestamp(),
+        updatedBy: user!.uid,
       }
 
       if (id) {
@@ -323,6 +328,7 @@ export function PoiEditPage() {
         await addDoc(collection(db, 'points_of_interest'), {
           ...data,
           createdAt: serverTimestamp(),
+          createdBy: user!.uid,
         })
       }
       navigate(poisListPath, { state: { poisScrollTop } })

@@ -5,6 +5,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { FOOD_CATEGORY_ID } from '../../lib/constants.ts'
+import { useAuth } from '../../hooks/useAuth'
 import { ImageUploader } from '../components/ImageUploader.tsx'
 import { PoiDetailPanel } from '../../user-web/components/MapView/PoiDetailPanel.tsx'
 import type { Poi, PoiEditableFields, DayHours } from '../types/index.ts'
@@ -47,6 +48,7 @@ function VideoUrlInput({ onAdd }: { onAdd: (url: string) => void }) {
 export function PoiEditPage() {
   const { poiId } = useParams<{ poiId: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [poi, setPoi] = useState<Poi | null>(null)
   const [category, setCategory] = useState<Category | null>(null)
   const [showMobilePreview, setShowMobilePreview] = useState(false)
@@ -234,6 +236,7 @@ export function PoiEditPage() {
         minPeople: form.minPeople.trim() || null,
         maxPeople: form.maxPeople.trim() || null,
         updatedAt: serverTimestamp(),
+        updatedBy: user!.uid,
       })
       navigate('/business/')
     } catch (err) {

@@ -343,6 +343,7 @@ describe("points_of_interest collection", () => {
     name: "Test POI",
     active: true,
     businessId: "biz-1",
+    categoryId: "cat-1",
     description: "A test point of interest",
     mapType: "default",
     maps: { agents: { price: null, active: true }, groups: { price: null, active: true } },
@@ -379,6 +380,7 @@ describe("points_of_interest collection", () => {
     name: "Families POI",
     active: true,
     businessId: null,
+    categoryId: "cat-1",
     description: "A families map POI",
     mapType: "families",
     price: "50",
@@ -753,21 +755,65 @@ describe("points_of_interest collection", () => {
   });
 
   describe("CREATE", () => {
-    it("allows admin to create a POI", async () => {
+    it("allows admin to create a POI with createdBy", async () => {
       const admin = env.authenticatedContext("admin-uid", { role: "admin" });
       const db = admin.firestore();
       await assertSucceeds(
-        setDoc(doc(db, "points_of_interest", "new-poi"), ACTIVE_POI)
+        setDoc(doc(db, "points_of_interest", "new-poi"), {
+          ...ACTIVE_POI, createdBy: "admin-uid",
+        })
       );
     });
 
-    it("allows content_manager to create a POI", async () => {
+    it("allows content_manager to create a POI with createdBy", async () => {
       const cm = env.authenticatedContext("cm-uid", {
         role: "content_manager",
       });
       const db = cm.firestore();
       await assertSucceeds(
+        setDoc(doc(db, "points_of_interest", "new-poi"), {
+          ...ACTIVE_POI, createdBy: "cm-uid",
+        })
+      );
+    });
+
+    it("denies create without createdBy", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertFails(
         setDoc(doc(db, "points_of_interest", "new-poi"), ACTIVE_POI)
+      );
+    });
+
+    it("denies create with wrong createdBy", async () => {
+      const cm = env.authenticatedContext("cm-uid", {
+        role: "content_manager",
+      });
+      const db = cm.firestore();
+      await assertFails(
+        setDoc(doc(db, "points_of_interest", "new-poi"), {
+          ...ACTIVE_POI, createdBy: "someone-else",
+        })
+      );
+    });
+
+    it("denies create with empty name", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertFails(
+        setDoc(doc(db, "points_of_interest", "new-poi"), {
+          ...ACTIVE_POI, name: "", createdBy: "admin-uid",
+        })
+      );
+    });
+
+    it("denies create with empty categoryId", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertFails(
+        setDoc(doc(db, "points_of_interest", "new-poi"), {
+          ...ACTIVE_POI, categoryId: "", createdBy: "admin-uid",
+        })
       );
     });
 
@@ -775,7 +821,9 @@ describe("points_of_interest collection", () => {
       const unauthed = env.unauthenticatedContext();
       const db = unauthed.firestore();
       await assertFails(
-        setDoc(doc(db, "points_of_interest", "new-poi"), ACTIVE_POI)
+        setDoc(doc(db, "points_of_interest", "new-poi"), {
+          ...ACTIVE_POI, createdBy: "anon",
+        })
       );
     });
 
@@ -786,7 +834,9 @@ describe("points_of_interest collection", () => {
       });
       const db = bizUser.firestore();
       await assertFails(
-        setDoc(doc(db, "points_of_interest", "new-poi"), ACTIVE_POI)
+        setDoc(doc(db, "points_of_interest", "new-poi"), {
+          ...ACTIVE_POI, createdBy: "biz-uid",
+        })
       );
     });
 
@@ -794,7 +844,9 @@ describe("points_of_interest collection", () => {
       const admin = env.authenticatedContext("admin-uid", { role: "admin" });
       const db = admin.firestore();
       await assertSucceeds(
-        setDoc(doc(db, "points_of_interest", "new-fam"), FAMILIES_POI)
+        setDoc(doc(db, "points_of_interest", "new-fam"), {
+          ...FAMILIES_POI, createdBy: "admin-uid",
+        })
       );
     });
 
@@ -805,6 +857,7 @@ describe("points_of_interest collection", () => {
         setDoc(doc(db, "points_of_interest", "bad-type"), {
           ...ACTIVE_POI,
           mapType: "invalid",
+          createdBy: "admin-uid",
         })
       );
     });
@@ -836,6 +889,7 @@ describe("points_of_interest collection", () => {
           email: "biz@example.com",
           website: "https://example.com",
           updatedAt: serverTimestamp(),
+          updatedBy: "biz-user-uid",
         })
       );
     });
@@ -861,6 +915,7 @@ describe("points_of_interest collection", () => {
         updateDoc(doc(db, "points_of_interest", "poi-biz"), {
           whatsapp: "972-50-1234567",
           updatedAt: serverTimestamp(),
+          updatedBy: "biz-user-uid",
         })
       );
     });
@@ -951,7 +1006,7 @@ describe("points_of_interest collection", () => {
       );
     });
 
-    it("allows admin to update any field on a POI", async () => {
+    it("allows admin to update any field on a POI with updatedBy", async () => {
       await env.withSecurityRulesDisabled(async (ctx) => {
         await setDoc(
           doc(ctx.firestore(), "points_of_interest", "poi-1"),
@@ -965,6 +1020,66 @@ describe("points_of_interest collection", () => {
         updateDoc(doc(db, "points_of_interest", "poi-1"), {
           active: false,
           name: "Renamed POI",
+          updatedBy: "admin-uid",
+        })
+      );
+    });
+
+    it("denies update without updatedBy", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-1"),
+          ACTIVE_POI
+        );
+      });
+
+      const cm = env.authenticatedContext("cm-uid", {
+        role: "content_manager",
+      });
+      const db = cm.firestore();
+      await assertFails(
+        updateDoc(doc(db, "points_of_interest", "poi-1"), {
+          name: "Updated",
+        })
+      );
+    });
+
+    it("denies update that clears name", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-1"),
+          ACTIVE_POI
+        );
+      });
+
+      const cm = env.authenticatedContext("cm-uid", {
+        role: "content_manager",
+      });
+      const db = cm.firestore();
+      await assertFails(
+        updateDoc(doc(db, "points_of_interest", "poi-1"), {
+          name: "",
+          updatedBy: "cm-uid",
+        })
+      );
+    });
+
+    it("denies update that clears categoryId", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(
+          doc(ctx.firestore(), "points_of_interest", "poi-1"),
+          ACTIVE_POI
+        );
+      });
+
+      const cm = env.authenticatedContext("cm-uid", {
+        role: "content_manager",
+      });
+      const db = cm.firestore();
+      await assertFails(
+        updateDoc(doc(db, "points_of_interest", "poi-1"), {
+          categoryId: "",
+          updatedBy: "cm-uid",
         })
       );
     });
@@ -1138,55 +1253,109 @@ describe("icons collection", () => {
     });
   });
 
-  describe("WRITE", () => {
+  describe("CREATE", () => {
     it("denies unauthenticated user from creating an icon", async () => {
       const unauthed = env.unauthenticatedContext();
       const db = unauthed.firestore();
       await assertFails(
-        setDoc(doc(db, "icons", "new-icon"), ICON_DOC)
+        setDoc(doc(db, "icons", "new-icon"), {
+          ...ICON_DOC, createdBy: "anon",
+        })
       );
     });
 
+    it("denies standard_user from creating an icon", async () => {
+      const user = env.authenticatedContext("user-uid", {
+        role: "standard_user",
+      });
+      const db = user.firestore();
+      await assertFails(
+        setDoc(doc(db, "icons", "new-icon"), {
+          ...ICON_DOC, createdBy: "user-uid",
+        })
+      );
+    });
+
+    it("allows admin to create an icon with createdBy", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertSucceeds(
+        setDoc(doc(db, "icons", "new-icon"), {
+          ...ICON_DOC, createdBy: "admin-uid",
+        })
+      );
+    });
+
+    it("allows content_manager to create an icon with createdBy", async () => {
+      const cm = env.authenticatedContext("cm-uid", {
+        role: "content_manager",
+      });
+      const db = cm.firestore();
+      await assertSucceeds(
+        setDoc(doc(db, "icons", "new-icon"), {
+          ...ICON_DOC, createdBy: "cm-uid",
+        })
+      );
+    });
+
+    it("denies create without createdBy", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertFails(
+        setDoc(doc(db, "icons", "new-icon"), ICON_DOC)
+      );
+    });
+  });
+
+  describe("UPDATE", () => {
     it("denies unauthenticated user from updating an icon", async () => {
       const unauthed = env.unauthenticatedContext();
       const db = unauthed.firestore();
       await assertFails(
-        updateDoc(doc(db, "icons", "icon-1"), { name: "modified" })
+        updateDoc(doc(db, "icons", "icon-1"), {
+          name: "modified", updatedBy: "anon",
+        })
       );
     });
 
+    it("allows admin to update an icon with updatedBy", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertSucceeds(
+        updateDoc(doc(db, "icons", "icon-1"), {
+          name: "modified", updatedBy: "admin-uid",
+        })
+      );
+    });
+
+    it("denies update without updatedBy", async () => {
+      const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+      const db = admin.firestore();
+      await assertFails(
+        updateDoc(doc(db, "icons", "icon-1"), { name: "modified" })
+      );
+    });
+  });
+
+  describe("DELETE", () => {
     it("denies unauthenticated user from deleting an icon", async () => {
       const unauthed = env.unauthenticatedContext();
       const db = unauthed.firestore();
       await assertFails(deleteDoc(doc(db, "icons", "icon-1")));
     });
 
-    it("denies standard_user from writing an icon", async () => {
-      const user = env.authenticatedContext("user-uid", {
-        role: "standard_user",
-      });
-      const db = user.firestore();
-      await assertFails(
-        setDoc(doc(db, "icons", "new-icon"), ICON_DOC)
-      );
-    });
-
-    it("allows admin to write an icon", async () => {
+    it("allows admin to delete an icon", async () => {
       const admin = env.authenticatedContext("admin-uid", { role: "admin" });
       const db = admin.firestore();
-      await assertSucceeds(
-        setDoc(doc(db, "icons", "new-icon"), ICON_DOC)
-      );
+      await assertSucceeds(deleteDoc(doc(db, "icons", "icon-1")));
     });
 
-    it("allows content_manager to write an icon", async () => {
+    it("denies content_manager from deleting an icon", async () => {
       const cm = env.authenticatedContext("cm-uid", {
         role: "content_manager",
       });
       const db = cm.firestore();
-      await assertSucceeds(
-        setDoc(doc(db, "icons", "new-icon"), ICON_DOC)
-      );
+      await assertFails(deleteDoc(doc(db, "icons", "icon-1")));
     });
   });
 });
@@ -1853,5 +2022,234 @@ describe("crm_user reading users collection", () => {
     await assertSucceeds(
       getDoc(doc(db, "users", "other-uid"))
     );
+  });
+});
+
+// ── audit_log collection ─────────────────────────────────────────────────────
+
+describe("audit_log collection", () => {
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "audit_log", "log-1"), {
+        collection: "points_of_interest",
+        documentId: "poi-1",
+        action: "update",
+        userId: "cm-uid",
+        changes: { name: { old: "A", new: "B" } },
+        timestamp: serverTimestamp(),
+      });
+    });
+  });
+
+  it("allows admin to read audit_log", async () => {
+    const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+    const db = admin.firestore();
+    await assertSucceeds(getDoc(doc(db, "audit_log", "log-1")));
+  });
+
+  it("denies content_manager from reading audit_log", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertFails(getDoc(doc(db, "audit_log", "log-1")));
+  });
+
+  it("denies any client from creating audit_log", async () => {
+    const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+    const db = admin.firestore();
+    await assertFails(
+      addDoc(collection(db, "audit_log"), { action: "test" })
+    );
+  });
+
+  it("denies any client from updating audit_log", async () => {
+    const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+    const db = admin.firestore();
+    await assertFails(
+      updateDoc(doc(db, "audit_log", "log-1"), { action: "tampered" })
+    );
+  });
+
+  it("denies any client from deleting audit_log", async () => {
+    const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+    const db = admin.firestore();
+    await assertFails(deleteDoc(doc(db, "audit_log", "log-1")));
+  });
+});
+
+// ── categories collection ────────────────────────────────────────────────────
+
+describe("categories collection", () => {
+  const CAT_DOC = { name: "מסעדות", color: "#FF5733" };
+
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "categories", "cat-1"), CAT_DOC);
+    });
+  });
+
+  it("allows signed-in user to read", async () => {
+    const user = env.authenticatedContext("u1");
+    const db = user.firestore();
+    await assertSucceeds(getDoc(doc(db, "categories", "cat-1")));
+  });
+
+  it("allows admin to create with createdBy", async () => {
+    const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+    const db = admin.firestore();
+    await assertSucceeds(
+      setDoc(doc(db, "categories", "cat-new"), {
+        ...CAT_DOC, createdBy: "admin-uid",
+      })
+    );
+  });
+
+  it("allows content_manager to create with createdBy", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertSucceeds(
+      setDoc(doc(db, "categories", "cat-new"), {
+        ...CAT_DOC, createdBy: "cm-uid",
+      })
+    );
+  });
+
+  it("denies create without createdBy", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertFails(
+      setDoc(doc(db, "categories", "cat-new"), CAT_DOC)
+    );
+  });
+
+  it("denies create with empty name", async () => {
+    const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+    const db = admin.firestore();
+    await assertFails(
+      setDoc(doc(db, "categories", "cat-new"), {
+        name: "", color: "#000", createdBy: "admin-uid",
+      })
+    );
+  });
+
+  it("allows admin to update with updatedBy", async () => {
+    const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+    const db = admin.firestore();
+    await assertSucceeds(
+      updateDoc(doc(db, "categories", "cat-1"), {
+        name: "Updated", updatedBy: "admin-uid",
+      })
+    );
+  });
+
+  it("denies update without updatedBy", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertFails(
+      updateDoc(doc(db, "categories", "cat-1"), { name: "Hacked" })
+    );
+  });
+
+  it("allows admin to delete", async () => {
+    const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+    const db = admin.firestore();
+    await assertSucceeds(deleteDoc(doc(db, "categories", "cat-1")));
+  });
+
+  it("denies content_manager from deleting", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertFails(deleteDoc(doc(db, "categories", "cat-1")));
+  });
+});
+
+// ── subcategories collection ─────────────────────────────────────────────────
+
+describe("subcategories collection", () => {
+  const SUB_DOC = { name: "כשר", categoryId: "cat-1" };
+
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "subcategories", "sub-1"), SUB_DOC);
+    });
+  });
+
+  it("allows admin to create with createdBy", async () => {
+    const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+    const db = admin.firestore();
+    await assertSucceeds(
+      setDoc(doc(db, "subcategories", "sub-new"), {
+        ...SUB_DOC, createdBy: "admin-uid",
+      })
+    );
+  });
+
+  it("allows content_manager to create with createdBy", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertSucceeds(
+      setDoc(doc(db, "subcategories", "sub-new"), {
+        ...SUB_DOC, createdBy: "cm-uid",
+      })
+    );
+  });
+
+  it("denies create with empty name", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertFails(
+      setDoc(doc(db, "subcategories", "sub-new"), {
+        name: "", categoryId: "c1", createdBy: "cm-uid",
+      })
+    );
+  });
+
+  it("allows content_manager to update with updatedBy", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertSucceeds(
+      updateDoc(doc(db, "subcategories", "sub-1"), {
+        name: "Updated", updatedBy: "cm-uid",
+      })
+    );
+  });
+
+  it("denies update without updatedBy", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertFails(
+      updateDoc(doc(db, "subcategories", "sub-1"), { name: "Hacked" })
+    );
+  });
+
+  it("denies content_manager from deleting", async () => {
+    const cm = env.authenticatedContext("cm-uid", {
+      role: "content_manager",
+    });
+    const db = cm.firestore();
+    await assertFails(deleteDoc(doc(db, "subcategories", "sub-1")));
+  });
+
+  it("allows admin to delete", async () => {
+    const admin = env.authenticatedContext("admin-uid", { role: "admin" });
+    const db = admin.firestore();
+    await assertSucceeds(deleteDoc(doc(db, "subcategories", "sub-1")));
   });
 });
