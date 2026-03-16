@@ -2,7 +2,7 @@
 
 ## Key Files
 
-- `firebase.json` — hosting target (1 active site), functions source, Firestore/Storage rules, emulator ports
+- `firebase.json` — hosting targets (2 active sites), functions source, Firestore/Storage rules, emulator ports
 - `.firebaserc` — project aliases
 - `firestore.rules` — Firestore Security Rules
 - `storage.rules` — Cloud Storage Security Rules
@@ -12,9 +12,18 @@
 
 ## Hosting Target
 
-Single active site: `click-bateva` → https://click-bateva.web.app — serves map (`/`), admin (`/admin/*`), business (`/business/*`).
+Two active sites:
+- `click-bateva` → https://click-bateva.web.app — serves map (`/`), admin (`/admin/*`), business (`/business/*`). Custom domain: https://clickbateva.co.il
+- `click-bateva-crm` → https://click-bateva-crm.web.app — standalone CRM app
 
-(`click-bateva-app` and `click-bateva-biz` Firebase Hosting sites still exist in the Firebase console but are not in `firebase.json` and are not deployed by CI.)
+Legacy sites `click-bateva-app` and `click-bateva-biz` were deleted from Firebase console (IDs permanently retired, cannot be recreated).
+
+### Custom domain checklist
+When adding a new custom domain to Firebase Hosting, update ALL of these:
+1. **GCP API Key referrers** — add `newdomain.com/*` to Browser Key HTTP referrers in [GCP Credentials](https://console.cloud.google.com/apis/credentials)
+2. **reCAPTCHA v3 domains** — add `newdomain.com` in [reCAPTCHA admin](https://www.google.com/recaptcha/admin)
+3. **Firebase Auth authorized domains** — Firebase Console → Authentication → Settings
+4. Missing any one causes cascading 403 errors: Installations → App Check → Auth → Firestore all fail
 
 ## Deploy Commands
 
@@ -72,7 +81,7 @@ npm run test:mutate:functions    # functions only
 ## Patterns & Conventions
 
 - CSP is `Content-Security-Policy-Report-Only` (not enforcement) — violations logged but don't block
-- CSP covers: Google Maps, Leaflet tiles (`*.tile.openstreetmap.org`), Nominatim geocoding, Cloud Functions endpoint, Firebase SDKs, Sentry, Google Analytics, YouTube iframe, reCAPTCHA (App Check), Firebase App Check API
+- CSP covers: Google Maps, Leaflet tiles (`*.tile.openstreetmap.org`), Nominatim geocoding, Cloud Functions endpoint, Firebase SDKs, Sentry, Google Analytics, YouTube iframe, reCAPTCHA script+connect (App Check), Firebase App Check API
 - SPA rewrite: all routes → `/index.html`
 - Asset caching: `/assets/**` gets `max-age=31536000, immutable`; HTML gets `no-cache`
 - `Permissions-Policy: geolocation=(self)` — map uses browser geolocation
