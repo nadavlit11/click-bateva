@@ -14,7 +14,7 @@
 
 Two active sites:
 - `click-bateva` → https://click-bateva.web.app — serves map (`/`), admin (`/admin/*`), business (`/business/*`). Custom domain: https://clickbateva.co.il
-- `click-bateva-crm` → https://click-bateva-crm.web.app — standalone CRM app
+- `click-bateva-crm` → https://click-bateva-crm.web.app — standalone CRM app (no App Check, login-only, no anonymous auth, no cross-links to main app)
 
 Legacy sites `click-bateva-app` and `click-bateva-biz` were deleted from Firebase console (IDs permanently retired, cannot be recreated).
 

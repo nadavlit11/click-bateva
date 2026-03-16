@@ -62,16 +62,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </NavLink>
         ))}
 
-        {role === 'admin' && (
-          <a
-            href="https://click-bateva.web.app/admin"
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            לוח ניהול ←
-          </a>
-        )}
       </nav>
 
       <div className="p-3 border-t border-gray-200">
