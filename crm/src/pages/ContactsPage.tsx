@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   collection, onSnapshot, doc, deleteDoc, orderBy, query,
 } from 'firebase/firestore'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../lib/firebase.ts'
+import { useAuthEffect } from '../hooks/useAuthSnapshot.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { useAuth } from '../hooks/useAuth'
 import { ContactModal } from '../components/crm/ContactModal.tsx'
@@ -22,7 +23,7 @@ export function ContactsPage() {
   const [confirmDelete, setConfirmDelete] = useState<CrmContact | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  useEffect(() => {
+  useAuthEffect(() => {
     const q = query(
       collection(db, 'crm_contacts'),
       orderBy('createdAt', 'desc'),
@@ -38,7 +39,9 @@ export function ContactsPage() {
         setLoading(false)
       },
       err => {
-        reportError(err, { source: 'ContactsPage.onSnapshot' })
+        reportError(err, {
+          source: 'ContactsPage.onSnapshot',
+        })
         setLoading(false)
       },
     )

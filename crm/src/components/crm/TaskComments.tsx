@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   collection, onSnapshot, addDoc, serverTimestamp,
   query, orderBy,
 } from 'firebase/firestore'
 import { db } from '../../lib/firebase.ts'
+import { useAuthEffect } from '../../hooks/useAuthSnapshot.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { useAuth } from '../../hooks/useAuth'
 import { formatDateTime } from './crmUtils.ts'
@@ -20,7 +21,7 @@ export function TaskComments({ taskId }: Props) {
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
+  useAuthEffect(() => {
     const q = query(
       collection(db, 'crm_tasks', taskId, 'comments'),
       orderBy('createdAt', 'desc'),
@@ -36,7 +37,9 @@ export function TaskComments({ taskId }: Props) {
         setLoading(false)
       },
       err => {
-        reportError(err, { source: 'TaskComments.onSnapshot' })
+        reportError(err, {
+          source: 'TaskComments.onSnapshot',
+        })
         setLoading(false)
       },
     )

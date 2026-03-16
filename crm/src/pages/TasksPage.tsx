@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import {
   collection, onSnapshot, doc, deleteDoc,
   orderBy, query, Timestamp,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
+import { useAuthEffect } from '../hooks/useAuthSnapshot.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { useAuth } from '../hooks/useAuth'
 import { TaskModal } from '../components/crm/TaskModal.tsx'
@@ -61,7 +62,7 @@ export function TasksPage() {
   const [confirmDelete, setConfirmDelete] = useState<CrmTask | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  useEffect(() => {
+  useAuthEffect(() => {
     const q = query(
       collection(db, 'crm_tasks'),
       orderBy('date', 'asc'),

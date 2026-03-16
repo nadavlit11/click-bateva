@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   doc, onSnapshot, updateDoc, deleteDoc, getDocs,
@@ -6,6 +6,7 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
+import { useAuthEffect } from '../hooks/useAuthSnapshot.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { useAuth } from '../hooks/useAuth'
 import { ActivityTimeline } from '../components/crm/ActivityTimeline.tsx'
@@ -37,7 +38,7 @@ export function ContactDetailPage() {
   // Create task modal
   const [taskModalOpen, setTaskModalOpen] = useState(false)
 
-  useEffect(() => {
+  useAuthEffect(() => {
     if (!id) return
     return onSnapshot(
       doc(db, 'crm_contacts', id),
@@ -69,7 +70,7 @@ export function ContactDetailPage() {
   }, [id])
 
   // Load linked tasks
-  useEffect(() => {
+  useAuthEffect(() => {
     if (!id) return
     const q = query(
       collection(db, 'crm_tasks'),

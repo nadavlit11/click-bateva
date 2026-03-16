@@ -56,16 +56,27 @@ service cloud.firestore {
                         (isSignedIn() && resource.data.mapType == 'families' && resource.data.active == true)));
 
       allow create: if isAdminOrContentManager() &&
-                       request.resource.data.mapType in ['default', 'families'];
+                       request.resource.data.mapType in ['default', 'families'] &&
+                       request.resource.data.createdBy == request.auth.uid &&
+                       request.resource.data.name is string &&
+                       request.resource.data.name.size() > 0 &&
+                       request.resource.data.categoryId is string &&
+                       request.resource.data.categoryId.size() > 0;
       allow delete: if isAdmin();
 
-      allow update: if isAdminOrContentManager() ||
+      allow update: if (isAdminOrContentManager() &&
+                        request.resource.data.updatedBy == request.auth.uid &&
+                        request.resource.data.name is string &&
+                        request.resource.data.name.size() > 0 &&
+                        request.resource.data.categoryId is string &&
+                        request.resource.data.categoryId.size() > 0) ||
         (isBusinessUser() &&
          resource.data.businessId != null &&
          get(/databases/$(database)/documents/businesses/$(resource.data.businessId))
            .data.associatedUserIds.hasAny([request.auth.uid]) &&
          request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['mainImage', 'description', 'images', 'videos', 'phone', 'whatsapp', 'email', 'website', 'kashrutCertUrl', 'menuUrl', 'facebook', 'openingHours', 'price', 'minPeople', 'maxPeople', 'updatedAt'])
+           .hasOnly(['mainImage', 'description', 'images', 'videos', 'phone', 'whatsapp', 'email', 'website', 'kashrutCertUrl', 'menuUrl', 'facebook', 'openingHours', 'price', 'minPeople', 'maxPeople', 'updatedAt', 'updatedBy']) &&
+         request.resource.data.updatedBy == request.auth.uid
         );
     }
 
@@ -90,21 +101,48 @@ service cloud.firestore {
 
     match /categories/{categoryId} {
       allow read: if isSignedIn();
-      allow write: if isAdminOrContentManager();
+      allow create: if isAdminOrContentManager() &&
+                       request.resource.data.createdBy == request.auth.uid &&
+                       request.resource.data.name is string &&
+                       request.resource.data.name.size() > 0;
+      allow update: if isAdminOrContentManager() &&
+                       request.resource.data.updatedBy == request.auth.uid &&
+                       request.resource.data.name is string &&
+                       request.resource.data.name.size() > 0;
+      allow delete: if isAdmin();
     }
 
     // ─── subcategories ──────────────────────────────────────────────────────
 
     match /subcategories/{subcategoryId} {
       allow read: if isSignedIn();
-      allow write: if isAdminOrContentManager();
+      allow create: if isAdminOrContentManager() &&
+                       request.resource.data.createdBy == request.auth.uid &&
+                       request.resource.data.name is string &&
+                       request.resource.data.name.size() > 0;
+      allow update: if isAdminOrContentManager() &&
+                       request.resource.data.updatedBy == request.auth.uid &&
+                       request.resource.data.name is string &&
+                       request.resource.data.name.size() > 0;
+      allow delete: if isAdmin();
     }
 
     // ─── icons ──────────────────────────────────────────────────────────────
 
     match /icons/{iconId} {
       allow read: if isSignedIn();
-      allow write: if isAdminOrContentManager();
+      allow create: if isAdminOrContentManager() &&
+                       request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAdminOrContentManager() &&
+                       request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // ─── audit_log ──────────────────────────────────────────────────────
+
+    match /audit_log/{logId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
     }
 
     // ─── businesses ─────────────────────────────────────────────────────────

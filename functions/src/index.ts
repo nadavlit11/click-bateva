@@ -15,3 +15,5 @@ export {deleteContentManager, blockContentManager, createContentManager} from ".
 export {createTravelAgent, deleteTravelAgent} from "./agent.js";
 export {sendRegistrationRequest} from "./registration.js";
 export {createCrmUser, deleteCrmUser} from "./crm.js";
+export {dailyFirestoreExport} from "./backup.js";
+export {auditPoiChanges} from "./audit.js";

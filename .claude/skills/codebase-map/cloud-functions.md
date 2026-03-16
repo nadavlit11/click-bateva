@@ -8,9 +8,13 @@
 - `functions/src/agent.ts` — `createTravelAgent` + `deleteTravelAgent` (v2 callables, admin-only)
 - `functions/src/crm.ts` — `createCrmUser` + `deleteCrmUser` (v2 callables, admin-only)
 - `functions/src/users.ts` — `deleteContentManager` + `blockContentManager` (v2 callables, admin-only)
+- `functions/src/backup.ts` — `dailyFirestoreExport` (v2 scheduled, daily 2AM IST)
+- `functions/src/audit.ts` — `auditPoiChanges` (v2 Firestore trigger on `points_of_interest`)
 - `functions/src/__tests__/auth.unit.test.ts` — unit tests for auth functions (no emulator)
 - `functions/src/__tests__/crm.unit.test.ts` — unit tests for CRM user management functions
 - `functions/src/__tests__/users.unit.test.ts` — unit tests for user management functions
+- `functions/src/__tests__/backup.unit.test.ts` — unit tests for daily export
+- `functions/src/__tests__/audit.unit.test.ts` — unit tests for POI audit trigger
 - `tests/integration/auth-functions.test.ts` — integration tests (emulator required)
 - `functions/stryker.config.json` — mutation testing config for `auth.ts`
 
@@ -28,6 +32,8 @@
 | `deleteTravelAgent` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `createCrmUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `deleteCrmUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
+| `dailyFirestoreExport` | v2 `onSchedule` | Daily 2AM IST | N/A (scheduled) |
+| `auditPoiChanges` | v2 `onDocumentWritten` | POI create/update/delete | N/A (trigger) |
 
 ## Data Flow
 
@@ -95,6 +101,7 @@ deleteCrmUser (v2 callable)
 - All callables validate: (1) authenticated, (2) admin role, (3) input types
 - Sentry error reporting on unexpected errors via `Sentry.captureException`
 - Valid roles: `admin`, `content_manager`, `business_user`, `travel_agent`, `standard_user`, `crm_user`
+- Firestore triggers (`onDocumentWritten`) and scheduled functions (`onSchedule`) do NOT need `enforceAppCheck` or `cors` — those are `onCall`-only options
 
 ## Gotchas
 
@@ -105,4 +112,6 @@ deleteCrmUser (v2 callable)
 - Mutation testing score is 69% (infra/logger lines are expected survivors)
 - **MUST run `npm run build` before deploying new functions** — `firebase deploy` reads compiled JS, not TS. New exports in `index.ts` are silently skipped if JS is stale.
 - `deleteContentManager`/`blockContentManager` validate target user has `content_manager` role before acting
-- All function unit tests (85 total) must pass before deploy: `cd functions && npm test`
+- All function unit tests (106 total) must pass before deploy: `cd functions && npm test`
+- **`JSON.stringify` does NOT handle Firestore `Timestamp` objects** — they serialize to `{}` (no enumerable properties). When comparing Firestore field values, use `.toMillis()` for Timestamps and check `latitude`/`longitude` for GeoPoints.
+- **Module-level `process.env` reads break tests** — env vars set in `beforeEach` run after module load. Read `process.env` inside the handler function, not at module scope.

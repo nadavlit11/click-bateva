@@ -4,7 +4,7 @@
 
 - `firestore.rules` — all security rules (root of monorepo)
 - `storage.rules` — Cloud Storage rules (root of monorepo)
-- `firestore-tests/src/firestore.rules.test.ts` — 78 integration tests (Jest + emulator)
+- `firestore-tests/src/firestore.rules.test.ts` — 153 integration tests (Jest + emulator)
 - `firestore-tests/package.json` — standalone package with `@firebase/rules-unit-testing`
 - `firestore-tests/jest.config.js` — test config
 
@@ -15,18 +15,36 @@ Helper functions: isSignedIn, userRole, isAdmin, isContentManager, isAdminOrCont
 
 points_of_interest/{poiId}
   read:   admin/cm OR (NOT honeypot && (travel_agent && maps.agents.active == true) OR (business_user && businessId == uid) OR maps.groups.active == true)
-  create: admin/cm
+  create: admin/cm (requires createdBy == auth.uid, name non-empty, categoryId non-empty)
   delete: admin ONLY (content managers CANNOT delete)
-  update: admin/cm OR (business_user && in associatedUserIds && affectedKeys allowlist)
+  update: admin/cm (requires updatedBy == auth.uid, name/categoryId non-empty) OR (business_user && in associatedUserIds && affectedKeys allowlist + updatedBy)
 
 clicks/{clickId}
   create: anyone EXCEPT admin/content_manager (blocked) and business_user on own POI (get() check on poi.businessId == auth.uid). Validated: poiId, categoryId, timestamp — exact keys, string types, size limits
   read:   admin only
   delete: admin only
 
-categories/{id}     — read: isSignedIn(), write: admin/cm
-subcategories/{id}  — read: isSignedIn(), write: admin/cm
-icons/{id}          — read: isSignedIn(), write: admin/cm
+categories/{id}
+  read:   isSignedIn()
+  create: admin/cm (requires createdBy == auth.uid, name non-empty)
+  update: admin/cm (requires updatedBy == auth.uid, name non-empty)
+  delete: admin only
+
+subcategories/{id}
+  read:   isSignedIn()
+  create: admin/cm (requires createdBy == auth.uid, name non-empty)
+  update: admin/cm (requires updatedBy == auth.uid, name non-empty)
+  delete: admin only
+
+icons/{id}
+  read:   isSignedIn()
+  create: admin/cm (requires createdBy == auth.uid)
+  update: admin/cm (requires updatedBy == auth.uid)
+  delete: admin only
+
+audit_log/{logId}
+  read:   admin only
+  create/update/delete: false (server-only via admin SDK)
 
 businesses/{businessId}
   write: admin only
@@ -76,7 +94,8 @@ users/{userId}
 - A rule written in the file but not deployed silently blocks all reads/writes
 - clicks documents require EXACTLY `poiId`, `categoryId`, `timestamp` — no extra fields allowed
 - POI delete is admin-only (split from create rule). Content managers can create but NOT delete POIs.
-- Business user POI update allowlist includes: `whatsapp`, `iconId`, `iconUrl` (added in UI/UX batch)
+- Business user POI update allowlist includes: `whatsapp`, `updatedBy` (added in data protection), `iconId`, `iconUrl` (added in UI/UX batch)
+- All frontend writes to POIs, categories, subcategories, and icons must include `createdBy: user!.uid` on create and `updatedBy: user!.uid` on update — enforced by Firestore rules
 
 ## Running Tests
 

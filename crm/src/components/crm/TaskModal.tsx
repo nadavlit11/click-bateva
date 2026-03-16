@@ -6,6 +6,7 @@ import {
 import { db } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { useAuth } from '../../hooks/useAuth'
+import { useAuthEffect } from '../../hooks/useAuthSnapshot.ts'
 import { TaskComments } from './TaskComments'
 import type {
   CrmTask, CrmContact, TaskPriority,
@@ -76,27 +77,33 @@ export function TaskModal({
 
   // Load CRM users for assignee picker
   const [crmUsers, setCrmUsers] = useState<CrmUser[]>([])
-  useEffect(() => {
+  useAuthEffect(() => {
     const q = query(
       collection(db, 'users'),
       where('role', 'in', ['admin', 'crm_user']),
     )
-    return onSnapshot(q, snap => {
-      setCrmUsers(
-        snap.docs.map(d => ({
-          id: d.id,
-          email: (d.data().email ?? '') as string,
-          name: (d.data().name ?? undefined) as
-            string | undefined,
-        })),
-      )
-    })
+    return onSnapshot(
+      q,
+      snap => {
+        setCrmUsers(
+          snap.docs.map(d => ({
+            id: d.id,
+            email: (d.data().email ?? '') as string,
+            name: (d.data().name ?? undefined) as
+              string | undefined,
+          })),
+        )
+      },
+      err => reportError(err, {
+        source: 'TaskModal.users',
+      }),
+    )
   }, [])
 
   // Load contacts for contact picker
   const [contacts, setContacts] = useState<CrmContact[]>([])
   const [contactSearch, setContactSearch] = useState('')
-  useEffect(() => {
+  useAuthEffect(() => {
     return onSnapshot(
       collection(db, 'crm_contacts'),
       snap => {
@@ -106,6 +113,9 @@ export function TaskModal({
           }) as CrmContact),
         )
       },
+      err => reportError(err, {
+        source: 'TaskModal.contacts',
+      }),
     )
   }, [])
 

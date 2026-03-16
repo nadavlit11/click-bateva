@@ -15,7 +15,7 @@ import type { Poi, Category } from '../types/index.ts'
 import { useAuth } from '../../hooks/useAuth'
 
 export function PoisPage() {
-  const { role } = useAuth()
+  const { role, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -84,6 +84,7 @@ export function PoisPage() {
     await updateDoc(doc(db, 'points_of_interest', poi.id), {
       active: !poi.active,
       updatedAt: serverTimestamp(),
+      updatedBy: user!.uid,
     })
   }
 

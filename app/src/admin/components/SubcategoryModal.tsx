@@ -3,6 +3,7 @@ import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/fi
 import { ref, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
+import { useAuth } from '../../hooks/useAuth'
 import type { Subcategory, Category, Icon } from '../types/index.ts'
 import { IconPicker } from './IconPicker.tsx'
 import { ColorPickerField } from './ColorPickerField.tsx'
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function SubcategoryModal({ isOpen, onClose, subcategory, categories, existingGroups, icons, onSaved }: Props) {
+  const { user } = useAuth()
   const [name, setName] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [group, setGroup] = useState('')
@@ -82,9 +84,9 @@ export function SubcategoryModal({ isOpen, onClose, subcategory, categories, exi
         updatedAt: serverTimestamp(),
       }
       if (subcategory?.id) {
-        await updateDoc(doc(db, 'subcategories', subcategory.id), data)
+        await updateDoc(doc(db, 'subcategories', subcategory.id), { ...data, updatedBy: user!.uid })
       } else {
-        await addDoc(collection(db, 'subcategories'), { ...data, createdAt: serverTimestamp() })
+        await addDoc(collection(db, 'subcategories'), { ...data, createdAt: serverTimestamp(), createdBy: user!.uid })
       }
       onSaved()
     } catch (err) {
