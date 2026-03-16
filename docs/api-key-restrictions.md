@@ -9,8 +9,8 @@ Manual steps to restrict API keys in Google Cloud Console for production securit
 3. Under **Application restrictions**, select **HTTP referrers (websites)**
 4. Add allowed referrers:
    - `click-bateva.web.app/*`
-   - `click-bateva-app.web.app/*`
-   - `click-bateva-biz.web.app/*`
+   - `clickbateva.co.il/*`
+   - `click-bateva-crm.web.app/*`
 5. Under **API restrictions**, select **Restrict key** and enable only:
    - Cloud Firestore API
    - Firebase Installations API
@@ -25,7 +25,8 @@ Find the project it belongs to and restrict it there:
 
 1. Under **Application restrictions**, select **HTTP referrers (websites)**
 2. Add allowed referrers:
-   - `click-bateva-app.web.app/*` (only user-web uses Maps)
+   - `click-bateva.web.app/*` (unified app uses Maps)
+   - `clickbateva.co.il/*` (custom domain)
 3. Under **API restrictions**, select **Restrict key** and enable only:
    - Maps JavaScript API
 4. Save
@@ -33,6 +34,6 @@ Find the project it belongs to and restrict it there:
 ## Verification
 
 After restricting, verify each app still works:
-- Admin: https://click-bateva.web.app (no Maps, uses Leaflet/OSM)
-- User: https://click-bateva-app.web.app (uses Google Maps)
-- Business: https://click-bateva-biz.web.app (no Maps)
+- Main app: https://click-bateva.web.app (map + admin + business)
+- Custom domain: https://clickbateva.co.il (same app)
+- CRM: https://click-bateva-crm.web.app (standalone CRM)

@@ -7,10 +7,9 @@ import {
   persistentMultipleTabManager,
 } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
-import { getAuth, connectAuthEmulator, onAuthStateChanged, signInAnonymously } from "firebase/auth";
+import { getAuth, connectAuthEmulator, onAuthStateChanged } from "firebase/auth";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
@@ -42,28 +41,12 @@ if (import.meta.env.VITE_USE_EMULATOR === 'true') {
   connectAuthEmulator(auth, "http://127.0.0.1:9099");
   connectStorageEmulator(storage, "127.0.0.1", 9199);
   connectFunctionsEmulator(functions, "127.0.0.1", 5001);
-  (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
 }
 
-if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
-  initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
-    isTokenAutoRefreshEnabled: true,
-  });
-}
-
-// Resolves once the user is signed in (anonymous if not logged in).
-// Data hooks wait on this before subscribing to Firestore.
+// Resolves once the initial auth state is determined.
 export const authReady: Promise<void> = new Promise((resolve) => {
-  const unsub = onAuthStateChanged(auth, (user) => {
-    if (user) {
-      unsub();
-      resolve();
-    } else {
-      signInAnonymously(auth).catch(() => {
-        unsub();
-        resolve();
-      });
-    }
+  const unsub = onAuthStateChanged(auth, () => {
+    unsub();
+    resolve();
   });
 });
