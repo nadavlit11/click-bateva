@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import {
   collection, onSnapshot, query, where, Timestamp,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase.ts'
+import { useAuthEffect } from '../hooks/useAuthSnapshot.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { useAuth } from '../hooks/useAuth'
 import { TaskModal } from '../components/crm/TaskModal.tsx'
@@ -40,9 +41,8 @@ export function MyTasksPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<CrmTask | null>(null)
 
-  useEffect(() => {
+  useAuthEffect(() => {
     if (!user) return
-    // Query all tasks assigned to current user (including completed)
     const q = query(
       collection(db, 'crm_tasks'),
       where('assigneeUid', '==', user.uid),

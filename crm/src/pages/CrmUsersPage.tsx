@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { collection, onSnapshot, query, where, doc, updateDoc } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { db, functions } from '../lib/firebase.ts'
+import { useAuthEffect } from '../hooks/useAuthSnapshot.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { getStrength, isPasswordValid, PASSWORD_ERROR, strengthLabel, strengthColor, strengthWidth } from '../lib/passwordStrength.ts'
 import { PasswordInput } from '../components/PasswordInput'
@@ -44,12 +45,19 @@ export function CrmUsersPage() {
   const [editPhone, setEditPhone] = useState('')
   const [editSaving, setEditSaving] = useState(false)
 
-  useEffect(() => {
-    const q = query(collection(db, 'users'), where('role', '==', 'crm_user'))
+  useAuthEffect(() => {
+    const q = query(
+      collection(db, 'users'),
+      where('role', '==', 'crm_user'),
+    )
     return onSnapshot(
       q,
       snap => {
-        setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() }) as ManagedUser))
+        setUsers(
+          snap.docs.map(d => ({
+            id: d.id, ...d.data(),
+          }) as ManagedUser),
+        )
         setLoading(false)
       },
       () => {
