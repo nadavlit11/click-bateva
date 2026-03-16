@@ -88,7 +88,9 @@ describe("clicks collection", () => {
     });
 
     it("allows authenticated user to create a valid click", async () => {
-      const authed = env.authenticatedContext("user-123");
+      const authed = env.authenticatedContext("user-123", {
+        role: "standard_user",
+      });
       const db = authed.firestore();
       await assertSucceeds(addDoc(collection(db, "clicks"), VALID_CLICK));
     });
@@ -1749,13 +1751,11 @@ describe("crm_contacts activity_log subcollection", () => {
   });
 
   it("allows crm_user to add an activity log entry", async () => {
-    const adminCtx = env.authenticatedContext("admin-uid", {
-      role: "admin",
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "crm_contacts", "c1"), {
+        name: "Test",
+      });
     });
-    await setDoc(
-      doc(adminCtx.firestore(), "crm_contacts", "c1"),
-      { name: "Test" }
-    );
 
     const crm = env.authenticatedContext("crm-uid", {
       role: "crm_user",
@@ -1770,13 +1770,11 @@ describe("crm_contacts activity_log subcollection", () => {
   });
 
   it("denies activity log create with mismatched createdBy", async () => {
-    const adminCtx = env.authenticatedContext("admin-uid", {
-      role: "admin",
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "crm_contacts", "c1"), {
+        name: "Test",
+      });
     });
-    await setDoc(
-      doc(adminCtx.firestore(), "crm_contacts", "c1"),
-      { name: "Test" }
-    );
 
     const crm = env.authenticatedContext("crm-uid", {
       role: "crm_user",
@@ -1791,15 +1789,14 @@ describe("crm_contacts activity_log subcollection", () => {
   });
 
   it("allows crm_user to read activity log", async () => {
-    const adminCtx = env.authenticatedContext("admin-uid", {
-      role: "admin",
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const fdb = ctx.firestore();
+      await setDoc(doc(fdb, "crm_contacts", "c1"), { name: "T" });
+      await setDoc(
+        doc(fdb, "crm_contacts", "c1", "activity_log", "l1"),
+        mkLogEntry("admin-uid", "admin@example.com")
+      );
     });
-    const adminDb = adminCtx.firestore();
-    await setDoc(doc(adminDb, "crm_contacts", "c1"), { name: "T" });
-    await setDoc(
-      doc(adminDb, "crm_contacts", "c1", "activity_log", "l1"),
-      mkLogEntry("admin-uid", "admin@example.com")
-    );
 
     const crm = env.authenticatedContext("crm-uid", {
       role: "crm_user",
@@ -1811,15 +1808,14 @@ describe("crm_contacts activity_log subcollection", () => {
   });
 
   it("denies crm_user from deleting activity log", async () => {
-    const adminCtx = env.authenticatedContext("admin-uid", {
-      role: "admin",
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const fdb = ctx.firestore();
+      await setDoc(doc(fdb, "crm_contacts", "c1"), { name: "T" });
+      await setDoc(
+        doc(fdb, "crm_contacts", "c1", "activity_log", "l1"),
+        mkLogEntry("admin-uid", "admin@example.com")
+      );
     });
-    const adminDb = adminCtx.firestore();
-    await setDoc(doc(adminDb, "crm_contacts", "c1"), { name: "T" });
-    await setDoc(
-      doc(adminDb, "crm_contacts", "c1", "activity_log", "l1"),
-      mkLogEntry("admin-uid", "admin@example.com")
-    );
 
     const crm = env.authenticatedContext("crm-uid", {
       role: "crm_user",
@@ -1833,13 +1829,11 @@ describe("crm_contacts activity_log subcollection", () => {
   });
 
   it("denies content_manager from adding activity log", async () => {
-    const adminCtx = env.authenticatedContext("admin-uid", {
-      role: "admin",
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "crm_contacts", "c1"), {
+        name: "T",
+      });
     });
-    await setDoc(
-      doc(adminCtx.firestore(), "crm_contacts", "c1"),
-      { name: "T" }
-    );
 
     const cm = env.authenticatedContext("cm-uid", {
       role: "content_manager",
