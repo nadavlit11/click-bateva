@@ -147,7 +147,6 @@ jobs:
             functions/lib
             functions/package.json
             functions/package-lock.json
-            functions/node_modules
           retention-days: 1
 
   # ── Deploy: Production (main only) ────────────────────────────────────
@@ -215,6 +214,10 @@ jobs:
         with:
           name: functions-dist
           path: functions
+
+      - name: Install functions dependencies
+        if: needs.changes.outputs.functions == 'true'
+        run: cd functions && npm ci
 
       - name: Deploy functions
         if: needs.changes.outputs.functions == 'true'
