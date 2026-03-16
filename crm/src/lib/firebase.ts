@@ -43,10 +43,14 @@ if (import.meta.env.VITE_USE_EMULATOR === 'true') {
   connectFunctionsEmulator(functions, "127.0.0.1", 5001);
 }
 
-// Resolves once the initial auth state is determined.
+// Resolves once a user is signed in.
+// CRM requires auth for all Firestore reads, so we wait for a real user
+// (unlike the main app which falls back to anonymous auth).
 export const authReady: Promise<void> = new Promise((resolve) => {
-  const unsub = onAuthStateChanged(auth, () => {
-    unsub();
-    resolve();
+  const unsub = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      unsub();
+      resolve();
+    }
   });
 });
