@@ -72,7 +72,7 @@ npm run test:mutate:functions    # functions only
 ## Patterns & Conventions
 
 - CSP is `Content-Security-Policy-Report-Only` (not enforcement) — violations logged but don't block
-- CSP covers: Google Maps, Leaflet tiles (`*.tile.openstreetmap.org`), Nominatim geocoding, Cloud Functions endpoint, Firebase SDKs, Sentry, Google Analytics, YouTube iframe
+- CSP covers: Google Maps, Leaflet tiles (`*.tile.openstreetmap.org`), Nominatim geocoding, Cloud Functions endpoint, Firebase SDKs, Sentry, Google Analytics, YouTube iframe, reCAPTCHA (App Check), Firebase App Check API
 - SPA rewrite: all routes → `/index.html`
 - Asset caching: `/assets/**` gets `max-age=31536000, immutable`; HTML gets `no-cache`
 - `Permissions-Policy: geolocation=(self)` — map uses browser geolocation
