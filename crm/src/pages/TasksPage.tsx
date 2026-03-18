@@ -8,9 +8,6 @@ import { reportError } from '../lib/errorReporting.ts'
 import { useAuth } from '../hooks/useAuth'
 import { TaskModal } from '../components/crm/TaskModal.tsx'
 import { TaskCard } from '../components/crm/TaskCard.tsx'
-import {
-  toggleTaskFollow, toggleTaskComplete,
-} from '../components/crm/crmUtils.ts'
 import type { CrmTask, TaskPriority } from '../types/index.ts'
 
 const PRIORITY_ORDER: Record<TaskPriority, number> = {
@@ -131,7 +128,6 @@ export function TasksPage() {
   const [tasks, setTasks] = useState<CrmTask[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
-  const [editing, setEditing] = useState<CrmTask | null>(null)
   const [search, setSearch] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
   const [tab, setTab] = useState<Tab>('active')
@@ -202,17 +198,6 @@ export function TasksPage() {
       uid === user?.uid ? 'today' : 'last-month',
     )
     setLoading(true)
-  }
-
-  function toggleFollow(task: CrmTask) {
-    if (!user) return
-    toggleTaskFollow(
-      task, user.uid, 'TasksPage.toggleFollow',
-    )
-  }
-
-  function handleToggleComplete(task: CrmTask) {
-    toggleTaskComplete(task, 'TasksPage.toggleComplete')
   }
 
   const term = search.trim().toLowerCase()
@@ -313,10 +298,7 @@ export function TasksPage() {
           משימות
         </h1>
         <button
-          onClick={() => {
-            setEditing(null)
-            setModalOpen(true)
-          }}
+          onClick={() => setModalOpen(true)}
           className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
         >
           + משימה חדשה
@@ -426,15 +408,6 @@ export function TasksPage() {
                     <TaskCard
                       key={t.id}
                       task={t}
-                      currentUid={user?.uid ?? ''}
-                      onEdit={task => {
-                        setEditing(task)
-                        setModalOpen(true)
-                      }}
-                      onToggleFollow={toggleFollow}
-                      onToggleComplete={
-                        handleToggleComplete
-                      }
                     />
                   ))}
                 </div>
@@ -459,15 +432,6 @@ export function TasksPage() {
                     <TaskCard
                       key={t.id}
                       task={t}
-                      currentUid={user?.uid ?? ''}
-                      onEdit={task => {
-                        setEditing(task)
-                        setModalOpen(true)
-                      }}
-                      onToggleFollow={toggleFollow}
-                      onToggleComplete={
-                        handleToggleComplete
-                      }
                     />
                   ))}
                 </div>
@@ -487,13 +451,6 @@ export function TasksPage() {
             <TaskCard
               key={t.id}
               task={t}
-              currentUid={user?.uid ?? ''}
-              onEdit={task => {
-                setEditing(task)
-                setModalOpen(true)
-              }}
-              onToggleFollow={toggleFollow}
-              onToggleComplete={handleToggleComplete}
             />
           ))}
         </div>
@@ -501,15 +458,9 @@ export function TasksPage() {
 
       <TaskModal
         isOpen={modalOpen}
-        onClose={() => {
-          setModalOpen(false)
-          setEditing(null)
-        }}
-        task={editing}
-        onSaved={() => {
-          setModalOpen(false)
-          setEditing(null)
-        }}
+        onClose={() => setModalOpen(false)}
+        task={null}
+        onSaved={() => setModalOpen(false)}
       />
     </div>
   )

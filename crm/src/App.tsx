@@ -8,6 +8,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m
 const ContactsPage = lazy(() => import('./pages/ContactsPage').then(m => ({ default: m.ContactsPage })))
 const ContactDetailPage = lazy(() => import('./pages/ContactDetailPage').then(m => ({ default: m.ContactDetailPage })))
 const TasksPage = lazy(() => import('./pages/TasksPage').then(m => ({ default: m.TasksPage })))
+const TaskDetailPage = lazy(() => import('./pages/TaskDetailPage').then(m => ({ default: m.TaskDetailPage })))
 const CrmUsersPage = lazy(() => import('./pages/CrmUsersPage').then(m => ({ default: m.CrmUsersPage })))
 
 function AdminOnlyRoute() {
@@ -34,6 +35,7 @@ export default function App() {
                 <Route path="contacts" element={<ContactsPage />} />
                 <Route path="contacts/:id" element={<ContactDetailPage />} />
                 <Route path="tasks" element={<TasksPage />} />
+                <Route path="tasks/:id" element={<TaskDetailPage />} />
                 <Route path="my-tasks" element={<Navigate to="/tasks" replace />} />
                 <Route element={<AdminOnlyRoute />}>
                   <Route path="users" element={<CrmUsersPage />} />
