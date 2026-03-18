@@ -7,6 +7,7 @@
 - `functions/src/business.ts` — `createBusinessUser` + `deleteBusinessUser` (v2 callables)
 - `functions/src/agent.ts` — `createTravelAgent` + `deleteTravelAgent` (v2 callables, admin-only)
 - `functions/src/crm.ts` — `createCrmUser` + `deleteCrmUser` (v2 callables, admin-only)
+- `functions/src/email.ts` — `sendContactEmail` (v2 callable, CRM-authorized, nodemailer Gmail SMTP)
 - `functions/src/users.ts` — `deleteContentManager` + `blockContentManager` (v2 callables, admin-only)
 - `functions/src/backup.ts` — `dailyFirestoreExport` (v2 scheduled, daily 2AM IST)
 - `functions/src/audit.ts` — `auditPoiChanges` (v2 Firestore trigger on `points_of_interest`)
@@ -32,6 +33,7 @@
 | `deleteTravelAgent` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `createCrmUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `deleteCrmUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
+| `sendContactEmail` | v2 `onCall({ cors: true, enforceAppCheck: true })` | CRM callable | admin or crm_user |
 | `dailyFirestoreExport` | v2 `onSchedule` | Daily 2AM IST | N/A (scheduled) |
 | `auditPoiChanges` | v2 `onDocumentWritten` | POI create/update/delete | N/A (trigger) |
 

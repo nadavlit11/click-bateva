@@ -175,13 +175,13 @@ service cloud.firestore {
       allow read: if isCrmAuthorized();
       allow create: if isCrmAuthorized() &&
         request.resource.data.keys().hasOnly([
-          'name', 'businessName', 'nameInMap', 'phone', 'email',
+          'name', 'businessName', 'nameInMap', 'phone', 'phone2', 'email',
           'createdBy', 'createdByEmail', 'createdAt', 'updatedAt'
         ]) &&
         request.resource.data.createdBy == request.auth.uid;
       allow update: if isCrmAuthorized() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'name', 'businessName', 'nameInMap', 'phone', 'email', 'updatedAt'
+          'name', 'businessName', 'nameInMap', 'phone', 'phone2', 'email', 'updatedAt'
         ]);
       allow delete: if isAdmin();
 
@@ -192,6 +192,21 @@ service cloud.firestore {
             'text', 'createdBy', 'createdByEmail', 'createdAt'
           ]) &&
           request.resource.data.createdBy == request.auth.uid;
+        allow update: if isCrmAuthorized() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'text', 'updatedAt'
+          ]);
+        allow delete: if isCrmAuthorized();
+      }
+
+      match /attachments/{attachmentId} {
+        allow read: if isCrmAuthorized();
+        allow create: if isCrmAuthorized() &&
+          request.resource.data.keys().hasOnly([
+            'name', 'url', 'contentType', 'size', 'emailSubject',
+            'uploadedBy', 'uploadedByEmail', 'createdAt'
+          ]) &&
+          request.resource.data.uploadedBy == request.auth.uid;
         allow delete: if isAdmin();
       }
     }
@@ -202,9 +217,10 @@ service cloud.firestore {
       allow read: if isCrmAuthorized();
       allow create: if isCrmAuthorized() &&
         request.resource.data.keys().hasOnly([
-          'contactId', 'contactName', 'title', 'description',
-          'date', 'color', 'priority', 'assigneeUid', 'assigneeEmail',
-          'followers', 'createdBy', 'createdByEmail', 'completed',
+          'contactId', 'contactName', 'contactBusinessName', 'contactPhone',
+          'title', 'description', 'date', 'color', 'priority',
+          'assigneeUid', 'assigneeEmail', 'followers',
+          'createdBy', 'createdByEmail', 'completed',
           'createdAt', 'updatedAt'
         ]) &&
         request.resource.data.createdBy == request.auth.uid;
@@ -212,6 +228,7 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'title', 'description', 'date', 'color', 'priority',
           'assigneeUid', 'assigneeEmail', 'contactId', 'contactName',
+          'contactBusinessName', 'contactPhone',
           'followers', 'completed', 'updatedAt'
         ]);
       allow delete: if isAdmin();

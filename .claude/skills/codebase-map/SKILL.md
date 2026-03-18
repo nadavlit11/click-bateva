@@ -1,3 +1,11 @@
+---
+name: codebase-map
+description: >
+  TRIGGER when: user asks "where is X", "how does X work", needs to understand a codebase area,
+  or before launching an Explore agent. Dispatcher to 7 sub-pages covering user-web, admin,
+  business, CRM, cloud-functions, firestore-rules, and infrastructure.
+---
+
 # codebase-map
 
 Read this before launching an Explore agent or reading code to understand an area of the codebase.

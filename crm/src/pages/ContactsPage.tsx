@@ -61,13 +61,19 @@ export function ContactsPage() {
   }
 
   const term = search.trim().toLowerCase()
+  const sorted = [...contacts].sort((a, b) =>
+    (a.businessName || '').localeCompare(
+      b.businessName || '', 'he',
+    ))
   const filtered = term
-    ? contacts.filter(c =>
+    ? sorted.filter(c =>
       c.name.toLowerCase().includes(term) ||
       c.businessName.toLowerCase().includes(term) ||
       (c.nameInMap || '').toLowerCase().includes(term) ||
-      c.phone.includes(term))
-    : contacts
+      c.phone.includes(term) ||
+      (c.phone2 || '').includes(term) ||
+      c.email.toLowerCase().includes(term))
+    : sorted
 
   return (
     <div className="p-4 md:p-6">
@@ -101,7 +107,7 @@ export function ContactsPage() {
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="חיפוש לפי שם, עסק, שם במפה או טלפון..."
+          placeholder="חיפוש לפי שם, עסק, טלפון, אימייל..."
           className="w-full sm:w-80 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
         />
       </div>
@@ -125,6 +131,7 @@ export function ContactsPage() {
                   <th className="text-right px-4 py-3 font-medium text-gray-600">עסק</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">שם במפה</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">טלפון</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">טלפון 2</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">אימייל</th>
                   <th className="px-4 py-3" />
                 </tr>
@@ -140,6 +147,7 @@ export function ContactsPage() {
                     <td className="px-4 py-3 text-gray-700">{c.businessName || '—'}</td>
                     <td className="px-4 py-3 text-gray-700">{c.nameInMap || '—'}</td>
                     <td className="px-4 py-3 text-gray-600" dir="ltr">{c.phone || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600" dir="ltr">{c.phone2 || '—'}</td>
                     <td className="px-4 py-3 text-gray-600" dir="ltr">{c.email || '—'}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2 justify-end" onClick={e => e.stopPropagation()}>

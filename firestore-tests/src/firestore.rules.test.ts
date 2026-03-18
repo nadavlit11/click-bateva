@@ -1575,6 +1575,7 @@ describe("crm_contacts collection", () => {
     businessName: "Test Biz",
     nameInMap: "Map Name",
     phone: "050-1234567",
+    phone2: "052-7654321",
     email: "test@example.com",
     createdBy: uid,
     createdByEmail: email,
@@ -1809,7 +1810,7 @@ describe("crm_contacts activity_log subcollection", () => {
     );
   });
 
-  it("denies crm_user from deleting activity log", async () => {
+  it("allows crm_user to delete a note", async () => {
     await env.withSecurityRulesDisabled(async (ctx) => {
       const fdb = ctx.firestore();
       await setDoc(doc(fdb, "crm_contacts", "c1"), { name: "T" });
@@ -1823,9 +1824,53 @@ describe("crm_contacts activity_log subcollection", () => {
       role: "crm_user",
     });
     const db = crm.firestore();
-    await assertFails(
+    await assertSucceeds(
       deleteDoc(
         doc(db, "crm_contacts", "c1", "activity_log", "l1")
+      )
+    );
+  });
+
+  it("allows crm_user to update a note", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const fdb = ctx.firestore();
+      await setDoc(doc(fdb, "crm_contacts", "c1"), { name: "T" });
+      await setDoc(
+        doc(fdb, "crm_contacts", "c1", "activity_log", "l1"),
+        mkLogEntry("crm-uid", "crm@example.com")
+      );
+    });
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertSucceeds(
+      updateDoc(
+        doc(db, "crm_contacts", "c1", "activity_log", "l1"),
+        { text: "Updated note", updatedAt: serverTimestamp() }
+      )
+    );
+  });
+
+  it("denies note update with disallowed fields", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const fdb = ctx.firestore();
+      await setDoc(doc(fdb, "crm_contacts", "c1"), { name: "T" });
+      await setDoc(
+        doc(fdb, "crm_contacts", "c1", "activity_log", "l1"),
+        mkLogEntry("crm-uid", "crm@example.com")
+      );
+    });
+
+    const crm = env.authenticatedContext("crm-uid", {
+      role: "crm_user",
+    });
+    const db = crm.firestore();
+    await assertFails(
+      updateDoc(
+        doc(db, "crm_contacts", "c1", "activity_log", "l1"),
+        { createdBy: "hacker-uid" }
       )
     );
   });
@@ -1856,6 +1901,8 @@ describe("crm_tasks collection", () => {
   const mkTaskData = (uid: string, email: string) => ({
     contactId: "c1",
     contactName: "Test Contact",
+    contactBusinessName: "Test Biz",
+    contactPhone: "050-1234567",
     title: "Call back",
     description: "Follow up",
     date: new Date(),

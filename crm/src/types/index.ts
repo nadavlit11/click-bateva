@@ -6,6 +6,7 @@ export interface CrmContact {
   businessName: string
   nameInMap?: string
   phone: string
+  phone2?: string
   email: string
   createdBy: string
   createdByEmail: string
@@ -19,12 +20,27 @@ export interface ActivityLogEntry {
   createdBy: string
   createdByEmail: string
   createdAt: unknown
+  updatedAt?: unknown
+}
+
+export interface CrmAttachment {
+  id: string
+  name: string
+  url: string
+  contentType: string
+  size: number
+  emailSubject?: string
+  uploadedBy: string
+  uploadedByEmail: string
+  createdAt: unknown
 }
 
 export interface CrmTask {
   id: string
   contactId: string
   contactName: string
+  contactBusinessName: string
+  contactPhone: string
   title: string
   description: string
   date: unknown

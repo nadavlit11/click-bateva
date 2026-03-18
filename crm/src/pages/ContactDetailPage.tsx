@@ -9,12 +9,16 @@ import { db } from '../lib/firebase.ts'
 import { useAuthEffect } from '../hooks/useAuthSnapshot.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { useAuth } from '../hooks/useAuth'
-import { ActivityTimeline } from '../components/crm/ActivityTimeline.tsx'
+import { ContactNotes } from '../components/crm/ContactNotes.tsx'
+import { EmailComposer } from '../components/crm/EmailComposer.tsx'
 import { TaskModal } from '../components/crm/TaskModal.tsx'
 import {
   PRIORITY_LABELS, PRIORITY_COLORS, formatDate,
+  formatDateTime,
 } from '../components/crm/crmUtils.ts'
-import type { CrmContact, CrmTask } from '../types/index.ts'
+import type {
+  CrmContact, CrmTask, CrmAttachment,
+} from '../types/index.ts'
 
 export function ContactDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -27,7 +31,8 @@ export function ContactDetailPage() {
   // Editable fields
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({
-    name: '', businessName: '', nameInMap: '', phone: '', email: '',
+    name: '', businessName: '', nameInMap: '',
+    phone: '', phone2: '', email: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -37,6 +42,14 @@ export function ContactDetailPage() {
 
   // Create task modal
   const [taskModalOpen, setTaskModalOpen] = useState(false)
+
+  // Email composer
+  const [emailOpen, setEmailOpen] = useState(false)
+
+  // Attachments
+  const [attachments, setAttachments] = useState<
+    CrmAttachment[]
+  >([])
 
   useAuthEffect(() => {
     if (!id) return
@@ -57,6 +70,7 @@ export function ContactDetailPage() {
           businessName: data.businessName,
           nameInMap: data.nameInMap || '',
           phone: data.phone,
+          phone2: data.phone2 || '',
           email: data.email,
         })
         setLoading(false)
@@ -95,6 +109,32 @@ export function ContactDetailPage() {
     )
   }, [id])
 
+  // Load attachments
+  useAuthEffect(() => {
+    if (!id) return
+    const q = query(
+      collection(
+        db, 'crm_contacts', id, 'attachments',
+      ),
+      orderBy('createdAt', 'desc'),
+    )
+    return onSnapshot(
+      q,
+      snap => {
+        setAttachments(
+          snap.docs.map(d => ({
+            id: d.id, ...d.data(),
+          }) as CrmAttachment),
+        )
+      },
+      err => {
+        reportError(err, {
+          source: 'ContactDetailPage.attachments',
+        })
+      },
+    )
+  }, [id])
+
   async function handleSave() {
     if (!id || !form.name.trim()) return
     setSaving(true)
@@ -104,6 +144,7 @@ export function ContactDetailPage() {
         businessName: form.businessName.trim(),
         nameInMap: (form.nameInMap || '').trim(),
         phone: form.phone.trim(),
+        phone2: (form.phone2 || '').trim(),
         email: form.email.trim(),
         updatedAt: serverTimestamp(),
       })
@@ -121,13 +162,17 @@ export function ContactDetailPage() {
     if (!id) return
     setDeleting(true)
     try {
-      // Delete activity_log subcollection first (Firestore doesn't cascade)
+      // Delete subcollections first (Firestore doesn't cascade)
+      const batch = writeBatch(db)
       const logSnap = await getDocs(
         collection(db, 'crm_contacts', id, 'activity_log'),
       )
-      if (logSnap.size > 0) {
-        const batch = writeBatch(db)
-        logSnap.docs.forEach(d => batch.delete(d.ref))
+      logSnap.docs.forEach(d => batch.delete(d.ref))
+      const attSnap = await getDocs(
+        collection(db, 'crm_contacts', id, 'attachments'),
+      )
+      attSnap.docs.forEach(d => batch.delete(d.ref))
+      if (logSnap.size > 0 || attSnap.size > 0) {
         await batch.commit()
       }
       await deleteDoc(doc(db, 'crm_contacts', id))
@@ -178,6 +223,28 @@ export function ContactDetailPage() {
         </span>
       </div>
 
+      {/* Quick actions */}
+      <div className="flex gap-2 mb-4">
+        {contact.phone && (
+          <a
+            href={`https://wa.me/972${contact.phone.replace(/^0/, '').replace(/[^0-9]/g, '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
+          >
+            WhatsApp
+          </a>
+        )}
+        {contact.email && (
+          <button
+            onClick={() => setEmailOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+          >
+            שלח אימייל
+          </button>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Contact info */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -196,6 +263,7 @@ export function ContactDetailPage() {
                         businessName: contact.businessName,
                         nameInMap: contact.nameInMap || '',
                         phone: contact.phone,
+                        phone2: contact.phone2 || '',
                         email: contact.email,
                       })
                     }}
@@ -273,6 +341,16 @@ export function ContactDetailPage() {
                   />
                 </div>
                 <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">טלפון 2</label>
+                  <input
+                    type="tel"
+                    value={form.phone2}
+                    onChange={e => setForm(p => ({ ...p, phone2: e.target.value }))}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                    dir="ltr"
+                  />
+                </div>
+                <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">אימייל</label>
                   <input
                     type="email"
@@ -293,6 +371,12 @@ export function ContactDetailPage() {
                   value={contact.phone || '—'}
                   dir="ltr"
                   href={contact.phone ? `tel:${contact.phone}` : undefined}
+                />
+                <Field
+                  label="טלפון 2"
+                  value={contact.phone2 || '—'}
+                  dir="ltr"
+                  href={contact.phone2 ? `tel:${contact.phone2}` : undefined}
                 />
                 <Field
                   label="אימייל"
@@ -346,9 +430,54 @@ export function ContactDetailPage() {
           </div>
         </div>
 
-        {/* Right: Activity timeline */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          {id && <ActivityTimeline contactId={id} />}
+        {/* Right: Notes + Attachments */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            {id && <ContactNotes contactId={id} />}
+          </div>
+
+          {attachments.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 className="text-sm font-bold text-gray-700 mb-3">
+                קבצים ({attachments.length})
+              </h3>
+              <div className="space-y-2">
+                {attachments.map(att => (
+                  <div
+                    key={att.id}
+                    className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 bg-gray-50"
+                  >
+                    <span className="text-lg">
+                      {att.contentType?.startsWith('image/')
+                        ? '🖼️'
+                        : att.contentType === 'application/pdf'
+                          ? '📄'
+                          : '📎'}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <a
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                      >
+                        {att.name}
+                      </a>
+                      <p className="text-xs text-gray-400">
+                        {att.emailSubject && (
+                          <span>{att.emailSubject} — </span>
+                        )}
+                        {formatDateTime(att.createdAt)}
+                      </p>
+                    </div>
+                    <span className="text-xs text-gray-400 shrink-0">
+                      {(att.size / 1024).toFixed(0)} KB
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -360,6 +489,15 @@ export function ContactDetailPage() {
         preselectedContactId={id}
         preselectedContactName={contact.name}
       />
+
+      {contact.email && (
+        <EmailComposer
+          isOpen={emailOpen}
+          onClose={() => setEmailOpen(false)}
+          contactId={id ?? ''}
+          contactEmail={contact.email}
+        />
+      )}
 
       {/* Delete confirm */}
       {confirmDelete && (
@@ -373,7 +511,7 @@ export function ContactDetailPage() {
           >
             <h2 className="text-lg font-bold text-gray-900 mb-2">מחיקת איש קשר</h2>
             <p className="text-sm text-gray-600 mb-4">
-              {`למחוק את "${contact.name}"? כל יומן הפעילות ימחק גם.`}
+              {`למחוק את "${contact.name}"? כל ההערות יימחקו גם.`}
             </p>
             <div className="flex gap-3 justify-end">
               <button

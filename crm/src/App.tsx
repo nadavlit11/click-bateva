@@ -8,7 +8,6 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m
 const ContactsPage = lazy(() => import('./pages/ContactsPage').then(m => ({ default: m.ContactsPage })))
 const ContactDetailPage = lazy(() => import('./pages/ContactDetailPage').then(m => ({ default: m.ContactDetailPage })))
 const TasksPage = lazy(() => import('./pages/TasksPage').then(m => ({ default: m.TasksPage })))
-const MyTasksPage = lazy(() => import('./pages/MyTasksPage').then(m => ({ default: m.MyTasksPage })))
 const CrmUsersPage = lazy(() => import('./pages/CrmUsersPage').then(m => ({ default: m.CrmUsersPage })))
 
 function AdminOnlyRoute() {
@@ -31,11 +30,11 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route element={<AuthGuard />}>
               <Route element={<CrmLayout />}>
-                <Route index element={<Navigate to="/my-tasks" replace />} />
+                <Route index element={<Navigate to="/tasks" replace />} />
                 <Route path="contacts" element={<ContactsPage />} />
                 <Route path="contacts/:id" element={<ContactDetailPage />} />
                 <Route path="tasks" element={<TasksPage />} />
-                <Route path="my-tasks" element={<MyTasksPage />} />
+                <Route path="my-tasks" element={<Navigate to="/tasks" replace />} />
                 <Route element={<AdminOnlyRoute />}>
                   <Route path="users" element={<CrmUsersPage />} />
                 </Route>

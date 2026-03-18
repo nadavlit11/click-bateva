@@ -1,3 +1,11 @@
+---
+name: firebase-deploy
+description: >
+  TRIGGER when: user needs emergency manual deploy commands, asks about hosting targets,
+  deploy syntax, or Firebase deploy gotchas. CLI cheatsheet — normal deployments go
+  through CI/CD (GitHub Actions), not manual CLI.
+---
+
 # firebase-deploy
 
 Cheatsheet for deploying this project's Firebase services.

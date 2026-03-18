@@ -1,3 +1,11 @@
+---
+name: testing
+description: >
+  TRIGGER when: user asks "what tests to write", "how to test this", "run tests", or is adding
+  Cloud Functions, Firestore rules, or lib/ utilities. Decision matrix for test type, locations,
+  and run commands. Covers unit tests, integration tests, Stryker mutation testing, and CRAP analysis.
+---
+
 # testing
 
 Every feature must ship with tests. Tests are written **alongside the feature**, not deferred to Phase 5.

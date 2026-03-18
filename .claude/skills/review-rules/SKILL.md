@@ -1,3 +1,11 @@
+---
+name: review-rules
+description: >
+  TRIGGER when: about to deploy firestore.rules or storage.rules, user says "review rules"
+  or "check permissions", or has modified security rules. Validates rules against the
+  permission matrix and checks for common security gaps.
+---
+
 # review-rules
 
 Use this skill before deploying `firestore.rules` or `storage.rules`. Validates rules against the permission matrix in `docs/hld.md`.

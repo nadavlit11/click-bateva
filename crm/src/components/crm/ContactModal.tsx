@@ -19,6 +19,7 @@ interface FormState {
   businessName: string
   nameInMap: string
   phone: string
+  phone2: string
   email: string
 }
 
@@ -27,6 +28,7 @@ const INITIAL: FormState = {
   businessName: '',
   nameInMap: '',
   phone: '',
+  phone2: '',
   email: '',
 }
 
@@ -45,6 +47,7 @@ export function ContactModal({
         businessName: contact.businessName,
         nameInMap: contact.nameInMap || '',
         phone: contact.phone,
+        phone2: contact.phone2 || '',
         email: contact.email,
       })
     } else {
@@ -73,6 +76,7 @@ export function ContactModal({
         businessName: form.businessName.trim(),
         nameInMap: (form.nameInMap || '').trim(),
         phone: form.phone.trim(),
+        phone2: (form.phone2 || '').trim(),
         email: form.email.trim(),
         updatedAt: serverTimestamp(),
       }
@@ -155,6 +159,19 @@ export function ContactModal({
               type="tel"
               value={form.phone}
               onChange={e => set('phone', e.target.value)}
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+              dir="ltr"
+              placeholder="050-1234567"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              טלפון 2
+            </label>
+            <input
+              type="tel"
+              value={form.phone2}
+              onChange={e => set('phone2', e.target.value)}
               className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
               dir="ltr"
               placeholder="050-1234567"

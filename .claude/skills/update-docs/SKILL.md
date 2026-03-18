@@ -1,3 +1,11 @@
+---
+name: update-docs
+description: >
+  TRIGGER when: a feature, schema, or behavior change was implemented and docs need syncing,
+  user says "update docs", or the code-review skill flags behavior changes. Checklist for
+  atdd.md, hld.md, and all LLD docs.
+---
+
 # update-docs
 
 Use this skill whenever a feature, schema, or behavior change has been decided. It ensures all project docs stay in sync.
