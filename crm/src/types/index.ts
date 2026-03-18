@@ -4,6 +4,7 @@ export interface CrmContact {
   id: string
   name: string
   businessName: string
+  nameInMap?: string
   phone: string
   email: string
   createdBy: string

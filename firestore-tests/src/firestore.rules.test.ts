@@ -1573,6 +1573,7 @@ describe("crm_contacts collection", () => {
   const mkContactData = (uid: string, email: string) => ({
     name: "Test Contact",
     businessName: "Test Biz",
+    nameInMap: "Map Name",
     phone: "050-1234567",
     email: "test@example.com",
     createdBy: uid,
@@ -1686,6 +1687,7 @@ describe("crm_contacts collection", () => {
     await assertSucceeds(
       updateDoc(doc(db, "crm_contacts", "c1"), {
         name: "Updated",
+        nameInMap: "Updated Map",
         updatedAt: serverTimestamp(),
       })
     );
