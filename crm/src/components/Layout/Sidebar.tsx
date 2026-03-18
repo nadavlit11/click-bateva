@@ -14,9 +14,8 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { path: '/my-tasks',  label: 'המשימות שלי',   end: false },
+  { path: '/tasks',     label: 'משימות',         end: false },
   { path: '/contacts',  label: 'אנשי קשר',      end: false },
-  { path: '/tasks',     label: 'כל המשימות',    end: false },
   { path: '/users',     label: 'משתמשי CRM',    end: false, adminOnly: true },
 ]
 
