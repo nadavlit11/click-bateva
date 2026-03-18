@@ -13,16 +13,16 @@ import type {
 } from '../../types/index.ts'
 
 const TASK_COLORS = [
-  '#3b82f6', // blue
-  '#22c55e', // green
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#a855f7', // purple
-  '#ec4899', // pink
-  '#14b8a6', // teal
-  '#f97316', // orange
-  '#6366f1', // indigo
-  '#64748b', // slate
+  '#2563eb', // vivid blue
+  '#16a34a', // vivid green
+  '#eab308', // vivid yellow
+  '#dc2626', // vivid red
+  '#9333ea', // vivid purple
+  '#db2777', // vivid pink
+  '#0d9488', // vivid teal
+  '#ea580c', // vivid orange
+  '#4f46e5', // vivid indigo
+  '#0ea5e9', // vivid sky
 ]
 
 interface Props {
@@ -44,6 +44,8 @@ interface FormState {
   assigneeEmail: string
   contactId: string
   contactName: string
+  contactBusinessName: string
+  contactPhone: string
   completed: boolean
 }
 
@@ -57,6 +59,8 @@ const INITIAL: FormState = {
   assigneeEmail: '',
   contactId: '',
   contactName: '',
+  contactBusinessName: '',
+  contactPhone: '',
   completed: false,
 }
 
@@ -135,6 +139,8 @@ export function TaskModal({
         assigneeEmail: task.assigneeEmail,
         contactId: task.contactId,
         contactName: task.contactName,
+        contactBusinessName: task.contactBusinessName || '',
+        contactPhone: task.contactPhone || '',
         completed: task.completed,
       })
     } else {
@@ -144,6 +150,8 @@ export function TaskModal({
         assigneeEmail: user?.email ?? '',
         contactId: preselectedContactId ?? '',
         contactName: preselectedContactName ?? '',
+        contactBusinessName: '',
+        contactPhone: '',
       })
     }
     setError('')
@@ -167,7 +175,11 @@ export function TaskModal({
 
   function selectContact(c: CrmContact) {
     setForm(prev => ({
-      ...prev, contactId: c.id, contactName: c.name,
+      ...prev,
+      contactId: c.id,
+      contactName: c.name,
+      contactBusinessName: c.businessName || '',
+      contactPhone: c.phone || '',
     }))
     setContactSearch('')
   }
@@ -200,6 +212,8 @@ export function TaskModal({
         assigneeEmail: form.assigneeEmail,
         contactId: form.contactId,
         contactName: form.contactName,
+        contactBusinessName: form.contactBusinessName,
+        contactPhone: form.contactPhone,
         completed: form.completed,
         updatedAt: serverTimestamp(),
       }

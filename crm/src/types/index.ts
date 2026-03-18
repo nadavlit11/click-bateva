@@ -27,6 +27,8 @@ export interface CrmTask {
   id: string
   contactId: string
   contactName: string
+  contactBusinessName: string
+  contactPhone: string
   title: string
   description: string
   date: unknown

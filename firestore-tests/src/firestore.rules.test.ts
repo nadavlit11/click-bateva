@@ -1901,6 +1901,8 @@ describe("crm_tasks collection", () => {
   const mkTaskData = (uid: string, email: string) => ({
     contactId: "c1",
     contactName: "Test Contact",
+    contactBusinessName: "Test Biz",
+    contactPhone: "050-1234567",
     title: "Call back",
     description: "Follow up",
     date: new Date(),

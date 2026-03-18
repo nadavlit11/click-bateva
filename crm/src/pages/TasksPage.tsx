@@ -51,7 +51,7 @@ function isOverdueKey(key: string): boolean {
 type Tab = 'active' | 'completed'
 
 export function TasksPage() {
-  const { user, role } = useAuth()
+  const { user } = useAuth()
   const [tasks, setTasks] = useState<CrmTask[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -241,7 +241,8 @@ export function TasksPage() {
                       onEdit={task => { setEditing(task); setModalOpen(true) }}
                       onToggleFollow={toggleFollow}
                       onToggleComplete={handleToggleComplete}
-                      onDelete={role === 'admin' ? task => setConfirmDelete(task) : undefined}
+
+
                     />
                   ))}
                 </div>
@@ -264,7 +265,6 @@ export function TasksPage() {
                 onEdit={task => { setEditing(task); setModalOpen(true) }}
                 onToggleFollow={toggleFollow}
                 onToggleComplete={handleToggleComplete}
-                onDelete={role === 'admin' ? task => setConfirmDelete(task) : undefined}
               />
             ))}
           </div>
