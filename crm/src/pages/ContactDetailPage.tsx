@@ -181,6 +181,28 @@ export function ContactDetailPage() {
         </span>
       </div>
 
+      {/* Quick actions */}
+      <div className="flex gap-2 mb-4">
+        {contact.phone && (
+          <a
+            href={`https://wa.me/972${contact.phone.replace(/^0/, '').replace(/[^0-9]/g, '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
+          >
+            WhatsApp
+          </a>
+        )}
+        {contact.email && (
+          <a
+            href={`mailto:${contact.email}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+          >
+            אימייל
+          </a>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Contact info */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
