@@ -52,6 +52,19 @@ service firebase.storage {
       allow write: if isAdminOrContentManager() || isBusinessUser();
     }
 
+    // ─── crm-attachments/ ────────────────────────────────────────────────────
+    // CRM users can upload/read attachments; admin can delete
+
+    function isCrmAuthorized() {
+      return isSignedIn() &&
+        (request.auth.token.role == 'admin' || request.auth.token.role == 'crm_user');
+    }
+
+    match /crm-attachments/{allPaths=**} {
+      allow read: if isCrmAuthorized();
+      allow write: if isCrmAuthorized();
+    }
+
     // ─── Default deny ───────────────────────────────────────────────────────
 
     match /{allPaths=**} {

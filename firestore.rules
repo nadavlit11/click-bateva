@@ -198,6 +198,17 @@ service cloud.firestore {
           ]);
         allow delete: if isCrmAuthorized();
       }
+
+      match /attachments/{attachmentId} {
+        allow read: if isCrmAuthorized();
+        allow create: if isCrmAuthorized() &&
+          request.resource.data.keys().hasOnly([
+            'name', 'url', 'contentType', 'size', 'emailSubject',
+            'uploadedBy', 'uploadedByEmail', 'createdAt'
+          ]) &&
+          request.resource.data.uploadedBy == request.auth.uid;
+        allow delete: if isAdmin();
+      }
     }
 
     // ─── CRM tasks ────────────────────────────────────────────────────

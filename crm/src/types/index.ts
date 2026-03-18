@@ -23,6 +23,18 @@ export interface ActivityLogEntry {
   updatedAt?: unknown
 }
 
+export interface CrmAttachment {
+  id: string
+  name: string
+  url: string
+  contentType: string
+  size: number
+  emailSubject?: string
+  uploadedBy: string
+  uploadedByEmail: string
+  createdAt: unknown
+}
+
 export interface CrmTask {
   id: string
   contactId: string
