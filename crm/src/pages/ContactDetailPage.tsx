@@ -27,7 +27,7 @@ export function ContactDetailPage() {
   // Editable fields
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({
-    name: '', businessName: '', phone: '', email: '',
+    name: '', businessName: '', nameInMap: '', phone: '', email: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -55,6 +55,7 @@ export function ContactDetailPage() {
         setForm({
           name: data.name,
           businessName: data.businessName,
+          nameInMap: data.nameInMap || '',
           phone: data.phone,
           email: data.email,
         })
@@ -101,6 +102,7 @@ export function ContactDetailPage() {
       await updateDoc(doc(db, 'crm_contacts', id), {
         name: form.name.trim(),
         businessName: form.businessName.trim(),
+        nameInMap: (form.nameInMap || '').trim(),
         phone: form.phone.trim(),
         email: form.email.trim(),
         updatedAt: serverTimestamp(),
@@ -192,6 +194,7 @@ export function ContactDetailPage() {
                       setForm({
                         name: contact.name,
                         businessName: contact.businessName,
+                        nameInMap: contact.nameInMap || '',
                         phone: contact.phone,
                         email: contact.email,
                       })
@@ -251,6 +254,15 @@ export function ContactDetailPage() {
                   />
                 </div>
                 <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">שם במפה</label>
+                  <input
+                    type="text"
+                    value={form.nameInMap}
+                    onChange={e => setForm(p => ({ ...p, nameInMap: e.target.value }))}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                </div>
+                <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">טלפון</label>
                   <input
                     type="tel"
@@ -275,6 +287,7 @@ export function ContactDetailPage() {
               <>
                 <Field label="שם" value={contact.name} />
                 <Field label="עסק" value={contact.businessName || '—'} />
+                <Field label="שם במפה" value={contact.nameInMap || '—'} />
                 <Field
                   label="טלפון"
                   value={contact.phone || '—'}

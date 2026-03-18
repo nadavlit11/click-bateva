@@ -65,6 +65,7 @@ export function ContactsPage() {
     ? contacts.filter(c =>
       c.name.toLowerCase().includes(term) ||
       c.businessName.toLowerCase().includes(term) ||
+      (c.nameInMap || '').toLowerCase().includes(term) ||
       c.phone.includes(term))
     : contacts
 
@@ -100,7 +101,7 @@ export function ContactsPage() {
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="חיפוש לפי שם, עסק או טלפון..."
+          placeholder="חיפוש לפי שם, עסק, שם במפה או טלפון..."
           className="w-full sm:w-80 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
         />
       </div>
@@ -122,6 +123,7 @@ export function ContactsPage() {
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="text-right px-4 py-3 font-medium text-gray-600">שם</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">עסק</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">שם במפה</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">טלפון</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">אימייל</th>
                   <th className="px-4 py-3" />
@@ -136,6 +138,7 @@ export function ContactsPage() {
                   >
                     <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
                     <td className="px-4 py-3 text-gray-700">{c.businessName || '—'}</td>
+                    <td className="px-4 py-3 text-gray-700">{c.nameInMap || '—'}</td>
                     <td className="px-4 py-3 text-gray-600" dir="ltr">{c.phone || '—'}</td>
                     <td className="px-4 py-3 text-gray-600" dir="ltr">{c.email || '—'}</td>
                     <td className="px-4 py-3">
@@ -175,6 +178,9 @@ export function ContactsPage() {
                     <p className="font-medium text-gray-900 truncate">{c.name}</p>
                     {c.businessName && (
                       <p className="text-sm text-gray-500 truncate">{c.businessName}</p>
+                    )}
+                    {c.nameInMap && (
+                      <p className="text-xs text-gray-400 truncate">{c.nameInMap}</p>
                     )}
                   </div>
                   <div className="flex gap-2 shrink-0 mr-2" onClick={e => e.stopPropagation()}>

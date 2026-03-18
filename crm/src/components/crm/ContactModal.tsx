@@ -17,6 +17,7 @@ interface Props {
 interface FormState {
   name: string
   businessName: string
+  nameInMap: string
   phone: string
   email: string
 }
@@ -24,6 +25,7 @@ interface FormState {
 const INITIAL: FormState = {
   name: '',
   businessName: '',
+  nameInMap: '',
   phone: '',
   email: '',
 }
@@ -41,6 +43,7 @@ export function ContactModal({
       setForm({
         name: contact.name,
         businessName: contact.businessName,
+        nameInMap: contact.nameInMap || '',
         phone: contact.phone,
         email: contact.email,
       })
@@ -68,6 +71,7 @@ export function ContactModal({
       const data = {
         name: form.name.trim(),
         businessName: form.businessName.trim(),
+        nameInMap: (form.nameInMap || '').trim(),
         phone: form.phone.trim(),
         email: form.email.trim(),
         updatedAt: serverTimestamp(),
@@ -129,6 +133,17 @@ export function ContactModal({
               type="text"
               value={form.businessName}
               onChange={e => set('businessName', e.target.value)}
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              שם במפה
+            </label>
+            <input
+              type="text"
+              value={form.nameInMap}
+              onChange={e => set('nameInMap', e.target.value)}
               className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
             />
           </div>

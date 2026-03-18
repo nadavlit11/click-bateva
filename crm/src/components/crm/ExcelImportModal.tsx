@@ -16,6 +16,7 @@ interface Props {
 interface ParsedRow {
   name: string
   businessName: string
+  nameInMap: string
   phone: string
   email: string
 }
@@ -28,6 +29,9 @@ const HEADER_MAP: Record<string, keyof ParsedRow> = {
   'businessname': 'businessName',
   'business name': 'businessName',
   'business': 'businessName',
+  'שם במפה': 'nameInMap',
+  'name in map': 'nameInMap',
+  'nameinmap': 'nameInMap',
   'טלפון': 'phone',
   'phone': 'phone',
   'אימייל': 'email',
@@ -101,7 +105,7 @@ export function ExcelImportModal({
       const parsed: ParsedRow[] = raw
         .map(row => {
           const out: ParsedRow = {
-            name: '', businessName: '', phone: '', email: '',
+            name: '', businessName: '', nameInMap: '', phone: '', email: '',
           }
           for (const [col, field] of Object.entries(colMap)) {
             out[field] = String(row[col] ?? '').trim()
@@ -143,6 +147,7 @@ export function ExcelImportModal({
           batch.set(ref, {
             name: row.name,
             businessName: row.businessName,
+            nameInMap: row.nameInMap,
             phone: row.phone,
             email: row.email,
             createdBy: user?.uid ?? '',
@@ -184,7 +189,7 @@ export function ExcelImportModal({
         <div className="mb-4">
           <p className="text-sm text-gray-600 mb-2">
             העלה קובץ Excel (.xlsx / .xls) עם כותרות:
-            שם, עסק, טלפון, אימייל
+            שם, עסק, שם במפה, טלפון, אימייל
           </p>
           <input
             ref={fileRef}
@@ -217,6 +222,9 @@ export function ExcelImportModal({
                       עסק
                     </th>
                     <th className="text-right px-3 py-2 font-medium text-gray-600">
+                      שם במפה
+                    </th>
+                    <th className="text-right px-3 py-2 font-medium text-gray-600">
                       טלפון
                     </th>
                     <th className="text-right px-3 py-2 font-medium text-gray-600">
@@ -235,6 +243,9 @@ export function ExcelImportModal({
                       </td>
                       <td className="px-3 py-1.5 text-gray-700">
                         {row.businessName || '—'}
+                      </td>
+                      <td className="px-3 py-1.5 text-gray-700">
+                        {row.nameInMap || '—'}
                       </td>
                       <td className="px-3 py-1.5 text-gray-600" dir="ltr">
                         {row.phone || '—'}
