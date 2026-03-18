@@ -10,11 +10,15 @@ import { useAuthEffect } from '../hooks/useAuthSnapshot.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { useAuth } from '../hooks/useAuth'
 import { ContactNotes } from '../components/crm/ContactNotes.tsx'
+import { EmailComposer } from '../components/crm/EmailComposer.tsx'
 import { TaskModal } from '../components/crm/TaskModal.tsx'
 import {
   PRIORITY_LABELS, PRIORITY_COLORS, formatDate,
+  formatDateTime,
 } from '../components/crm/crmUtils.ts'
-import type { CrmContact, CrmTask } from '../types/index.ts'
+import type {
+  CrmContact, CrmTask, CrmAttachment,
+} from '../types/index.ts'
 
 export function ContactDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -38,6 +42,14 @@ export function ContactDetailPage() {
 
   // Create task modal
   const [taskModalOpen, setTaskModalOpen] = useState(false)
+
+  // Email composer
+  const [emailOpen, setEmailOpen] = useState(false)
+
+  // Attachments
+  const [attachments, setAttachments] = useState<
+    CrmAttachment[]
+  >([])
 
   useAuthEffect(() => {
     if (!id) return
@@ -97,6 +109,32 @@ export function ContactDetailPage() {
     )
   }, [id])
 
+  // Load attachments
+  useAuthEffect(() => {
+    if (!id) return
+    const q = query(
+      collection(
+        db, 'crm_contacts', id, 'attachments',
+      ),
+      orderBy('createdAt', 'desc'),
+    )
+    return onSnapshot(
+      q,
+      snap => {
+        setAttachments(
+          snap.docs.map(d => ({
+            id: d.id, ...d.data(),
+          }) as CrmAttachment),
+        )
+      },
+      err => {
+        reportError(err, {
+          source: 'ContactDetailPage.attachments',
+        })
+      },
+    )
+  }, [id])
+
   async function handleSave() {
     if (!id || !form.name.trim()) return
     setSaving(true)
@@ -124,13 +162,17 @@ export function ContactDetailPage() {
     if (!id) return
     setDeleting(true)
     try {
-      // Delete activity_log subcollection first (Firestore doesn't cascade)
+      // Delete subcollections first (Firestore doesn't cascade)
+      const batch = writeBatch(db)
       const logSnap = await getDocs(
         collection(db, 'crm_contacts', id, 'activity_log'),
       )
-      if (logSnap.size > 0) {
-        const batch = writeBatch(db)
-        logSnap.docs.forEach(d => batch.delete(d.ref))
+      logSnap.docs.forEach(d => batch.delete(d.ref))
+      const attSnap = await getDocs(
+        collection(db, 'crm_contacts', id, 'attachments'),
+      )
+      attSnap.docs.forEach(d => batch.delete(d.ref))
+      if (logSnap.size > 0 || attSnap.size > 0) {
         await batch.commit()
       }
       await deleteDoc(doc(db, 'crm_contacts', id))
@@ -194,12 +236,12 @@ export function ContactDetailPage() {
           </a>
         )}
         {contact.email && (
-          <a
-            href={`mailto:${contact.email}`}
+          <button
+            onClick={() => setEmailOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
           >
-            אימייל
-          </a>
+            שלח אימייל
+          </button>
         )}
       </div>
 
@@ -388,9 +430,54 @@ export function ContactDetailPage() {
           </div>
         </div>
 
-        {/* Right: Activity timeline */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          {id && <ContactNotes contactId={id} />}
+        {/* Right: Notes + Attachments */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            {id && <ContactNotes contactId={id} />}
+          </div>
+
+          {attachments.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 className="text-sm font-bold text-gray-700 mb-3">
+                קבצים ({attachments.length})
+              </h3>
+              <div className="space-y-2">
+                {attachments.map(att => (
+                  <div
+                    key={att.id}
+                    className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 bg-gray-50"
+                  >
+                    <span className="text-lg">
+                      {att.contentType?.startsWith('image/')
+                        ? '🖼️'
+                        : att.contentType === 'application/pdf'
+                          ? '📄'
+                          : '📎'}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <a
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                      >
+                        {att.name}
+                      </a>
+                      <p className="text-xs text-gray-400">
+                        {att.emailSubject && (
+                          <span>{att.emailSubject} — </span>
+                        )}
+                        {formatDateTime(att.createdAt)}
+                      </p>
+                    </div>
+                    <span className="text-xs text-gray-400 shrink-0">
+                      {(att.size / 1024).toFixed(0)} KB
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -402,6 +489,15 @@ export function ContactDetailPage() {
         preselectedContactId={id}
         preselectedContactName={contact.name}
       />
+
+      {contact.email && (
+        <EmailComposer
+          isOpen={emailOpen}
+          onClose={() => setEmailOpen(false)}
+          contactId={id ?? ''}
+          contactEmail={contact.email}
+        />
+      )}
 
       {/* Delete confirm */}
       {confirmDelete && (
