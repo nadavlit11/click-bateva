@@ -66,6 +66,7 @@ Sidebar: 4 nav items, "לוח ניהול" link (admin only → main admin app)
 ## Gotchas
 - **Tailwind v4 RTL positioning:** `left-*`/`right-*` are LOGICAL in v4. In RTL: `right-3` = physical LEFT, `left-3` = physical RIGHT. Use `right-*` for physical left placement (e.g., hamburger button on the left side in RTL).
 - **Firestore collections:** `crm_contacts` (with `activity_log` subcollection), `crm_tasks`, `users` (queried for assignee/contact pickers)
+- **CRM contact fields:** `name`, `businessName`, `nameInMap?`, `phone`, `email`, `createdBy`, `createdByEmail`, `createdAt`, `updatedAt`. When adding fields: update type, ContactModal, ContactDetailPage, ContactsPage, ExcelImportModal, `firestore.rules` allowlists (create + update), and rules test `mkContactData`.
 - **Cloud Functions:** `createCrmUser`, `deleteCrmUser` callables
 - **Subcollection cascade delete:** When deleting a `crm_contacts` doc, must first batch-delete all `activity_log` subcollection docs
 - **New roles need `users` read access:** `crm_user` role needs explicit read rule on `users` collection for pickers
