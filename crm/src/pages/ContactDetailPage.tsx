@@ -9,7 +9,7 @@ import { db } from '../lib/firebase.ts'
 import { useAuthEffect } from '../hooks/useAuthSnapshot.ts'
 import { reportError } from '../lib/errorReporting.ts'
 import { useAuth } from '../hooks/useAuth'
-import { ActivityTimeline } from '../components/crm/ActivityTimeline.tsx'
+import { ContactNotes } from '../components/crm/ContactNotes.tsx'
 import { TaskModal } from '../components/crm/TaskModal.tsx'
 import {
   PRIORITY_LABELS, PRIORITY_COLORS, formatDate,
@@ -27,7 +27,8 @@ export function ContactDetailPage() {
   // Editable fields
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({
-    name: '', businessName: '', nameInMap: '', phone: '', email: '',
+    name: '', businessName: '', nameInMap: '',
+    phone: '', phone2: '', email: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -57,6 +58,7 @@ export function ContactDetailPage() {
           businessName: data.businessName,
           nameInMap: data.nameInMap || '',
           phone: data.phone,
+          phone2: data.phone2 || '',
           email: data.email,
         })
         setLoading(false)
@@ -104,6 +106,7 @@ export function ContactDetailPage() {
         businessName: form.businessName.trim(),
         nameInMap: (form.nameInMap || '').trim(),
         phone: form.phone.trim(),
+        phone2: (form.phone2 || '').trim(),
         email: form.email.trim(),
         updatedAt: serverTimestamp(),
       })
@@ -196,6 +199,7 @@ export function ContactDetailPage() {
                         businessName: contact.businessName,
                         nameInMap: contact.nameInMap || '',
                         phone: contact.phone,
+                        phone2: contact.phone2 || '',
                         email: contact.email,
                       })
                     }}
@@ -273,6 +277,16 @@ export function ContactDetailPage() {
                   />
                 </div>
                 <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">טלפון 2</label>
+                  <input
+                    type="tel"
+                    value={form.phone2}
+                    onChange={e => setForm(p => ({ ...p, phone2: e.target.value }))}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                    dir="ltr"
+                  />
+                </div>
+                <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">אימייל</label>
                   <input
                     type="email"
@@ -293,6 +307,12 @@ export function ContactDetailPage() {
                   value={contact.phone || '—'}
                   dir="ltr"
                   href={contact.phone ? `tel:${contact.phone}` : undefined}
+                />
+                <Field
+                  label="טלפון 2"
+                  value={contact.phone2 || '—'}
+                  dir="ltr"
+                  href={contact.phone2 ? `tel:${contact.phone2}` : undefined}
                 />
                 <Field
                   label="אימייל"
@@ -348,7 +368,7 @@ export function ContactDetailPage() {
 
         {/* Right: Activity timeline */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          {id && <ActivityTimeline contactId={id} />}
+          {id && <ContactNotes contactId={id} />}
         </div>
       </div>
 
@@ -373,7 +393,7 @@ export function ContactDetailPage() {
           >
             <h2 className="text-lg font-bold text-gray-900 mb-2">מחיקת איש קשר</h2>
             <p className="text-sm text-gray-600 mb-4">
-              {`למחוק את "${contact.name}"? כל יומן הפעילות ימחק גם.`}
+              {`למחוק את "${contact.name}"? כל ההערות יימחקו גם.`}
             </p>
             <div className="flex gap-3 justify-end">
               <button

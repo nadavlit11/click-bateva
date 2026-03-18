@@ -6,6 +6,7 @@ export interface CrmContact {
   businessName: string
   nameInMap?: string
   phone: string
+  phone2?: string
   email: string
   createdBy: string
   createdByEmail: string
@@ -19,6 +20,7 @@ export interface ActivityLogEntry {
   createdBy: string
   createdByEmail: string
   createdAt: unknown
+  updatedAt?: unknown
 }
 
 export interface CrmTask {

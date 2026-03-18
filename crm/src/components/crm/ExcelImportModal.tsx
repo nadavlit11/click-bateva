@@ -18,6 +18,7 @@ interface ParsedRow {
   businessName: string
   nameInMap: string
   phone: string
+  phone2: string
   email: string
 }
 
@@ -34,6 +35,8 @@ const HEADER_MAP: Record<string, keyof ParsedRow> = {
   'nameinmap': 'nameInMap',
   'טלפון': 'phone',
   'phone': 'phone',
+  'טלפון 2': 'phone2',
+  'phone2': 'phone2',
   'אימייל': 'email',
   'email': 'email',
   'מייל': 'email',
@@ -105,7 +108,8 @@ export function ExcelImportModal({
       const parsed: ParsedRow[] = raw
         .map(row => {
           const out: ParsedRow = {
-            name: '', businessName: '', nameInMap: '', phone: '', email: '',
+            name: '', businessName: '', nameInMap: '',
+            phone: '', phone2: '', email: '',
           }
           for (const [col, field] of Object.entries(colMap)) {
             out[field] = String(row[col] ?? '').trim()
@@ -149,6 +153,7 @@ export function ExcelImportModal({
             businessName: row.businessName,
             nameInMap: row.nameInMap,
             phone: row.phone,
+            phone2: row.phone2,
             email: row.email,
             createdBy: user?.uid ?? '',
             createdByEmail: user?.email ?? '',
@@ -189,7 +194,7 @@ export function ExcelImportModal({
         <div className="mb-4">
           <p className="text-sm text-gray-600 mb-2">
             העלה קובץ Excel (.xlsx / .xls) עם כותרות:
-            שם, עסק, שם במפה, טלפון, אימייל
+            שם, עסק, שם במפה, טלפון, טלפון 2, אימייל
           </p>
           <input
             ref={fileRef}
@@ -228,6 +233,9 @@ export function ExcelImportModal({
                       טלפון
                     </th>
                     <th className="text-right px-3 py-2 font-medium text-gray-600">
+                      טלפון 2
+                    </th>
+                    <th className="text-right px-3 py-2 font-medium text-gray-600">
                       אימייל
                     </th>
                   </tr>
@@ -249,6 +257,9 @@ export function ExcelImportModal({
                       </td>
                       <td className="px-3 py-1.5 text-gray-600" dir="ltr">
                         {row.phone || '—'}
+                      </td>
+                      <td className="px-3 py-1.5 text-gray-600" dir="ltr">
+                        {row.phone2 || '—'}
                       </td>
                       <td className="px-3 py-1.5 text-gray-600" dir="ltr">
                         {row.email || '—'}
