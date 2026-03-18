@@ -1,3 +1,11 @@
+---
+name: vite-react-scaffold
+description: >
+  TRIGGER when: scaffolding a new React app in the monorepo, user says "new app", "scaffold",
+  or "create a new Vite project". Template with RTL Hebrew setup, Rubik font, Tailwind v4,
+  and Firebase emulator config.
+---
+
 # vite-react-scaffold
 
 Use when scaffolding a new React app under `apps/` (admin, business, user-web).

@@ -70,7 +70,7 @@ Existing LLDs (follow these for format):
 ## Weekly Skills & Memory Audit
 
 On the first conversation of each week, run a quick audit of skills and memory files:
-1. Check line counts — flag files that grew >20% above baseline (CLAUDE.md: 65, MEMORY.md: 45, code-review: 218, cloud-functions: 188)
+1. Check line counts — flag files that grew >20% above baseline (CLAUDE.md: 65, MEMORY.md: 45, code-review SKILL.md: 92, code-review subagents total: ~230, cloud-functions SKILL.md: 105)
 2. Search for file paths referenced in skills that no longer exist in the repo
 3. Search for rules that appear in multiple files (duplication)
 4. Remove stale content, consolidate duplicates

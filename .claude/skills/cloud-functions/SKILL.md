@@ -1,6 +1,21 @@
+---
+name: cloud-functions
+description: >
+  TRIGGER when: writing or modifying Firebase Cloud Functions, user mentions onCall, auth triggers,
+  custom claims, business user setup, or Cloud Function tests. Reference for v1/v2 triggers,
+  Admin SDK patterns, Jest test setup, and business user claims.
+---
+
 # cloud-functions
 
 Reference for writing, configuring, and testing Firebase Cloud Functions in this project.
+
+For detailed sub-topics, read the relevant reference file:
+
+| Topic | File |
+|-------|------|
+| Jest test setup, mocking, ts-jest config | `references/jest-setup.md` |
+| Business user claims, dual role system | `references/business-claims.md` |
 
 ---
 
@@ -36,8 +51,10 @@ Gen1 auth triggers max Node 22 (not 24). Check `engines.node` in `functions/pack
 
 ## Emulator prerequisites
 
-- Requires **Java 21+** — Firebase Emulator will refuse to start on Java 17 or below
-- Install: `brew install --cask temurin@21`
+See the `/emulator` skill for full emulator setup, seeding, and troubleshooting.
+
+Quick reference:
+- Requires **Java 21+**
 - Start: `firebase emulators:start --only auth,functions,firestore`
 - UI: http://127.0.0.1:4000
 
@@ -86,103 +103,3 @@ await fetch(
 await signInWithEmailAndPassword(auth, email, password);
 await user.getIdToken(true);
 ```
-
----
-
-## Jest test setup
-
-### Config files
-
-```
-functions/
-├── jest.config.unit.js         # no emulator, runs *.unit.test.ts
-├── jest.config.integration.js  # emulator required, runs *.integration.test.ts
-└── tsconfig.test.json          # overrides NodeNext → CommonJS for Jest
-```
-
-### ts-jest — use `transform`, NOT `globals`
-
-`globals: { 'ts-jest': { ... } }` is **deprecated** in ts-jest v29+. Always use:
-
-```js
-module.exports = {
-  testEnvironment: "node",
-  transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.test.json" }] },
-  moduleNameMapper: { "^(\\.{1,2}/.*)\\.js$": "$1" }, // strips .js from NodeNext imports
-};
-```
-
-### tsconfig.test.json — required to fix NodeNext/Jest incompatibility
-
-```json
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": { "module": "CommonJS", "moduleResolution": "node" },
-  "include": ["src"]
-}
-```
-
-### Unit test boilerplate — mocking Admin SDK
-
-`auth.ts` calls `getFirestore()` and `getAuth()` at **module load time**. Key rules:
-
-1. Use `jest.mock()` (auto-hoisted) for all three modules: `firebase-admin/firestore`, `firebase-admin/auth`, `firebase-admin/app`
-2. `import` the module under test AFTER the `jest.mock()` calls
-3. `getApps` mock must return a non-empty array to skip `initializeApp()`
-
-See `functions/src/__tests__/auth.unit.test.ts` for the full working pattern.
-
-### Calling v2 callables in unit tests
-
-```ts
-// ✅ Use .run() directly — do NOT use testEnv.wrapV2()
-const result = await setUserRole.run(makeRequest({}));
-```
-
-### Integration test — unique Firebase app names
-
-Prevents "app already exists" errors when multiple test files run:
-
-```ts
-const app = initializeApp({ projectId: "click-bateva", apiKey: "test-key" }, `test-${Date.now()}`);
-```
-
----
-
-## Business user custom claims
-
-Business users require TWO custom claims, not just `role`:
-
-```ts
-const businessRef = `/databases/(default)/documents/businesses/${uid}`;
-await adminAuth.setCustomUserClaims(uid, { role: "business_user", businessRef });
-```
-
-The `businessRef` claim is set for auditability and mirrored in the `users/{uid}` doc. The actual `businesses` read rule uses UID comparison:
-```
-allow read: if isAdmin() || (isBusinessUser() && request.auth.uid == businessId)
-```
-
-**Gotcha:** Setting only `{ role: "business_user" }` without `businessRef` will break the business dashboard — `AuthGuard` expects `businessRef` to resolve the business document path.
-
-The `businesses/{uid}` document must also include `associatedUserIds: [uid]` — checked by the POI update rule:
-```
-get(...businesses/...).data.associatedUserIds.hasAny([request.auth.uid])
-```
-
-Mirror `businessRef` in the `users/{uid}` Firestore doc for auditability.
-
----
-
-## Dual role system
-
-Roles are stored in **two places** that must stay in sync:
-
-| Store | Used by | Set by |
-|-------|---------|--------|
-| Firestore `users/{uid}.role` | Admin UI display only | `onUserCreated` + `setUserRole` |
-| Custom claim `{ role }` on Auth token | Firestore rules + storage rules + callable function auth checks + front-end | `onUserCreated` + `setUserRole` |
-
-`setUserRole` updates both atomically. When testing manually, make sure both are set.
-
-**Important:** Firestore Security Rules use `request.auth.token.role` (custom claims), NOT `get()` on the users collection. This avoids failures when the user document doesn't exist yet (e.g., new users before the trigger fires).

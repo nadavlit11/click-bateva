@@ -1,3 +1,10 @@
+---
+name: bug-retro
+description: >
+  TRIGGER when: a bug was just fixed, committing a fix: change, or user says "bug retro".
+  Encodes the lesson into the code-review skill so the same bug class never slips through again.
+---
+
 # bug-retro
 
 Run this after fixing **any** bug — including small ones. The goal is to make sure the same bug can never slip through again, and that the fix didn't break anything.
@@ -34,11 +41,11 @@ Pick the category that best fits:
 
 ## Step 3 — Add a rule to the code-review skill
 
-Open `.claude/skills/code-review/SKILL.md` and add a bullet to the subagent that would have caught this bug:
+Open the relevant subagent file in `.claude/skills/code-review/subagents/` and add a bullet:
 
-- **Security issue** → Subagent A
-- **Project pattern violated** → Subagent B
-- **Code quality / completeness / layout** → Subagent C
+- **Security issue** → `subagents/security.md`
+- **Project pattern violated** → `subagents/patterns.md`
+- **Code quality / completeness / layout** → `subagents/code-quality.md`
 
 Write the rule as a concrete check, not a vague principle:
 

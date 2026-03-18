@@ -1,3 +1,11 @@
+---
+name: start
+description: >
+  TRIGGER when: beginning a new conversation, user says "start", "status", "briefing",
+  or wants to understand current branch state, recent commits, and CI status before working.
+  Read-only session startup — no changes to code.
+---
+
 # start
 
 Session startup briefing. Run at the beginning of a new conversation to quickly understand the project state.

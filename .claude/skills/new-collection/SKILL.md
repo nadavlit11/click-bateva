@@ -1,3 +1,11 @@
+---
+name: new-collection
+description: >
+  TRIGGER when: adding a new Firestore collection or data model, user says "new collection"
+  or "add a collection". Checklist for schema design, rules, indexes, docs, and all files
+  that must be updated when introducing a new collection.
+---
+
 # new-collection
 
 Use this skill when adding a new Firestore collection to the project. Ensures all required files are updated consistently.

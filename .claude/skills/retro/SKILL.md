@@ -1,3 +1,10 @@
+---
+name: retro
+description: >
+  TRIGGER when: feature/refactor complete, or auto-triggered after feat:/fix: commits with logic changes.
+  Captures lessons into skills, codebase-map, and docs. Two tiers: quick (small changes) and full (large features).
+---
+
 # retro
 
 Use this skill to capture lessons learned and keep skills sharp.
