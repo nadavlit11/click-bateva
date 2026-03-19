@@ -106,6 +106,10 @@ npm run test:mutate:functions    # functions only
 
 - Emulator connection in apps is gated on `VITE_USE_EMULATOR === 'true'` (NOT `import.meta.env.DEV`)
 - After changing Firestore rules, you MUST deploy them — undeployed rules silently block access
-- Cloud Functions use `setGlobalOptions({ maxInstances: 10 })` to limit scaling
+- Cloud Functions use `setGlobalOptions({ maxInstances: 10, region: "me-west1" })` — v2 functions in me-west1, v1 `onUserCreated` in us-central1
+- **Firestore region: me-west1 (Tel Aviv)** — migrated from nam5 (US) on 2026-03-19
+- **Backups:** Native Firestore scheduled backups (daily, 7-day retention) — no Cloud Function, managed via `gcloud firestore backups schedules`
+- **Cloud Storage:** Default bucket `click-bateva.firebasestorage.app` is in me-west1
+- **Manual hosting deploy:** Always build with `VITE_USE_EMULATOR=false npm run build` — `.env.local` has emulator enabled
 - `serviceAccount.json` is gitignored — needed for scripts like `set-admin.mjs`
 - Build env var `VITE_GOOGLE_MAPS_API_KEY` is required (admin MapPicker + user-web FloatingSearch)
