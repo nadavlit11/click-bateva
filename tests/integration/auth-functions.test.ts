@@ -42,7 +42,7 @@ beforeAll(() => {
   app = initializeApp({ projectId: PROJECT_ID, apiKey: "test-key" }, `test-${RUN}`);
   auth = getAuth(app);
   db = getFirestore(app);
-  functions = getFunctions(app);
+  functions = getFunctions(app, "me-west1");
 
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
   connectFirestoreEmulator(db, "127.0.0.1", 8080);

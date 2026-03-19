@@ -7,7 +7,7 @@ Sentry.init({
   enabled: !!process.env.SENTRY_DSN,
 });
 
-setGlobalOptions({maxInstances: 10});
+setGlobalOptions({maxInstances: 10, region: "me-west1"});
 
 export {onUserCreated, setUserRole} from "./auth.js";
 export {createBusinessUser, deleteBusinessUser} from "./business.js";
@@ -16,5 +16,4 @@ export {createTravelAgent, deleteTravelAgent} from "./agent.js";
 export {sendRegistrationRequest} from "./registration.js";
 export {createCrmUser, deleteCrmUser} from "./crm.js";
 export {sendContactEmail} from "./email.js";
-export {dailyFirestoreExport} from "./backup.js";
 export {auditPoiChanges} from "./audit.js";

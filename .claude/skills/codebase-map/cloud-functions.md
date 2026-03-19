@@ -2,14 +2,14 @@
 
 ## Key Files
 
-- `functions/src/index.ts` — exports all functions; Sentry init; `setGlobalOptions({ maxInstances: 10 })`
+- `functions/src/index.ts` — exports all functions; Sentry init; `setGlobalOptions({ maxInstances: 10, region: "me-west1" })`
 - `functions/src/auth.ts` — `onUserCreated` (v1 auth trigger) + `setUserRole` (v2 callable)
 - `functions/src/business.ts` — `createBusinessUser` + `deleteBusinessUser` (v2 callables)
 - `functions/src/agent.ts` — `createTravelAgent` + `deleteTravelAgent` (v2 callables, admin-only)
 - `functions/src/crm.ts` — `createCrmUser` + `deleteCrmUser` (v2 callables, admin-only)
 - `functions/src/email.ts` — `sendContactEmail` (v2 callable, CRM-authorized, nodemailer Gmail SMTP)
 - `functions/src/users.ts` — `deleteContentManager` + `blockContentManager` (v2 callables, admin-only)
-- `functions/src/backup.ts` — `dailyFirestoreExport` (v2 scheduled, daily 2AM IST)
+- `functions/src/backup.ts` — `dailyFirestoreExport` (REMOVED — replaced by native Firestore scheduled backups)
 - `functions/src/audit.ts` — `auditPoiChanges` (v2 Firestore trigger on `points_of_interest`)
 - `functions/src/__tests__/auth.unit.test.ts` — unit tests for auth functions (no emulator)
 - `functions/src/__tests__/crm.unit.test.ts` — unit tests for CRM user management functions
@@ -34,7 +34,6 @@
 | `createCrmUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `deleteCrmUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `sendContactEmail` | v2 `onCall({ cors: true, enforceAppCheck: true })` | CRM callable | admin or crm_user |
-| `dailyFirestoreExport` | v2 `onSchedule` | Daily 2AM IST | N/A (scheduled) |
 | `auditPoiChanges` | v2 `onDocumentWritten` | POI create/update/delete | N/A (trigger) |
 
 ## Data Flow
@@ -95,6 +94,15 @@ deleteCrmUser (v2 callable)
   ├─ Deletes Firebase Auth user (tolerates auth/user-not-found)
   └─ Deletes users/ doc
 ```
+
+## Infra Prerequisites
+
+When a function depends on external infrastructure (GCS buckets, IAM roles, secrets), verify they exist before marking the feature done. Trigger the function once and check logs.
+
+**Backups:** Native Firestore scheduled backups (daily, 7-day retention). No Cloud Function needed. The `dailyFirestoreExport` function was removed — use `gcloud firestore backups schedules list` to manage.
+- Gen2 functions run on the **Compute Engine SA** (`576857518417-compute@developer.gserviceaccount.com`), not the App Engine SA — always check with `gcloud functions describe <name> --format="value(serviceConfig.serviceAccountEmail)"`
+
+---
 
 ## Patterns & Conventions
 
