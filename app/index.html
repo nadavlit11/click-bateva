@@ -2,6 +2,11 @@
 <html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      if (location.hostname === "click-bateva.web.app") {
+        location.replace("https://clickbateva.co.il" + location.pathname + location.search + location.hash);
+      }
+    </script>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
