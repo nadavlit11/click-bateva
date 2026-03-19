@@ -37,7 +37,7 @@ export { db };
 
 export const auth = getAuth(app);
 export const storage = getStorage(app);
-export const functions = getFunctions(app);
+export const functions = getFunctions(app, "me-west1");
 
 if (import.meta.env.VITE_USE_EMULATOR === 'true') {
   connectFirestoreEmulator(db, "127.0.0.1", 8080);

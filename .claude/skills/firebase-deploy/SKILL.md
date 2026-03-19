@@ -46,6 +46,31 @@ Source: `app/dist` (built by `cd app && npm run build`)
 
 ---
 
+## Deploying a single Cloud Function
+
+**MUST build TypeScript first** — `firebase deploy` reads compiled JS from `functions/lib/`, not the TS source. New or changed exports are silently skipped if JS is stale.
+
+```bash
+# 1. Build
+cd functions && npm run build && cd ..
+
+# 2. Deploy single function
+firebase deploy --only functions:functionName
+```
+
+**Common failure:** `No function matches the filter` — means the JS build is stale. Always build first.
+
+**Verify after deploy:** For scheduled/triggered functions, trigger manually and check logs:
+```bash
+# Trigger a scheduled function
+gcloud firestore export gs://click-bateva-db-backups/$(date +%Y-%m-%d) --async
+
+# Check logs
+gcloud functions logs read functionName --region=me-west1 --gen2 --limit=5
+```
+
+---
+
 ## Gotchas
 
 ### Interrupted deploy leaves hosting unfinalized
