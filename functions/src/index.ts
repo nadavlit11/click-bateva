@@ -17,3 +17,4 @@ export {sendRegistrationRequest} from "./registration.js";
 export {createCrmUser, deleteCrmUser} from "./crm.js";
 export {sendContactEmail} from "./email.js";
 export {auditPoiChanges} from "./audit.js";
+export {enrichPoiFromWebsite} from "./enrichment/index.js";
