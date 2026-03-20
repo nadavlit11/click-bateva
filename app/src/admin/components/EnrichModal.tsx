@@ -80,7 +80,7 @@ const FIELD_LABELS: Record<ScalarField, string> = {
 
 type FeedbackField =
   | keyof typeof FIELD_LABELS
-  | 'email' | 'openingHours' | 'images' | 'videos' | 'location'
+  | 'openingHours' | 'images' | 'videos' | 'location'
 
 const enrichPoiFn = httpsCallable<EnrichRequest, EnrichmentResult>(
   functions, 'enrichPoiFromWebsite',
@@ -422,22 +422,6 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
                 </label>
               )
             })}
-
-            {/* Email (display-only — not in POI form) */}
-            <div className="flex items-center gap-3 p-2">
-              <span className="w-4" />
-              <span className="text-sm font-medium text-gray-700 min-w-[70px]">
-                אימייל
-              </span>
-              {result.email ? (
-                <span className="text-sm text-gray-600 truncate" dir="ltr">
-                  {result.email}
-                </span>
-              ) : (
-                <span className="text-sm text-gray-400">לא נמצא</span>
-              )}
-              <RatingButtons field="email" />
-            </div>
 
             {/* Opening hours */}
             <div className="border-t border-gray-100 pt-3">
