@@ -4,7 +4,7 @@ interface Props {
   open: boolean
   onClose: () => void
   title: string
-  maxWidth?: 'sm' | 'md' | 'lg'
+  maxWidth?: 'sm' | 'md' | 'lg' | '2xl'
   children: ReactNode
   /** Hide the close button and disable backdrop click (e.g. during loading) */
   disableClose?: boolean
@@ -16,6 +16,7 @@ const MAX_W: Record<MaxWidth, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-lg',
+  '2xl': 'max-w-2xl',
 }
 
 export function Modal({

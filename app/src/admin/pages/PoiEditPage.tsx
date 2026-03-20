@@ -235,9 +235,14 @@ export function PoiEditPage() {
     if (fields.phone) set('phone', fields.phone)
     if (fields.whatsapp) set('whatsapp', fields.whatsapp)
     if (fields.facebook) set('facebook', fields.facebook)
+    if (fields.description) set('description', fields.description)
     if (fields.agentsPrice) set('agentsPrice', fields.agentsPrice)
     if (fields.groupsPrice) set('groupsPrice', fields.groupsPrice)
     if (fields.openingHours) set('openingHours', fields.openingHours)
+    if (fields.location) {
+      set('lat', fields.location.lat.toString())
+      set('lng', fields.location.lng.toString())
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {

@@ -12,7 +12,7 @@ Scrapes POI websites to extract structured data and enrich Firestore `points_of_
 
 1. **Scrape** — Firecrawl API on homepage + auto-discovered sub-pages (contact/gallery/about, max 3 pages)
 2. **Programmatic extraction** — zero-hallucination regex: Israeli phones, emails, YouTube, images (`<img>`, CSS `background-image`, `data-src`), Facebook, JSON-LD schema.org, Google Maps embeds
-3. **LLM extraction** — Claude Haiku for opening hours (Hebrew day parsing, "בלילה" = AM fix), price (with context), WhatsApp
+3. **LLM extraction** — Claude Haiku for opening hours (Hebrew day parsing, "בלילה" = AM fix), price (with context), WhatsApp, description (1-3 sentences from "about us"/intro), address (street address for geocoding)
 4. **Verification** — Layer A: programmatic (times in source, phone in source). Layer B: LLM grounding check (quote exact source text)
 5. **Image ranking** — Claude Vision ranks candidates, filters logos/UI, picks best 5 content photos (downloads as base64 first since many sites block direct URL access)
 

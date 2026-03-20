@@ -50,6 +50,9 @@ export interface EnrichmentResult {
   facebook: string | null;
   openingHours: Record<DayKey, DayHours | null> | null;
   price: string | null;
+  description: string | null;
+  address: string | null;
+  location: { lat: number; lng: number } | null;
 }
 
 // ── Provenance tracking ──────────────────────────────────

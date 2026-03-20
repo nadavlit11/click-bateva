@@ -233,6 +233,8 @@ const emptyLlm = {
   openingHours: null,
   price: null,
   whatsapp: null,
+  description: null,
+  address: null,
 };
 
 describe("buildProvenance", () => {
