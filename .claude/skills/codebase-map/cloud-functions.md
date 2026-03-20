@@ -11,6 +11,13 @@
 - `functions/src/users.ts` — `deleteContentManager` + `blockContentManager` (v2 callables, admin-only)
 - `functions/src/backup.ts` — `dailyFirestoreExport` (REMOVED — replaced by native Firestore scheduled backups)
 - `functions/src/audit.ts` — `auditPoiChanges` (v2 Firestore trigger on `points_of_interest`)
+- `functions/src/enrichment/` — POI enrichment pipeline (ported from scripts/lib/):
+  - `types.ts` — DayHours, ScrapedPage, EnrichmentResult interfaces
+  - `extractor.ts` — programmatic regex extraction (phones, emails, images, etc.)
+  - `scraper.ts` — Firecrawl API web scraping + sub-page discovery
+  - `llm-extractor.ts` — Claude extraction, verification, Vision image ranking
+  - `image-processor.ts` — download, validate, upload images to Storage
+  - `index.ts` — `enrichPoiFromWebsite` + `updateEnrichmentInstructions` Cloud Functions
 - `functions/src/__tests__/auth.unit.test.ts` — unit tests for auth functions (no emulator)
 - `functions/src/__tests__/crm.unit.test.ts` — unit tests for CRM user management functions
 - `functions/src/__tests__/users.unit.test.ts` — unit tests for user management functions
@@ -35,6 +42,8 @@
 | `deleteCrmUser` | v2 `onCall({ cors: true })` | Admin callable | admin only |
 | `sendContactEmail` | v2 `onCall({ cors: true, enforceAppCheck: true })` | CRM callable | admin or crm_user |
 | `auditPoiChanges` | v2 `onDocumentWritten` | POI create/update/delete | N/A (trigger) |
+| `enrichPoiFromWebsite` | v2 `onCall({ cors: true, enforceAppCheck: true })` | Admin callable | admin only |
+| `updateEnrichmentInstructions` | v2 `onCall({ cors: true, enforceAppCheck: true })` | Admin callable | admin only |
 
 ## Data Flow
 
@@ -122,6 +131,6 @@ When a function depends on external infrastructure (GCS buckets, IAM roles, secr
 - Mutation testing score is 69% (infra/logger lines are expected survivors)
 - **MUST run `npm run build` before deploying new functions** — `firebase deploy` reads compiled JS, not TS. New exports in `index.ts` are silently skipped if JS is stale.
 - `deleteContentManager`/`blockContentManager` validate target user has `content_manager` role before acting
-- All function unit tests (106 total) must pass before deploy: `cd functions && npm test`
+- All function unit tests (150 total) must pass before deploy: `cd functions && npm test`
 - **`JSON.stringify` does NOT handle Firestore `Timestamp` objects** — they serialize to `{}` (no enumerable properties). When comparing Firestore field values, use `.toMillis()` for Timestamps and check `latitude`/`longitude` for GeoPoints.
 - **Module-level `process.env` reads break tests** — env vars set in `beforeEach` run after module load. Read `process.env` inside the handler function, not at module scope.

@@ -65,6 +65,32 @@ node scripts/enrich-pois.mjs --dry-run --all --resume
 - **Images re-uploaded**: External image URLs are downloaded and re-uploaded to Firebase Storage `poi-media/` with token-based download URLs (matching existing `getDownloadURL` pattern).
 - **CSV parser is naive**: Splits on commas, doesn't handle quoted fields. URLs with commas will break.
 
-## Next Step
+## Admin Dashboard Integration (COMPLETE)
 
-Admin dashboard integration — embed enrichment as a UI feature so content managers can trigger scraping per-POI from the admin panel.
+**Architecture:**
+- Cloud Function `enrichPoiFromWebsite` runs pipeline server-side (API keys as Firebase secrets)
+- Admin clicks "העשרה מהאתר" button on PoiEditPage → modal shows results → cherry-pick fields → merge into form
+- Feedback stored in `enrichment_feedback` collection (per-field thumbs up/down + free-text)
+- Instructions stored in `settings/enrichment_instructions` doc (per-field rules)
+- `updateEnrichmentInstructions` Cloud Function auto-updates rules after each feedback
+
+**Key files (Cloud Functions):**
+```
+functions/src/enrichment/types.ts           # DayHours, ScrapedPage, EnrichmentResult
+functions/src/enrichment/extractor.ts       # Programmatic extraction (22 unit tests)
+functions/src/enrichment/scraper.ts         # Firecrawl web scraping
+functions/src/enrichment/llm-extractor.ts   # Claude extraction + verification + Vision ranking (11 tests)
+functions/src/enrichment/image-processor.ts # Download + validate + upload to Storage
+functions/src/enrichment/index.ts           # Cloud Function orchestrator (13 tests)
+```
+
+**Key files (Admin UI):**
+```
+app/src/admin/components/EnrichModal.tsx    # Cherry-pick modal with feedback UI
+```
+
+**Secrets required:**
+```bash
+firebase functions:secrets:set FIRECRAWL_API_KEY
+firebase functions:secrets:set ANTHROPIC_API_KEY
+```

@@ -66,6 +66,10 @@ crm_tasks/{taskId}
   update: admin/crm_user (affectedKeys hasOnly — cannot change createdBy/createdByEmail/createdAt)
   delete: admin only
 
+enrichment_feedback/{feedbackId}
+  read:   admin only
+  create: admin only
+
 users/{userId}
   read/write: admin
   read: own doc
