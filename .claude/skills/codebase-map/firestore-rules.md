@@ -70,6 +70,10 @@ enrichment_feedback/{feedbackId}
   read:   admin only
   create: admin only
 
+enrichment_runs/{runId}
+  read:   admin only
+  write:  server-only (Cloud Function via admin SDK)
+
 users/{userId}
   read/write: admin
   read: own doc
