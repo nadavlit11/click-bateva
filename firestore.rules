@@ -168,6 +168,12 @@ service cloud.firestore {
       allow create: if isAdmin();
     }
 
+    // ─── enrichment runs (provenance audit trail) ─────────────────────────
+
+    match /enrichment_runs/{runId} {
+      allow read: if isAdmin();
+    }
+
     // ─── trips ──────────────────────────────────────────────────────────────
 
     match /trips/{tripId} {

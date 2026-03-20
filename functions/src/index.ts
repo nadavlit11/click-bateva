@@ -21,3 +21,6 @@ export {
   enrichPoiFromWebsite,
   updateEnrichmentInstructions,
 } from "./enrichment/index.js";
+export {
+  analyzeEnrichmentFeedback,
+} from "./enrichment/analysis.js";

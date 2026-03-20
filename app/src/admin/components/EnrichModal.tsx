@@ -8,6 +8,20 @@ import { Modal } from '../../components/Modal'
 import type { DayHours } from '../../types/index'
 import { DAY_KEYS, DAY_NAMES_HE } from '../pages/poi-form/types'
 
+type ExtractionSource =
+  | 'programmatic'
+  | 'llm'
+  | 'both_agree'
+  | 'programmatic_preferred'
+  | 'llm_rejected'
+
+type FieldProvenance = Record<string, {
+  source: ExtractionSource
+  programmaticValue: unknown
+  llmValue: unknown
+  finalValue: unknown
+}>
+
 interface EnrichmentResult {
   phone: string | null
   whatsapp: string | null
@@ -17,6 +31,8 @@ interface EnrichmentResult {
   facebook: string | null
   openingHours: Record<string, DayHours | null> | null
   price: string | null
+  provenance?: FieldProvenance
+  enrichmentRunId?: string
 }
 
 interface EnrichRequest {
@@ -167,6 +183,17 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
 
   async function saveFeedback(appliedFields: string[], skippedFields: string[]) {
     try {
+      // Build per-field provenance map for rated fields
+      const prov = result?.provenance
+      const fieldProvenance: Record<string, ExtractionSource> = {}
+      if (prov) {
+        for (const field of [...appliedFields, ...skippedFields]) {
+          if (prov[field]) {
+            fieldProvenance[field] = prov[field].source
+          }
+        }
+      }
+
       await addDoc(collection(db, 'enrichment_feedback'), {
         poiId,
         website,
@@ -176,6 +203,9 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
         fieldRatings,
         note: feedbackNote.trim() || null,
         adminUid: user?.uid || null,
+        fieldProvenance: Object.keys(fieldProvenance).length > 0
+          ? fieldProvenance : null,
+        enrichmentRunId: result?.enrichmentRunId ?? null,
       })
       // Trigger instruction update asynchronously
       updateInstructionsFn().catch(err =>

@@ -76,13 +76,21 @@ node scripts/enrich-pois.mjs --dry-run --all --resume
 
 **Key files (Cloud Functions):**
 ```
-functions/src/enrichment/types.ts           # DayHours, ScrapedPage, EnrichmentResult
-functions/src/enrichment/extractor.ts       # Programmatic extraction (22 unit tests)
+functions/src/enrichment/types.ts           # Types + ExtractionProvenance
+functions/src/enrichment/extractor.ts       # Programmatic extraction (22 tests)
 functions/src/enrichment/scraper.ts         # Firecrawl web scraping
-functions/src/enrichment/llm-extractor.ts   # Claude extraction + verification + Vision ranking (11 tests)
-functions/src/enrichment/image-processor.ts # Download + validate + upload to Storage
-functions/src/enrichment/index.ts           # Cloud Function orchestrator (13 tests)
+functions/src/enrichment/llm-extractor.ts   # Claude extraction + verification (11 tests)
+functions/src/enrichment/image-processor.ts # Download + upload to Storage
+functions/src/enrichment/index.ts           # Orchestrator + provenance (13 tests)
+functions/src/enrichment/analysis.ts        # Feedback aggregation (19 tests)
 ```
+
+**Provenance tracking:**
+- Each enrichment run records which layer (programmatic vs LLM) produced each field
+- Raw data stored in `enrichment_runs` collection for analysis
+- Feedback includes `fieldProvenance` per rated field
+- `analyzeEnrichmentFeedback` Cloud Function aggregates bad rates by source
+- `/analyze-enrichment` skill produces code fix recommendations
 
 **Key files (Admin UI):**
 ```

@@ -51,3 +51,21 @@ export interface EnrichmentResult {
   openingHours: Record<DayKey, DayHours | null> | null;
   price: string | null;
 }
+
+// ── Provenance tracking ──────────────────────────────────
+
+export type ExtractionSource =
+  | "programmatic"
+  | "llm"
+  | "both_agree"
+  | "programmatic_preferred"
+  | "llm_rejected";
+
+export interface FieldProvenance {
+  source: ExtractionSource;
+  programmaticValue: unknown;
+  llmValue: unknown;
+  finalValue: unknown;
+}
+
+export type ExtractionProvenance = Record<string, FieldProvenance>;

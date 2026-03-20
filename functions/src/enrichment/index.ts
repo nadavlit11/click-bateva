@@ -25,6 +25,7 @@ import {
 import {processImages} from "./image-processor";
 import {
   DayHours, DayKey, EnrichmentResult, ProgrammaticResult,
+  ExtractionProvenance, ExtractionSource,
 } from "./types";
 
 const firecrawlKey = defineSecret("FIRECRAWL_API_KEY");
@@ -78,6 +79,91 @@ export function formatInstructions(
     }
   }
   return parts.length > 0 ? parts.join("\n") : undefined;
+}
+
+/** Fields handled by each extraction layer. */
+const PROG_FIELDS = [
+  "phone", "email", "facebook", "images",
+  "videos", "location",
+] as const;
+const SHARED_FIELDS = [
+  "openingHours", "whatsapp",
+] as const;
+const LLM_ONLY_FIELDS = ["price"] as const;
+
+/**
+ * Build provenance map by comparing programmatic, LLM,
+ * and final verified results.
+ * @param {ProgrammaticResult} prog Programmatic extraction.
+ * @param {LlmFields} llm LLM extraction.
+ * @param {Record<string, unknown>} verified Final result.
+ * @return {ExtractionProvenance} Per-field provenance map.
+ */
+export function buildProvenance(
+  prog: ProgrammaticResult,
+  llm: LlmFields,
+  verified: Record<string, unknown>,
+): ExtractionProvenance {
+  const provenance: ExtractionProvenance = {};
+
+  for (const field of PROG_FIELDS) {
+    const pVal = prog[field];
+    const fVal = verified[field];
+    const hasVal = Array.isArray(pVal) ?
+      pVal.length > 0 : pVal != null;
+    if (hasVal) {
+      provenance[field] = {
+        source: "programmatic",
+        programmaticValue: pVal,
+        llmValue: null,
+        finalValue: fVal,
+      };
+    }
+  }
+
+  for (const field of SHARED_FIELDS) {
+    const pVal = prog[field];
+    const lVal = llm[field];
+    const fVal = verified[field];
+    const pHas = pVal != null;
+    const lHas = lVal != null;
+
+    if (!pHas && !lHas) continue;
+
+    let source: ExtractionSource;
+    if (pHas && lHas) {
+      const eq = JSON.stringify(pVal) === JSON.stringify(lVal);
+      source = eq ? "both_agree" : "programmatic_preferred";
+    } else if (pHas) {
+      source = "programmatic";
+    } else if (fVal == null) {
+      source = "llm_rejected";
+    } else {
+      source = "llm";
+    }
+
+    provenance[field] = {
+      source,
+      programmaticValue: pVal ?? null,
+      llmValue: lVal ?? null,
+      finalValue: fVal ?? null,
+    };
+  }
+
+  for (const field of LLM_ONLY_FIELDS) {
+    const lVal = llm[field];
+    const fVal = verified[field];
+    if (lVal == null) continue;
+
+    provenance[field] = {
+      source: fVal != null ? "llm" : "llm_rejected",
+      programmaticValue: null,
+      llmValue: lVal,
+      finalValue: fVal ?? null,
+    };
+  }
+
+  return provenance;
 }
 
 /**
@@ -229,12 +315,33 @@ export const enrichPoiFromWebsite = onCall(
         price: (verified.price as string) || null,
       };
 
+      // Build provenance map
+      const provenance = buildProvenance(
+        programmatic, llmResult, verified,
+      );
+
+      // Write raw data to enrichment_runs for analysis
+      const runRef = await db
+        .collection("enrichment_runs").add({
+          poiId: poiId.trim(),
+          website: website.trim(),
+          timestamp: new Date(),
+          programmaticResult: {...programmatic},
+          llmResult: {...llmResult},
+          provenance,
+          scrapedUrls: scrapeResult.pages.map((p) => p.url),
+        });
+
       logger.info(
         `Enrichment complete: ${storageUrls.length} images, ` +
         `phone=${!!result.phone}, email=${!!result.email}`,
       );
 
-      return result;
+      return {
+        ...result,
+        provenance,
+        enrichmentRunId: runRef.id,
+      };
     } catch (err: unknown) {
       if (err instanceof HttpsError) throw err;
       const msg = err instanceof Error ? err.message : String(err);
