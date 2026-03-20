@@ -146,7 +146,9 @@ export function discoverSubpages(
 export async function scrapeWebsite(
   website: string, firecrawlKey: string,
 ): Promise<ScrapeResult> {
-  const baseUrl = `https://${website}`;
+  const domain = website
+    .replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  const baseUrl = `https://${domain}`;
   const pages: ScrapedPage[] = [];
 
   // Stage 1: Scrape homepage
@@ -154,7 +156,7 @@ export async function scrapeWebsite(
   if (!homepage.success || !homepage.data) {
     // Try http fallback
     const httpHomepage = await scrapePage(
-      `http://${website}`, firecrawlKey,
+      `http://${domain}`, firecrawlKey,
     );
     if (!httpHomepage.success || !httpHomepage.data) {
       return {
