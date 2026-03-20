@@ -52,6 +52,10 @@ coverage/
 # WordPress data export
 clickbateva-data.json
 
+# Enrichment pipeline working files
+scripts/input/
+scripts/output/
+
 # Firebase service account keys (never commit)
 serviceAccount.json
 *serviceAccount*.json
