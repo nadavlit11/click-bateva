@@ -74,6 +74,8 @@ Return JSON with these fields:
   - If the business is a hotel or accommodation, opening hours are usually not applicable — return all null.
 - "price": free-text string describing pricing. MUST include context of what the price is for (e.g. "ארוחת צהריים החל מ-109₪", "כניסה: 80-120 ש\"ח", "כניסה חופשית"). Do NOT extract a price without its context. Return null if no clear pricing found.
 - "whatsapp": WhatsApp phone number if explicitly mentioned as WhatsApp (Israeli format starting with 05), or null
+- "description": a short Hebrew description of the business/point of interest (1-3 sentences). Extract from the website's "about us", intro section, or meta description. Return null if no suitable description found.
+- "address": the full street address of the business (e.g. "רח' הרצל 42, תל אביב"), or null if not found
 
 Website content:
 ---
@@ -130,10 +132,15 @@ export async function extractWithLLM(pages) {
       openingHours: data.openingHours || null,
       price: data.price || null,
       whatsapp: data.whatsapp || null,
+      description: data.description || null,
+      address: data.address || null,
     };
   } catch (err) {
     console.warn(`    LLM extraction failed: ${err.message}`);
-    return { openingHours: null, price: null, whatsapp: null };
+    return {
+      openingHours: null, price: null, whatsapp: null,
+      description: null, address: null,
+    };
   }
 }
 

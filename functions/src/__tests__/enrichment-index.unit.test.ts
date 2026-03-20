@@ -102,6 +102,8 @@ describe("mergeResults", () => {
     openingHours: null,
     price: null,
     whatsapp: null,
+    description: null,
+    address: null,
   };
 
   it("uses programmatic openingHours when present", () => {
@@ -185,5 +187,30 @@ describe("mergeResults", () => {
     expect(result.videos).toEqual(
       ["https://youtube.com/watch?v=abc"],
     );
+  });
+
+  it("description always comes from LLM", () => {
+    const prog = makeProgResult();
+    const result = mergeResults(
+      prog,
+      {...llmEmpty, description: "מסעדה איטלקית ברמת גן"},
+    );
+    expect(result.description).toBe("מסעדה איטלקית ברמת גן");
+  });
+
+  it("address always comes from LLM", () => {
+    const prog = makeProgResult();
+    const result = mergeResults(
+      prog,
+      {...llmEmpty, address: "רח' הרצל 42, תל אביב"},
+    );
+    expect(result.address).toBe("רח' הרצל 42, תל אביב");
+  });
+
+  it("preserves programmatic location", () => {
+    const loc = {lat: 32.08, lng: 34.78};
+    const prog = makeProgResult({location: loc});
+    const result = mergeResults(prog, llmEmpty);
+    expect(result.location).toBe(loc);
   });
 });

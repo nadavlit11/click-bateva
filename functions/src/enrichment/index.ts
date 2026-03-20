@@ -37,6 +37,8 @@ interface LlmFields {
   openingHours: Record<DayKey, DayHours | null> | null;
   price: string | null;
   whatsapp: string | null;
+  description: string | null;
+  address: string | null;
 }
 
 /**
@@ -55,6 +57,8 @@ export function mergeResults(
     openingHours: prog.openingHours || llm.openingHours,
     price: llm.price,
     whatsapp: prog.whatsapp || llm.whatsapp,
+    description: llm.description,
+    address: llm.address,
   };
 }
 
@@ -89,7 +93,9 @@ const PROG_FIELDS = [
 const SHARED_FIELDS = [
   "openingHours", "whatsapp",
 ] as const;
-const LLM_ONLY_FIELDS = ["price"] as const;
+const LLM_ONLY_FIELDS = [
+  "price", "description", "address",
+] as const;
 
 /**
  * Build provenance map by comparing programmatic, LLM,
@@ -313,6 +319,11 @@ export const enrichPoiFromWebsite = onCall(
           (verified.openingHours as EnrichmentResult["openingHours"]) ||
           null,
         price: (verified.price as string) || null,
+        description: (verified.description as string) || null,
+        address: (verified.address as string) || null,
+        location:
+          (verified.location as { lat: number; lng: number }) ||
+          null,
       };
 
       // Build provenance map

@@ -31,6 +31,9 @@ interface EnrichmentResult {
   facebook: string | null
   openingHours: Record<string, DayHours | null> | null
   price: string | null
+  description: string | null
+  address: string | null
+  location: { lat: number; lng: number } | null
   provenance?: FieldProvenance
   enrichmentRunId?: string
 }
@@ -54,14 +57,17 @@ export interface ApplyFields {
   phone: string
   whatsapp: string
   facebook: string
+  description: string
   images: string[]
   videos: string[]
   openingHours: Record<string, DayHours | null>
   agentsPrice: string
   groupsPrice: string
+  location: { lat: number; lng: number }
 }
 
-type ScalarField = 'phone' | 'whatsapp' | 'facebook' | 'price'
+type ScalarField =
+  | 'phone' | 'whatsapp' | 'facebook' | 'price' | 'description'
 type Rating = 'good' | 'bad'
 
 const FIELD_LABELS: Record<ScalarField, string> = {
@@ -69,11 +75,12 @@ const FIELD_LABELS: Record<ScalarField, string> = {
   whatsapp: 'וואטסאפ',
   facebook: 'פייסבוק',
   price: 'מחיר',
+  description: 'תיאור',
 }
 
 type FeedbackField =
   | keyof typeof FIELD_LABELS
-  | 'openingHours' | 'images' | 'videos'
+  | 'email' | 'openingHours' | 'images' | 'videos' | 'location'
 
 const enrichPoiFn = httpsCallable<EnrichRequest, EnrichmentResult>(
   functions, 'enrichPoiFromWebsite',
@@ -85,6 +92,7 @@ const updateInstructionsFn = httpsCallable(
 export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId }: Props) {
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [applying, setApplying] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<EnrichmentResult | null>(null)
 
@@ -93,6 +101,7 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
   const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set())
   const [selectedVideos, setSelectedVideos] = useState<Set<number>>(new Set())
   const [hoursSelected, setHoursSelected] = useState(false)
+  const [locationSelected, setLocationSelected] = useState(false)
 
   // Feedback state
   const [fieldRatings, setFieldRatings] = useState<Record<string, Rating>>({})
@@ -102,12 +111,14 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
   useEffect(() => {
     if (!isOpen) return
     setLoading(false)
+    setApplying(false)
     setError('')
     setResult(null)
     setSelectedScalars(new Set())
     setSelectedImages(new Set())
     setSelectedVideos(new Set())
     setHoursSelected(false)
+    setLocationSelected(false)
     setFieldRatings({})
     setFeedbackNote('')
     handleEnrich()
@@ -132,6 +143,7 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
       setSelectedImages(new Set(data.images.map((_, i) => i)))
       setSelectedVideos(new Set(data.videos.map((_, i) => i)))
       setHoursSelected(data.openingHours !== null)
+      setLocationSelected(data.location !== null || data.address !== null)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'שגיאה בהעשרת הנתונים'
       setError(msg)
@@ -214,37 +226,57 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
     }
   }
 
-  function handleApply() {
-    if (!result) return
+  async function geocodeAddress(
+    address: string,
+  ): Promise<{ lat: number; lng: number } | null> {
+    try {
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json` +
+        `?address=${encodeURIComponent(address)}` +
+        `&language=he&region=IL&components=country:IL&key=${apiKey}`,
+      )
+      if (!res.ok) {
+        reportError(
+          new Error(`Geocoding API ${res.status}`),
+          { source: 'EnrichModal.geocode' },
+        )
+        return null
+      }
+      const data = await res.json()
+      if (data.status === 'OK' && data.results?.[0]) {
+        const loc = data.results[0].geometry.location
+        return { lat: loc.lat, lng: loc.lng }
+      }
+      return null
+    } catch (err) {
+      reportError(err, { source: 'EnrichModal.geocode' })
+      return null
+    }
+  }
+
+  async function handleApply() {
+    if (!result || applying) return
+    setApplying(true)
 
     const fields: Partial<ApplyFields> = {}
     const applied: string[] = []
     const skipped: string[] = []
 
-    if (selectedScalars.has('phone') && result.phone) {
-      fields.phone = result.phone
-      applied.push('phone')
-    } else if (result.phone) {
-      skipped.push('phone')
-    }
-    if (selectedScalars.has('whatsapp') && result.whatsapp) {
-      fields.whatsapp = result.whatsapp
-      applied.push('whatsapp')
-    } else if (result.whatsapp) {
-      skipped.push('whatsapp')
-    }
-    if (selectedScalars.has('facebook') && result.facebook) {
-      fields.facebook = result.facebook
-      applied.push('facebook')
-    } else if (result.facebook) {
-      skipped.push('facebook')
-    }
-    if (selectedScalars.has('price') && result.price) {
-      fields.agentsPrice = result.price
-      fields.groupsPrice = result.price
-      applied.push('price')
-    } else if (result.price) {
-      skipped.push('price')
+    // Scalar fields
+    for (const field of Object.keys(FIELD_LABELS) as ScalarField[]) {
+      const value = result[field]
+      if (selectedScalars.has(field) && value) {
+        if (field === 'price') {
+          fields.agentsPrice = value
+          fields.groupsPrice = value
+        } else {
+          (fields as Record<string, unknown>)[field] = value
+        }
+        applied.push(field)
+      } else if (value) {
+        skipped.push(field)
+      }
     }
 
     if (selectedImages.size > 0) {
@@ -267,8 +299,26 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
       skipped.push('openingHours')
     }
 
+    // Location: programmatic lat/lng or geocode from address
+    const hasLocationData = result.location || result.address
+    if (locationSelected && hasLocationData) {
+      let loc = result.location
+      if (!loc && result.address) {
+        loc = await geocodeAddress(result.address)
+      }
+      if (loc) {
+        fields.location = loc
+        applied.push('location')
+      } else {
+        skipped.push('location')
+      }
+    } else if (hasLocationData) {
+      skipped.push('location')
+    }
+
     // Save feedback asynchronously (don't block apply)
-    const hasFeedback = Object.keys(fieldRatings).length > 0 || feedbackNote.trim()
+    const hasFeedback =
+      Object.keys(fieldRatings).length > 0 || feedbackNote.trim()
     if (hasFeedback || applied.length > 0) {
       saveFeedback(applied, skipped)
     }
@@ -280,7 +330,8 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
   const hasSelection = selectedScalars.size > 0 ||
     selectedImages.size > 0 ||
     selectedVideos.size > 0 ||
-    hoursSelected
+    hoursSelected ||
+    locationSelected
 
   function RatingButtons({ field }: { field: FeedbackField }) {
     return (
@@ -318,7 +369,7 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
       open={isOpen}
       onClose={onClose}
       title="העשרה מהאתר"
-      maxWidth="lg"
+      maxWidth="2xl"
       disableClose={loading}
     >
       <div className="px-5 py-4 overflow-y-auto max-h-[70vh]">
@@ -348,69 +399,120 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
             {/* Scalar fields */}
             {(Object.keys(FIELD_LABELS) as ScalarField[]).map(field => {
               const value = result[field]
-              if (!value) return null
               return (
                 <label key={field} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedScalars.has(field)}
                     onChange={() => toggleScalar(field)}
+                    disabled={!value}
                     className="w-4 h-4 text-blue-600 rounded border-gray-300"
                   />
                   <span className="text-sm font-medium text-gray-700 min-w-[70px]">
                     {FIELD_LABELS[field]}
                   </span>
-                  <span className="text-sm text-gray-600 truncate" dir="ltr">
-                    {value}
-                  </span>
+                  {value ? (
+                    <span className="text-sm text-gray-600 truncate" dir="ltr">
+                      {value}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-400">לא נמצא</span>
+                  )}
                   <RatingButtons field={field} />
                 </label>
               )
             })}
 
+            {/* Email (display-only — not in POI form) */}
+            <div className="flex items-center gap-3 p-2">
+              <span className="w-4" />
+              <span className="text-sm font-medium text-gray-700 min-w-[70px]">
+                אימייל
+              </span>
+              {result.email ? (
+                <span className="text-sm text-gray-600 truncate" dir="ltr">
+                  {result.email}
+                </span>
+              ) : (
+                <span className="text-sm text-gray-400">לא נמצא</span>
+              )}
+              <RatingButtons field="email" />
+            </div>
+
             {/* Opening hours */}
-            {result.openingHours && (
-              <div className="border-t border-gray-100 pt-3">
-                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hoursSelected}
-                    onChange={() => setHoursSelected(!hoursSelected)}
-                    className="w-4 h-4 text-blue-600 rounded border-gray-300"
-                  />
-                  <span className="text-sm font-medium text-gray-700">שעות פתיחה</span>
-                  <RatingButtons field="openingHours" />
-                </label>
-                {hoursSelected && (
-                  <div className="mr-7 mt-1 grid grid-cols-2 gap-1">
-                    {DAY_KEYS.map(day => {
-                      const hours = result.openingHours?.[day]
-                      return (
-                        <div key={day} className="flex items-center gap-2 text-xs text-gray-600">
-                          <span className="font-medium min-w-[40px]">{DAY_NAMES_HE[day]}</span>
-                          {hours ? (
-                            <span dir="ltr">{hours.open}–{hours.close}</span>
-                          ) : (
-                            <span className="text-gray-400">סגור</span>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
+            <div className="border-t border-gray-100 pt-3">
+              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hoursSelected}
+                  onChange={() => setHoursSelected(!hoursSelected)}
+                  disabled={!result.openingHours}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300"
+                />
+                <span className="text-sm font-medium text-gray-700">שעות פתיחה</span>
+                {!result.openingHours && (
+                  <span className="text-sm text-gray-400">לא נמצא</span>
                 )}
-              </div>
-            )}
+                <RatingButtons field="openingHours" />
+              </label>
+              {hoursSelected && result.openingHours && (
+                <div className="mr-7 mt-1 grid grid-cols-2 gap-1">
+                  {DAY_KEYS.map(day => {
+                    const hours = result.openingHours?.[day]
+                    return (
+                      <div key={day} className="flex items-center gap-2 text-xs text-gray-600">
+                        <span className="font-medium min-w-[40px]">{DAY_NAMES_HE[day]}</span>
+                        {hours ? (
+                          <span dir="ltr">{hours.open}–{hours.close}</span>
+                        ) : (
+                          <span className="text-gray-400">סגור</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Location */}
+            <div className="border-t border-gray-100 pt-3">
+              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={locationSelected}
+                  onChange={() => setLocationSelected(!locationSelected)}
+                  disabled={!result.location && !result.address}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300"
+                />
+                <span className="text-sm font-medium text-gray-700 min-w-[70px]">
+                  מיקום
+                </span>
+                {result.location ? (
+                  <span className="text-sm text-gray-600" dir="ltr">
+                    {result.location.lat.toFixed(5)}, {result.location.lng.toFixed(5)}
+                  </span>
+                ) : result.address ? (
+                  <span className="text-sm text-gray-600">{result.address}</span>
+                ) : (
+                  <span className="text-sm text-gray-400">לא נמצא</span>
+                )}
+                <RatingButtons field="location" />
+              </label>
+            </div>
 
             {/* Images */}
-            {result.images.length > 0 && (
-              <div className="border-t border-gray-100 pt-3">
-                <div className="flex items-center mb-2">
-                  <p className="text-sm font-medium text-gray-700">
-                    תמונות ({selectedImages.size}/{result.images.length})
-                  </p>
-                  <RatingButtons field="images" />
-                </div>
-                <div className="grid grid-cols-3 gap-2">
+            <div className="border-t border-gray-100 pt-3">
+              <div className="flex items-center mb-2">
+                <p className="text-sm font-medium text-gray-700">
+                  תמונות
+                  {result.images.length > 0 && (
+                    <> ({selectedImages.size}/{result.images.length})</>
+                  )}
+                </p>
+                <RatingButtons field="images" />
+              </div>
+              {result.images.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2">
                   {result.images.map((url, idx) => (
                     <button
                       key={idx}
@@ -434,17 +536,19 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
                     </button>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-gray-400 mr-7">לא נמצאו תמונות</p>
+              )}
+            </div>
 
             {/* Videos */}
-            {result.videos.length > 0 && (
-              <div className="border-t border-gray-100 pt-3">
-                <div className="flex items-center mb-2">
-                  <p className="text-sm font-medium text-gray-700">סרטונים</p>
-                  <RatingButtons field="videos" />
-                </div>
-                {result.videos.map((url, idx) => (
+            <div className="border-t border-gray-100 pt-3">
+              <div className="flex items-center mb-2">
+                <p className="text-sm font-medium text-gray-700">סרטונים</p>
+                <RatingButtons field="videos" />
+              </div>
+              {result.videos.length > 0 ? (
+                result.videos.map((url, idx) => (
                   <label key={idx} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
                     <input
                       type="checkbox"
@@ -454,18 +558,11 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
                     />
                     <span className="text-sm text-gray-600 truncate" dir="ltr">{url}</span>
                   </label>
-                ))}
-              </div>
-            )}
-
-            {/* No results message */}
-            {!result.phone && !result.email && !result.whatsapp && !result.facebook &&
-             !result.price && !result.openingHours && result.images.length === 0 &&
-             result.videos.length === 0 && (
-              <p className="text-center text-gray-500 py-4 text-sm">
-                לא נמצאו נתונים חדשים באתר
-              </p>
-            )}
+                ))
+              ) : (
+                <p className="text-sm text-gray-400 mr-7">לא נמצאו סרטונים</p>
+              )}
+            </div>
 
             {/* Feedback textarea */}
             <div className="border-t border-gray-100 pt-3">
@@ -490,10 +587,10 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
           <button
             type="button"
             onClick={handleApply}
-            disabled={!hasSelection}
+            disabled={!hasSelection || applying}
             className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
-            החל שדות נבחרים
+            {applying ? 'מחיל...' : 'החל שדות נבחרים'}
           </button>
           <button
             type="button"
