@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '../../lib/firebase'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { db, functions } from '../../lib/firebase'
 import { reportError } from '../../lib/errorReporting'
+import { useAuth } from '../../hooks/useAuth'
 import { Modal } from '../../components/Modal'
 import type { DayHours } from '../../types/index'
 import { DAY_KEYS, DAY_NAMES_HE } from '../pages/poi-form/types'
@@ -44,6 +46,7 @@ export interface ApplyFields {
 }
 
 type ScalarField = 'phone' | 'whatsapp' | 'facebook' | 'price'
+type Rating = 'good' | 'bad'
 
 const FIELD_LABELS: Record<ScalarField, string> = {
   phone: 'טלפון',
@@ -52,11 +55,18 @@ const FIELD_LABELS: Record<ScalarField, string> = {
   price: 'מחיר',
 }
 
+const ALL_FEEDBACK_FIELDS = [
+  ...Object.keys(FIELD_LABELS),
+  'openingHours', 'images', 'videos',
+] as const
+type FeedbackField = typeof ALL_FEEDBACK_FIELDS[number]
+
 const enrichPoiFn = httpsCallable<EnrichRequest, EnrichmentResult>(
   functions, 'enrichPoiFromWebsite',
 )
 
 export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId }: Props) {
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<EnrichmentResult | null>(null)
@@ -66,6 +76,10 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
   const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set())
   const [selectedVideos, setSelectedVideos] = useState<Set<number>>(new Set())
   const [hoursSelected, setHoursSelected] = useState(false)
+
+  // Feedback state
+  const [fieldRatings, setFieldRatings] = useState<Record<string, Rating>>({})
+  const [feedbackNote, setFeedbackNote] = useState('')
 
   // Reset state and auto-fetch when modal opens
   useEffect(() => {
@@ -77,6 +91,8 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
     setSelectedImages(new Set())
     setSelectedVideos(new Set())
     setHoursSelected(false)
+    setFieldRatings({})
+    setFeedbackNote('')
     handleEnrich()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
@@ -135,35 +151,91 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
     })
   }
 
+  function setRating(field: FeedbackField, rating: Rating) {
+    setFieldRatings(prev => {
+      if (prev[field] === rating) {
+        const next = { ...prev }
+        delete next[field]
+        return next
+      }
+      return { ...prev, [field]: rating }
+    })
+  }
+
+  async function saveFeedback(appliedFields: string[], skippedFields: string[]) {
+    try {
+      await addDoc(collection(db, 'enrichment_feedback'), {
+        poiId,
+        website,
+        timestamp: serverTimestamp(),
+        appliedFields,
+        skippedFields,
+        fieldRatings,
+        note: feedbackNote.trim() || null,
+        adminUid: user?.uid || null,
+      })
+    } catch (err) {
+      reportError(err, { source: 'EnrichModal.feedback' })
+    }
+  }
+
   function handleApply() {
     if (!result) return
 
     const fields: Partial<ApplyFields> = {}
+    const applied: string[] = []
+    const skipped: string[] = []
 
     if (selectedScalars.has('phone') && result.phone) {
       fields.phone = result.phone
+      applied.push('phone')
+    } else if (result.phone) {
+      skipped.push('phone')
     }
     if (selectedScalars.has('whatsapp') && result.whatsapp) {
       fields.whatsapp = result.whatsapp
+      applied.push('whatsapp')
+    } else if (result.whatsapp) {
+      skipped.push('whatsapp')
     }
     if (selectedScalars.has('facebook') && result.facebook) {
       fields.facebook = result.facebook
+      applied.push('facebook')
+    } else if (result.facebook) {
+      skipped.push('facebook')
     }
     if (selectedScalars.has('price') && result.price) {
-      // Price goes to both agents and groups price fields
       fields.agentsPrice = result.price
       fields.groupsPrice = result.price
+      applied.push('price')
+    } else if (result.price) {
+      skipped.push('price')
     }
 
     if (selectedImages.size > 0) {
       fields.images = result.images.filter((_, i) => selectedImages.has(i))
+      applied.push('images')
+    } else if (result.images.length > 0) {
+      skipped.push('images')
     }
     if (selectedVideos.size > 0) {
       fields.videos = result.videos.filter((_, i) => selectedVideos.has(i))
+      applied.push('videos')
+    } else if (result.videos.length > 0) {
+      skipped.push('videos')
     }
 
     if (hoursSelected && result.openingHours) {
       fields.openingHours = result.openingHours
+      applied.push('openingHours')
+    } else if (result.openingHours) {
+      skipped.push('openingHours')
+    }
+
+    // Save feedback asynchronously (don't block apply)
+    const hasFeedback = Object.keys(fieldRatings).length > 0 || feedbackNote.trim()
+    if (hasFeedback || applied.length > 0) {
+      saveFeedback(applied, skipped)
     }
 
     onApply(fields)
@@ -174,6 +246,37 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
     selectedImages.size > 0 ||
     selectedVideos.size > 0 ||
     hoursSelected
+
+  function RatingButtons({ field }: { field: FeedbackField }) {
+    return (
+      <span className="flex gap-0.5 mr-auto">
+        <button
+          type="button"
+          onClick={() => setRating(field, 'good')}
+          className={`px-1.5 py-0.5 text-xs rounded transition-colors ${
+            fieldRatings[field] === 'good'
+              ? 'bg-green-100 text-green-700'
+              : 'text-gray-400 hover:text-green-600'
+          }`}
+          title="דירוג טוב"
+        >
+          👍
+        </button>
+        <button
+          type="button"
+          onClick={() => setRating(field, 'bad')}
+          className={`px-1.5 py-0.5 text-xs rounded transition-colors ${
+            fieldRatings[field] === 'bad'
+              ? 'bg-red-100 text-red-700'
+              : 'text-gray-400 hover:text-red-600'
+          }`}
+          title="דירוג גרוע"
+        >
+          👎
+        </button>
+      </span>
+    )
+  }
 
   return (
     <Modal
@@ -225,6 +328,7 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
                   <span className="text-sm text-gray-600 truncate" dir="ltr">
                     {value}
                   </span>
+                  <RatingButtons field={field} />
                 </label>
               )
             })}
@@ -240,6 +344,7 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
                     className="w-4 h-4 text-blue-600 rounded border-gray-300"
                   />
                   <span className="text-sm font-medium text-gray-700">שעות פתיחה</span>
+                  <RatingButtons field="openingHours" />
                 </label>
                 {hoursSelected && (
                   <div className="mr-7 mt-1 grid grid-cols-2 gap-1">
@@ -264,9 +369,12 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
             {/* Images */}
             {result.images.length > 0 && (
               <div className="border-t border-gray-100 pt-3">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  תמונות ({selectedImages.size}/{result.images.length})
-                </p>
+                <div className="flex items-center mb-2">
+                  <p className="text-sm font-medium text-gray-700">
+                    תמונות ({selectedImages.size}/{result.images.length})
+                  </p>
+                  <RatingButtons field="images" />
+                </div>
                 <div className="grid grid-cols-3 gap-2">
                   {result.images.map((url, idx) => (
                     <button
@@ -297,7 +405,10 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
             {/* Videos */}
             {result.videos.length > 0 && (
               <div className="border-t border-gray-100 pt-3">
-                <p className="text-sm font-medium text-gray-700 mb-2">סרטונים</p>
+                <div className="flex items-center mb-2">
+                  <p className="text-sm font-medium text-gray-700">סרטונים</p>
+                  <RatingButtons field="videos" />
+                </div>
                 {result.videos.map((url, idx) => (
                   <label key={idx} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
                     <input
@@ -320,6 +431,20 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
                 לא נמצאו נתונים חדשים באתר
               </p>
             )}
+
+            {/* Feedback textarea */}
+            <div className="border-t border-gray-100 pt-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                הערות לשיפור
+              </label>
+              <textarea
+                value={feedbackNote}
+                onChange={e => setFeedbackNote(e.target.value)}
+                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                rows={2}
+                placeholder="איך ניתן לשפר את ההעשרה? (אופציונלי)"
+              />
+            </div>
           </div>
         )}
       </div>
