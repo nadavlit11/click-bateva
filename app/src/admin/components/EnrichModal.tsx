@@ -64,6 +64,9 @@ type FeedbackField = typeof ALL_FEEDBACK_FIELDS[number]
 const enrichPoiFn = httpsCallable<EnrichRequest, EnrichmentResult>(
   functions, 'enrichPoiFromWebsite',
 )
+const updateInstructionsFn = httpsCallable(
+  functions, 'updateEnrichmentInstructions',
+)
 
 export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId }: Props) {
   const { user } = useAuth()
@@ -174,6 +177,10 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
         note: feedbackNote.trim() || null,
         adminUid: user?.uid || null,
       })
+      // Trigger instruction update asynchronously
+      updateInstructionsFn().catch(err =>
+        reportError(err, { source: 'EnrichModal.updateInstructions' }),
+      )
     } catch (err) {
       reportError(err, { source: 'EnrichModal.feedback' })
     }

@@ -32,7 +32,7 @@ interface CallClaudeOpts {
  * @param {CallClaudeOpts} opts Request options.
  * @return {Promise<string>} Claude response text.
  */
-async function callClaude(opts: CallClaudeOpts): Promise<string> {
+export async function callClaude(opts: CallClaudeOpts): Promise<string> {
   const {
     systemPrompt, content, anthropicKey,
     maxTokens = 2048, timeoutMs = 60000,

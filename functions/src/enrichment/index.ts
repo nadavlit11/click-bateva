@@ -16,6 +16,7 @@ import * as Sentry from "@sentry/node";
 import {scrapeWebsite} from "./scraper";
 import {extractProgrammatic} from "./extractor";
 import {
+  callClaude,
   extractWithLLM,
   verifyWithLLM,
   fixNightTimeErrors,
@@ -240,6 +241,124 @@ export const enrichPoiFromWebsite = onCall(
       logger.error(`Enrichment failed: ${msg}`);
       Sentry.captureException(err);
       throw new HttpsError("internal", `Enrichment failed: ${msg}`);
+    }
+  },
+);
+
+// ── Self-improving feedback loop ─────────────────────────
+
+/* eslint-disable max-len */
+const INSTRUCTION_UPDATE_SYSTEM =
+  "You are an AI that maintains extraction rules for a web scraping pipeline. " +
+  "Given current rules and recent user feedback, update the rules to improve future extractions. " +
+  "Return ONLY valid JSON with field keys (opening_hours, images, price, general) and string rule values. No explanation.";
+
+const INSTRUCTION_UPDATE_PROMPT = `Here are the current extraction rules and recent user feedback for a POI enrichment pipeline.
+
+Current rules:
+{RULES}
+
+Recent feedback (last 20 sessions):
+{FEEDBACK}
+
+Update the rules to address the feedback. Keep rules concise and actionable. Return JSON with keys: "general", "opening_hours", "images", "price", and any other fields mentioned in feedback. Each value is a short instruction string.`;
+/* eslint-enable max-len */
+
+/**
+ * Callable Cloud Function: updates enrichment instructions
+ * based on accumulated feedback. Called after feedback is
+ * saved from the EnrichModal.
+ */
+export const updateEnrichmentInstructions = onCall(
+  {
+    cors: true,
+    enforceAppCheck: true,
+    timeoutSeconds: 60,
+    secrets: [anthropicKey],
+  },
+  async (request) => {
+    // Auth guard
+    if (!request.auth) {
+      throw new HttpsError(
+        "unauthenticated", "Must be authenticated.",
+      );
+    }
+    if (request.auth.token.role !== "admin") {
+      throw new HttpsError(
+        "permission-denied",
+        "Only admins can update instructions.",
+      );
+    }
+
+    try {
+      // Load current instructions
+      const instructionsDoc = await db
+        .doc("settings/enrichment_instructions").get();
+      const currentRules = instructionsDoc.exists ?
+        instructionsDoc.data() : {};
+
+      // Load last 20 feedback docs
+      const feedbackSnap = await db
+        .collection("enrichment_feedback")
+        .orderBy("timestamp", "desc")
+        .limit(20)
+        .get();
+
+      if (feedbackSnap.empty) {
+        return {updated: false, reason: "No feedback yet"};
+      }
+
+      const feedback = feedbackSnap.docs.map((d) => {
+        const data = d.data();
+        return {
+          appliedFields: data.appliedFields,
+          skippedFields: data.skippedFields,
+          fieldRatings: data.fieldRatings,
+          note: data.note,
+        };
+      });
+
+      // Call Claude to update instructions
+      const response = await callClaude({
+        systemPrompt: INSTRUCTION_UPDATE_SYSTEM,
+        content: INSTRUCTION_UPDATE_PROMPT
+          .replace(
+            "{RULES}",
+            JSON.stringify(currentRules, null, 2),
+          )
+          .replace(
+            "{FEEDBACK}",
+            JSON.stringify(feedback, null, 2),
+          ),
+        anthropicKey: anthropicKey.value(),
+      });
+
+      // Parse updated rules
+      const codeBlockMatch =
+        response.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const jsonStr = codeBlockMatch ?
+        codeBlockMatch[1].trim() : response.trim();
+      const updatedRules = JSON.parse(jsonStr);
+
+      // Write back to Firestore
+      await db
+        .doc("settings/enrichment_instructions")
+        .set(updatedRules);
+
+      logger.info(
+        "Enrichment instructions updated from feedback",
+      );
+
+      return {updated: true};
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.error(
+        `Instruction update failed: ${msg}`,
+      );
+      Sentry.captureException(err);
+      throw new HttpsError(
+        "internal", `Instruction update failed: ${msg}`,
+      );
     }
   },
 );
