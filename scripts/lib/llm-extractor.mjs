@@ -249,3 +249,121 @@ export async function verifyWithLLM(pages, allExtracted, programmatic) {
 
   return verified;
 }
+
+// ─── Image Ranking via Claude Vision ─────────────────────────────────────────
+
+const IMAGE_RANKING_SYSTEM = `You are an image curator for a tourism/business directory. Your job is to select the best photos that represent a business or point of interest.
+
+Return ONLY a JSON array of the image URLs you selected, in order of quality (best first). No explanation.`;
+
+const IMAGE_RANKING_PROMPT = `Below are candidate images from a business website. Select the best photos (up to 5) for a tourism directory listing.
+
+Rules:
+- SKIP: logos, icons, UI elements, navigation graphics, transparent backgrounds, decorative borders, social media icons, payment method icons
+- PREFER: photos of the venue, food, activities, scenery, people enjoying the place, interior/exterior shots
+- PREFER: larger, higher quality images over small thumbnails
+- Return the selected image URLs as a JSON array, best first
+- If fewer than 5 good photos exist, return fewer
+
+Business name: {NAME}`;
+
+/**
+ * Use Claude Vision to rank and select the best images from candidates.
+ * Downloads images first and sends as base64 since many sites block direct URL access.
+ *
+ * @param {string[]} candidateUrls - all extracted image URLs
+ * @param {string} poiName - name of the POI (helps Claude understand context)
+ * @returns {string[]} top 5 image URLs ranked by quality
+ */
+export async function rankImagesWithVision(candidateUrls, poiName) {
+  if (candidateUrls.length === 0) return [];
+  if (candidateUrls.length <= 2) return candidateUrls;
+
+  // Limit to 15 candidates
+  const candidates = candidateUrls.slice(0, 15);
+
+  // Download images and convert to base64
+  const downloaded = [];
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { timeout: 10000 });
+      if (!res.ok) continue;
+      const contentType = res.headers.get("content-type")?.split(";")[0]?.trim();
+      if (!contentType?.startsWith("image/")) continue;
+
+      const buffer = await res.buffer();
+      if (buffer.length < 1024 || buffer.length > 5 * 1024 * 1024) continue;
+
+      const mediaType = contentType === "image/jpg" ? "image/jpeg" : contentType;
+      downloaded.push({
+        url,
+        base64: buffer.toString("base64"),
+        mediaType,
+      });
+    } catch {
+      // Skip images that can't be downloaded
+    }
+  }
+
+  if (downloaded.length === 0) return candidateUrls.slice(0, 5);
+  if (downloaded.length <= 2) return downloaded.map(d => d.url);
+
+  // Build message with base64 images for Claude Vision
+  const content = [
+    { type: "text", text: IMAGE_RANKING_PROMPT.replace("{NAME}", poiName) },
+  ];
+
+  for (let i = 0; i < downloaded.length; i++) {
+    const d = downloaded[i];
+    content.push({
+      type: "image",
+      source: { type: "base64", media_type: d.mediaType, data: d.base64 },
+    });
+    content.push({
+      type: "text",
+      text: `Image ${i + 1} URL: ${d.url}`,
+    });
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90000);
+
+    const res = await fetch(ANTHROPIC_API, {
+      method: "POST",
+      headers: {
+        "x-api-key": ANTHROPIC_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 1024,
+        system: IMAGE_RANKING_SYSTEM,
+        messages: [{ role: "user", content }],
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Claude API ${res.status}: ${body.slice(0, 300)}`);
+    }
+
+    const json = await res.json();
+    const text = json.content?.[0]?.text || "[]";
+    const ranked = parseJsonResponse(text);
+
+    if (!Array.isArray(ranked)) return downloaded.map(d => d.url).slice(0, 5);
+
+    // Validate returned URLs are from our candidate list
+    const downloadedUrls = downloaded.map(d => d.url);
+    const validUrls = ranked.filter(url => downloadedUrls.includes(url));
+    return validUrls.slice(0, 5);
+  } catch (err) {
+    console.warn(`    Image ranking failed: ${err.message}`);
+    return downloaded.map(d => d.url).slice(0, 5);
+  }
+}

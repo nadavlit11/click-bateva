@@ -32,7 +32,7 @@ import { loadProgress, saveProgress, markCompleted, markFailed, isAlreadyProcess
 import { buildReportEntry, writeReport, loadReport } from "./lib/report.mjs";
 import { scrapeWebsite } from "./lib/scraper.mjs";
 import { extractProgrammatic } from "./lib/extractor.mjs";
-import { extractWithLLM, verifyWithLLM, fixNightTimeErrors } from "./lib/llm-extractor.mjs";
+import { extractWithLLM, verifyWithLLM, fixNightTimeErrors, rankImagesWithVision } from "./lib/llm-extractor.mjs";
 import { processImages } from "./lib/image-processor.mjs";
 
 // ─── CLI arg parsing ──────────────────────────────────────────────────────────
@@ -227,13 +227,14 @@ async function runDryRun() {
         fixNightTimeErrors(verified.openingHours, allMarkdown);
       }
 
-      // Stage 5: Image processing (in dry-run, just collect URLs — don't upload)
-      console.log("  Processing images...");
-      const imageUrls = programmatic.images || [];
+      // Stage 5: Image ranking via Claude Vision
+      console.log("  Ranking images...");
+      const candidateImages = programmatic.images || [];
+      const rankedImages = await rankImagesWithVision(candidateImages, poi.data.name);
 
       const extracted = {
         ...verified,
-        images: imageUrls.slice(0, 5), // store URLs for now; --apply will upload
+        images: rankedImages, // ranked by Vision; --apply will upload
       };
 
       const entry = buildReportEntry(poi.id, poi.data.name, poi.website, poi.data, extracted);

@@ -87,6 +87,8 @@ function extractYouTubeVideos(html) {
 
 const IMG_SRC_RE = /<img\s[^>]*src=["']([^"']+)["'][^>]*>/gi;
 const OG_IMAGE_RE = /<meta\s[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/gi;
+const BG_IMAGE_RE = /background[-_]image:\s*url\(\s*['"]?([^'")\s]+)['"]?\s*\)/gi;
+const DATA_SRC_RE = /(?:data-src|data-lazy-src|data-bg|data-image)=["']([^"']+)["']/gi;
 
 function extractImages(html, baseUrl) {
   const images = [];
@@ -96,7 +98,7 @@ function extractImages(html, baseUrl) {
   let match;
   while ((match = OG_IMAGE_RE.exec(html)) !== null) {
     const url = resolveImageUrl(match[1], baseUrl);
-    if (url && !seen.has(url)) {
+    if (url && !seen.has(url) && !isLikelyUIImage("", url)) {
       images.push({ url, source: "og:image", priority: 0 });
       seen.add(url);
     }
@@ -107,11 +109,30 @@ function extractImages(html, baseUrl) {
     const url = resolveImageUrl(match[1], baseUrl);
     if (!url || seen.has(url)) continue;
 
-    // Filter out tiny images, tracking pixels, common UI elements
     const fullTag = match[0].toLowerCase();
     if (isLikelyUIImage(fullTag, url)) continue;
 
     images.push({ url, source: "img", priority: 1 });
+    seen.add(url);
+  }
+
+  // CSS background-image (divs with inline styles — common in Wix, galleries)
+  while ((match = BG_IMAGE_RE.exec(html)) !== null) {
+    const url = resolveImageUrl(match[1], baseUrl);
+    if (!url || seen.has(url)) continue;
+    if (isLikelyUIImage("", url)) continue;
+
+    images.push({ url, source: "background-image", priority: 1 });
+    seen.add(url);
+  }
+
+  // Lazy-loaded images (data-src, data-lazy-src, data-bg attributes)
+  while ((match = DATA_SRC_RE.exec(html)) !== null) {
+    const url = resolveImageUrl(match[1], baseUrl);
+    if (!url || seen.has(url)) continue;
+    if (isLikelyUIImage("", url)) continue;
+
+    images.push({ url, source: "data-src", priority: 1 });
     seen.add(url);
   }
 
