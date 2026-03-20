@@ -13,6 +13,7 @@ import {
 import { ref, getDownloadURL } from 'firebase/storage'
 import { db, storage, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
+import { EnrichModal, type ApplyFields } from '../components/EnrichModal'
 import { FOOD_CATEGORY_ID } from '../../lib/constants.ts'
 import { useAuth } from '../../hooks/useAuth'
 import type { Poi, Category, Subcategory, Icon, Business } from '../types/index.ts'
@@ -50,6 +51,7 @@ export function PoiEditPage() {
   const formScrollRef = useRef<HTMLFormElement>(null)
   const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
+  const [showEnrichModal, setShowEnrichModal] = useState(false)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const originalIconRef = useRef<{ iconId: string | null; iconUrl: string | null }>({ iconId: null, iconUrl: null })
 
@@ -221,6 +223,23 @@ export function PoiEditPage() {
     }
   }
 
+  function handleEnrichApply(fields: Partial<ApplyFields>) {
+    // Images/videos: append to existing arrays
+    if (fields.images) {
+      set('images', [...form.images, ...fields.images])
+    }
+    if (fields.videos) {
+      set('videos', [...form.videos, ...fields.videos])
+    }
+    // Scalar fields: direct replace
+    if (fields.phone) set('phone', fields.phone)
+    if (fields.whatsapp) set('whatsapp', fields.whatsapp)
+    if (fields.facebook) set('facebook', fields.facebook)
+    if (fields.agentsPrice) set('agentsPrice', fields.agentsPrice)
+    if (fields.groupsPrice) set('groupsPrice', fields.groupsPrice)
+    if (fields.openingHours) set('openingHours', fields.openingHours)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const t = (v: string) => (v ?? '').trim()
@@ -362,6 +381,15 @@ export function PoiEditPage() {
             </span>
           )}
         </h1>
+        {!isNew && form.website && (
+          <button
+            type="button"
+            onClick={() => setShowEnrichModal(true)}
+            className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+          >
+            העשרה מהאתר
+          </button>
+        )}
         {!isNew && form.mapType === 'default' && (
           <button
             type="button"
@@ -606,6 +634,16 @@ export function PoiEditPage() {
           </div>
         </div>
       </form>
+
+      {/* Enrich from website modal */}
+      <EnrichModal
+        isOpen={showEnrichModal}
+        onClose={() => setShowEnrichModal(false)}
+        onApply={handleEnrichApply}
+        website={form.website}
+        poiName={form.name}
+        poiId={id || ''}
+      />
 
       {/* Duplicate to families confirmation */}
       {showDuplicateConfirm && (

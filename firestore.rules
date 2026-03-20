@@ -161,6 +161,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ─── enrichment feedback ─────────────────────────────────────────────────
+
+    match /enrichment_feedback/{feedbackId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+    }
+
+    // ─── enrichment runs (provenance audit trail) ─────────────────────────
+
+    match /enrichment_runs/{runId} {
+      allow read: if isAdmin();
+    }
+
     // ─── trips ──────────────────────────────────────────────────────────────
 
     match /trips/{tripId} {
