@@ -1,4 +1,4 @@
-// Cloud Functions entry point
+// Cloud Functions entry point — v2 enrichment pipeline
 import {setGlobalOptions} from "firebase-functions";
 import * as Sentry from "@sentry/node";
 
