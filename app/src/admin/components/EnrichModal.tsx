@@ -71,11 +71,9 @@ const FIELD_LABELS: Record<ScalarField, string> = {
   price: 'מחיר',
 }
 
-const ALL_FEEDBACK_FIELDS = [
-  ...Object.keys(FIELD_LABELS),
-  'openingHours', 'images', 'videos',
-] as const
-type FeedbackField = typeof ALL_FEEDBACK_FIELDS[number]
+type FeedbackField =
+  | keyof typeof FIELD_LABELS
+  | 'openingHours' | 'images' | 'videos'
 
 const enrichPoiFn = httpsCallable<EnrichRequest, EnrichmentResult>(
   functions, 'enrichPoiFromWebsite',
