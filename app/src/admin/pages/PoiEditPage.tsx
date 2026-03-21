@@ -648,6 +648,16 @@ export function PoiEditPage() {
         website={form.website}
         poiName={form.name}
         poiId={id || ''}
+        currentData={{
+          phone: form.phone,
+          whatsapp: form.whatsapp,
+          facebook: form.facebook,
+          price: form.agentsPrice,
+          description: form.description,
+          openingHours: form.openingHours,
+          lat: form.lat,
+          lng: form.lng,
+        }}
       />
 
       {/* Duplicate to families confirmation */}
