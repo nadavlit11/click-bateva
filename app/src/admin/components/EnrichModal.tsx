@@ -44,6 +44,17 @@ interface EnrichRequest {
   poiId: string
 }
 
+interface CurrentPoiData {
+  phone: string
+  whatsapp: string
+  facebook: string
+  price: string
+  description: string
+  openingHours: Record<string, DayHours | null> | 'by_appointment'
+  lat: string
+  lng: string
+}
+
 interface Props {
   isOpen: boolean
   onClose: () => void
@@ -51,6 +62,7 @@ interface Props {
   website: string
   poiName: string
   poiId: string
+  currentData: CurrentPoiData
 }
 
 export interface ApplyFields {
@@ -89,7 +101,9 @@ const updateInstructionsFn = httpsCallable(
   functions, 'updateEnrichmentInstructions',
 )
 
-export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId }: Props) {
+export function EnrichModal({
+  isOpen, onClose, onApply, website, poiName, poiId, currentData,
+}: Props) {
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [applying, setApplying] = useState(false)
@@ -399,24 +413,107 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
             {/* Scalar fields */}
             {(Object.keys(FIELD_LABELS) as ScalarField[]).map(field => {
               const value = result[field]
+              const cur = currentData[field]?.trim()
+              const hasCurrent = !!cur
+              const isDesc = field === 'description'
+              const showComparison = hasCurrent && !!value
+
+              if (showComparison) {
+                return (
+                  <div key={field} className="p-2 rounded-lg
+                    hover:bg-gray-50"
+                  >
+                    <label className="flex items-center gap-3
+                      cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedScalars.has(field)}
+                        onChange={() => toggleScalar(field)}
+                        className="w-4 h-4 text-blue-600
+                          rounded border-gray-300"
+                      />
+                      <span className="text-sm font-medium
+                        text-gray-700 min-w-[70px]"
+                      >
+                        {FIELD_LABELS[field]}
+                      </span>
+                      <RatingButtons field={field} />
+                    </label>
+                    <div className="mr-7 mt-1 space-y-1">
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-medium
+                          text-gray-400 min-w-[32px] shrink-0"
+                        >
+                          נוכחי
+                        </span>
+                        <span
+                          className={`text-xs text-gray-500 ${
+                            isDesc
+                              ? 'whitespace-pre-wrap'
+                              : 'truncate'
+                          }`}
+                          dir={isDesc ? undefined : 'ltr'}
+                        >
+                          {cur}
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-medium
+                          text-blue-500 min-w-[32px] shrink-0"
+                        >
+                          חדש
+                        </span>
+                        <span
+                          className={`text-sm text-gray-600 ${
+                            isDesc
+                              ? 'whitespace-pre-wrap'
+                              : 'truncate'
+                          }`}
+                          dir={isDesc ? undefined : 'ltr'}
+                        >
+                          {value}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
               return (
-                <label key={field} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label
+                  key={field}
+                  className="flex items-center gap-3 p-2
+                    rounded-lg hover:bg-gray-50 cursor-pointer"
+                >
                   <input
                     type="checkbox"
                     checked={selectedScalars.has(field)}
                     onChange={() => toggleScalar(field)}
                     disabled={!value}
-                    className="w-4 h-4 text-blue-600 rounded border-gray-300"
+                    className="w-4 h-4 text-blue-600
+                      rounded border-gray-300"
                   />
-                  <span className="text-sm font-medium text-gray-700 min-w-[70px]">
+                  <span className="text-sm font-medium
+                    text-gray-700 min-w-[70px]"
+                  >
                     {FIELD_LABELS[field]}
                   </span>
                   {value ? (
-                    <span className="text-sm text-gray-600 truncate" dir="ltr">
+                    <span
+                      className={`text-sm text-gray-600 ${
+                        isDesc
+                          ? 'whitespace-pre-wrap'
+                          : 'truncate'
+                      }`}
+                      dir={isDesc ? undefined : 'ltr'}
+                    >
                       {value}
                     </span>
                   ) : (
-                    <span className="text-sm text-gray-400">לא נמצא</span>
+                    <span className="text-sm text-gray-400">
+                      לא נמצא
+                    </span>
                   )}
                   <RatingButtons field={field} />
                 </label>
@@ -439,23 +536,102 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
                 )}
                 <RatingButtons field="openingHours" />
               </label>
-              {hoursSelected && result.openingHours && (
-                <div className="mr-7 mt-1 grid grid-cols-2 gap-1">
-                  {DAY_KEYS.map(day => {
-                    const hours = result.openingHours?.[day]
-                    return (
-                      <div key={day} className="flex items-center gap-2 text-xs text-gray-600">
-                        <span className="font-medium min-w-[40px]">{DAY_NAMES_HE[day]}</span>
-                        {hours ? (
-                          <span dir="ltr">{hours.open}–{hours.close}</span>
+              {hoursSelected && result.openingHours && (() => {
+                const curHours = currentData.openingHours
+                const hasCurrentHours =
+                  curHours !== 'by_appointment'
+                  && typeof curHours === 'object'
+                  && Object.values(curHours).some(v => v !== null)
+                const isByAppt =
+                  curHours === 'by_appointment'
+                return (
+                  <div className="mr-7 mt-1 space-y-2">
+                    {(hasCurrentHours || isByAppt) && (
+                      <>
+                        <p className="text-xs font-medium
+                          text-gray-400"
+                        >
+                          נוכחי
+                        </p>
+                        {isByAppt ? (
+                          <p className="text-xs text-gray-400
+                            mb-2"
+                          >
+                            לפי תיאום
+                          </p>
                         ) : (
-                          <span className="text-gray-400">סגור</span>
+                          <div className="grid grid-cols-2
+                            gap-1 mb-2"
+                          >
+                            {DAY_KEYS.map(day => {
+                              const h = (
+                                curHours as Record<
+                                  string, DayHours | null
+                                >
+                              )[day]
+                              return (
+                                <div
+                                  key={day}
+                                  className="flex items-center
+                                    gap-2 text-xs text-gray-400"
+                                >
+                                  <span className="font-medium
+                                    min-w-[40px]"
+                                  >
+                                    {DAY_NAMES_HE[day]}
+                                  </span>
+                                  {h ? (
+                                    <span dir="ltr">
+                                      {h.open}–{h.close}
+                                    </span>
+                                  ) : (
+                                    <span>סגור</span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
                         )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
+                      </>
+                    )}
+                    {(hasCurrentHours || isByAppt) && (
+                      <p className="text-xs font-medium
+                        text-blue-500"
+                      >
+                        חדש
+                      </p>
+                    )}
+                    <div className="grid grid-cols-2 gap-1">
+                      {DAY_KEYS.map(day => {
+                        const hours =
+                          result.openingHours?.[day]
+                        return (
+                          <div
+                            key={day}
+                            className="flex items-center
+                              gap-2 text-xs text-gray-600"
+                          >
+                            <span className="font-medium
+                              min-w-[40px]"
+                            >
+                              {DAY_NAMES_HE[day]}
+                            </span>
+                            {hours ? (
+                              <span dir="ltr">
+                                {hours.open}–{hours.close}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">
+                                סגור
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Location */}
@@ -471,17 +647,63 @@ export function EnrichModal({ isOpen, onClose, onApply, website, poiName, poiId 
                 <span className="text-sm font-medium text-gray-700 min-w-[70px]">
                   מיקום
                 </span>
-                {result.location ? (
-                  <span className="text-sm text-gray-600" dir="ltr">
-                    {result.location.lat.toFixed(5)}, {result.location.lng.toFixed(5)}
+                {!result.location && !result.address && (
+                  <span className="text-sm text-gray-400">
+                    לא נמצא
                   </span>
-                ) : result.address ? (
-                  <span className="text-sm text-gray-600">{result.address}</span>
-                ) : (
-                  <span className="text-sm text-gray-400">לא נמצא</span>
                 )}
                 <RatingButtons field="location" />
               </label>
+              {(result.location || result.address) && (() => {
+                const hasCurrentLoc =
+                  currentData.lat !== '0'
+                  && currentData.lng !== '0'
+                  && currentData.lat !== ''
+                  && currentData.lng !== ''
+                return (
+                  <div className="mr-7 mt-1 space-y-1">
+                    {hasCurrentLoc && (
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-medium
+                          text-gray-400 min-w-[32px] shrink-0"
+                        >
+                          נוכחי
+                        </span>
+                        <span
+                          className="text-xs text-gray-500"
+                          dir="ltr"
+                        >
+                          {currentData.lat}, {currentData.lng}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-start gap-2">
+                      {hasCurrentLoc && (
+                        <span className="text-xs font-medium
+                          text-blue-500 min-w-[32px] shrink-0"
+                        >
+                          חדש
+                        </span>
+                      )}
+                      {result.location ? (
+                        <span
+                          className="text-sm text-gray-600"
+                          dir="ltr"
+                        >
+                          {result.location.lat.toFixed(5)},{' '}
+                          {result.location.lng.toFixed(5)}
+                        </span>
+                      ) : (
+                        <span className="text-sm
+                          text-gray-600"
+                        >
+                          {result.address}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Images */}
