@@ -36,7 +36,7 @@ const anthropicKey = defineSecret("ANTHROPIC_API_KEY");
 const db = getFirestore();
 
 interface LlmFields {
-  openingHours: Record<DayKey, DayHours | null> | null;
+  openingHours: Record<DayKey, DayHours | null> | "by_appointment" | null;
   price: string | null;
   whatsapp: string | null;
   description: string | null;
@@ -276,7 +276,7 @@ export const enrichPoiFromWebsite = onCall(
       );
 
       // Fix night time errors before verification
-      if (llmResult.openingHours) {
+      if (llmResult.openingHours && typeof llmResult.openingHours === "object") {
         const sourceText = scrapeResult.pages
           .map((p) => p.markdown).join("\n");
         fixNightTimeErrors(llmResult.openingHours, sourceText);
@@ -440,7 +440,7 @@ export const enrichPoiFromDescription = onCall(
       );
 
       // Fix night time errors
-      if (llmResult.openingHours) {
+      if (llmResult.openingHours && typeof llmResult.openingHours === "object") {
         fixNightTimeErrors(llmResult.openingHours, description);
       }
 

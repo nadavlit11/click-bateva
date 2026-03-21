@@ -97,6 +97,7 @@ const EXTRACTION_PROMPT = `Extract the following fields from this website conten
 
 Return JSON with these fields:
 - "openingHours": object with keys "sunday","monday","tuesday","wednesday","thursday","friday","saturday". Each value is either {"open":"HH:MM","close":"HH:MM"} or null if closed/unknown that day.
+  SPECIAL CASE: if the business explicitly operates only by appointment (phrases like "בתיאום מראש", "לפי תיאום", "by appointment"), return the string "by_appointment" instead of a day object. Return null if no hours information is found at all.
   IMPORTANT rules for opening hours:
   - Parse Hebrew day names: ראשון=sunday, שני=monday, שלישי=tuesday, רביעי=wednesday, חמישי=thursday, שישי=friday, שבת=saturday.
   - Also parse א'=sunday, ב'=monday, ג'=tuesday, ד'=wednesday, ה'=thursday, ו'=friday.
@@ -157,7 +158,7 @@ export function fixNightTimeErrors(
 }
 
 interface LlmExtractionResult {
-  openingHours: Record<DayKey, DayHours | null> | null;
+  openingHours: Record<DayKey, DayHours | null> | "by_appointment" | null;
   price: string | null;
   whatsapp: string | null;
   description: string | null;
@@ -226,6 +227,7 @@ const DESCRIPTION_EXTRACTION_PROMPT =
   "Return JSON with:\n" +
   "- \"openingHours\": object with keys \"sunday\",\"monday\",\"tuesday\",\"wednesday\",\"thursday\",\"friday\",\"saturday\".\n" +
   "  Each value is {\"open\":\"HH:MM\",\"close\":\"HH:MM\"} or null if closed/unknown that day.\n" +
+  "  SPECIAL CASE: if the text explicitly says the business operates by appointment (\"בתיאום מראש\", \"לפי תיאום\", \"by appointment\"), return the string \"by_appointment\" instead of a day object. Return null if no hours info found at all.\n" +
   "  IMPORTANT rules for opening hours:\n" +
   "  - Parse Hebrew day names: ראשון=sunday, שני=monday, שלישי=tuesday, רביעי=wednesday, חמישי=thursday, שישי=friday, שבת=saturday.\n" +
   "  - Also parse א'=sunday, ב'=monday, ג'=tuesday, ד'=wednesday, ה'=thursday, ו'=friday.\n" +
@@ -246,7 +248,7 @@ const DESCRIPTION_EXTRACTION_PROMPT =
 /* eslint-enable max-len */
 
 export interface DescriptionLlmResult {
-  openingHours: Record<DayKey, DayHours | null> | null;
+  openingHours: Record<DayKey, DayHours | null> | "by_appointment" | null;
   price: string | null;
   whatsapp: string | null;
   phone: string | null;

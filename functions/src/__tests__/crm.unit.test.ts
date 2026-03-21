@@ -85,7 +85,10 @@ describe("createCrmUser — validation", () => {
   it("throws unauthenticated when request.auth is null", async () => {
     await expect(
       createCrmUser.run(makeCreateRequest({auth: null}))
-    ).rejects.toMatchObject({code: "unauthenticated"});
+    ).rejects.toMatchObject({
+      code: "unauthenticated",
+      message: "Must be authenticated.",
+    });
   });
 
   it("throws permission-denied for a non-admin caller", async () => {
@@ -95,7 +98,10 @@ describe("createCrmUser — validation", () => {
           auth: {uid: "u1", token: {role: "crm_user"}},
         })
       )
-    ).rejects.toMatchObject({code: "permission-denied"});
+    ).rejects.toMatchObject({
+      code: "permission-denied",
+      message: "Only admins can create CRM users.",
+    });
   });
 
   it("throws invalid-argument for a missing email", async () => {
@@ -103,6 +109,19 @@ describe("createCrmUser — validation", () => {
       createCrmUser.run(
         makeCreateRequest({
           data: {email: "", password: "Pass1!", name: "N"},
+        })
+      )
+    ).rejects.toMatchObject({
+      code: "invalid-argument",
+      message: "Email is required",
+    });
+  });
+
+  it("throws invalid-argument for non-string email", async () => {
+    await expect(
+      createCrmUser.run(
+        makeCreateRequest({
+          data: {email: 123, password: "Pass1!", name: "N"},
         })
       )
     ).rejects.toMatchObject({code: "invalid-argument"});
@@ -115,6 +134,19 @@ describe("createCrmUser — validation", () => {
           data: {email: "a@b.com", password: "", name: "N"},
         })
       )
+    ).rejects.toMatchObject({
+      code: "invalid-argument",
+      message: "Password is required",
+    });
+  });
+
+  it("throws invalid-argument for non-string password", async () => {
+    await expect(
+      createCrmUser.run(
+        makeCreateRequest({
+          data: {email: "a@b.com", password: 123, name: "N"},
+        })
+      )
     ).rejects.toMatchObject({code: "invalid-argument"});
   });
 
@@ -123,6 +155,19 @@ describe("createCrmUser — validation", () => {
       createCrmUser.run(
         makeCreateRequest({
           data: {email: "a@b.com", password: "Pass1!", name: ""},
+        })
+      )
+    ).rejects.toMatchObject({
+      code: "invalid-argument",
+      message: "Name is required",
+    });
+  });
+
+  it("throws invalid-argument for non-string name", async () => {
+    await expect(
+      createCrmUser.run(
+        makeCreateRequest({
+          data: {email: "a@b.com", password: "Pass1!", name: 42},
         })
       )
     ).rejects.toMatchObject({code: "invalid-argument"});
@@ -153,6 +198,38 @@ describe("createCrmUser — success path", () => {
     });
   });
 
+  it("trims email and name before passing to Auth and Firestore",
+    async () => {
+      const data = {
+        email: "  crm@example.com  ",
+        password: "StrongPass1!",
+        name: "  CRM User  ",
+      };
+      await createCrmUser.run(makeCreateRequest({data}));
+
+      expect(mockCreateUser).toHaveBeenCalledWith({
+        email: "crm@example.com",
+        password: "StrongPass1!",
+        displayName: "CRM User",
+      });
+      expect(mockSet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: "crm@example.com",
+          name: "CRM User",
+        }),
+      );
+    });
+
+  it("logs creation with uid and caller", async () => {
+    const loggerInfo = require("firebase-functions/logger").info;
+    await createCrmUser.run(makeCreateRequest({}));
+
+    expect(loggerInfo).toHaveBeenCalledWith(
+      "CRM user created",
+      {uid: "new-uid", by: "admin-uid"},
+    );
+  });
+
   it("maps auth/email-already-exists to already-exists", async () => {
     mockCreateUser.mockRejectedValueOnce({
       code: "auth/email-already-exists",
@@ -160,8 +237,31 @@ describe("createCrmUser — success path", () => {
 
     await expect(
       createCrmUser.run(makeCreateRequest({}))
-    ).rejects.toMatchObject({code: "already-exists"});
+    ).rejects.toMatchObject({
+      code: "already-exists",
+      message: "auth/email-already-in-use",
+    });
   });
+
+  it("reports unknown errors to Sentry and throws internal",
+    async () => {
+      const sentryCapture =
+        require("@sentry/node").captureException;
+      const unknownErr = new Error("boom");
+      mockCreateUser.mockRejectedValueOnce(unknownErr);
+
+      await expect(
+        createCrmUser.run(makeCreateRequest({}))
+      ).rejects.toMatchObject({
+        code: "internal",
+        message: "Failed to create user",
+      });
+
+      expect(sentryCapture).toHaveBeenCalledWith(
+        unknownErr,
+        {tags: {source: "createCrmUser"}},
+      );
+    });
 });
 
 // ── deleteCrmUser ─────────────────────────────────────────────────────────────
@@ -170,7 +270,10 @@ describe("deleteCrmUser — validation", () => {
   it("throws unauthenticated when request.auth is null", async () => {
     await expect(
       deleteCrmUser.run(makeDeleteRequest({auth: null}))
-    ).rejects.toMatchObject({code: "unauthenticated"});
+    ).rejects.toMatchObject({
+      code: "unauthenticated",
+      message: "Must be authenticated.",
+    });
   });
 
   it("throws permission-denied for a non-admin caller", async () => {
@@ -180,13 +283,19 @@ describe("deleteCrmUser — validation", () => {
           auth: {uid: "u1", token: {role: "crm_user"}},
         })
       )
-    ).rejects.toMatchObject({code: "permission-denied"});
+    ).rejects.toMatchObject({
+      code: "permission-denied",
+      message: "Only admins can delete CRM users.",
+    });
   });
 
   it("throws invalid-argument for an empty uid", async () => {
     await expect(
       deleteCrmUser.run(makeDeleteRequest({data: {uid: ""}}))
-    ).rejects.toMatchObject({code: "invalid-argument"});
+    ).rejects.toMatchObject({
+      code: "invalid-argument",
+      message: "uid must be a non-empty string.",
+    });
   });
 
   it("throws invalid-argument for a non-string uid", async () => {
@@ -203,7 +312,18 @@ describe("deleteCrmUser — success path", () => {
     expect(result).toEqual({uid: "crm-uid"});
     expect(mockDeleteUser).toHaveBeenCalledWith("crm-uid");
     expect(mockCollection).toHaveBeenCalledWith("users");
+    expect(mockDoc).toHaveBeenCalledWith("crm-uid");
     expect(mockDocDelete).toHaveBeenCalled();
+  });
+
+  it("logs deletion with uid and caller", async () => {
+    const loggerInfo = require("firebase-functions/logger").info;
+    await deleteCrmUser.run(makeDeleteRequest({}));
+
+    expect(loggerInfo).toHaveBeenCalledWith(
+      "CRM user deleted",
+      {uid: "crm-uid", by: "admin-uid"},
+    );
   });
 
   it("tolerates auth/user-not-found and still cleans up Firestore",
@@ -216,5 +336,31 @@ describe("deleteCrmUser — success path", () => {
 
       expect(result).toEqual({uid: "crm-uid"});
       expect(mockDocDelete).toHaveBeenCalled();
+    });
+
+  it("reports unexpected errors to Sentry and throws internal",
+    async () => {
+      const sentryCapture =
+        require("@sentry/node").captureException;
+      const loggerError =
+        require("firebase-functions/logger").error;
+      const unknownErr = new Error("boom");
+      mockDeleteUser.mockRejectedValueOnce(unknownErr);
+
+      await expect(
+        deleteCrmUser.run(makeDeleteRequest({}))
+      ).rejects.toMatchObject({
+        code: "internal",
+        message: "Failed to delete user.",
+      });
+
+      expect(sentryCapture).toHaveBeenCalledWith(
+        unknownErr,
+        {tags: {source: "deleteCrmUser"}},
+      );
+      expect(loggerError).toHaveBeenCalledWith(
+        "Unexpected error deleting Firebase Auth user",
+        unknownErr,
+      );
     });
 });

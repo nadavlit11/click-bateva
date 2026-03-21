@@ -209,6 +209,78 @@ describe("aggregateFeedback", () => {
       Object.keys(result.byField.phone.bySource).length,
     ).toBe(0);
   });
+
+  it("classifies medium severity (10-15%)", () => {
+    // 10 samples, 1 bad = 10% (>= 10%, < 15%)
+    const docs = Array.from({length: 10}, (_, i) =>
+      mkFeedback(
+        {phone: i === 0 ? "bad" : "good"},
+        {phone: "programmatic"},
+      ),
+    );
+    const result = aggregateFeedback(docs);
+    const issue = result.topIssues.find(
+      (x) => x.field === "phone",
+    );
+    expect(issue?.severity).toBe("medium");
+  });
+
+  it("classifies low severity (0 < rate < 10%)", () => {
+    // 20 samples, 1 bad = 5% (> 0, < 10%)
+    const docs = Array.from({length: 20}, (_, i) =>
+      mkFeedback(
+        {phone: i === 0 ? "bad" : "good"},
+        {phone: "programmatic"},
+      ),
+    );
+    const result = aggregateFeedback(docs);
+    const issue = result.topIssues.find(
+      (x) => x.field === "phone",
+    );
+    expect(issue?.severity).toBe("low");
+  });
+
+  it("does not flag when bad rate is 0", () => {
+    const docs = Array.from({length: 5}, () =>
+      mkFeedback(
+        {phone: "good"},
+        {phone: "programmatic"},
+      ),
+    );
+    const result = aggregateFeedback(docs);
+    expect(result.topIssues).toHaveLength(0);
+  });
+
+  it("rounds bad rate to 2 decimal places", () => {
+    // 3 bad / 7 total = 0.42857... → 0.43
+    const docs = Array.from({length: 7}, (_, i) =>
+      mkFeedback(
+        {phone: i < 3 ? "bad" : "good"},
+        {phone: "programmatic"},
+      ),
+    );
+    const result = aggregateFeedback(docs);
+    expect(result.byField.phone.badRate).toBe(0.43);
+  });
+
+  it("includes generatedAt timestamp", () => {
+    const result = aggregateFeedback([]);
+    expect(result.generatedAt).toBeDefined();
+    // Should be valid ISO string
+    expect(
+      new Date(result.generatedAt).toISOString(),
+    ).toBe(result.generatedAt);
+  });
+
+  it("uses docs.length for totalFeedbackCount", () => {
+    const docs = [
+      mkFeedback({phone: "good"}),
+      mkFeedback({email: "bad"}),
+      mkFeedback({phone: "bad"}),
+    ];
+    const result = aggregateFeedback(docs);
+    expect(result.totalFeedbackCount).toBe(3);
+  });
 });
 
 // ── buildProvenance tests ────────────────────────────────
