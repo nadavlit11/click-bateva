@@ -117,7 +117,8 @@ export function EnrichFromDescriptionModal({
         if (val) scalars.add(field)
       }
       setSelectedScalars(scalars)
-      setHoursSelected(data.openingHours !== null)
+      // by_appointment is truthy — auto-select hours when present
+      setHoursSelected(data.openingHours != null)
       // cleanedDescription unchecked by default — requires intentional review
       setCleanedDescSelected(false)
     } catch (err: unknown) {
