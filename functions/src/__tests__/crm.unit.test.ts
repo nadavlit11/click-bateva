@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Unit tests for crm.ts — no emulator required.
  * Admin SDK is fully mocked; tests focus on validation logic in
