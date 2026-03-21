@@ -12,7 +12,7 @@
 - `functions/src/backup.ts` — `dailyFirestoreExport` (REMOVED — replaced by native Firestore scheduled backups)
 - `functions/src/audit.ts` — `auditPoiChanges` (v2 Firestore trigger on `points_of_interest`)
 - `functions/src/enrichment/` — POI enrichment pipeline (ported from scripts/lib/):
-  - `types.ts` — DayHours, ScrapedPage, EnrichmentResult interfaces (+ optional `minPeople`, `maxPeople`, `cleanedDescription`)
+  - `types.ts` — DayHours, ScrapedPage, EnrichmentResult interfaces (+ optional `minPeople`, `maxPeople`, `cleanedDescription`); `openingHours` is `Record<DayKey, DayHours | null> | "by_appointment" | null` — always narrow with `typeof === "object"` before accessing day keys
   - `extractor.ts` — programmatic regex extraction from HTML (phones, emails, images, etc.)
   - `description-extractor.ts` — programmatic regex extraction from plain text (phone, whatsapp, email); regexes kept in sync with extractor.ts
   - `scraper.ts` — Firecrawl API web scraping + sub-page discovery
@@ -25,8 +25,15 @@
 - `functions/src/__tests__/users.unit.test.ts` — unit tests for user management functions
 - `functions/src/__tests__/backup.unit.test.ts` — unit tests for daily export
 - `functions/src/__tests__/audit.unit.test.ts` — unit tests for POI audit trigger
+- `functions/src/__tests__/email.unit.test.ts` — unit tests for sendContactEmail
+- `functions/src/__tests__/image-processor.unit.test.ts` — unit tests for processImages
+- `functions/src/__tests__/scraper.unit.test.ts` — unit tests for scrapeWebsite + discoverSubpages
+- `functions/src/__tests__/extractor.unit.test.ts` — unit tests for programmatic extraction
+- `functions/src/__tests__/llm-extractor.unit.test.ts` — unit tests for LLM extraction + verification
+- `functions/src/__tests__/agent.unit.test.ts` — unit tests for travel agent management
+- `functions/src/__tests__/analysis.unit.test.ts` — unit tests for enrichment feedback analysis
 - `tests/integration/auth-functions.test.ts` — integration tests (emulator required)
-- `functions/stryker.config.json` — mutation testing config for `auth.ts`
+- `functions/stryker.config.json` — mutation testing config
 
 ## Exported Functions
 
@@ -135,7 +142,7 @@ When a function depends on external infrastructure (GCS buckets, IAM roles, secr
 - Mutation testing score is 69% (infra/logger lines are expected survivors)
 - **MUST run `npm run build` before deploying new functions** — `firebase deploy` reads compiled JS, not TS. New exports in `index.ts` are silently skipped if JS is stale.
 - `deleteContentManager`/`blockContentManager` validate target user has `content_manager` role before acting
-- All function unit tests (173 total) must pass before deploy: `cd functions && npm test`
+- All function unit tests (444 total) must pass before deploy: `cd functions && npm test`
 - **Test helper functions that build `CallableRequest` must have `: any` return type** — `CallableRequest` has an `acceptsStreaming` property that TypeScript infers from the object literal. If the helper (e.g., `makeReq()`) lacks a return type annotation, TypeScript checks the inferred type against `CallableRequest` and fails with "missing acceptsStreaming". Fix: annotate the helper with `// eslint-disable-next-line @typescript-eslint/no-explicit-any` + `: any` return type.
 - **`enrichPoiFromDescription` vs `enrichPoiFromWebsite`** — description enrichment does NOT need Firecrawl, uses a 60s timeout (vs 300s), and writes `source: 'description'` to `enrichment_runs`. Does not call `verifyWithLLM` (description IS the source). Returns `images: [], videos: [], location: null` always.
 - **`JSON.stringify` does NOT handle Firestore `Timestamp` objects** — they serialize to `{}` (no enumerable properties). When comparing Firestore field values, use `.toMillis()` for Timestamps and check `latitude`/`longitude` for GeoPoints.

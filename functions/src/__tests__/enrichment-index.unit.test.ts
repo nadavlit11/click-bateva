@@ -869,6 +869,35 @@ describe("enrichPoiFromDescription", () => {
     expect(mockFixNight).toHaveBeenCalled();
   });
 
+  it("normalizes all-null openingHours to by_appointment", async () => {
+    mockExtractFromDescLLM.mockResolvedValue({
+      ...defaultDescLlm,
+      openingHours: {
+        sunday: null, monday: null, tuesday: null, wednesday: null,
+        thursday: null, friday: null, saturday: null,
+      },
+    });
+    const r = await enrichPoiFromDescription.run(makeDescReq());
+    expect(r.openingHours).toBe("by_appointment");
+  });
+
+  it("leaves partial openingHours unchanged", async () => {
+    const hours = {
+      sunday: {open: "09:00", close: "17:00"},
+      monday: null, tuesday: null, wednesday: null,
+      thursday: null, friday: null, saturday: null,
+    };
+    mockExtractFromDescLLM.mockResolvedValue({...defaultDescLlm, openingHours: hours});
+    const r = await enrichPoiFromDescription.run(makeDescReq());
+    expect(r.openingHours).toEqual(hours);
+  });
+
+  it("normalizes null openingHours to by_appointment", async () => {
+    mockExtractFromDescLLM.mockResolvedValue({...defaultDescLlm, openingHours: null});
+    const r = await enrichPoiFromDescription.run(makeDescReq());
+    expect(r.openingHours).toBe("by_appointment");
+  });
+
   it("captures Sentry on unexpected error", async () => {
     const err = new Error("boom");
     mockExtractFromDesc.mockImplementation(() => {
