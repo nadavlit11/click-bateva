@@ -216,6 +216,99 @@ export async function extractWithLLM(
   }
 }
 
+// ── Description LLM Extraction ──────────────────────────────
+
+/* eslint-disable max-len */
+const DESCRIPTION_EXTRACTION_PROMPT =
+  "Extract structured data from this Israeli POI description text.\n" +
+  "The text is a plain-text description (not a website page).\n" +
+  "Extract ONLY what is explicitly stated. Never invent values.\n\n" +
+  "Return JSON with:\n" +
+  "- \"openingHours\": object with keys \"sunday\",\"monday\",\"tuesday\",\"wednesday\",\"thursday\",\"friday\",\"saturday\".\n" +
+  "  Each value is {\"open\":\"HH:MM\",\"close\":\"HH:MM\"} or null if closed/unknown that day.\n" +
+  "  IMPORTANT rules for opening hours:\n" +
+  "  - Parse Hebrew day names: ראשון=sunday, שני=monday, שלישי=tuesday, רביעי=wednesday, חמישי=thursday, שישי=friday, שבת=saturday.\n" +
+  "  - Also parse א'=sunday, ב'=monday, ג'=tuesday, ד'=wednesday, ה'=thursday, ו'=friday.\n" +
+  "  - Ranges like \"א'-ה' 09:00-17:00\" mean sunday through thursday.\n" +
+  "  - CRITICAL: \"בלילה\" means AFTER MIDNIGHT (AM). \"1 בלילה\" = \"01:00\", \"2 בלילה\" = \"02:00\". NEVER 23:00.\n" +
+  "  - \"בצהריים\" means noon/PM. \"12 בצהריים\" = \"12:00\".\n" +
+  "  - Example: \"פתוח בין 12 בצהריים ל1 בלילה\" → open:\"12:00\", close:\"01:00\".\n" +
+  "- \"price\": free-text price with context (e.g. \"כניסה 80₪\"), or null\n" +
+  "- \"whatsapp\": WhatsApp number starting with 05 if explicitly mentioned as WhatsApp, or null\n" +
+  "- \"phone\": Israeli phone number (mobile 05x or landline 0x-xxxxxxx) if present, or null\n" +
+  "- \"address\": full street address if mentioned (e.g. \"רח' הרצל 42, תל אביב\"), or null\n" +
+  "- \"minPeople\": minimum number of participants as a string (e.g. \"10\"), or null\n" +
+  "- \"maxPeople\": maximum number of participants as a string (e.g. \"30\"), or null\n" +
+  "- \"cleanedDescription\": the original text with phone numbers, emails, opening hours,\n" +
+  "  prices, addresses, and group-size fragments removed. Preserve the business narrative.\n" +
+  "  Return null if nothing meaningful was removed.\n\n" +
+  "Description text:\n---\n{CONTENT}\n---";
+/* eslint-enable max-len */
+
+export interface DescriptionLlmResult {
+  openingHours: Record<DayKey, DayHours | null> | null;
+  price: string | null;
+  whatsapp: string | null;
+  phone: string | null;
+  description: null;
+  address: string | null;
+  minPeople: string | null;
+  maxPeople: string | null;
+  cleanedDescription: string | null;
+}
+
+/**
+ * Extract structured fields from a plain-text POI description
+ * using Claude API. No web scraping — description IS the source.
+ * @param {string} text Plain-text description.
+ * @param {string} anthropicKey Anthropic API key.
+ * @param {string} instructions Optional extra instructions.
+ * @return {Promise<DescriptionLlmResult>} Extracted fields.
+ */
+export async function extractFromDescriptionWithLLM(
+  text: string,
+  anthropicKey: string,
+  instructions?: string,
+): Promise<DescriptionLlmResult> {
+  const nullResult: DescriptionLlmResult = {
+    openingHours: null, price: null, whatsapp: null,
+    phone: null, description: null, address: null,
+    minPeople: null, maxPeople: null, cleanedDescription: null,
+  };
+
+  let systemPrompt = EXTRACTION_SYSTEM;
+  if (instructions) {
+    systemPrompt += "\n\nAdditional instructions:\n" + instructions;
+  }
+
+  try {
+    const response = await callClaude({
+      systemPrompt,
+      content: DESCRIPTION_EXTRACTION_PROMPT
+        .replace("{CONTENT}", text.slice(0, 4000)),
+      anthropicKey,
+    });
+
+    const data = parseJsonResponse(response);
+
+    return {
+      openingHours: data.openingHours || null,
+      price: data.price || null,
+      whatsapp: data.whatsapp || null,
+      phone: data.phone || null,
+      description: null,
+      address: data.address || null,
+      minPeople: data.minPeople ? String(data.minPeople) : null,
+      maxPeople: data.maxPeople ? String(data.maxPeople) : null,
+      cleanedDescription: data.cleanedDescription || null,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.warn(`Description LLM extraction failed: ${msg}`);
+    return nullResult;
+  }
+}
+
 // ── LLM Verification ────────────────────────────────────────
 
 const VERIFICATION_SYSTEM =

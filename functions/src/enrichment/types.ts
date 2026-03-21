@@ -53,6 +53,10 @@ export interface EnrichmentResult {
   description: string | null;
   address: string | null;
   location: { lat: number; lng: number } | null;
+  // Description-enrichment-only fields (optional)
+  minPeople?: string | null;
+  maxPeople?: string | null;
+  cleanedDescription?: string | null;
 }
 
 // ── Provenance tracking ──────────────────────────────────

@@ -21,7 +21,9 @@ import {
   verifyWithLLM,
   fixNightTimeErrors,
   rankImagesWithVision,
+  extractFromDescriptionWithLLM,
 } from "./llm-extractor";
+import {extractFromDescription} from "./description-extractor";
 import {processImages} from "./image-processor";
 import {
   DayHours, DayKey, EnrichmentResult, ProgrammaticResult,
@@ -359,6 +361,147 @@ export const enrichPoiFromWebsite = onCall(
       logger.error(`Enrichment failed: ${msg}`);
       Sentry.captureException(err);
       throw new HttpsError("internal", `Enrichment failed: ${msg}`);
+    }
+  },
+);
+
+// ── Enrich from Description ───────────────────────────────
+
+/**
+ * Callable Cloud Function: extract structured data from a
+ * POI's existing description text (phone, hours, price, etc.)
+ * and return the results for admin review via EnrichModal.
+ */
+export const enrichPoiFromDescription = onCall(
+  {
+    cors: true,
+    enforceAppCheck: true,
+    timeoutSeconds: 60,
+    memory: "256MiB",
+    secrets: [anthropicKey],
+  },
+  async (request) => {
+    // Auth guard
+    if (!request.auth) {
+      throw new HttpsError(
+        "unauthenticated", "Must be authenticated.",
+      );
+    }
+    if (request.auth.token.role !== "admin") {
+      throw new HttpsError(
+        "permission-denied", "Only admins can enrich POIs.",
+      );
+    }
+
+    const {poiId} = request.data as {poiId: unknown};
+    if (typeof poiId !== "string" || !poiId.trim()) {
+      throw new HttpsError(
+        "invalid-argument", "poiId is required.",
+      );
+    }
+
+    try {
+      // Fetch POI description from Firestore
+      const poiDoc = await db
+        .doc(`points_of_interest/${poiId.trim()}`).get();
+      if (!poiDoc.exists) {
+        throw new HttpsError("not-found", "POI not found.");
+      }
+      const poiData = poiDoc.data() || {};
+      const description = (poiData.description as string) || "";
+
+      if (!description.trim()) {
+        throw new HttpsError(
+          "failed-precondition", "POI has no description.",
+        );
+      }
+
+      logger.info(
+        `Enriching POI ${poiId.trim()} from description`,
+      );
+
+      // Programmatic extraction
+      const descProg = extractFromDescription(description);
+      const programmatic: ProgrammaticResult = {
+        ...descProg,
+        videos: [],
+        images: [],
+        facebook: null,
+        openingHours: null,
+        location: null,
+      };
+
+      // LLM extraction
+      const instructions = await loadInstructions();
+      const llmResult = await extractFromDescriptionWithLLM(
+        description,
+        anthropicKey.value(),
+        instructions,
+      );
+
+      // Fix night time errors
+      if (llmResult.openingHours) {
+        fixNightTimeErrors(llmResult.openingHours, description);
+      }
+
+      // Merge: pass description: null to avoid overwriting narrative
+      const merged = mergeResults(
+        programmatic, {...llmResult, description: null},
+      );
+
+      // Build provenance
+      const provenance = buildProvenance(
+        programmatic, {...llmResult, description: null}, merged,
+      );
+
+      const result: EnrichmentResult = {
+        phone: (merged.phone as string) || null,
+        whatsapp: (merged.whatsapp as string) || null,
+        email: (merged.email as string) || null,
+        videos: [],
+        images: [],
+        facebook: null,
+        openingHours:
+          (merged.openingHours as EnrichmentResult["openingHours"]) ||
+          null,
+        price: (merged.price as string) || null,
+        description: null,
+        address: (merged.address as string) || null,
+        location: null,
+        minPeople: llmResult.minPeople,
+        maxPeople: llmResult.maxPeople,
+        cleanedDescription: llmResult.cleanedDescription,
+      };
+
+      // Write enrichment run for analysis
+      const runRef = await db
+        .collection("enrichment_runs").add({
+          poiId: poiId.trim(),
+          source: "description",
+          timestamp: new Date(),
+          programmaticResult: {...programmatic},
+          llmResult: {...llmResult},
+          provenance,
+          descriptionText: description,
+        });
+
+      logger.info(
+        `Description enrichment complete for POI ${poiId.trim()}`,
+      );
+
+      return {
+        ...result,
+        provenance,
+        enrichmentRunId: runRef.id,
+      };
+    } catch (err: unknown) {
+      if (err instanceof HttpsError) throw err;
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.error(`Description enrichment failed: ${msg}`);
+      Sentry.captureException(err);
+      throw new HttpsError(
+        "internal", `Description enrichment failed: ${msg}`,
+      );
     }
   },
 );
