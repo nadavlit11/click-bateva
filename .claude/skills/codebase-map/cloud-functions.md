@@ -12,12 +12,13 @@
 - `functions/src/backup.ts` — `dailyFirestoreExport` (REMOVED — replaced by native Firestore scheduled backups)
 - `functions/src/audit.ts` — `auditPoiChanges` (v2 Firestore trigger on `points_of_interest`)
 - `functions/src/enrichment/` — POI enrichment pipeline (ported from scripts/lib/):
-  - `types.ts` — DayHours, ScrapedPage, EnrichmentResult interfaces
-  - `extractor.ts` — programmatic regex extraction (phones, emails, images, etc.)
+  - `types.ts` — DayHours, ScrapedPage, EnrichmentResult interfaces (+ optional `minPeople`, `maxPeople`, `cleanedDescription`)
+  - `extractor.ts` — programmatic regex extraction from HTML (phones, emails, images, etc.)
+  - `description-extractor.ts` — programmatic regex extraction from plain text (phone, whatsapp, email); regexes kept in sync with extractor.ts
   - `scraper.ts` — Firecrawl API web scraping + sub-page discovery
-  - `llm-extractor.ts` — Claude extraction, verification, Vision image ranking
+  - `llm-extractor.ts` — Claude extraction, verification, Vision image ranking; also exports `extractFromDescriptionWithLLM` (no Firecrawl needed)
   - `image-processor.ts` — download, validate, upload images to Storage
-  - `index.ts` — `enrichPoiFromWebsite` + `updateEnrichmentInstructions` Cloud Functions
+  - `index.ts` — `enrichPoiFromWebsite` + `updateEnrichmentInstructions` + `enrichPoiFromDescription` Cloud Functions
   - `analysis.ts` — `analyzeEnrichmentFeedback` Cloud Function (feedback aggregation by provenance source)
 - `functions/src/__tests__/auth.unit.test.ts` — unit tests for auth functions (no emulator)
 - `functions/src/__tests__/crm.unit.test.ts` — unit tests for CRM user management functions
@@ -46,6 +47,7 @@
 | `enrichPoiFromWebsite` | v2 `onCall({ cors: true, enforceAppCheck: true })` | Admin callable | admin only |
 | `updateEnrichmentInstructions` | v2 `onCall({ cors: true, enforceAppCheck: true })` | Admin callable | admin only |
 | `analyzeEnrichmentFeedback` | v2 `onCall({ cors: true, enforceAppCheck: true })` | Admin callable | admin only |
+| `enrichPoiFromDescription` | v2 `onCall({ cors: true, enforceAppCheck: true })` | Admin callable | admin only |
 
 ## Data Flow
 
@@ -134,5 +136,7 @@ When a function depends on external infrastructure (GCS buckets, IAM roles, secr
 - **MUST run `npm run build` before deploying new functions** — `firebase deploy` reads compiled JS, not TS. New exports in `index.ts` are silently skipped if JS is stale.
 - `deleteContentManager`/`blockContentManager` validate target user has `content_manager` role before acting
 - All function unit tests (173 total) must pass before deploy: `cd functions && npm test`
+- **Test helper functions that build `CallableRequest` must have `: any` return type** — `CallableRequest` has an `acceptsStreaming` property that TypeScript infers from the object literal. If the helper (e.g., `makeReq()`) lacks a return type annotation, TypeScript checks the inferred type against `CallableRequest` and fails with "missing acceptsStreaming". Fix: annotate the helper with `// eslint-disable-next-line @typescript-eslint/no-explicit-any` + `: any` return type.
+- **`enrichPoiFromDescription` vs `enrichPoiFromWebsite`** — description enrichment does NOT need Firecrawl, uses a 60s timeout (vs 300s), and writes `source: 'description'` to `enrichment_runs`. Does not call `verifyWithLLM` (description IS the source). Returns `images: [], videos: [], location: null` always.
 - **`JSON.stringify` does NOT handle Firestore `Timestamp` objects** — they serialize to `{}` (no enumerable properties). When comparing Firestore field values, use `.toMillis()` for Timestamps and check `latitude`/`longitude` for GeoPoints.
 - **Module-level `process.env` reads break tests** — env vars set in `beforeEach` run after module load. Read `process.env` inside the handler function, not at module scope.
