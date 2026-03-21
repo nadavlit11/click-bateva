@@ -20,6 +20,7 @@ export {auditPoiChanges} from "./audit.js";
 export {
   enrichPoiFromWebsite,
   updateEnrichmentInstructions,
+  enrichPoiFromDescription,
 } from "./enrichment/index.js";
 export {
   analyzeEnrichmentFeedback,
