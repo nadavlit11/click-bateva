@@ -375,7 +375,7 @@ export function EnrichFromDescriptionModal({
                 />
                 <span className="text-sm font-medium text-gray-700">שעות פתיחה</span>
                 {!result.openingHours && (
-                  <span className="text-sm text-gray-400">לא נמצא</span>
+                  <span className="text-sm text-gray-400">בתיאום מראש</span>
                 )}
                 <RatingButtons field="openingHours" />
               </label>
