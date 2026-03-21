@@ -48,11 +48,15 @@ Per project convention, deploy PRs are merged right away — no need to wait for
 gh pr merge <PR-number> --merge
 ```
 
-### 5. Verify
+### 5. Verify jobs ran (not just CI kicked off)
 
 ```bash
-gh run list --branch main --limit 1   # check CI kicked off
+gh run list --branch main --limit 1 --json databaseId --jq '.[0].databaseId'
+# then:
+gh run view <id> --json jobs --jq '.jobs[] | {name: .name, conclusion: .conclusion}'
 ```
+
+Check that each expected job ran with `success` — not `skipped`. If CI-App or CI-Functions was skipped, that component was NOT deployed. A `skipped` job means the path filter didn't match — no deploy happened for that layer.
 
 ---
 
@@ -62,3 +66,4 @@ gh run list --branch main --limit 1   # check CI kicked off
 - **Always rebase from main first** — stale branches cause merge conflicts in CI
 - **CI runs after merge** — no need to wait for CI before merging deploy PRs
 - **Don't confuse with `/firebase-deploy`** — that skill is for emergency manual CLI deploys only
+- **A failed CI job in a PR causes deploy-production to be SKIPPED entirely** — if CI-Functions fails but CI-App passed (or vice versa), neither layer gets deployed. The code lands on main but stays undeployed. Fix: create a new PR that touches the affected files to trigger a fresh deploy of each layer. Check past CI runs with `gh run view <id> --json jobs` to identify which components are stale.
