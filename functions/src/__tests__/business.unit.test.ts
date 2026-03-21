@@ -88,24 +88,35 @@ describe("createBusinessUser — auth checks", () => {
   it("throws unauthenticated when request.auth is null", async () => {
     await expect(
       createBusinessUser.run(makeCreateRequest({auth: null}))
-    ).rejects.toMatchObject({code: "unauthenticated"});
+    ).rejects.toMatchObject({
+      code: "unauthenticated",
+      message: "Must be authenticated.",
+    });
   });
 
   it("throws permission-denied for a non-admin caller", async () => {
     await expect(
       createBusinessUser.run(
-        makeCreateRequest({auth: {uid: "u1", token: {role: "content_manager"}}})
+        makeCreateRequest({
+          auth: {uid: "u1", token: {role: "content_manager"}},
+        })
       )
-    ).rejects.toMatchObject({code: "permission-denied"});
+    ).rejects.toMatchObject({
+      code: "permission-denied",
+      message: "Only admins can create business users.",
+    });
   });
 
-  it("throws permission-denied for a business_user caller", async () => {
-    await expect(
-      createBusinessUser.run(
-        makeCreateRequest({auth: {uid: "u1", token: {role: "business_user"}}})
-      )
-    ).rejects.toMatchObject({code: "permission-denied"});
-  });
+  it("throws permission-denied for a business_user caller",
+    async () => {
+      await expect(
+        createBusinessUser.run(
+          makeCreateRequest({
+            auth: {uid: "u1", token: {role: "business_user"}},
+          })
+        )
+      ).rejects.toMatchObject({code: "permission-denied"});
+    });
 });
 
 describe("createBusinessUser — input validation", () => {
@@ -164,18 +175,25 @@ describe("createBusinessUser — success path", () => {
     mockCreateUser.mockResolvedValue({uid: "new-uid"});
   });
 
-  it("creates Auth user with the provided email and returns uid", async () => {
-    const result = await createBusinessUser.run(makeCreateRequest({}));
+  it("creates Auth user with the provided email and returns uid",
+    async () => {
+      const result = await createBusinessUser.run(
+        makeCreateRequest({})
+      );
 
-    expect(result).toEqual({uid: "new-uid"});
-    expect(mockCreateUser).toHaveBeenCalledWith({
-      email: "test@example.com",
-      password: "Pass1234",
+      expect(result).toEqual({uid: "new-uid"});
+      expect(mockCreateUser).toHaveBeenCalledWith({
+        email: "test@example.com",
+        password: "Pass1234",
+      });
     });
-  });
 
   it("lowercases and trims the email", async () => {
-    const data = {name: "Biz", email: "  Test@Example.COM  ", password: "Pass1234"};
+    const data = {
+      name: "Biz",
+      email: "  Test@Example.COM  ",
+      password: "Pass1234",
+    };
     await createBusinessUser.run(makeCreateRequest({data}));
 
     expect(mockCreateUser).toHaveBeenCalledWith({
@@ -184,32 +202,134 @@ describe("createBusinessUser — success path", () => {
     });
   });
 
-  it("sets business_user role and businessRef custom claims", async () => {
-    await createBusinessUser.run(makeCreateRequest({}));
+  it("trims the business name", async () => {
+    const data = {
+      name: "  Biz Name  ",
+      email: "a@b.com",
+      password: "Pass1234",
+    };
+    await createBusinessUser.run(makeCreateRequest({data}));
 
-    expect(mockSetCustomUserClaims).toHaveBeenCalledWith("new-uid", {
-      role: "business_user",
-      businessRef: "/databases/(default)/documents/businesses/new-uid",
-    });
+    expect(mockBatchSet).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({name: "Biz Name"}),
+    );
   });
 
-  it("creates both user and business Firestore documents in a batch", async () => {
+  it("sets business_user role and businessRef custom claims",
+    async () => {
+      await createBusinessUser.run(makeCreateRequest({}));
+
+      expect(mockSetCustomUserClaims).toHaveBeenCalledWith(
+        "new-uid",
+        {
+          role: "business_user",
+          businessRef:
+            "/databases/(default)/documents/businesses/new-uid",
+        },
+      );
+    });
+
+  it("writes user doc with correct fields in batch", async () => {
+    await createBusinessUser.run(makeCreateRequest({}));
+
+    expect(mockBatchSet).toHaveBeenCalledWith(
+      "doc-ref-new-uid",
+      {
+        uid: "new-uid",
+        email: "test@example.com",
+        role: "business_user",
+        businessRef:
+          "/databases/(default)/documents/businesses/new-uid",
+        createdAt: "mock-timestamp",
+        updatedAt: "mock-timestamp",
+      },
+    );
+  });
+
+  it("writes business doc with correct fields in batch",
+    async () => {
+      await createBusinessUser.run(makeCreateRequest({}));
+
+      expect(mockBatchSet).toHaveBeenCalledWith(
+        "doc-ref-new-uid",
+        {
+          id: "new-uid",
+          name: "Test Business",
+          email: "test@example.com",
+          ownerUid: "new-uid",
+          associatedUserIds: ["new-uid"],
+          createdAt: "mock-timestamp",
+          updatedAt: "mock-timestamp",
+        },
+      );
+    });
+
+  it("creates both Firestore documents in a batch", async () => {
     await createBusinessUser.run(makeCreateRequest({}));
 
     expect(mockBatch).toHaveBeenCalled();
     expect(mockBatchSet).toHaveBeenCalledTimes(2);
     expect(mockBatchCommit).toHaveBeenCalled();
   });
+
+  it("logs creation with uid, email, name, and caller",
+    async () => {
+      const loggerInfo =
+        require("firebase-functions/logger").info;
+      await createBusinessUser.run(makeCreateRequest({}));
+
+      expect(loggerInfo).toHaveBeenCalledWith(
+        "Business user created",
+        {
+          uid: "new-uid",
+          email: "test@example.com",
+          name: "Test Business",
+          by: "admin-uid",
+        },
+      );
+    });
 });
 
-describe("createBusinessUser — duplicate email", () => {
-  it("throws already-exists when Firebase Auth email already exists", async () => {
-    mockCreateUser.mockRejectedValue({code: "auth/email-already-exists"});
+describe("createBusinessUser — error handling", () => {
+  it("throws already-exists for duplicate email", async () => {
+    mockCreateUser.mockRejectedValue({
+      code: "auth/email-already-exists",
+    });
 
     await expect(
       createBusinessUser.run(makeCreateRequest({}))
-    ).rejects.toMatchObject({code: "already-exists"});
+    ).rejects.toMatchObject({
+      code: "already-exists",
+      message: "(auth/email-already-in-use)",
+    });
   });
+
+  it("reports unknown errors to Sentry and throws internal",
+    async () => {
+      const sentryCapture =
+        require("@sentry/node").captureException;
+      const loggerError =
+        require("firebase-functions/logger").error;
+      const unknownErr = new Error("boom");
+      mockCreateUser.mockRejectedValue(unknownErr);
+
+      await expect(
+        createBusinessUser.run(makeCreateRequest({}))
+      ).rejects.toMatchObject({
+        code: "internal",
+        message: "Failed to create user.",
+      });
+
+      expect(sentryCapture).toHaveBeenCalledWith(
+        unknownErr,
+        {tags: {source: "createBusinessUser"}},
+      );
+      expect(loggerError).toHaveBeenCalledWith(
+        "Unexpected error creating Firebase Auth user",
+        unknownErr,
+      );
+    });
 });
 
 // ── deleteBusinessUser ───────────────────────────────────────────────────────
@@ -218,15 +338,23 @@ describe("deleteBusinessUser — auth checks", () => {
   it("throws unauthenticated when request.auth is null", async () => {
     await expect(
       deleteBusinessUser.run(makeDeleteRequest({auth: null}))
-    ).rejects.toMatchObject({code: "unauthenticated"});
+    ).rejects.toMatchObject({
+      code: "unauthenticated",
+      message: "Must be authenticated.",
+    });
   });
 
   it("throws permission-denied for a non-admin caller", async () => {
     await expect(
       deleteBusinessUser.run(
-        makeDeleteRequest({auth: {uid: "u1", token: {role: "content_manager"}}})
+        makeDeleteRequest({
+          auth: {uid: "u1", token: {role: "content_manager"}},
+        })
       )
-    ).rejects.toMatchObject({code: "permission-denied"});
+    ).rejects.toMatchObject({
+      code: "permission-denied",
+      message: "Only admins can delete business users.",
+    });
   });
 });
 
@@ -234,34 +362,92 @@ describe("deleteBusinessUser — input validation", () => {
   it("throws invalid-argument for empty uid", async () => {
     await expect(
       deleteBusinessUser.run(makeDeleteRequest({data: {uid: ""}}))
-    ).rejects.toMatchObject({code: "invalid-argument"});
+    ).rejects.toMatchObject({
+      code: "invalid-argument",
+      message: "uid must be a non-empty string.",
+    });
   });
 
   it("throws invalid-argument for non-string uid", async () => {
     await expect(
-      deleteBusinessUser.run(makeDeleteRequest({data: {uid: 123}}))
+      deleteBusinessUser.run(
+        makeDeleteRequest({data: {uid: 123}})
+      )
     ).rejects.toMatchObject({code: "invalid-argument"});
   });
 });
 
 describe("deleteBusinessUser — success path", () => {
-  it("deletes Auth user and both Firestore docs in a batch", async () => {
-    const result = await deleteBusinessUser.run(makeDeleteRequest({}));
+  it("deletes Auth user and both Firestore docs in a batch",
+    async () => {
+      const result = await deleteBusinessUser.run(
+        makeDeleteRequest({})
+      );
 
-    expect(result).toEqual({uid: "target-uid"});
-    expect(mockDeleteUser).toHaveBeenCalledWith("target-uid");
-    expect(mockBatch).toHaveBeenCalled();
-    expect(mockBatchDelete).toHaveBeenCalledTimes(2);
-    expect(mockBatchCommit).toHaveBeenCalled();
+      expect(result).toEqual({uid: "target-uid"});
+      expect(mockDeleteUser).toHaveBeenCalledWith("target-uid");
+      expect(mockBatch).toHaveBeenCalled();
+      expect(mockBatchDelete).toHaveBeenCalledTimes(2);
+      expect(mockBatchCommit).toHaveBeenCalled();
+    });
+
+  it("deletes from both users and businesses collections",
+    async () => {
+      await deleteBusinessUser.run(makeDeleteRequest({}));
+
+      expect(mockCollection).toHaveBeenCalledWith("users");
+      expect(mockCollection).toHaveBeenCalledWith("businesses");
+      expect(mockDoc).toHaveBeenCalledWith("target-uid");
+    });
+
+  it("logs deletion with uid and caller", async () => {
+    const loggerInfo = require("firebase-functions/logger").info;
+    await deleteBusinessUser.run(makeDeleteRequest({}));
+
+    expect(loggerInfo).toHaveBeenCalledWith(
+      "Business user deleted",
+      {uid: "target-uid", by: "admin-uid"},
+    );
   });
 
-  it("tolerates auth/user-not-found and still cleans up Firestore", async () => {
-    mockDeleteUser.mockRejectedValueOnce({code: "auth/user-not-found"});
+  it("tolerates auth/user-not-found and still cleans Firestore",
+    async () => {
+      mockDeleteUser.mockRejectedValueOnce({
+        code: "auth/user-not-found",
+      });
 
-    const result = await deleteBusinessUser.run(makeDeleteRequest({}));
+      const result = await deleteBusinessUser.run(
+        makeDeleteRequest({})
+      );
 
-    expect(result).toEqual({uid: "target-uid"});
-    expect(mockBatchDelete).toHaveBeenCalledTimes(2);
-    expect(mockBatchCommit).toHaveBeenCalled();
-  });
+      expect(result).toEqual({uid: "target-uid"});
+      expect(mockBatchDelete).toHaveBeenCalledTimes(2);
+      expect(mockBatchCommit).toHaveBeenCalled();
+    });
+
+  it("reports unexpected errors to Sentry and throws internal",
+    async () => {
+      const sentryCapture =
+        require("@sentry/node").captureException;
+      const loggerError =
+        require("firebase-functions/logger").error;
+      const unknownErr = new Error("boom");
+      mockDeleteUser.mockRejectedValueOnce(unknownErr);
+
+      await expect(
+        deleteBusinessUser.run(makeDeleteRequest({}))
+      ).rejects.toMatchObject({
+        code: "internal",
+        message: "Failed to delete user.",
+      });
+
+      expect(sentryCapture).toHaveBeenCalledWith(
+        unknownErr,
+        {tags: {source: "deleteBusinessUser"}},
+      );
+      expect(loggerError).toHaveBeenCalledWith(
+        "Unexpected error deleting Firebase Auth user",
+        unknownErr,
+      );
+    });
 });

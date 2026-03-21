@@ -37,7 +37,7 @@ export interface ProgrammaticResult {
   videos: string[];
   images: string[];
   facebook: string | null;
-  openingHours: Record<DayKey, DayHours | null> | null;
+  openingHours: Record<DayKey, DayHours | null> | "by_appointment" | null;
   location: { lat: number; lng: number } | null;
 }
 
@@ -48,7 +48,7 @@ export interface EnrichmentResult {
   videos: string[];
   images: string[]; // Firebase Storage download URLs
   facebook: string | null;
-  openingHours: Record<DayKey, DayHours | null> | null;
+  openingHours: Record<DayKey, DayHours | null> | "by_appointment" | null;
   price: string | null;
   description: string | null;
   address: string | null;

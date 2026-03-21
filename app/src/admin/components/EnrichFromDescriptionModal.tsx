@@ -27,7 +27,7 @@ interface DescriptionEnrichmentResult {
   phone: string | null
   whatsapp: string | null
   email: string | null
-  openingHours: Record<string, DayHours | null> | null
+  openingHours: Record<string, DayHours | null> | 'by_appointment' | null
   price: string | null
   address: string | null
   minPeople: string | null
@@ -375,58 +375,73 @@ export function EnrichFromDescriptionModal({
                 />
                 <span className="text-sm font-medium text-gray-700">שעות פתיחה</span>
                 {!result.openingHours && (
-                  <span className="text-sm text-gray-400">בתיאום מראש</span>
+                  <span className="text-sm text-gray-400">לא נמצא</span>
                 )}
                 <RatingButtons field="openingHours" />
               </label>
-              {hoursSelected && result.openingHours && (() => {
-                const curHours = currentData.openingHours
-                const hasCurrentHours =
-                  curHours !== 'by_appointment'
-                  && typeof curHours === 'object'
-                  && Object.values(curHours).some(v => v !== null)
-                const isByAppt = curHours === 'by_appointment'
-                return (
-                  <div className="mr-7 mt-1 space-y-2">
-                    {(hasCurrentHours || isByAppt) && (
-                      <>
-                        <p className="text-xs font-medium text-gray-400">נוכחי</p>
-                        {isByAppt ? (
-                          <p className="text-xs text-gray-400 mb-2">לפי תיאום</p>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-1 mb-2">
-                            {DAY_KEYS.map(day => {
-                              const h = (curHours as Record<string, DayHours | null>)[day]
-                              return (
-                                <div key={day} className="flex items-center gap-2 text-xs text-gray-400">
-                                  <span className="font-medium min-w-[40px]">{DAY_NAMES_HE[day]}</span>
-                                  {h ? <span dir="ltr">{h.open}–{h.close}</span> : <span>סגור</span>}
-                                </div>
-                              )
-                            })}
-                          </div>
-                        )}
-                      </>
+              {hoursSelected && result.openingHours && (
+                result.openingHours === 'by_appointment' ? (
+                  <div className="mr-7 mt-1">
+                    {(currentData.openingHours !== 'by_appointment'
+                      && typeof currentData.openingHours === 'object'
+                      && Object.values(currentData.openingHours).some(v => v !== null)) && (
+                      <p className="text-xs font-medium text-gray-400 mb-1">נוכחי: שעות קבועות</p>
                     )}
-                    {(hasCurrentHours || isByAppt) && (
-                      <p className="text-xs font-medium text-blue-500">חדש</p>
+                    {currentData.openingHours === 'by_appointment' && (
+                      <p className="text-xs font-medium text-gray-400 mb-1">נוכחי: בתיאום מראש</p>
                     )}
-                    <div className="grid grid-cols-2 gap-1">
-                      {DAY_KEYS.map(day => {
-                        const hours = result.openingHours?.[day]
-                        return (
-                          <div key={day} className="flex items-center gap-2 text-xs text-gray-600">
-                            <span className="font-medium min-w-[40px]">{DAY_NAMES_HE[day]}</span>
-                            {hours
-                              ? <span dir="ltr">{hours.open}–{hours.close}</span>
-                              : <span className="text-gray-400">סגור</span>}
-                          </div>
-                        )
-                      })}
-                    </div>
+                    <p className="text-sm text-gray-600">בתיאום מראש</p>
                   </div>
-                )
-              })()}
+                ) : (() => {
+                  const curHours = currentData.openingHours
+                  const hasCurrentHours =
+                    curHours !== 'by_appointment'
+                    && typeof curHours === 'object'
+                    && Object.values(curHours).some(v => v !== null)
+                  const isByAppt = curHours === 'by_appointment'
+                  const newHours = result.openingHours as Record<string, DayHours | null>
+                  return (
+                    <div className="mr-7 mt-1 space-y-2">
+                      {(hasCurrentHours || isByAppt) && (
+                        <>
+                          <p className="text-xs font-medium text-gray-400">נוכחי</p>
+                          {isByAppt ? (
+                            <p className="text-xs text-gray-400 mb-2">לפי תיאום</p>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-1 mb-2">
+                              {DAY_KEYS.map(day => {
+                                const h = (curHours as Record<string, DayHours | null>)[day]
+                                return (
+                                  <div key={day} className="flex items-center gap-2 text-xs text-gray-400">
+                                    <span className="font-medium min-w-[40px]">{DAY_NAMES_HE[day]}</span>
+                                    {h ? <span dir="ltr">{h.open}–{h.close}</span> : <span>סגור</span>}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {(hasCurrentHours || isByAppt) && (
+                        <p className="text-xs font-medium text-blue-500">חדש</p>
+                      )}
+                      <div className="grid grid-cols-2 gap-1">
+                        {DAY_KEYS.map(day => {
+                          const hours = newHours[day]
+                          return (
+                            <div key={day} className="flex items-center gap-2 text-xs text-gray-600">
+                              <span className="font-medium min-w-[40px]">{DAY_NAMES_HE[day]}</span>
+                              {hours
+                                ? <span dir="ltr">{hours.open}–{hours.close}</span>
+                                : <span className="text-gray-400">סגור</span>}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })()
+              )}
             </div>
 
             {/* Cleaned description */}

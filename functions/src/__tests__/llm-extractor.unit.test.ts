@@ -20,7 +20,7 @@ import {
   rankImagesWithVision,
   extractFromDescriptionWithLLM,
 } from "../enrichment/llm-extractor";
-import {ScrapedPage} from "../enrichment/types";
+import {ScrapedPage, DayHours} from "../enrichment/types";
 
 // Mock global fetch
 const mockFetch = jest.fn();
@@ -274,7 +274,8 @@ describe("extractWithLLM", () => {
     expect(r.whatsapp).toBe("0521234567");
     expect(r.description).toBe("מסעדה");
     expect(r.address).toBe("רח' הרצל 1");
-    expect(r.openingHours?.sunday).toEqual(
+    const lh = r.openingHours as Record<string, DayHours | null>;
+    expect(lh?.sunday).toEqual(
       {open: "09:00", close: "17:00"},
     );
   });
@@ -966,7 +967,8 @@ describe("extractFromDescriptionWithLLM", () => {
     expect(r.cleanedDescription).toBe(
       "מסעדה ים תיכונית עם נוף מדהים",
     );
-    expect(r.openingHours?.sunday).toEqual(
+    const lh2 = r.openingHours as Record<string, DayHours | null>;
+    expect(lh2?.sunday).toEqual(
       {open: "09:00", close: "17:00"},
     );
   });
