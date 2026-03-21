@@ -14,6 +14,7 @@ import { ref, getDownloadURL } from 'firebase/storage'
 import { db, storage, authReady } from '../../lib/firebase.ts'
 import { reportError } from '../../lib/errorReporting.ts'
 import { EnrichModal, type ApplyFields } from '../components/EnrichModal'
+import { EnrichFromDescriptionModal } from '../components/EnrichFromDescriptionModal'
 import { FOOD_CATEGORY_ID } from '../../lib/constants.ts'
 import { useAuth } from '../../hooks/useAuth'
 import type { Poi, Category, Subcategory, Icon, Business } from '../types/index.ts'
@@ -52,6 +53,7 @@ export function PoiEditPage() {
   const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [showEnrichModal, setShowEnrichModal] = useState(false)
+  const [showEnrichFromDescModal, setShowEnrichFromDescModal] = useState(false)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const originalIconRef = useRef<{ iconId: string | null; iconUrl: string | null }>({ iconId: null, iconUrl: null })
 
@@ -238,6 +240,8 @@ export function PoiEditPage() {
     if (fields.description) set('description', fields.description)
     if (fields.agentsPrice) set('agentsPrice', fields.agentsPrice)
     if (fields.groupsPrice) set('groupsPrice', fields.groupsPrice)
+    if (fields.minPeople) set('minPeople', fields.minPeople)
+    if (fields.maxPeople) set('maxPeople', fields.maxPeople)
     if (fields.openingHours) set('openingHours', fields.openingHours)
     if (fields.location) {
       set('lat', fields.location.lat.toString())
@@ -393,6 +397,15 @@ export function PoiEditPage() {
             className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
           >
             העשרה מהאתר
+          </button>
+        )}
+        {!isNew && form.description.trim() && (
+          <button
+            type="button"
+            onClick={() => setShowEnrichFromDescModal(true)}
+            className="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+          >
+            העשרה מהתיאור
           </button>
         )}
         {!isNew && form.mapType === 'default' && (
@@ -657,6 +670,22 @@ export function PoiEditPage() {
           openingHours: form.openingHours,
           lat: form.lat,
           lng: form.lng,
+        }}
+      />
+
+      {/* Enrich from description modal */}
+      <EnrichFromDescriptionModal
+        isOpen={showEnrichFromDescModal}
+        onClose={() => setShowEnrichFromDescModal(false)}
+        onApply={handleEnrichApply}
+        poiId={id || ''}
+        poiName={form.name}
+        currentData={{
+          phone: form.phone,
+          whatsapp: form.whatsapp,
+          price: form.agentsPrice,
+          description: form.description,
+          openingHours: form.openingHours,
         }}
       />
 

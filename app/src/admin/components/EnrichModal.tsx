@@ -76,6 +76,8 @@ export interface ApplyFields {
   agentsPrice: string
   groupsPrice: string
   location: { lat: number; lng: number }
+  minPeople: string
+  maxPeople: string
 }
 
 type ScalarField =
