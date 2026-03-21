@@ -454,6 +454,17 @@ export const enrichPoiFromDescription = onCall(
         programmatic, {...llmResult, description: null}, merged,
       );
 
+      // Normalize missing/all-null openingHours to "by_appointment" — for
+      // description enrichment, no hours info means "by appointment", not null.
+      const rawHours = merged.openingHours as EnrichmentResult["openingHours"];
+      const isAllNull =
+        rawHours !== null &&
+        rawHours !== "by_appointment" &&
+        typeof rawHours === "object" &&
+        Object.values(rawHours).every((v) => v === null);
+      const finalHours: EnrichmentResult["openingHours"] =
+        rawHours === null || isAllNull ? "by_appointment" : rawHours;
+
       const result: EnrichmentResult = {
         phone: (merged.phone as string) || null,
         whatsapp: (merged.whatsapp as string) || null,
@@ -461,9 +472,7 @@ export const enrichPoiFromDescription = onCall(
         videos: [],
         images: [],
         facebook: null,
-        openingHours:
-          (merged.openingHours as EnrichmentResult["openingHours"]) ||
-          null,
+        openingHours: finalHours,
         price: (merged.price as string) || null,
         description: null,
         address: (merged.address as string) || null,
